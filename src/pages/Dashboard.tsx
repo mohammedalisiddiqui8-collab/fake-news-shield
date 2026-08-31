@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useNavigate } from "react-router";
-import { useTheme } from "next-themes";
+import { useTheme } from "@/components/ThemeProvider";
 import { toast } from "sonner";
 import {
   Shield, Search, Clock, Home, Loader2, CheckCircle2, AlertTriangle,
