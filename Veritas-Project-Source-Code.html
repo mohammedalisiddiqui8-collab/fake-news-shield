@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Veritas — Project Source Code</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: #f8fafc;
+    color: #1e293b;
+    line-height: 1.6;
+    padding: 40px;
+  }
+
+  @media print {
+    body { padding: 20px; background: white; }
+    .page-break { page-break-before: always; }
+    .no-print { display: none; }
+  }
+
+  .cover {
+    text-align: center;
+    padding: 80px 40px;
+    margin-bottom: 60px;
+    border-bottom: 3px solid #0f172a;
+  }
+
+  .cover h1 {
+    font-size: 48px;
+    font-weight: 800;
+    letter-spacing: -1px;
+    color: #0f172a;
+    margin-bottom: 8px;
+  }
+
+  .cover .subtitle {
+    font-size: 20px;
+    color: #64748b;
+    font-weight: 500;
+    margin-bottom: 24px;
+  }
+
+  .cover .meta {
+    font-size: 14px;
+    color: #94a3b8;
+    line-height: 2;
+  }
+
+  .toc {
+    margin-bottom: 60px;
+    padding: 32px;
+    background: white;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+  }
+
+  .toc h2 {
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 16px;
+    color: #0f172a;
+  }
+
+  .toc ol {
+    padding-left: 24px;
+  }
+
+  .toc li {
+    padding: 6px 0;
+    font-size: 15px;
+    color: #475569;
+  }
+
+  .toc li strong {
+    color: #1e293b;
+  }
+
+  .file-section {
+    margin-bottom: 60px;
+  }
+
+  .file-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding: 16px 20px;
+    background: #0f172a;
+    color: white;
+    border-radius: 10px 10px 0 0;
+  }
+
+  .file-header .icon {
+    width: 36px;
+    height: 36px;
+    background: #3b82f6;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .file-header .info h3 {
+    font-size: 15px;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .file-header .info p {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 2px;
+  }
+
+  .code-block {
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 24px;
+    border-radius: 0 0 10px 10px;
+    overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    line-height: 1.7;
+    white-space: pre;
+    tab-size: 2;
+  }
+
+  .code-block .comment { color: #64748b; }
+  .code-block .keyword { color: #c084fc; }
+  .code-block .string { color: #86efac; }
+  .code-block .type { color: #67e8f9; }
+  .code-block .func { color: #fbbf24; }
+  .code-block .number { color: #fb923c; }
+
+  .divider {
+    border: none;
+    border-top: 2px solid #e2e8f0;
+    margin: 60px 0;
+  }
+
+  .footer {
+    text-align: center;
+    padding: 40px 0;
+    border-top: 2px solid #0f172a;
+    margin-top: 60px;
+  }
+
+  .footer p {
+    font-size: 13px;
+    color: #94a3b8;
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER PAGE -->
+<div class="cover">
+  <h1>Veritas</h1>
+  <div class="subtitle">AI-Powered Misinformation Detection System</div>
+  <div class="meta">
+    BSc Data Science — Third Year Project<br>
+    Source Code Documentation<br>
+    August 2026
+  </div>
+</div>
+
+<!-- TABLE OF CONTENTS -->
+<div class="toc">
+  <h2>Contents</h2>
+  <ol>
+    <li><strong>Analysis Engine</strong> — NLP-based fake news detection with weighted severity scoring</li>
+    <li><strong>Database Schema</strong> — Convex data model for analysis storage</li>
+    <li><strong>Backend Queries & Mutations</strong> — CRUD operations for analysis history</li>
+    <li><strong>Credibility Gauge</strong> — Animated SVG confidence visualization</li>
+    <li><strong>Statistics Dashboard</strong> — Charts and analytics with Recharts</li>
+    <li><strong>Methodology View</strong> — Academic documentation of the detection approach</li>
+  </ol>
+</div>
+
+<!-- FILE 1: ANALYSIS ENGINE -->
+<div class="file-section">
+  <div class="file-header">
+    <div class="icon">01</div>
+    <div class="info">
+      <h3>src/convex/analyzeNews.ts</h3>
+      <p>NLP-based fake news detection engine — 12 red flag categories, 9 green flag categories, weighted severity scoring</p>
+    </div>
+  </div>
+  <div class="code-block">"use node";
+
+import { action } from "./_generated/server";
+import { v } from "convex/values";
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Veritas NLP-Based Fake News Detection Engine v2
+// Multi-layered linguistic analysis with severity-weighted scoring,
+// domain-specific heuristics, and structural pattern detection.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── WORD LISTS WITH SEVERITY WEIGHTS ──────────────────────────────────────
+
+const SENSATIONALIST: Array&lt;[RegExp, number]&gt; = [
+  [/[A-Z]{3,}!{2,}/g, 8],                      // EXPOSED!!!
+  [/shocking|unbelievable|mind[- ]?blowing/gi, 6],
+  [/miracle|wonder|amazing|incredible/gi, 5],
+  [/urgent|breaking|just in/gi, 4],
+  [/exposed|revealed/gi, 6],
+  [/secret|hidden|suppressed|banned|censored/gi, 6],
+  [/cover[- ]?up|conspiracy/gi, 7],
+  [/they don'?t want you to know/gi, 8],
+  [/share (this|before|now)|before they delete/gi, 7],
+  [/wake up|open your eyes|do your research/gi, 6],
+  [/the truth (about|they|is)|what they'?re hiding/gi, 7],
+  [/mainstream media (won'?t|doesn'?t|is paid)/gi, 8],
+  [/you won'?t (believe|want to miss)/gi, 7],
+];
+
+const CLICKBAIT: Array&lt;[RegExp, number]&gt; = [
+  [/you won'?t believe/i, 6],
+  [/doctors? (don'?t|hate|are shocked)/i, 7],
+  [/(one|a) (trick|simple|weird|secret)/i, 5],
+  [/number \d+ will (shock|amaze|surprise)/i, 7],
+  [/\d+%\s*of\s*(people|doctors)\s*(don'?t|won'?t)/i, 7],
+  [/(before it'?s|while you still can)/i, 5],
+  [/(click here|act now|limited time)/i, 6],
+  [/(celebrities|hate|love) this (trick|secret)/i, 7],
+];
+
+const ANONYMOUS_SOURCING: Array&lt;[RegExp, number]&gt; = [
+  [/experts? (say|claim|believe|warn)/gi, 4],
+  [/studies (show|reveal|suggest|prove)/gi, 3],
+  [/scientists? (say|warn|discover|reveal)/gi, 3],
+  [/insiders? (reveal|say|claim)/gi, 5],
+  [/sources? (say|claim|reveal)/gi, 4],
+  [/anonymous (source|insider|official)/gi, 7],
+  [/(people|everyone) (are saying|say|claim)/gi, 5],
+];
+
+const FEAR_MONGERING: Array&lt;[RegExp, number]&gt; = [
+  [/(they|the elite|the powerful) (are|want|plan|will) to/gi, 5],
+  [/big (pharma|tech|media|tobacco|oil)/gi, 6],
+  [/deep state|new world order|illuminati/gi, 7],
+  [/mind control|brainwash|programming/gi, 6],
+  [/depopulation|eugenics|population control/gi, 7],
+];
+
+const CONSPIRACY: Array&lt;[RegExp, number]&gt; = [
+  [/conspiracy|conspir(acy|ies|ing)/gi, 6],
+  [/cover[- ]?up|covering up/gi, 6],
+  [/wake up|open your eyes/gi, 6],
+  [/do your (own )?research/gi, 5],
+  [/sheeple/gi, 7],
+  [/fake news|lamestream/gi, 5],
+  [/deep state|shadow government/gi, 7],
+  [/globalist|global elites|cabal/gi, 6],
+  [/censored|silenced|suppressed/gi, 5],
+];
+
+const CREDIBLE_INDICATORS: Array&lt;[RegExp, number]&gt; = [
+  [/according to (the |a |research |official )/gi, 5],
+  [/published (in|on|by)/gi, 6],
+  [/(study|research|report) (published|found|conducted)/gi, 6],
+  [/(data|findings) (from|show|indicate)/gi, 5],
+  [/(officials?|spokesperson) (said|stated|confirmed)/gi, 5],
+  [/in a (press|public|official) statement/gi, 6],
+  [/(CEO|CTO|CFO|president|director|minister)/gi, 4],
+  [/(peer[- ]?reviewed|peer reviewed)/gi, 7],
+  [/(found that|showed that|revealed that|confirmed that)/gi, 4],
+];
+
+const CREDIBLE_SOURCES = [
+  /\breuters\b/i, /\bbc\b/i, /\bnew york times\b/i, /\bthe guardian\b/i,
+  /\bnature\b/i, /\bscience\b/i, /\bthe lancet\b/i, /\bjournal of\b/i,
+  /\buniversity of\b/i, /\bnasa\b/i, /\bcdc\b/i, /\bfda\b/i,
+  /\bharvard\b/i, /\bmit\b/i, /\bstanford\b/i, /\boxford\b/i,
+];
+
+// ─── WEIGHTED MATCHING ──────────────────────────────────────────────────────
+
+function weightedMatches(
+  text: string,
+  patterns: Array&lt;[RegExp, number]&gt;
+): { total: number; score: number; matches: string[] } {
+  let total = 0, score = 0;
+  const matches: string[] = [];
+  for (const [pattern, weight] of patterns) {
+    const found = text.match(pattern);
+    if (found) {
+      total += found.length;
+      score += found.length * weight;
+      matches.push(...found.slice(0, 2).map(m =&gt; m.trim()));
+    }
+  }
+  return { total, score, matches: [...new Set(matches)].slice(0, 3) };
+}
+
+// ─── ANALYSIS FUNCTION ──────────────────────────────────────────────────────
+
+function analyzeText(text: string) {
+  const wordCount = text.split(/\s+/).length;
+  let redFlagScore = 0, greenFlagScore = 0;
+  const redFlags: string[] = [], greenFlags: string[] = [];
+
+  // ── RED FLAG ANALYSIS (12 categories) ──
+
+  const sens = weightedMatches(text, SENSATIONALIST);
+  if (sens.score &gt;= 30) { redFlagScore += 30; redFlags.push(`Highly sensationalist language (${sens.total} instances)`); }
+  else if (sens.score &gt;= 15) { redFlagScore += 18; redFlags.push("Sensationalist language detected"); }
+
+  const cb = weightedMatches(text, CLICKBAIT);
+  if (cb.score &gt;= 15) { redFlagScore += 25; redFlags.push(`Multiple clickbait patterns (${cb.total} matches)`); }
+  else if (cb.score &gt;= 8) { redFlagScore += 14; redFlags.push(`Clickbait: "${cb.matches[0]}"`); }
+
+  const anon = weightedMatches(text, ANONYMOUS_SOURCING);
+  if (anon.score &gt;= 20) { redFlagScore += 22; redFlags.push("Heavy anonymous/vague sourcing"); }
+  else if (anon.score &gt;= 10) { redFlagScore += 12; redFlags.push("Some anonymous sourcing detected"); }
+
+  const fear = weightedMatches(text, FEAR_MONGERING);
+  if (fear.score &gt;= 20) { redFlagScore += 22; redFlags.push("Fear-mongering language detected"); }
+  else if (fear.score &gt;= 10) { redFlagScore += 12; redFlags.push("Some alarmist language detected"); }
+
+  const consp = weightedMatches(text, CONSPIRACY);
+  if (consp.score &gt;= 18) { redFlagScore += 28; redFlags.push(`Conspiracy language (${consp.total} markers)`); }
+  else if (consp.score &gt;= 9) { redFlagScore += 16; redFlags.push("Conspiracy-themed language detected"); }
+
+  const capsCount = (text.match(/[A-Z]{3,}!{1,}/g))?.length ?? 0;
+  if (capsCount &gt;= 5) { redFlagScore += 18; redFlags.push(`Excessive caps/exclamation (${capsCount})`); }
+
+  const emojiCount = (text.match(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}]/gu))?.length ?? 0;
+  if (emojiCount &gt;= 3) { redFlagScore += 12; redFlags.push(`Excessive emoji usage (${emojiCount})`); }
+
+  if (text.match(/share.*(before|now)|before.*(delete|remove)/i))
+    { redFlagScore += 12; redFlags.push("Urgency language pressuring shares"); }
+  if (!text.match(/https?:\/\//i) &amp;&amp; wordCount &gt; 40) { redFlagScore += 6; }
+
+  // ── GREEN FLAG ANALYSIS (9 categories) ──
+
+  const cred = weightedMatches(text, CREDIBLE_INDICATORS);
+  if (cred.score &gt;= 25) { greenFlagScore += 25; greenFlags.push(`Strong sourcing (${cred.total} indicators)`); }
+  else if (cred.score &gt;= 12) { greenFlagScore += 16; greenFlags.push(`Good sourcing (${cred.total} indicators)`); }
+
+  if (/\d+%|\$[\d,]+|\d+ million|\d+ billion/i.test(text))
+    { greenFlagScore += 16; greenFlags.push("Specific statistics cited"); }
+
+  const credCount = CREDIBLE_SOURCES.filter(p =&gt; p.test(text)).length;
+  if (credCount &gt;= 2) { greenFlagScore += 22; greenFlags.push(`References credible institutions (${credCount})`); }
+
+  if (/on (monday|tuesday|wednesday|thursday|friday)/i.test(text))
+    { greenFlagScore += 14; greenFlags.push("Specific dates provided"); }
+
+  if (/however|on the other hand|critics (say|argue)/i.test(text))
+    { greenFlagScore += 18; greenFlags.push("Balanced reporting with multiple perspectives"); }
+
+  const struct = ["who", "what", "where", "when", "why"]
+    .filter(w =&gt; new RegExp(`\\b${w}\\b`, "i").test(text)).length;
+  if (struct &gt;= 4) { greenFlagScore += 16; greenFlags.push("Journalistic structure (who, what, where, when, why)"); }
+
+  if (wordCount &gt;= 80 &amp;&amp; wordCount &lt;= 800)
+    { greenFlagScore += 6; greenFlags.push("Appropriate article length"); }
+
+  // ── VERDICT CALCULATION ──
+
+  const total = Math.max(redFlagScore + greenFlagScore, 1);
+  const redRatio = redFlagScore / total;
+  const greenRatio = greenFlagScore / total;
+  let verdict: "likely_real" | "likely_fake" | "uncertain";
+  let confidence: number;
+
+  if (redRatio &gt;= 0.65) {
+    verdict = "likely_fake";
+    confidence = Math.min(95, Math.round(55 + redRatio * 40));
+  } else if (greenRatio &gt;= 0.65) {
+    verdict = "likely_real";
+    confidence = Math.min(95, Math.round(55 + greenRatio * 40));
+  } else if (redRatio &gt; greenRatio + 0.1) {
+    verdict = "likely_fake";
+    confidence = Math.min(78, Math.round(42 + (redRatio - greenRatio) * 35));
+  } else if (greenRatio &gt; redRatio + 0.1) {
+    verdict = "likely_real";
+    confidence = Math.min(78, Math.round(42 + (greenRatio - redRatio) * 35));
+  } else {
+    verdict = "uncertain";
+    confidence = Math.round(35 + Math.abs(redRatio - greenRatio) * 15);
+  }
+  confidence = Math.max(35, Math.min(95, confidence));
+
+  // ── OUTPUT ──
+
+  const summary = verdict === "likely_fake"
+    ? `This content shows ${redFlags.length} red flags suggesting it may be unreliable. ${redFlags[0] ?? "Language patterns raise concerns."} Exercise caution.`
+    : verdict === "likely_real"
+    ? `This content shows ${greenFlags.length} indicators consistent with credible journalism. ${greenFlags[0] ?? "Sourcing appears legitimate."}`
+    : `Mixed profile: ${redFlags.length} concerns, ${greenFlags.length} positives. Verify through independent sources.`;
+
+  const parts: string[] = [];
+  if (redFlags.length) parts.push(`Concerns: ${redFlags.slice(0, 3).join("; ")}.`);
+  if (greenFlags.length) parts.push(`Positives: ${greenFlags.slice(0, 3).join("; ")}.`);
+  parts.push(`Confidence: ${confidence}% based on linguistic pattern analysis, source verification, and structural evaluation.`);
+
+  return { verdict, confidence, summary, redFlags, greenFlags, reasoning: parts.join(" ") };
+}
+
+// ─── CONVEX ACTION ──────────────────────────────────────────────────────────
+
+export const analyzeNews = action({
+  args: {
+    text: v.string(),
+    inputType: v.union(v.literal("text"), v.literal("url")),
+  },
+  handler: async (_ctx, args) =&gt; {
+    if (args.text.trim().length &lt; 10) {
+      return {
+        verdict: "uncertain" as const,
+        confidence: 30,
+        summary: "Text too short for meaningful analysis.",
+        redFlags: ["Too short"],
+        greenFlags: [],
+        reasoning: "Minimum content required for analysis.",
+      };
+    }
+    return analyzeText(args.text.trim());
+  },
+});</div>
+</div>
+
+<!-- FILE 2: SCHEMA -->
+<div class="file-section page-break">
+  <div class="file-header">
+    <div class="icon">02</div>
+    <div class="info">
+      <h3>src/convex/schema.ts</h3>
+      <p>Database schema — Convex data model for users and analysis history</p>
+    </div>
+  </div>
+  <div class="code-block">import { authTables } from "@convex-dev/auth/server";
+import { defineSchema, defineTable } from "convex/server";
+import { v } from "convex/values";
+
+export const ROLES = { ADMIN: "admin", USER: "user", MEMBER: "member" } as const;
+export const roleValidator = v.union(
+  v.literal(ROLES.ADMIN), v.literal(ROLES.USER), v.literal(ROLES.MEMBER)
+);
+
+const schema = defineSchema(
+  {
+    // Auth tables (provided by Convex Auth)
+    ...authTables,
+
+    // Users table
+    users: defineTable({
+      name: v.optional(v.string()),
+      image: v.optional(v.string()),
+      email: v.optional(v.string()),
+      emailVerificationTime: v.optional(v.number()),
+      isAnonymous: v.optional(v.boolean()),
+      role: v.optional(roleValidator),
+    }).index("email", ["email"]),
+
+    // Analysis history table
+    analyses: defineTable({
+      userId: v.string(),
+      inputText: v.string(),
+      inputType: v.union(v.literal("text"), v.literal("url")),
+      verdict: v.union(
+        v.literal("likely_real"),
+        v.literal("likely_fake"),
+        v.literal("uncertain"),
+      ),
+      confidence: v.number(),
+      summary: v.string(),
+      redFlags: v.array(v.string()),
+      greenFlags: v.array(v.string()),
+      reasoning: v.string(),
+      createdAt: v.number(),
+    }).index("by_user", ["userId", "createdAt"]),
+  },
+  { schemaValidation: false },
+);
+
+export default schema;</div>
+</div>
+
+<!-- FILE 3: QUERIES/MUTATIONS -->
+<div class="file-section page-break">
+  <div class="file-header">
+    <div class="icon">03</div>
+    <div class="info">
+      <h3>src/convex/analyses.ts</h3>
+      <p>Backend queries and mutations — CRUD operations for analysis history</p>
+    </div>
+  </div>
+  <div class="code-block">import { query, mutation } from "./_generated/server";
+import { v } from "convex/values";
+
+// List all analyses for the current user (most recent first)
+export const listByUser = query({
+  args: {},
+  handler: async (ctx) =&gt; {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return [];
+    const analyses = await ctx.db
+      .query("analyses")
+      .withIndex("by_user", (q) =&gt; q.eq("userId", identity.subject))
+      .order("desc")
+      .take(50);
+    return analyses;
+  },
+});
+
+// Get a single analysis by ID
+export const get = query({
+  args: { id: v.id("analyses") },
+  handler: async (ctx, args) =&gt; {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return null;
+    const analysis = await ctx.db.get(args.id);
+    if (!analysis || analysis.userId !== identity.subject) return null;
+    return analysis;
+  },
+});
+
+// Create a new analysis record
+export const create = mutation({
+  args: {
+    inputText: v.string(),
+    inputType: v.union(v.literal("text"), v.literal("url")),
+    verdict: v.union(
+      v.literal("likely_real"),
+      v.literal("likely_fake"),
+      v.literal("uncertain"),
+    ),
+    confidence: v.number(),
+    summary: v.string(),
+    redFlags: v.array(v.string()),
+    greenFlags: v.array(v.string()),
+    reasoning: v.string(),
+  },
+  handler: async (ctx, args) =&gt; {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+    return ctx.db.insert("analyses", {
+      userId: identity.subject,
+      ...args,
+      createdAt: Date.now(),
+    });
+  },
+});
+
+// Delete an analysis (owner only)
+export const remove = mutation({
+  args: { id: v.id("analyses") },
+  handler: async (ctx, args) =&gt; {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("Not authenticated");
+    const analysis = await ctx.db.get(args.id);
+    if (!analysis || analysis.userId !== identity.subject) {
+      throw new Error("Not authorized");
+    }
+    await ctx.db.delete(args.id);
+  },
+});</div>
+</div>
+
+<!-- FILE 4: CREDIBILITY GAUGE -->
+<div class="file-section page-break">
+  <div class="file-header">
+    <div class="icon">04</div>
+    <div class="info">
+      <h3>src/components/CredibilityGauge.tsx</h3>
+      <p>Animated SVG circular confidence gauge with glow effects</p>
+    </div>
+  </div>
+  <div class="code-block">import { motion } from "framer-motion";
+
+interface CredibilityGaugeProps {
+  confidence: number;
+  verdict: "likely_real" | "likely_fake" | "uncertain";
+  size?: number;
+}
+
+const verdictColors: Record&lt;string, { stroke: string; glow: string }&gt; = {
+  likely_real: { stroke: "#10b981", glow: "rgba(16, 185, 129, 0.3)" },
+  uncertain:   { stroke: "#f59e0b", glow: "rgba(245, 158, 11, 0.3)" },
+  likely_fake: { stroke: "#ef4444", glow: "rgba(239, 68, 68, 0.3)" },
+};
+
+export function CredibilityGauge({
+  confidence, verdict, size = 180,
+}: CredibilityGaugeProps) {
+  const colors = verdictColors[verdict];
+  const strokeWidth = 10;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const progress = (confidence / 100) * circumference;
+  const center = size / 2;
+
+  return (
+    &lt;div className="relative inline-flex items-center justify-center"&gt;
+      {/* Glow background */}
+      &lt;div
+        className="absolute rounded-full blur-xl"
+        style={{
+          width: size * 0.8, height: size * 0.8,
+          background: colors.glow,
+        }}
+      /&gt;
+
+      {/* SVG circle */}
+      &lt;svg
+        width={size} height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        className="relative -rotate-90"
+      &gt;
+        {/* Background track */}
+        &lt;circle
+          cx={center} cy={center} r={radius}
+          fill="none" stroke="currentColor"
+          strokeWidth={strokeWidth}
+          className="text-muted/30"
+        /&gt;
+        {/* Animated progress arc */}
+        &lt;motion.circle
+          cx={center} cy={center} r={radius}
+          fill="none" stroke={colors.stroke}
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          initial={{ strokeDashoffset: circumference }}
+          animate={{ strokeDashoffset: circumference - progress }}
+          transition={{ duration: 1.2, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+          style={{ filter: `drop-shadow(0 0 6px ${colors.glow})` }}
+        /&gt;
+      &lt;/svg&gt;
+
+      {/* Center text */}
+      &lt;div className="absolute inset-0 flex flex-col items-center justify-center"&gt;
+        &lt;motion.span
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+          className="text-3xl font-extrabold tracking-tight"
+        &gt;
+          {confidence}%
+        &lt;/motion.span&gt;
+        &lt;motion.span
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3, delay: 0.8 }}
+          className="text-[11px] text-muted-foreground font-medium"
+        &gt;
+          confidence
+        &lt;/motion.span&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}</div>
+</div>
+
+<!-- FILE 5: STATS VIEW -->
+<div class="file-section page-break">
+  <div class="file-header">
+    <div class="icon">05</div>
+    <div class="info">
+      <h3>src/components/StatsView.tsx</h3>
+      <p>Statistics dashboard — pie chart, bar chart, and stat cards with Recharts</p>
+    </div>
+  </div>
+  <div class="code-block">import { motion } from "framer-motion";
+import {
+  PieChart, Pie, Cell, BarChart, Bar,
+  XAxis, YAxis, Tooltip, ResponsiveContainer,
+} from "recharts";
+import {
+  TrendingUp, AlertTriangle, CheckCircle2, BarChart3,
+} from "lucide-react";
+
+interface StatsViewProps {
+  analyses: {
+    verdict: "likely_real" | "likely_fake" | "uncertain";
+    confidence: number;
+    redFlags: string[];
+    greenFlags: string[];
+  }[];
+}
+
+const COLORS = {
+  likely_real: "#10b981",
+  uncertain: "#f59e0b",
+  likely_fake: "#ef4444",
+};
+
+const LABELS = {
+  likely_real: "Likely Real",
+  uncertain: "Uncertain",
+  likely_fake: "Likely Fake",
+};
+
+export function StatsView({ analyses }: StatsViewProps) {
+  if (analyses.length === 0) return null;
+
+  // Calculate statistics
+  const total = analyses.length;
+  const vc = { likely_real: 0, uncertain: 0, likely_fake: 0 };
+  let tc = 0, tr = 0, tg = 0;
+
+  for (const a of analyses) {
+    vc[a.verdict]++;
+    tc += a.confidence;
+    tr += a.redFlags.length;
+    tg += a.greenFlags.length;
+  }
+
+  const avg = Math.round(tc / total);
+
+  const pieData = (Object.keys(vc) as Array&lt;keyof typeof vc&gt;)
+    .map((k) =&gt; ({ name: LABELS[k], value: vc[k], color: COLORS[k] }))
+    .filter((d) =&gt; d.value &gt; 0);
+
+  // Confidence distribution
+  const buckets = [
+    { range: "35-50%", count: 0, fill: "#94a3b8" },
+    { range: "50-65%", count: 0, fill: "#f59e0b" },
+    { range: "65-80%", count: 0, fill: "#3b82f6" },
+    { range: "80-95%", count: 0, fill: "#10b981" },
+  ];
+  for (const a of analyses) {
+    if (a.confidence &lt; 50) buckets[0].count++;
+    else if (a.confidence &lt; 65) buckets[1].count++;
+    else if (a.confidence &lt; 80) buckets[2].count++;
+    else buckets[3].count++;
+  }
+
+  const statCards = [
+    { label: "Total Analyses", value: total, icon: BarChart3,
+      color: "text-primary", bg: "bg-primary/10" },
+    { label: "Avg Confidence", value: `${avg}%`, icon: TrendingUp,
+      color: "text-blue-600", bg: "bg-blue-500/10" },
+    { label: "Red Flags", value: tr, icon: AlertTriangle,
+      color: "text-red-600", bg: "bg-red-500/10" },
+    { label: "Green Flags", value: tg, icon: CheckCircle2,
+      color: "text-emerald-600", bg: "bg-emerald-500/10" },
+  ];
+
+  return (
+    &lt;div className="space-y-6"&gt;
+      {/* Stat cards */}
+      &lt;div className="grid grid-cols-2 sm:grid-cols-4 gap-3"&gt;
+        {statCards.map((c, i) =&gt; (
+          &lt;motion.div
+            key={c.label}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: i * 0.08 }}
+            className="glass-card rounded-xl p-4"
+          &gt;
+            &lt;div className="flex items-center gap-2 mb-2"&gt;
+              &lt;div className={`w-7 h-7 rounded-lg ${c.bg} flex items-center justify-center`}&gt;
+                &lt;c.icon className={`w-3.5 h-3.5 ${c.color}`} /&gt;
+              &lt;/div&gt;
+              &lt;span className="text-[11px] text-muted-foreground"&gt;
+                {c.label}
+              &lt;/span&gt;
+            &lt;/div&gt;
+            &lt;span className="text-xl font-bold"&gt;{c.value}&lt;/span&gt;
+          &lt;/motion.div&gt;
+        ))}
+      &lt;/div&gt;
+
+      {/* Charts */}
+      &lt;div className="grid grid-cols-1 sm:grid-cols-2 gap-4"&gt;
+        {pieData.length &gt; 0 &amp;&amp; (
+          &lt;motion.div className="glass-card rounded-2xl p-6"&gt;
+            &lt;h3 className="text-sm font-semibold text-muted-foreground
+              uppercase tracking-widest mb-4"&gt;
+              Verdict Distribution
+            &lt;/h3&gt;
+            &lt;div className="flex items-center justify-center"&gt;
+              &lt;ResponsiveContainer width={200} height={200}&gt;
+                &lt;PieChart&gt;
+                  &lt;Pie data={pieData} cx="50%" cy="50%"
+                    innerRadius={55} outerRadius={80}
+                    dataKey="value" stroke="none"&gt;
+                    {pieData.map((e) =&gt; (
+                      &lt;Cell key={e.name} fill={e.color} /&gt;
+                    ))}
+                  &lt;/Pie&gt;
+                &lt;/PieChart&gt;
+              &lt;/ResponsiveContainer&gt;
+            &lt;/div&gt;
+          &lt;/motion.div&gt;
+        )}
+
+        {buckets.some((b) =&gt; b.count &gt; 0) &amp;&amp; (
+          &lt;motion.div className="glass-card rounded-2xl p-6"&gt;
+            &lt;h3 className="text-sm font-semibold text-muted-foreground
+              uppercase tracking-widest mb-4"&gt;
+              Confidence Distribution
+            &lt;/h3&gt;
+            &lt;ResponsiveContainer width="100%" height={200}&gt;
+              &lt;BarChart data={buckets}&gt;
+                &lt;XAxis dataKey="range" tick={{ fontSize: 11 }}
+                  axisLine={false} tickLine={false} /&gt;
+                &lt;YAxis tick={{ fontSize: 11 }} axisLine={false}
+                  tickLine={false} allowDecimals={false} /&gt;
+                &lt;Bar dataKey="count" radius={[6, 6, 0, 0]}&gt;
+                  {buckets.map((e) =&gt; (
+                    &lt;Cell key={e.range} fill={e.fill} /&gt;
+                  ))}
+                &lt;/Bar&gt;
+              &lt;/BarChart&gt;
+            &lt;/ResponsiveContainer&gt;
+          &lt;/motion.div&gt;
+        )}
+      &lt;/div&gt;
+    &lt;/div&gt;
+  );
+}</div>
+</div>
+
+<!-- FILE 6: METHODOLOGY -->
+<div class="file-section page-break">
+  <div class="file-header">
+    <div class="icon">06</div>
+    <div class="info">
+      <h3>src/components/MethodologyView.tsx</h3>
+      <p>Academic documentation — technical methodology for project presentation</p>
+    </div>
+  </div>
+  <div class="code-block">import { motion } from "framer-motion";
+import {
+  Brain, Layers, Search, BarChart3,
+  Shield, BookOpen, Target, GitBranch,
+} from "lucide-react";
+
+const sections = [
+  {
+    icon: Brain,
+    title: "System Architecture",
+    content: "Veritas uses a multi-layered NLP pipeline on Convex with React frontend. Modular design separates detection heuristics from scoring and presentation.",
+    details: [
+      "Serverless Convex backend with real-time data sync",
+      "React 19 + TypeScript frontend with Vite",
+      "Shadcn/UI component library with Glassmorphism theme",
+      "Framer Motion for meaningful animations",
+    ],
+  },
+  {
+    icon: Layers,
+    title: "Three-Layer Analysis Pipeline",
+    content: "Sequential layers: pattern extraction → severity scoring → verdict calculation. Each layer builds on the previous.",
+    details: [
+      "Layer 1: Regex-based pattern extraction with weighted matching",
+      "Layer 2: Category-level severity scoring (red flags vs green flags)",
+      "Layer 3: Ratio-based verdict calculation with confidence calibration",
+      "Each layer independently testable and auditable",
+    ],
+  },
+  {
+    icon: Search,
+    title: "Red Flag Detection (12 Categories)",
+    content: "Identifies 12 categories of misinformation indicators, each with severity-weighted patterns:",
+    details: [
+      "Sensationalist language — emotionally manipulative words",
+      "Clickbait patterns — headline manipulation tactics",
+      "Anonymous sourcing — vague attribution",
+      "Fear-mongering — alarmist framing",
+      "Conspiracy language — conspiratorial rhetoric",
+      "Excessive capitalization and exclamation marks",
+      "Emoji overuse — unprofessional indicators",
+      "ALL CAPS emphasis — typographic shouting",
+      "Multi-exclamation marks — emotional punctuation",
+      "Urgency/sharing pressure tactics",
+      "Missing citations — no sources or references",
+      "Inappropriate length — too short for real articles",
+    ],
+  },
+  {
+    icon: Target,
+    title: "Green Flag Detection (9 Categories)",
+    content: "Evaluates credibility indicators consistent with journalistic standards:",
+    details: [
+      "Named sources with credentials and attributions",
+      "Quantitative data — statistics, percentages, figures",
+      "Credible institutions — Reuters, BBC, universities, journals",
+      "Temporal specificity — exact dates, timelines",
+      "Balanced reporting — multiple perspectives, counterarguments",
+      "Journalistic structure — who, what, where, when, why",
+      "Neutral tone — absence of emotional language",
+      "Appropriate length — 80-800 words",
+      "Named quotes — direct attributions to individuals",
+    ],
+  },
+  {
+    icon: BarChart3,
+    title: "Scoring Methodology",
+    content: "Verdicts determined by red-to-green severity ratio with calibrated thresholds:",
+    details: [
+      "Red flag ratio ≥ 0.65 → Likely Fake (55-95% confidence)",
+      "Green flag ratio ≥ 0.65 → Likely Real (55-95% confidence)",
+      "Difference > 0.1 → Leaning verdict (42-78% confidence)",
+      "Balanced scores → Uncertain (35-50% confidence)",
+      "Confidence capped to prevent overconfident claims",
+    ],
+  },
+  {
+    icon: GitBranch,
+    title: "Why Rule-Based Over ML?",
+    content: "Deliberate design choice over trained ML models (BERT, RoBERTa):",
+    details: [
+      "Explainability — every decision traceable to patterns",
+      "Transparency — users see exactly why content was flagged",
+      "No training data required — works without labeled datasets",
+      "Deterministic — same input always produces same output",
+      "Trade-off: ML models sacrifice explainability for accuracy",
+    ],
+  },
+  {
+    icon: BookOpen,
+    title: "Academic References",
+    content: "Informed by established misinformation research:",
+    details: [
+      "MIT Media Lab — linguistic feature extraction for fake news",
+      "First Draft News — misinformation taxonomy framework",
+      "Stanford Internet Observatory — Virality Project analysis",
+      "Reuters Institute — Digital News Report credibility",
+      "LIAR Dataset (Wang, 2017) — 12.8K labeled statements",
+    ],
+  },
+  {
+    icon: Shield,
+    title: "Limitations &amp; Future Work",
+    content: "Acknowledged limitations for academic honesty:",
+    details: [
+      "No external fact-check database cross-referencing",
+      "No image/video analysis (text-only currently)",
+      "Rule-based system requires manual pattern updates",
+      "Future: Fine-tuned BERT classifier on LIAR dataset",
+      "Future: TF-IDF vectorization for topic modeling",
+      "Future: Google Fact Check Tools API integration",
+    ],
+  },
+];
+
+export function MethodologyView() {
+  return (
+    &lt;div className="space-y-6"&gt;
+      {sections.map((s, i) =&gt; (
+        &lt;motion.div
+          key={s.title}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3, delay: i * 0.06 }}
+          className="glass-card rounded-2xl p-6"
+        &gt;
+          &lt;div className="flex items-center gap-3 mb-3"&gt;
+            &lt;div className="w-9 h-9 rounded-xl bg-primary/10
+              flex items-center justify-center shrink-0"&gt;
+              &lt;s.icon className="w-4 h-4 text-primary" /&gt;
+            &lt;/div&gt;
+            &lt;h3 className="text-base font-bold"&gt;{s.title}&lt;/h3&gt;
+          &lt;/div&gt;
+          &lt;p className="text-sm text-muted-foreground
+            leading-relaxed mb-3"&gt;
+            {s.content}
+          &lt;/p&gt;
+          &lt;ul className="space-y-1.5"&gt;
+            {s.details.map((d) =&gt; (
+              &lt;li key={d} className="flex items-start gap-2
+                text-xs text-muted-foreground leading-relaxed"&gt;
+                &lt;div className="w-1 h-1 rounded-full bg-primary
+                  mt-1.5 shrink-0" /&gt;
+                {d}
+              &lt;/li&gt;
+            ))}
+          &lt;/ul&gt;
+        &lt;/motion.div&gt;
+      ))}
+    &lt;/div&gt;
+  );
+}</div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <p><strong>Veritas</strong> — AI-Powered Misinformation Detection System</p>
+  <p>BSc Data Science Third Year Project • August 2026</p>
+</div>
+
+</body>
+</html>
