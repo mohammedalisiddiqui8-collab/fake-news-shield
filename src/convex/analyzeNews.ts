@@ -1,6 +1,6 @@
 "use node";
 
-import { action } from "../_generated/server";
+import { action } from "./_generated/server";
 import { v } from "convex/values";
 
 const ANALYSIS_PROMPT = `You are an expert fake news detector and media literacy analyst. Your task is to analyze the given news article or text and determine whether it is likely real or fake news.

@@ -102,7 +102,7 @@ export default function Dashboard() {
   const analyses = useQuery(api.analyses.listByUser);
   const createAnalysis = useMutation(api.analyses.create);
   const deleteAnalysis = useMutation(api.analyses.remove);
-  const runAnalysis = useAction(api.actions.analyze.analyzeNews);
+  const runAnalysis = useAction(api.analyzeNews.analyzeNews);
 
   const [inputText, setInputText] = useState("");
   const [inputType, setInputType] = useState<"text" | "url">("text");
