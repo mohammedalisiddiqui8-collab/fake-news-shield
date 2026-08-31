@@ -2,15 +2,13 @@ import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useAuth } from "@/hooks/use-auth";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import {
   Shield,
   Search,
   Clock,
-  LogOut,
-  Send,
+  Home,
   Loader2,
   CheckCircle2,
   AlertTriangle,
@@ -28,7 +26,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type Verdict = "likely_real" | "likely_fake" | "uncertain";
 
@@ -97,7 +94,6 @@ const sampleTexts = [
 ];
 
 export default function Dashboard() {
-  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const analyses = useQuery(api.analyses.listByUser);
   const createAnalysis = useMutation(api.analyses.create);
@@ -137,17 +133,21 @@ export default function Dashboard() {
       setCurrentResult(result);
       setActiveView("result");
 
-      // Save to history
-      await createAnalysis({
-        inputText: inputText.trim().slice(0, 5000),
-        inputType,
-        verdict: result.verdict,
-        confidence: result.confidence,
-        summary: result.summary,
-        redFlags: result.redFlags,
-        greenFlags: result.greenFlags,
-        reasoning: result.reasoning,
-      });
+      // Save to history (best-effort — if user is not authenticated this may fail silently)
+      try {
+        await createAnalysis({
+          inputText: inputText.trim().slice(0, 5000),
+          inputType,
+          verdict: result.verdict,
+          confidence: result.confidence,
+          summary: result.summary,
+          redFlags: result.redFlags,
+          greenFlags: result.greenFlags,
+          reasoning: result.reasoning,
+        });
+      } catch {
+        // History save is best-effort — analysis still works
+      }
 
       toast.success("Analysis complete!");
     } catch (error) {
@@ -160,15 +160,15 @@ export default function Dashboard() {
     } finally {
       setIsAnalyzing(false);
     }
-  }, [inputText, inputType, createAnalysis]);
+  }, [inputText, inputType, runAnalysis, createAnalysis]);
 
   const handleDelete = useCallback(
     async (id: string) => {
       try {
         await deleteAnalysis({ id: id as never });
-        toast.success("Analysis removed from history.");
+        toast.success("Removed from history.");
       } catch {
-        toast.error("Failed to delete analysis.");
+        toast.error("Failed to delete.");
       }
     },
     [deleteAnalysis],
@@ -192,11 +192,6 @@ export default function Dashboard() {
     [],
   );
 
-  const handleSignOut = async () => {
-    await signOut();
-    navigate("/");
-  };
-
   const vc = currentResult ? verdictConfig[currentResult.verdict] : null;
 
   return (
@@ -211,62 +206,66 @@ export default function Dashboard() {
       <nav className="sticky top-0 z-50 glass-strong border-b border-border/50">
         <div className="mx-auto max-w-6xl px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center">
-              <Shield className="w-4 h-4 text-primary-foreground" />
-            </div>
-            <span className="font-bold tracking-tight hidden sm:inline">
-              Fake News Shield
-            </span>
+            <button
+              type="button"
+              className="cursor-pointer flex items-center gap-3"
+              onClick={() => navigate("/")}
+            >
+              <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center">
+                <Shield className="w-4 h-4 text-primary-foreground" />
+              </div>
+              <span className="font-bold tracking-tight hidden sm:inline">
+                Fake News Shield
+              </span>
+            </button>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Tabs
-              value={activeView}
-              onValueChange={(v) =>
-                setActiveView(v as "analyze" | "result" | "history")
-              }
+          <div className="flex items-center gap-1">
+            <Button
+              variant={activeView === "analyze" ? "default" : "ghost"}
+              size="sm"
+              className={`cursor-pointer gap-1.5 text-xs sm:text-sm ${
+                activeView === "analyze" ? "bg-primary text-primary-foreground" : ""
+              }`}
+              onClick={() => setActiveView("analyze")}
             >
-              <TabsList className="glass-subtle">
-                <TabsTrigger
-                  value="analyze"
-                  className="cursor-pointer gap-1.5 text-xs sm:text-sm"
-                >
-                  <Search className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Analyze</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="result"
-                  className="cursor-pointer gap-1.5 text-xs sm:text-sm"
-                  disabled={!currentResult}
-                >
-                  <BarChart3 className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Results</span>
-                </TabsTrigger>
-                <TabsTrigger
-                  value="history"
-                  className="cursor-pointer gap-1.5 text-xs sm:text-sm"
-                >
-                  <Clock className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">History</span>
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
+              <Search className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Analyze</span>
+            </Button>
+            <Button
+              variant={activeView === "result" ? "default" : "ghost"}
+              size="sm"
+              className={`cursor-pointer gap-1.5 text-xs sm:text-sm ${
+                activeView === "result" ? "bg-primary text-primary-foreground" : ""
+              }`}
+              disabled={!currentResult}
+              onClick={() => setActiveView("result")}
+            >
+              <BarChart3 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Results</span>
+            </Button>
+            <Button
+              variant={activeView === "history" ? "default" : "ghost"}
+              size="sm"
+              className={`cursor-pointer gap-1.5 text-xs sm:text-sm ${
+                activeView === "history" ? "bg-primary text-primary-foreground" : ""
+              }`}
+              onClick={() => setActiveView("history")}
+            >
+              <Clock className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">History</span>
+            </Button>
 
             <div className="w-px h-6 bg-border/50 mx-1" />
 
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground hidden md:inline max-w-[120px] truncate">
-                {user?.name || user?.email || "Guest"}
-              </span>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="cursor-pointer h-8 w-8"
-                onClick={handleSignOut}
-              >
-                <LogOut className="w-4 h-4" />
-              </Button>
-            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="cursor-pointer h-8 w-8"
+              onClick={() => navigate("/")}
+            >
+              <Home className="w-4 h-4" />
+            </Button>
           </div>
         </div>
       </nav>
@@ -274,7 +273,7 @@ export default function Dashboard() {
       {/* Main Content */}
       <main className="mx-auto max-w-4xl px-6 py-8">
         <AnimatePresence mode="wait">
-          {/* ANALYZE VIEW */}
+          {/* ─── ANALYZE VIEW ─────────────────────────────────────── */}
           {activeView === "analyze" && (
             <motion.div
               key="analyze"
@@ -428,7 +427,7 @@ export default function Dashboard() {
             </motion.div>
           )}
 
-          {/* RESULT VIEW */}
+          {/* ─── RESULT VIEW ──────────────────────────────────────── */}
           {activeView === "result" && currentResult && vc && (
             <motion.div
               key="result"
@@ -494,7 +493,7 @@ export default function Dashboard() {
                       transition={{
                         duration: 0.8,
                         delay: 0.3,
-                        ease: [0.22, 1, 0.36, 1],
+                        ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
                       }}
                       className={`h-full rounded-full ${
                         currentResult.verdict === "likely_real"
@@ -642,7 +641,7 @@ export default function Dashboard() {
             </motion.div>
           )}
 
-          {/* HISTORY VIEW */}
+          {/* ─── HISTORY VIEW ─────────────────────────────────────── */}
           {activeView === "history" && (
             <motion.div
               key="history"

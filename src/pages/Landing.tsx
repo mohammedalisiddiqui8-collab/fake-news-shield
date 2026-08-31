@@ -154,16 +154,16 @@ export default function Landing() {
               <Button
                 variant="ghost"
                 className="cursor-pointer hidden sm:inline-flex"
-                onClick={() => navigate("/auth")}
+                onClick={() => navigate("/dashboard")}
               >
-                Sign In
+                Dashboard
               </Button>
               <Button
                 className="cursor-pointer bg-primary hover:bg-primary/90 text-primary-foreground gap-2"
-                onClick={() => navigate("/auth")}
-              >
-                Get Started
-                <ArrowRight className="w-4 h-4" />
+              onClick={() => navigate("/dashboard")}
+            >
+              Get Started
+              <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -216,7 +216,7 @@ export default function Landing() {
             <Button
               size="lg"
               className="cursor-pointer bg-primary hover:bg-primary/90 text-primary-foreground gap-2 px-8 h-12 text-base glow-blue"
-              onClick={() => navigate("/auth")}
+              onClick={() => navigate("/dashboard")}
             >
               Start Analyzing
               <ArrowRight className="w-5 h-5" />
@@ -435,7 +435,7 @@ export default function Landing() {
             <Button
               size="lg"
               className="cursor-pointer mt-8 bg-primary hover:bg-primary/90 text-primary-foreground gap-2 px-10 h-13 text-base glow-blue"
-              onClick={() => navigate("/auth")}
+              onClick={() => navigate("/dashboard")}
             >
               Get Started Free
               <ArrowRight className="w-5 h-5" />
