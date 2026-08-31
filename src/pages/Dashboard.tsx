@@ -140,15 +140,21 @@ export default function Dashboard() {
     setInputText(analysis.inputText); setInputType(analysis.inputType); setActiveView("result");
   }, []);
 
-  // Highlight keywords in text
-  const highlightText = useCallback((text: string, keywords: string[]) => {
-    if (!keywords.length) return text;
-    let result = text;
+  // Split text for keyword highlighting
+  const getHighlightedParts = useCallback((text: string, keywords: string[]) => {
+    if (!keywords.length || !text) return [{ text, highlighted: false }];
+    const parts: Array<{ text: string; highlighted: boolean }> = [];
+    let remaining = text;
     for (const kw of keywords) {
-      const escaped = kw.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      result = result.replace(new RegExp(`(${escaped})`, "gi"), `\u2761$1\u2762`);
+      const idx = remaining.toLowerCase().indexOf(kw.toLowerCase());
+      if (idx >= 0) {
+        if (idx > 0) parts.push({ text: remaining.slice(0, idx), highlighted: false });
+        parts.push({ text: remaining.slice(idx, idx + kw.length), highlighted: true });
+        remaining = remaining.slice(idx + kw.length);
+      }
     }
-    return result;
+    if (remaining) parts.push({ text: remaining, highlighted: false });
+    return parts.length ? parts : [{ text, highlighted: false }];
   }, []);
 
   // Export as text
@@ -404,11 +410,11 @@ export default function Dashboard() {
                 <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest mb-3">Analyzed Content {currentResult.triggeredKeywords.length > 0 && <span className="text-red-500 normal-case">(highlighted keywords)</span>}</h3>
                 <p className="text-xs text-muted-foreground leading-relaxed max-h-40 overflow-auto whitespace-pre-wrap">
                   {currentResult.triggeredKeywords.length > 0
-                    ? highlightText(inputText, currentResult.triggeredKeywords).split("\u2761").map((part, i, arr) => {
-                        if (i === arr.length - 1) return <span key={i}>{part}</span>;
-                        const [highlighted, rest] = arr[i + 1]?.split("\u2762") ?? [arr[i + 1], ""];
-                        return <span key={i}>{part}<span className="bg-red-500/15 text-red-600 font-medium px-0.5 rounded">{highlighted}</span>{rest}</span>;
-                      })
+                    ? getHighlightedParts(inputText, currentResult.triggeredKeywords).map((part, i) =>
+                        part.highlighted
+                          ? <span key={i} className="bg-red-500/15 text-red-600 font-medium px-0.5 rounded">{part.text}</span>
+                          : <span key={i}>{part.text}</span>
+                      )
                     : inputText
                   }
                 </p>
