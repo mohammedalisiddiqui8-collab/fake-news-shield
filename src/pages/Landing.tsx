@@ -147,7 +147,7 @@ export default function Landing() {
                 <Shield className="w-5 h-5 text-primary-foreground" />
               </div>
               <span className="text-lg font-bold tracking-tight">
-                Fake News Shield
+                Veritas
               </span>
             </div>
             <div className="flex items-center gap-3">
@@ -451,11 +451,9 @@ export default function Landing() {
             <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
               <Shield className="w-4 h-4 text-primary-foreground" />
             </div>
-            <span className="text-sm font-semibold">Fake News Shield</span>
+            <span className="text-sm font-semibold">Veritas</span>
           </div>
-          <p className="text-xs text-muted-foreground">
-            A BSc Data Science Third Year Project — AI-Powered Fake News
-            Detection
+          <p className="text-xs text-muted-foreground">A BSc Data Science Third Year Project — AI-Powered Misinformation Detection
           </p>
         </div>
       </footer>

@@ -15,7 +15,7 @@ const sections = [
     icon: Brain,
     title: "System Architecture",
     content:
-      "Fake News Shield employs a multi-layered NLP analysis pipeline built on Convex (serverless backend) with a React frontend. The architecture follows a modular design pattern where detection heuristics are separated from scoring logic and presentation layers.",
+      "Veritas employs a multi-layered NLP analysis pipeline built on Convex (serverless backend) with a React frontend. The architecture follows a modular design pattern where detection heuristics are separated from scoring logic and presentation layers.",
     details: [
       "Serverless Convex backend with real-time data synchronization",
       "React + TypeScript frontend with Vite for fast builds",
@@ -146,7 +146,7 @@ export function MethodologyView() {
           <div>
             <h2 className="text-lg font-bold">Technical Methodology</h2>
             <p className="text-sm text-muted-foreground">
-              How Fake News Shield detects misinformation — for academic reference
+              How Veritas detects misinformation — for academic reference
             </p>
           </div>
         </div>

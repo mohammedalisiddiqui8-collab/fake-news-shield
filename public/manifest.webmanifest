@@ -1,7 +1,7 @@
 {
-  "name": "freebuff.com application",
-  "short_name": "freebuff.com",
-  "description": "freebuff.com application",
+  "name": "Veritas",
+  "short_name": "Veritas",
+  "description": "AI-Powered Misinformation Detection System",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
