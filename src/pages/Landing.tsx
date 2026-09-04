@@ -63,9 +63,9 @@ const steps = [
 ];
 
 const verdictExamples = [
-  { verdict: "likely_real", label: "Likely Real", icon: CheckCircle2, color: "text-emerald-500", bg: "bg-emerald-500/10", border: "border-emerald-500/30", glow: "shadow-emerald-500/10", confidence: 92, sample: "BBC reports on government climate policy with named officials, cited data, and balanced perspectives." },
-  { verdict: "uncertain", label: "Uncertain", icon: AlertTriangle, color: "text-amber-500", bg: "bg-amber-500/10", border: "border-amber-500/30", glow: "shadow-amber-500/10", confidence: 54, sample: "Article mixes verified facts with unverified claims from unnamed sources." },
-  { verdict: "likely_fake", label: "Likely Fake", icon: XCircle, color: "text-red-500", bg: "bg-red-500/10", border: "border-red-500/30", glow: "shadow-red-500/10", confidence: 87, sample: "Sensational headline with no source, anonymous 'experts', and unverifiable statistics." },
+  { verdict: "likely_real", label: "Likely Real", icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-500/15", border: "border-emerald-400/40", glow: "shadow-emerald-500/15", confidence: 92, sample: "BBC reports on government climate policy with named officials, cited data, and balanced perspectives." },
+  { verdict: "uncertain", label: "Uncertain", icon: AlertTriangle, color: "text-amber-600", bg: "bg-amber-400/15", border: "border-amber-400/40", glow: "shadow-amber-500/15", confidence: 54, sample: "Article mixes verified facts with unverified claims from unnamed sources." },
+  { verdict: "likely_fake", label: "Likely Fake", icon: XCircle, color: "text-red-500", bg: "bg-red-500/15", border: "border-red-400/40", glow: "shadow-red-500/15", confidence: 87, sample: "Sensational headline with no source, anonymous 'experts', and unverifiable statistics." },
 ];
 
 const techStack = [
@@ -103,7 +103,7 @@ export default function Landing() {
         <div className="mx-auto max-w-6xl px-6 py-4">
           <div className="glass-strong rounded-2xl px-6 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-[oklch(0.45_0.16_280)] flex items-center justify-center shadow-lg shadow-primary/30">
                 <Shield className="w-5 h-5 text-primary-foreground" />
               </div>
               <span className="text-lg font-bold tracking-tight">Veritas</span>
@@ -123,15 +123,15 @@ export default function Landing() {
         <div className="mx-auto max-w-5xl text-center">
           {/* Badge */}
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 glass rounded-full px-5 py-2 mb-8 border border-primary/10">
+            className="inline-flex items-center gap-2 glass rounded-full px-5 py-2 mb-8 border border-emerald-400/30 shadow-lg shadow-emerald-500/5">
             <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-sm font-medium text-primary">BSc Data Science — Final Year Project</span>
+            <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">BSc Data Science — Final Year Project</span>
           </motion.div>
 
           {/* Main heading */}
           <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.1 }}
             className="text-5xl sm:text-6xl lg:text-8xl font-extrabold tracking-tight leading-[1.05]">
-            Detect Fake News
+            <span className="text-foreground">Detect Fake News</span>
             <br />
             <span className="text-gradient">With Precision</span>
           </motion.h1>
@@ -146,7 +146,7 @@ export default function Landing() {
           {/* CTA buttons */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.4 }}
             className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button size="lg" className="cursor-pointer bg-primary hover:bg-primary/90 text-primary-foreground gap-2 px-10 h-14 text-base glow-blue shadow-xl shadow-primary/20"
+            <Button size="lg" className="cursor-pointer bg-gradient-to-r from-primary via-[oklch(0.45_0.18_220)] to-[oklch(0.42_0.16_280)] hover:opacity-90 text-primary-foreground gap-2 px-10 h-14 text-base glow-blue shadow-xl shadow-primary/30 animate-gradient border-0"
               onClick={() => navigate("/dashboard")}>
               <Sparkles className="w-5 h-5" /> Start Analyzing <ArrowRight className="w-5 h-5" />
             </Button>
@@ -329,14 +329,14 @@ export default function Landing() {
             className="glass-strong rounded-3xl px-8 py-16 sm:px-16 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
             <div className="relative">
-              <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center mx-auto mb-6 shadow-xl shadow-primary/20">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary via-[oklch(0.45_0.18_220)] to-[oklch(0.42_0.16_280)] flex items-center justify-center mx-auto mb-6 shadow-xl shadow-primary/30 animate-pulse-glow">
                 <Shield className="w-8 h-8 text-primary-foreground" />
               </div>
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Ready to Fact-Check?</h2>
               <p className="mt-4 text-muted-foreground max-w-md mx-auto">
                 Start analyzing articles with NLP-powered detection. No sign-up required.
               </p>
-              <Button size="lg" className="cursor-pointer mt-8 bg-primary hover:bg-primary/90 text-primary-foreground gap-2 px-10 h-14 text-base glow-blue shadow-xl shadow-primary/20"
+              <Button size="lg" className="cursor-pointer mt-8 bg-gradient-to-r from-primary via-[oklch(0.45_0.18_220)] to-[oklch(0.42_0.16_280)] hover:opacity-90 text-primary-foreground gap-2 px-10 h-14 text-base glow-blue shadow-xl shadow-primary/30 border-0"
                 onClick={() => navigate("/dashboard")}>
                 Launch Veritas <ArrowRight className="w-5 h-5" />
               </Button>
