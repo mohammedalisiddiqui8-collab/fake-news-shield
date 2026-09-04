@@ -103,14 +103,14 @@ export default function Landing() {
         <div className="mx-auto max-w-6xl px-6 py-4">
           <div className="glass-strong rounded-2xl px-6 py-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-[oklch(0.45_0.16_280)] flex items-center justify-center shadow-lg shadow-primary/30">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[oklch(0.50_0.20_210)] to-[oklch(0.45_0.16_175)] flex items-center justify-center shadow-lg shadow-primary/30">
                 <Shield className="w-5 h-5 text-primary-foreground" />
               </div>
               <span className="text-lg font-bold tracking-tight">Veritas</span>
             </div>
             <div className="flex items-center gap-3">
               <Button variant="ghost" className="cursor-pointer hidden sm:inline-flex" onClick={() => navigate("/dashboard")}>Dashboard</Button>
-              <Button className="cursor-pointer bg-primary hover:bg-primary/90 text-primary-foreground gap-2 shadow-lg shadow-primary/20" onClick={() => navigate("/dashboard")}>
+              <Button className="cursor-pointer bg-gradient-to-r from-[oklch(0.50_0.18_220)] to-[oklch(0.48_0.16_195)] hover:opacity-90 text-primary-foreground gap-2 shadow-lg shadow-primary/30 border-0" onClick={() => navigate("/dashboard")}>
                 Get Started <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
@@ -146,7 +146,7 @@ export default function Landing() {
           {/* CTA buttons */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.4 }}
             className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button size="lg" className="cursor-pointer bg-gradient-to-r from-primary via-[oklch(0.45_0.18_220)] to-[oklch(0.42_0.16_280)] hover:opacity-90 text-primary-foreground gap-2 px-10 h-14 text-base glow-blue shadow-xl shadow-primary/30 animate-gradient border-0"
+            <Button size="lg" className="cursor-pointer bg-gradient-to-r from-[oklch(0.50_0.20_210)] via-[oklch(0.48_0.18_195)] to-[oklch(0.45_0.16_175)] hover:opacity-90 text-primary-foreground gap-2 px-10 h-14 text-base glow-blue shadow-xl shadow-primary/30 animate-gradient border-0"
               onClick={() => navigate("/dashboard")}>
               <Sparkles className="w-5 h-5" /> Start Analyzing <ArrowRight className="w-5 h-5" />
             </Button>
@@ -329,14 +329,14 @@ export default function Landing() {
             className="glass-strong rounded-3xl px-8 py-16 sm:px-16 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
             <div className="relative">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary via-[oklch(0.45_0.18_220)] to-[oklch(0.42_0.16_280)] flex items-center justify-center mx-auto mb-6 shadow-xl shadow-primary/30 animate-pulse-glow">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[oklch(0.50_0.20_210)] via-[oklch(0.48_0.18_195)] to-[oklch(0.45_0.16_175)] flex items-center justify-center mx-auto mb-6 shadow-xl shadow-primary/30 animate-pulse-glow">
                 <Shield className="w-8 h-8 text-primary-foreground" />
               </div>
               <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Ready to Fact-Check?</h2>
               <p className="mt-4 text-muted-foreground max-w-md mx-auto">
                 Start analyzing articles with NLP-powered detection. No sign-up required.
               </p>
-              <Button size="lg" className="cursor-pointer mt-8 bg-gradient-to-r from-primary via-[oklch(0.45_0.18_220)] to-[oklch(0.42_0.16_280)] hover:opacity-90 text-primary-foreground gap-2 px-10 h-14 text-base glow-blue shadow-xl shadow-primary/30 border-0"
+              <Button size="lg" className="cursor-pointer mt-8 bg-gradient-to-r from-[oklch(0.50_0.20_210)] via-[oklch(0.48_0.18_195)] to-[oklch(0.45_0.16_175)] hover:opacity-90 text-primary-foreground gap-2 px-10 h-14 text-base glow-blue shadow-xl shadow-primary/30 animate-gradient border-0"
                 onClick={() => navigate("/dashboard")}>
                 Launch Veritas <ArrowRight className="w-5 h-5" />
               </Button>
