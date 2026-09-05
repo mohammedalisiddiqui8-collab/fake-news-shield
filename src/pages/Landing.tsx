@@ -122,18 +122,18 @@ export default function Landing() {
       <motion.section style={{ opacity: heroOpacity, scale: heroScale }} className="relative pt-32 pb-20 px-6">
         <div className="mx-auto max-w-5xl text-center">
           {/* Badge */}
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}
-            className="inline-flex items-center gap-2 glass rounded-full px-5 py-2 mb-8 border border-emerald-400/30 shadow-lg shadow-emerald-500/5">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">BSc Data Science — Final Year Project</span>
+          <motion.div initial={{ opacity: 0, scale: 0.85, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }}
+            className="inline-flex items-center gap-2 glass rounded-full px-5 py-2 mb-8 border border-emerald-400/30 shadow-lg shadow-emerald-500/5 hover-glow">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-lg shadow-emerald-500/40" />
+            <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400 tracking-wide">BSc Data Science — Final Year Project</span>
           </motion.div>
 
           {/* Main heading */}
-          <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.1 }}
+          <motion.h1 initial={{ opacity: 0, y: 38 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.75, delay: 0.12, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }}
             className="text-5xl sm:text-6xl lg:text-8xl font-extrabold tracking-tight leading-[1.05]">
             <span className="text-foreground">Detect Fake News</span>
             <br />
-            <span className="text-gradient">With Precision</span>
+            <span className="text-gradient shimmer">With Precision</span>
           </motion.h1>
 
           <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.25 }}
@@ -146,43 +146,50 @@ export default function Landing() {
           {/* CTA buttons */}
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.4 }}
             className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button size="lg" className="cursor-pointer bg-gradient-to-r from-[oklch(0.50_0.20_210)] via-[oklch(0.48_0.18_195)] to-[oklch(0.45_0.16_175)] hover:opacity-90 text-primary-foreground gap-2 px-10 h-14 text-base glow-blue shadow-xl shadow-primary/30 animate-gradient border-0"
+            <Button size="lg" className="cursor-pointer bg-gradient-to-r from-[oklch(0.50_0.20_210)] via-[oklch(0.48_0.18_195)] to-[oklch(0.45_0.16_175)] hover:opacity-90 text-primary-foreground gap-2 px-10 h-14 text-base glow-blue shadow-xl shadow-primary/30 animate-gradient border-0 hover-lift"
               onClick={() => navigate("/dashboard")}>
               <Sparkles className="w-5 h-5" /> Start Analyzing <ArrowRight className="w-5 h-5" />
             </Button>
-            <Button size="lg" variant="outline" className="cursor-pointer glass border-primary/20 hover:bg-primary/5 gap-2 px-8 h-14 text-base"
+            <Button size="lg" variant="outline" className="cursor-pointer glass border-primary/20 hover:bg-primary/5 gap-2 px-8 h-14 text-base hover-lift"
               onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}>
               See How It Works <ChevronDown className="w-4 h-4" />
             </Button>
           </motion.div>
 
           {/* Stats bar */}
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.6 }}
+          <motion.div initial={{ opacity: 0, y: 34 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.55, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }}
             className="mt-16 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto">
             {stats.map((s, i) => (
               <motion.div key={s.label} custom={i} variants={scaleIn} initial="hidden" animate="visible"
-                className="glass-card rounded-xl p-4 text-center">
+                className="glass-card rounded-xl p-4 text-center hover-shimmer">
                 <s.icon className="w-5 h-5 text-primary mx-auto mb-2" />
-                <span className="text-2xl font-extrabold text-gradient">{s.value}</span>
+                <span className="text-2xl font-extrabold text-gradient shimmer">{s.value}</span>
                 <p className="text-[11px] text-muted-foreground mt-1">{s.label}</p>
               </motion.div>
             ))}
           </motion.div>
 
           {/* Verdict preview cards */}
-          <motion.div initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.8 }}
+          <motion.div initial={{ opacity: 0, y: 44 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.75, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }}
             className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
             {verdictExamples.map((v, i) => (
               <motion.div key={v.verdict} custom={i} variants={fadeUp} initial="hidden" animate="visible"
-                className={`glass-card rounded-2xl p-5 text-left border ${v.border} hover:shadow-lg hover:${v.glow} transition-all duration-300 hover:-translate-y-1`}>
-                <div className="flex items-center gap-2 mb-3">
-                  <div className={`w-8 h-8 rounded-lg ${v.bg} flex items-center justify-center`}>
+                className={`glass-card rounded-2xl p-5 text-left border ${v.border} hover-glow group hover:-translate-y-1 transition-all duration-300`}>
+                <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{
+                  background: v.verdict === "likely_real"
+                    ? "radial-gradient(ellipse at 50% 0%, oklch(0.65 0.22 160 / 12%) 0%, transparent 60%)"
+                    : v.verdict === "likely_fake"
+                    ? "radial-gradient(ellipse at 50% 0%, oklch(0.60 0.25 25 / 14%) 0%, transparent 60%)"
+                    : "radial-gradient(ellipse at 50% 0%, oklch(0.60 0.20 80 / 14%) 0%, transparent 60%)",
+                }} />
+                <div className="flex items-center gap-2 mb-3 relative">
+                  <div className={`w-8 h-8 rounded-lg ${v.bg} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
                     <v.icon className={`w-4 h-4 ${v.color}`} />
                   </div>
                   <span className={`text-sm font-semibold ${v.color}`}>{v.label}</span>
                 </div>
                 <div className="flex items-baseline gap-1 mb-2">
-                  <span className="text-2xl font-bold">{v.confidence}%</span>
+                  <span className="text-2xl font-bold text-gradient">{v.confidence}%</span>
                   <span className="text-xs text-muted-foreground">confidence</span>
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed">{v.sample}</p>
@@ -208,10 +215,10 @@ export default function Landing() {
                 className="glass-card rounded-2xl p-8 text-center group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative overflow-hidden">
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/0 via-primary/50 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5 group-hover:bg-primary/15 group-hover:scale-110 transition-all duration-300">
-                  <s.icon className="w-7 h-7 text-primary" />
+                  <s.icon className="w-7 h-7 text-primary group-hover:animate-float-faster" />
                 </div>
                 <span className="text-xs font-bold text-primary/60 uppercase tracking-widest">Step {s.step}</span>
-                <h3 className="mt-2 text-xl font-semibold">{s.title}</h3>
+                <h3 className="mt-2 text-xl font-semibold text-gradient">{s.title}</h3>
                 <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{s.description}</p>
               </motion.div>
             ))}
@@ -235,10 +242,10 @@ export default function Landing() {
                 className="glass-card rounded-2xl p-6 group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative overflow-hidden">
                 <div className={`absolute inset-0 bg-gradient-to-br ${f.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
                 <div className="relative">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/15 group-hover:scale-110 transition-all duration-300">
+                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/15 group-hover:scale-110 transition-all duration-300 group-hover:animate-float-faster">
                     <f.icon className="w-5 h-5 text-primary" />
                   </div>
-                  <h3 className="text-lg font-semibold">{f.title}</h3>
+                  <h3 className="text-lg font-semibold text-gradient">{f.title}</h3>
                   <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{f.description}</p>
                 </div>
               </motion.div>
@@ -295,10 +302,10 @@ export default function Landing() {
           <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.6 }}
             className="glass-card rounded-3xl p-10 sm:p-12 text-center relative overflow-hidden">
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-primary to-blue-500" />
-            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-6">
+            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-6 animate-float-tilt">
               <FileCheck className="w-8 h-8 text-primary" />
             </div>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4">Academically Grounded</h2>
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4 text-gradient">Academically Grounded</h2>
             <p className="text-muted-foreground max-w-xl mx-auto mb-8">
               Detection heuristics informed by research from MIT Media Lab, Stanford Internet Observatory,
               Reuters Institute, and the LIAR Dataset (12.8K labeled statements).
@@ -329,14 +336,14 @@ export default function Landing() {
             className="glass-strong rounded-3xl px-8 py-16 sm:px-16 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
             <div className="relative">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[oklch(0.50_0.20_210)] via-[oklch(0.48_0.18_195)] to-[oklch(0.45_0.16_175)] flex items-center justify-center mx-auto mb-6 shadow-xl shadow-primary/30 animate-pulse-glow">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[oklch(0.50_0.20_210)] via-[oklch(0.48_0.18_195)] to-[oklch(0.45_0.16_175)] flex items-center justify-center mx-auto mb-6 shadow-xl shadow-primary/30 animate-pulse-glow animate-float-faster">
                 <Shield className="w-8 h-8 text-primary-foreground" />
               </div>
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">Ready to Fact-Check?</h2>
+              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-gradient">Ready to Fact-Check?</h2>
               <p className="mt-4 text-muted-foreground max-w-md mx-auto">
                 Start analyzing articles with NLP-powered detection. No sign-up required.
               </p>
-              <Button size="lg" className="cursor-pointer mt-8 bg-gradient-to-r from-[oklch(0.50_0.20_210)] via-[oklch(0.48_0.18_195)] to-[oklch(0.45_0.16_175)] hover:opacity-90 text-primary-foreground gap-2 px-10 h-14 text-base glow-blue shadow-xl shadow-primary/30 animate-gradient border-0"
+              <Button size="lg" className="cursor-pointer mt-8 bg-gradient-to-r from-[oklch(0.50_0.20_210)] via-[oklch(0.48_0.18_195)] to-[oklch(0.45_0.16_175)] hover:opacity-90 text-primary-foreground gap-2 px-10 h-14 text-base glow-blue shadow-xl shadow-primary/30 animate-gradient border-0 hover-lift"
                 onClick={() => navigate("/dashboard")}>
                 Launch Veritas <ArrowRight className="w-5 h-5" />
               </Button>

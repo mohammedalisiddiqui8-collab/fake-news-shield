@@ -193,8 +193,9 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen gradient-bg text-foreground">
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-        <div className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full bg-primary/6 blur-[100px] animate-float" />
-        <div className="absolute top-1/3 -right-32 w-[400px] h-[400px] rounded-full bg-chart-2/6 blur-[80px] animate-float-delay" />
+        <div className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full bg-primary/6 blur-[100px] animate-float-faster" />
+        <div className="absolute top-1/3 -right-32 w-[400px] h-[400px] rounded-full bg-chart-2/6 blur-[80px] animate-float-delay animate-float-tilt" />
+        <div className="absolute bottom-[-120px] left-1/3 w-[420px] h-[420px] rounded-full bg-primary/4 blur-[120px] animate-float-slower" />
       </div>
 
       {/* Nav */}
@@ -292,9 +293,10 @@ export default function Dashboard() {
 
           {/* ─── RESULT ─── */}
           {activeView === "result" && currentResult && vc && (
-            <motion.div key="result" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.3 }}>
+            <motion.div key="result" initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -24 }} transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }}>
               <div className="flex items-center justify-between mb-6">
-                <button type="button" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer" onClick={() => setActiveView("analyze")}>
+                <button type="button" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer hover-lift"
+                  onClick={() => setActiveView("analyze")}>
                   <ArrowLeft className="w-4 h-4" />New Analysis
                 </button>
                 <div className="flex gap-2">
@@ -428,9 +430,8 @@ export default function Dashboard() {
               <div className="mb-6 sm:mb-8"><div className="flex items-center gap-3 mb-2"><div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center"><Clock className="w-5 h-5 text-primary" /></div><div><h1 className="text-xl sm:text-2xl font-bold tracking-tight">Analysis History</h1><p className="text-xs sm:text-sm text-muted-foreground">Your recent detection results</p></div></div></div>
               {!analyses ? <div className="glass-card rounded-2xl p-12 text-center"><Loader2 className="w-6 h-6 animate-spin text-muted-foreground mx-auto" /></div>
                 : analyses.length === 0 ? <div className="glass-card rounded-2xl p-12 text-center"><div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-4"><Search className="w-6 h-6 text-primary" /></div><h3 className="text-lg font-semibold mb-2">No analyses yet</h3><p className="text-sm text-muted-foreground mb-6">Start by analyzing your first piece of content.</p><Button className="cursor-pointer bg-primary text-primary-foreground gap-2" onClick={() => setActiveView("analyze")}><Sparkles className="w-4 h-4" />Analyze Content</Button></div>
-                : <div className="space-y-3">{analyses.map((analysis, i) => { const avc = verdictConfig[analysis.verdict]; return (
-                  <motion.div key={analysis._id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2, delay: i * 0.05 }}
-                    className="glass-card rounded-xl p-4 hover:shadow-md transition-all duration-200 cursor-pointer group" onClick={() => handleLoadFromHistory(analysis)}>
+                : <div className="space-y-3">{analyses.map((analysis, i) => { const avc = verdictConfig[analysis.verdict]; return (                    <motion.div key={analysis._id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: i * 0.05, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }}
+                    className="glass-card rounded-xl p-4 hover-glow cursor-pointer group" onClick={() => handleLoadFromHistory(analysis)}>
                     <div className="flex items-start gap-3 sm:gap-4">
                       <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl ${avc.bg} flex items-center justify-center shrink-0`}><avc.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${avc.color}`} /></div>
                       <div className="flex-1 min-w-0">

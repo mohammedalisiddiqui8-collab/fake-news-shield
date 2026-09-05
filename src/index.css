@@ -207,6 +207,89 @@
     background-size: 200% 200%;
     animation: gradientShift 4s ease infinite;
   }
+
+  .animate-float-faster {
+    animation: float 3.5s ease-in-out infinite;
+  }
+
+  .animate-float-slower {
+    animation: float 12s ease-in-out infinite;
+  }
+
+  .animate-float-tilt {
+    animation: floatTilt 9s ease-in-out infinite;
+  }
+
+  .animate-float-tilt-delay {
+    animation: floatTilt 9s ease-in-out 3s infinite;
+  }
+
+  .animate-shimmer-pulse {
+    background: linear-gradient(110deg, transparent 25%, oklch(1 0 0 / 40%) 37%, transparent 63%);
+    background-size: 200% 100%;
+    animation: shimmer 2.5s ease-in-out infinite;
+  }
+
+  .animate-spin-slow {
+    animation: spin 14s linear infinite;
+  }
+
+  .animate-spin-slower {
+    animation: spin 24s linear infinite;
+  }
+
+  .hover-lift {
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px oklch(0.50 0.18 220 / 12%), 0 1px 4px oklch(0.50 0.18 220 / 5%);
+  }
+
+  .hover-glow {
+    transition: box-shadow 0.35s ease, transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .hover-glow:hover {
+    box-shadow: 0 0 30px oklch(0.50 0.20 210 / 20%), 0 0 80px oklch(0.50 0.20 210 / 10%), 0 10px 40px oklch(0.50 0.18 220 / 10%);
+    transform: translateY(-2px);
+  }
+
+  .hover-shimmer {
+    position: relative; overflow: hidden;
+  }
+  .hover-shimmer::before {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(110deg, transparent 25%, oklch(1 0 0 / 35%) 37%, transparent 63%);
+    background-size: 200% 100%;
+    animation: shimmer 2.5s ease-in-out infinite;
+    pointer-events: none;
+  }
+
+  .text-shimmer {
+    background: linear-gradient(90deg, currentColor 0%, oklch(1 0 0 / 85%) 50%, currentColor 100%);
+    background-size: 200% 100%;
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: shimmerText 3s ease-in-out infinite;
+  }
+
+  .glow-soft {
+    box-shadow: 0 0 20px oklch(0.50 0.20 210 / 15%), 0 0 50px oklch(0.50 0.20 210 / 6%);
+  }
+
+  .glow-teal {
+    box-shadow: 0 0 20px oklch(0.78 0.08 185 / 20%), 0 0 50px oklch(0.78 0.08 185 / 8%);
+  }
+
+  .ring-emphasized:focus-visible {
+    outline: 2px solid oklch(0.50 0.18 220);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px oklch(0.50 0.18 220 / 25%);
+  }
+
+  .stagger-enter { opacity: 0; transform: translateY(14px); }
+  .stagger-enter-active { opacity: 1; transform: translateY(0); transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1); }
 }
 
 @keyframes float {
@@ -214,9 +297,19 @@
   50% { transform: translateY(-15px); }
 }
 
+@keyframes floatTilt {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-12px) rotate(1.2deg); }
+}
+
 @keyframes shimmer {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
+}
+
+@keyframes shimmerText {
+  0% { background-position: 200% 50%; }
+  100% { background-position: -200% 50%; }
 }
 
 @keyframes pulseGlow {
@@ -228,6 +321,23 @@
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes orbit {
+  0% { transform: rotate(0deg) translateX(120px) rotate(0deg); }
+  100% { transform: rotate(360deg) translateX(120px) rotate(-360deg); }
+}
+
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(8px, -6px); }
+  50% { transform: translate(-6px, 4px); }
+  75% { transform: translate(6px, 8px); }
 }
 
 /* Selection styling */
