@@ -12,10 +12,8 @@ import {
 } from "recharts";
 import {
   TrendingUp,
-  Shield,
   AlertTriangle,
   CheckCircle2,
-  XCircle,
   BarChart3,
 } from "lucide-react";
 
@@ -32,9 +30,9 @@ interface StatsViewProps {
 }
 
 const COLORS = {
-  likely_real: "#10b981",
-  uncertain: "#f59e0b",
-  likely_fake: "#ef4444",
+  likely_real: "#34d399",
+  uncertain: "#fbbf24",
+  likely_fake: "#f87171",
 };
 
 const VERDICT_LABELS = {
@@ -46,7 +44,6 @@ const VERDICT_LABELS = {
 export function StatsView({ analyses }: StatsViewProps) {
   if (analyses.length === 0) return null;
 
-  // Calculate stats
   const totalAnalyses = analyses.length;
   const verdictCounts = { likely_real: 0, uncertain: 0, likely_fake: 0 };
   let totalConfidence = 0;
@@ -63,19 +60,14 @@ export function StatsView({ analyses }: StatsViewProps) {
   const avgConfidence = Math.round(totalConfidence / totalAnalyses);
 
   const pieData = (Object.keys(verdictCounts) as Array<keyof typeof verdictCounts>).map(
-    (key) => ({
-      name: VERDICT_LABELS[key],
-      value: verdictCounts[key],
-      color: COLORS[key],
-    }),
+    (key) => ({ name: VERDICT_LABELS[key], value: verdictCounts[key], color: COLORS[key] }),
   ).filter((d) => d.value > 0);
 
-  // Confidence distribution
   const confBuckets = [
-    { range: "35-50%", count: 0, fill: "#94a3b8" },
-    { range: "50-65%", count: 0, fill: "#f59e0b" },
-    { range: "65-80%", count: 0, fill: "#3b82f6" },
-    { range: "80-95%", count: 0, fill: "#10b981" },
+    { range: "35-50%", count: 0, fill: "#64748b" },
+    { range: "50-65%", count: 0, fill: "#fbbf24" },
+    { range: "65-80%", count: 0, fill: "#38bdf8" },
+    { range: "80-95%", count: 0, fill: "#34d399" },
   ];
   for (const a of analyses) {
     if (a.confidence < 50) confBuckets[0].count++;
@@ -85,83 +77,56 @@ export function StatsView({ analyses }: StatsViewProps) {
   }
 
   const statCards = [
-    {
-      label: "Total Analyses",
-      value: totalAnalyses,
-      icon: BarChart3,
-      color: "text-primary",
-      bg: "bg-primary/10",
-    },
-    {
-      label: "Avg. Confidence",
-      value: `${avgConfidence}%`,
-      icon: TrendingUp,
-      color: "text-blue-600",
-      bg: "bg-blue-500/10",
-    },
-    {
-      label: "Red Flags Found",
-      value: totalRedFlags,
-      icon: AlertTriangle,
-      color: "text-red-600",
-      bg: "bg-red-500/10",
-    },
-    {
-      label: "Green Flags Found",
-      value: totalGreenFlags,
-      icon: CheckCircle2,
-      color: "text-emerald-600",
-      bg: "bg-emerald-500/10",
-    },
+    { label: "Total", value: totalAnalyses, icon: BarChart3, color: "text-primary", bg: "bg-primary/8" },
+    { label: "Avg. Confidence", value: `${avgConfidence}%`, icon: TrendingUp, color: "text-cyan-400", bg: "bg-cyan-500/8" },
+    { label: "Red Flags", value: totalRedFlags, icon: AlertTriangle, color: "text-red-400", bg: "bg-red-500/8" },
+    { label: "Green Flags", value: totalGreenFlags, icon: CheckCircle2, color: "text-emerald-400", bg: "bg-emerald-500/8" },
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Stat cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
         {statCards.map((card, i) => (
           <motion.div
             key={card.label}
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: i * 0.08 }}
-            className="glass-card rounded-xl p-4"
+            transition={{ duration: 0.25, delay: i * 0.06 }}
+            className="glass-card rounded-xl p-3.5"
           >
-            <div className="flex items-center gap-2 mb-2">
-              <div className={`w-7 h-7 rounded-lg ${card.bg} flex items-center justify-center`}>
-                <card.icon className={`w-3.5 h-3.5 ${card.color}`} />
+            <div className="flex items-center gap-1.5 mb-1.5">
+              <div className={`w-6 h-6 rounded-md ${card.bg} flex items-center justify-center`}>
+                <card.icon className={`w-3 h-3 ${card.color}`} />
               </div>
-              <span className="text-[11px] text-muted-foreground">
-                {card.label}
-              </span>
+              <span className="text-[10px] text-muted-foreground">{card.label}</span>
             </div>
-            <span className="text-xl font-bold">{card.value}</span>
+            <span className="text-lg font-bold text-gradient">{card.value}</span>
           </motion.div>
         ))}
       </div>
 
       {/* Charts */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Verdict distribution */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {pieData.length > 0 && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.3 }}
-            className="glass-card rounded-2xl p-6"
+            transition={{ duration: 0.25, delay: 0.25 }}
+            className="glass-card rounded-xl p-5"
           >
-            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-widest mb-4">
+            <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-3">
               Verdict Distribution
             </h3>
             <div className="flex items-center justify-center">
-              <ResponsiveContainer width={200} height={200}>
+              <ResponsiveContainer width={180} height={180}>
                 <PieChart>
                   <Pie
                     data={pieData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={55}
-                    outerRadius={80}
+                    innerRadius={50}
+                    outerRadius={72}
                     dataKey="value"
                     stroke="none"
                   >
@@ -171,65 +136,53 @@ export function StatsView({ analyses }: StatsViewProps) {
                   </Pie>
                   <Tooltip
                     contentStyle={{
-                      background: "rgba(255,255,255,0.9)",
-                      border: "1px solid rgba(0,0,0,0.1)",
+                      background: "oklch(0.12 0.03 240 / 90%)",
+                      border: "1px solid oklch(0.22 0.03 220 / 40%)",
                       borderRadius: "8px",
-                      fontSize: "12px",
+                      fontSize: "11px",
+                      color: "oklch(0.88 0.01 230)",
+                      backdropFilter: "blur(12px)",
                     }}
                   />
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="flex flex-wrap justify-center gap-3 mt-2">
+            <div className="flex flex-wrap justify-center gap-2.5 mt-2">
               {pieData.map((d) => (
-                <div key={d.name} className="flex items-center gap-1.5">
-                  <div
-                    className="w-2.5 h-2.5 rounded-full"
-                    style={{ background: d.color }}
-                  />
-                  <span className="text-[11px] text-muted-foreground">
-                    {d.name} ({d.value})
-                  </span>
+                <div key={d.name} className="flex items-center gap-1">
+                  <div className="w-2 h-2 rounded-full" style={{ background: d.color }} />
+                  <span className="text-[10px] text-muted-foreground">{d.name} ({d.value})</span>
                 </div>
               ))}
             </div>
           </motion.div>
         )}
 
-        {/* Confidence distribution */}
         {confBuckets.some((b) => b.count > 0) && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.4 }}
-            className="glass-card rounded-2xl p-6"
+            transition={{ duration: 0.25, delay: 0.3 }}
+            className="glass-card rounded-xl p-5"
           >
-            <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-widest mb-4">
+            <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-3">
               Confidence Distribution
             </h3>
-            <ResponsiveContainer width="100%" height={200}>
+            <ResponsiveContainer width="100%" height={180}>
               <BarChart data={confBuckets}>
-                <XAxis
-                  dataKey="range"
-                  tick={{ fontSize: 11, fill: "#94a3b8" }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{ fontSize: 11, fill: "#94a3b8" }}
-                  axisLine={false}
-                  tickLine={false}
-                  allowDecimals={false}
-                />
+                <XAxis dataKey="range" tick={{ fontSize: 10, fill: "oklch(0.50 0.03 230)" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: "oklch(0.50 0.03 230)" }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <Tooltip
                   contentStyle={{
-                    background: "rgba(255,255,255,0.9)",
-                    border: "1px solid rgba(0,0,0,0.1)",
+                    background: "oklch(0.12 0.03 240 / 90%)",
+                    border: "1px solid oklch(0.22 0.03 220 / 40%)",
                     borderRadius: "8px",
-                    fontSize: "12px",
+                    fontSize: "11px",
+                    color: "oklch(0.88 0.01 230)",
+                    backdropFilter: "blur(12px)",
                   }}
                 />
-                <Bar dataKey="count" radius={[6, 6, 0, 0]}>
+                <Bar dataKey="count" radius={[5, 5, 0, 0]}>
                   {confBuckets.map((entry) => (
                     <Cell key={entry.range} fill={entry.fill} />
                   ))}

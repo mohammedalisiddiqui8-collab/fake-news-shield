@@ -1,4 +1,4 @@
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import {
   Shield,
   Brain,
@@ -12,271 +12,342 @@ import {
   ArrowRight,
   Sparkles,
   Globe,
-  Lock,
+  FileCheck,
   TrendingUp,
   Users,
-  FileCheck,
-  MessageSquare,
   ChevronDown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
+import { useRef } from "react";
 
+/* ─── Animation Variants ─── */
 const fadeUp = {
-  hidden: { opacity: 0, y: 40 },
+  hidden: { opacity: 0, y: 30 },
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.1, duration: 0.7, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
+    transition: { delay: i * 0.08, duration: 0.65, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
+  }),
+};
+
+const fadeIn = {
+  hidden: { opacity: 0 },
+  visible: (i: number) => ({
+    opacity: 1,
+    transition: { delay: i * 0.1, duration: 0.5 },
   }),
 };
 
 const scaleIn = {
-  hidden: { opacity: 0, scale: 0.85 },
+  hidden: { opacity: 0, scale: 0.92 },
   visible: (i: number) => ({
     opacity: 1,
     scale: 1,
-    transition: { delay: i * 0.12, duration: 0.6, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
+    transition: { delay: i * 0.1, duration: 0.55, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
   }),
 };
 
+/* ─── Data ─── */
 const stats = [
-  { value: "70+", label: "Detection Patterns", icon: Search },
-  { value: "12", label: "Red Flag Categories", icon: AlertTriangle },
-  { value: "9", label: "Green Flag Categories", icon: CheckCircle2 },
-  { value: "<1s", label: "Analysis Speed", icon: Zap },
+  { value: "70+", label: "Patterns", icon: Search },
+  { value: "12", label: "Red Flags", icon: AlertTriangle },
+  { value: "9", label: "Green Flags", icon: CheckCircle2 },
+  { value: "<1s", label: "Speed", icon: Zap },
 ];
 
 const features = [
-  { icon: Brain, title: "NLP Pattern Engine", description: "70+ regex patterns weighted by severity across 21 categories for precision detection.", color: "from-blue-500/20 to-indigo-500/20" },
-  { icon: Search, title: "Deep Content Inspection", description: "Scrutinises tone, sourcing, statistical claims, and headline integrity against misinformation patterns.", color: "from-violet-500/20 to-purple-500/20" },
-  { icon: BarChart3, title: "Category Breakdown", description: "Visual chart showing exactly how much each category contributed to the final verdict.", color: "from-cyan-500/20 to-blue-500/20" },
-  { icon: Eye, title: "100% Transparent", description: "No black box. Every flag is explainable — see the exact words that triggered detection.", color: "from-emerald-500/20 to-teal-500/20" },
-  { icon: Zap, title: "Instant Analysis", description: "Paste any article and get a verdict in under 1 second. No API keys needed.", color: "from-amber-500/20 to-orange-500/20" },
-  { icon: Globe, title: "Any Content Format", description: "News articles, social media posts, WhatsApp forwards, blog entries — works on everything.", color: "from-rose-500/20 to-pink-500/20" },
+  { icon: Brain, title: "NLP Engine", description: "70+ weighted regex patterns across 21 categories for precision detection." },
+  { icon: Search, title: "Content Inspection", description: "Scrutinises tone, sourcing, statistics, and structure against known misinformation patterns." },
+  { icon: BarChart3, title: "Visual Breakdown", description: "Charts showing exactly how each category contributed to the final verdict." },
+  { icon: Eye, title: "Transparent AI", description: "No black box. Every flag is explainable with exact triggered keywords." },
+  { icon: Zap, title: "Real-Time", description: "Paste any article and get a verdict in under 1 second. No API keys needed." },
+  { icon: Globe, title: "Universal", description: "News articles, social media posts, WhatsApp forwards, blog entries." },
 ];
 
 const steps = [
-  { step: "01", title: "Paste Content", description: "Enter any news article, social media post, or text content you want to verify.", icon: Search },
-  { step: "02", title: "NLP Analysis", description: "Our engine scans 70+ patterns across 12 red flag and 9 green flag categories.", icon: Brain },
-  { step: "03", title: "Get Verdict", description: "Receive a clear verdict with confidence score, highlighted keywords, and detailed breakdown.", icon: Shield },
+  { step: "01", title: "Ingest", description: "Paste any news article, post, or text content for verification.", icon: Search },
+  { step: "02", title: "Analyze", description: "NLP engine scans 70+ patterns across 12 red flag and 9 green flag categories.", icon: Brain },
+  { step: "03", title: "Verdict", description: "Clear verdict with confidence score, highlighted keywords, and breakdown.", icon: Shield },
 ];
 
 const verdictExamples = [
-  { verdict: "likely_real", label: "Likely Real", icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-500/15", border: "border-emerald-400/40", glow: "shadow-emerald-500/15", confidence: 92, sample: "BBC reports on government climate policy with named officials, cited data, and balanced perspectives." },
-  { verdict: "uncertain", label: "Uncertain", icon: AlertTriangle, color: "text-amber-600", bg: "bg-amber-400/15", border: "border-amber-400/40", glow: "shadow-amber-500/15", confidence: 54, sample: "Article mixes verified facts with unverified claims from unnamed sources." },
-  { verdict: "likely_fake", label: "Likely Fake", icon: XCircle, color: "text-red-500", bg: "bg-red-500/15", border: "border-red-400/40", glow: "shadow-red-500/15", confidence: 87, sample: "Sensational headline with no source, anonymous 'experts', and unverifiable statistics." },
+  { verdict: "likely_real" as const, label: "Likely Real", icon: CheckCircle2, accent: "oklch(0.65 0.20 160)", confidence: 92, sample: "BBC reports on government climate policy with named officials, cited data, and balanced perspectives." },
+  { verdict: "uncertain" as const, label: "Uncertain", icon: AlertTriangle, accent: "oklch(0.75 0.18 80)", confidence: 54, sample: "Article mixes verified facts with unverified claims from unnamed sources." },
+  { verdict: "likely_fake" as const, label: "Likely Fake", icon: XCircle, accent: "oklch(0.60 0.22 25)", confidence: 87, sample: "Sensational headline with no source, anonymous 'experts', and unverifiable statistics." },
 ];
 
 const techStack = [
   { name: "React 19", desc: "UI Framework" },
   { name: "TypeScript", desc: "Type Safety" },
   { name: "Convex", desc: "Serverless Backend" },
-  { name: "Tailwind CSS", desc: "Styling" },
-  { name: "Framer Motion", desc: "Animations" },
+  { name: "Tailwind", desc: "Styling" },
+  { name: "Framer Motion", desc: "Animation" },
   { name: "Recharts", desc: "Data Viz" },
 ];
+
+/* ─── Reusable Section Wrapper ─── */
+function Section({ children, className = "", id }: { children: React.ReactNode; className?: string; id?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const isInView = useInView(ref, { once: true, margin: "-80px" });
+  return (
+    <motion.section
+      ref={ref}
+      id={id}
+      initial={{ opacity: 0, y: 30 }}
+      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      className={className}
+    >
+      {children}
+    </motion.section>
+  );
+}
 
 export default function Landing() {
   const navigate = useNavigate();
   const { scrollYProgress } = useScroll();
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
-  const heroScale = useTransform(scrollYProgress, [0, 0.3], [1, 0.95]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.35], [1, 0]);
+  const heroScale = useTransform(scrollYProgress, [0, 0.35], [1, 0.96]);
+  const gridOpacity = useTransform(scrollYProgress, [0, 0.5], [0.06, 0.02]);
 
   return (
     <div className="min-h-screen gradient-bg text-foreground overflow-hidden">
-      {/* Background effects */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-        <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-primary/8 blur-[120px] animate-float" />
-        <div className="absolute top-1/4 -right-40 w-[500px] h-[500px] rounded-full bg-chart-2/8 blur-[100px] animate-float-delay" />
-        <div className="absolute bottom-0 left-1/4 w-[700px] h-[400px] rounded-full bg-primary/5 blur-[140px] animate-float-slow" />
-        {/* Grid pattern */}
-        <div className="absolute inset-0 opacity-[0.02] dark:opacity-[0.04]" style={{
-          backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)",
-          backgroundSize: "32px 32px",
-        }} />
+      {/* ─── Animated Grid Background ─── */}
+      <div className="fixed inset-0 pointer-events-none -z-10">
+        <motion.div style={{ opacity: gridOpacity }} className="absolute inset-0">
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `
+                linear-gradient(oklch(0.72 0.16 195 / 0.08) 1px, transparent 1px),
+                linear-gradient(90deg, oklch(0.72 0.16 195 / 0.08) 1px, transparent 1px)
+              `,
+              backgroundSize: "60px 60px",
+              animation: "gridPulse 6s ease-in-out infinite",
+            }}
+          />
+        </motion.div>
+        {/* Ambient orbs */}
+        <div className="absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full bg-primary/5 blur-[120px] animate-float-slow" />
+        <div className="absolute top-1/3 -right-32 w-[400px] h-[400px] rounded-full blur-[100px] animate-float" style={{ background: "oklch(0.60 0.12 210 / 4%)" }} />
+        <div className="absolute bottom-0 left-1/4 w-[600px] h-[350px] rounded-full bg-primary/3 blur-[130px] animate-float-delay" />
       </div>
 
-      {/* Navigation */}
-      <motion.nav initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}
-        className="fixed top-0 left-0 right-0 z-50">
-        <div className="mx-auto max-w-6xl px-6 py-4">
-          <div className="glass-strong rounded-2xl px-6 py-3 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[oklch(0.50_0.20_210)] to-[oklch(0.45_0.16_175)] flex items-center justify-center shadow-lg shadow-primary/30">
-                <Shield className="w-5 h-5 text-primary-foreground" />
+      {/* ─── Navigation ─── */}
+      <motion.nav
+        initial={{ opacity: 0, y: -16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, delay: 0.1 }}
+        className="fixed top-0 left-0 right-0 z-50"
+      >
+        <div className="mx-auto max-w-6xl px-5 py-3">
+          <div className="glass-strong rounded-2xl px-5 py-2.5 flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center glow-cyan">
+                <Shield className="w-4 h-4 text-primary-foreground" />
               </div>
-              <span className="text-lg font-bold tracking-tight">Veritas</span>
+              <span className="text-base font-bold tracking-tight">Veritas</span>
             </div>
-            <div className="flex items-center gap-3">
-              <Button variant="ghost" className="cursor-pointer hidden sm:inline-flex" onClick={() => navigate("/dashboard")}>Dashboard</Button>
-              <Button className="cursor-pointer bg-gradient-to-r from-[oklch(0.50_0.18_220)] to-[oklch(0.48_0.16_195)] hover:opacity-90 text-primary-foreground gap-2 shadow-lg shadow-primary/30 border-0" onClick={() => navigate("/dashboard")}>
-                Get Started <ArrowRight className="w-4 h-4" />
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" className="cursor-pointer hidden sm:inline-flex text-xs" onClick={() => navigate("/dashboard")}>
+                Dashboard
+              </Button>
+              <Button
+                className="cursor-pointer bg-primary hover:bg-primary/85 text-primary-foreground gap-1.5 text-xs shadow-lg shadow-primary/20 border-0"
+                onClick={() => navigate("/dashboard")}
+              >
+                Get Started <ArrowRight className="w-3.5 h-3.5" />
               </Button>
             </div>
           </div>
         </div>
       </motion.nav>
 
-      {/* Hero */}
-      <motion.section style={{ opacity: heroOpacity, scale: heroScale }} className="relative pt-32 pb-20 px-6">
+      {/* ─── Hero ─── */}
+      <motion.section style={{ opacity: heroOpacity, scale: heroScale }} className="relative pt-28 pb-16 px-5">
         <div className="mx-auto max-w-5xl text-center">
           {/* Badge */}
-          <motion.div initial={{ opacity: 0, scale: 0.85, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }}
-            className="inline-flex items-center gap-2 glass rounded-full px-5 py-2 mb-8 border border-emerald-400/30 shadow-lg shadow-emerald-500/5 hover-glow">
-            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-lg shadow-emerald-500/40" />
-            <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400 tracking-wide">BSc Data Science — Final Year Project</span>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 mb-6 border border-primary/15"
+          >
+            <div className="w-1.5 h-1.5 rounded-full bg-primary status-pulse" />
+            <span className="text-[11px] font-medium text-primary tracking-wide">BSc Data Science — Final Year Project</span>
           </motion.div>
 
           {/* Main heading */}
-          <motion.h1 initial={{ opacity: 0, y: 38 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.75, delay: 0.12, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }}
-            className="text-5xl sm:text-6xl lg:text-8xl font-extrabold tracking-tight leading-[1.05]">
-            <span className="text-foreground">Detect Fake News</span>
+          <motion.h1
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+            className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.05]"
+          >
+            <span className="text-foreground">Detect Misinformation</span>
             <br />
-            <span className="text-gradient shimmer">With Precision</span>
+            <span className="text-gradient text-shimmer">With Precision</span>
           </motion.h1>
 
-          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.25 }}
-            className="mt-6 text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            An NLP-powered misinformation detection system that analyzes linguistic patterns,
-            source credibility, and logical consistency — delivering transparent,
-            explainable verdicts.
+          <motion.p
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.45 }}
+            className="mt-5 text-base sm:text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed"
+          >
+            NLP-powered linguistic analysis that detects misinformation patterns,
+            source credibility issues, and logical inconsistencies — with full transparency.
           </motion.p>
 
-          {/* CTA buttons */}
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.4 }}
-            className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button size="lg" className="cursor-pointer bg-gradient-to-r from-[oklch(0.50_0.20_210)] via-[oklch(0.48_0.18_195)] to-[oklch(0.45_0.16_175)] hover:opacity-90 text-primary-foreground gap-2 px-10 h-14 text-base glow-blue shadow-xl shadow-primary/30 animate-gradient border-0 hover-lift"
-              onClick={() => navigate("/dashboard")}>
-              <Sparkles className="w-5 h-5" /> Start Analyzing <ArrowRight className="w-5 h-5" />
+          {/* CTA */}
+          <motion.div
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.55 }}
+            className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3"
+          >
+            <Button
+              size="lg"
+              className="cursor-pointer bg-primary hover:bg-primary/85 text-primary-foreground gap-2 px-8 h-12 text-sm glow-cyan shadow-xl shadow-primary/20 animate-gradient border-0 hover-lift"
+              onClick={() => navigate("/dashboard")}
+            >
+              <Sparkles className="w-4 h-4" /> Start Analyzing <ArrowRight className="w-4 h-4" />
             </Button>
-            <Button size="lg" variant="outline" className="cursor-pointer glass border-primary/20 hover:bg-primary/5 gap-2 px-8 h-14 text-base hover-lift"
-              onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}>
-              See How It Works <ChevronDown className="w-4 h-4" />
+            <Button
+              size="lg"
+              variant="outline"
+              className="cursor-pointer glass border-primary/15 hover:bg-primary/5 gap-2 px-7 h-12 text-sm hover-lift"
+              onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}
+            >
+              How It Works <ChevronDown className="w-4 h-4" />
             </Button>
           </motion.div>
 
-          {/* Stats bar */}
-          <motion.div initial={{ opacity: 0, y: 34 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.55, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }}
-            className="mt-16 grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-3xl mx-auto">
+          {/* Stats */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.7 }}
+            className="mt-14 grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl mx-auto"
+          >
             {stats.map((s, i) => (
               <motion.div key={s.label} custom={i} variants={scaleIn} initial="hidden" animate="visible"
-                className="glass-card rounded-xl p-4 text-center hover-shimmer">
-                <s.icon className="w-5 h-5 text-primary mx-auto mb-2" />
-                <span className="text-2xl font-extrabold text-gradient shimmer">{s.value}</span>
-                <p className="text-[11px] text-muted-foreground mt-1">{s.label}</p>
+                className="glass-card rounded-xl p-3.5 text-center hover-shimmer hover-glow"
+              >
+                <s.icon className="w-4 h-4 text-primary mx-auto mb-1.5" />
+                <span className="text-xl font-extrabold text-gradient">{s.value}</span>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{s.label}</p>
               </motion.div>
             ))}
           </motion.div>
 
-          {/* Verdict preview cards */}
-          <motion.div initial={{ opacity: 0, y: 44 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.75, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] }}
-            className="mt-16 grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-4xl mx-auto">
+          {/* Verdict Preview */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, delay: 0.9 }}
+            className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-3 max-w-3xl mx-auto"
+          >
             {verdictExamples.map((v, i) => (
               <motion.div key={v.verdict} custom={i} variants={fadeUp} initial="hidden" animate="visible"
-                className={`glass-card rounded-2xl p-5 text-left border ${v.border} hover-glow group hover:-translate-y-1 transition-all duration-300`}>
-                <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" style={{
-                  background: v.verdict === "likely_real"
-                    ? "radial-gradient(ellipse at 50% 0%, oklch(0.65 0.22 160 / 12%) 0%, transparent 60%)"
-                    : v.verdict === "likely_fake"
-                    ? "radial-gradient(ellipse at 50% 0%, oklch(0.60 0.25 25 / 14%) 0%, transparent 60%)"
-                    : "radial-gradient(ellipse at 50% 0%, oklch(0.60 0.20 80 / 14%) 0%, transparent 60%)",
-                }} />
-                <div className="flex items-center gap-2 mb-3 relative">
-                  <div className={`w-8 h-8 rounded-lg ${v.bg} flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                    <v.icon className={`w-4 h-4 ${v.color}`} />
+                className="glass-card rounded-xl p-4 text-left hover-glow group hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden"
+              >
+                <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                  style={{ background: `radial-gradient(ellipse at 50% 0%, ${v.accent} / 8%) 0%, transparent 60%)` }}
+                />
+                <div className="relative">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform duration-300"
+                      style={{ background: `color-mix(in srgb, ${v.accent} 12%, transparent)` }}
+                    >
+                      <v.icon className="w-3.5 h-3.5" style={{ color: v.accent }} />
+                    </div>
+                    <span className="text-xs font-semibold" style={{ color: v.accent }}>{v.label}</span>
                   </div>
-                  <span className={`text-sm font-semibold ${v.color}`}>{v.label}</span>
+                  <div className="flex items-baseline gap-1 mb-1.5">
+                    <span className="text-lg font-bold text-gradient">{v.confidence}%</span>
+                    <span className="text-[10px] text-muted-foreground">confidence</span>
+                  </div>
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">{v.sample}</p>
                 </div>
-                <div className="flex items-baseline gap-1 mb-2">
-                  <span className="text-2xl font-bold text-gradient">{v.confidence}%</span>
-                  <span className="text-xs text-muted-foreground">confidence</span>
-                </div>
-                <p className="text-xs text-muted-foreground leading-relaxed">{v.sample}</p>
               </motion.div>
             ))}
           </motion.div>
         </div>
       </motion.section>
 
-      {/* How It Works */}
-      <section id="how-it-works" className="py-28 px-6">
+      {/* ─── How It Works ─── */}
+      <Section className="py-24 px-5" id="how-it-works">
         <div className="mx-auto max-w-5xl">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}
-            className="text-center mb-16">
-            <span className="text-sm font-semibold text-primary uppercase tracking-widest">Simple Process</span>
-            <h2 className="mt-3 text-3xl sm:text-5xl font-bold tracking-tight">How It Works</h2>
-            <p className="mt-4 text-muted-foreground max-w-lg mx-auto">Three steps from suspicion to certainty.</p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="text-center mb-14">
+            <span className="text-[11px] font-semibold text-primary uppercase tracking-[0.2em]">Pipeline</span>
+            <h2 className="mt-2.5 text-3xl sm:text-4xl font-bold tracking-tight">How It Works</h2>
+            <p className="mt-3 text-sm text-muted-foreground max-w-md mx-auto">Three steps from suspicion to certainty.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {steps.map((s, i) => (
               <motion.div key={s.step} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
-                className="glass-card rounded-2xl p-8 text-center group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/0 via-primary/50 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-5 group-hover:bg-primary/15 group-hover:scale-110 transition-all duration-300">
-                  <s.icon className="w-7 h-7 text-primary group-hover:animate-float-faster" />
+                className="glass-card rounded-xl p-6 text-center group hover-glow relative overflow-hidden"
+              >
+                <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className="w-14 h-14 rounded-xl bg-primary/8 flex items-center justify-center mx-auto mb-4 group-hover:bg-primary/12 group-hover:scale-105 transition-all duration-300">
+                  <s.icon className="w-6 h-6 text-primary" />
                 </div>
-                <span className="text-xs font-bold text-primary/60 uppercase tracking-widest">Step {s.step}</span>
-                <h3 className="mt-2 text-xl font-semibold text-gradient">{s.title}</h3>
-                <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{s.description}</p>
+                <span className="text-[10px] font-bold text-primary/50 uppercase tracking-[0.2em]">Step {s.step}</span>
+                <h3 className="mt-1.5 text-lg font-semibold text-gradient">{s.title}</h3>
+                <p className="mt-2 text-xs text-muted-foreground leading-relaxed">{s.description}</p>
               </motion.div>
             ))}
           </div>
         </div>
-      </section>
+      </Section>
 
-      {/* Features */}
-      <section className="py-28 px-6">
-        <div className="mx-auto max-w-6xl">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}
-            className="text-center mb-16">
-            <span className="text-sm font-semibold text-primary uppercase tracking-widest">Capabilities</span>
-            <h2 className="mt-3 text-3xl sm:text-5xl font-bold tracking-tight">Built for Media Literacy</h2>
-            <p className="mt-4 text-muted-foreground max-w-lg mx-auto">A comprehensive toolkit for identifying misinformation with precision.</p>
-          </motion.div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      {/* ─── Features ─── */}
+      <Section className="py-24 px-5">
+        <div className="mx-auto max-w-5xl">
+          <div className="text-center mb-14">
+            <span className="text-[11px] font-semibold text-primary uppercase tracking-[0.2em]">Capabilities</span>
+            <h2 className="mt-2.5 text-3xl sm:text-4xl font-bold tracking-tight">Built for Media Literacy</h2>
+            <p className="mt-3 text-sm text-muted-foreground max-w-md mx-auto">A comprehensive toolkit for identifying misinformation.</p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {features.map((f, i) => (
               <motion.div key={f.title} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}
-                className="glass-card rounded-2xl p-6 group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 relative overflow-hidden">
-                <div className={`absolute inset-0 bg-gradient-to-br ${f.color} opacity-0 group-hover:opacity-100 transition-opacity duration-500`} />
-                <div className="relative">
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/15 group-hover:scale-110 transition-all duration-300 group-hover:animate-float-faster">
-                    <f.icon className="w-5 h-5 text-primary" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gradient">{f.title}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{f.description}</p>
+                className="glass-card rounded-xl p-5 group hover-glow relative overflow-hidden"
+              >
+                <div className="w-10 h-10 rounded-lg bg-primary/8 flex items-center justify-center mb-3 group-hover:bg-primary/12 group-hover:scale-105 transition-all duration-300">
+                  <f.icon className="w-4.5 h-4.5 text-primary" />
                 </div>
+                <h3 className="text-sm font-semibold text-gradient mb-1.5">{f.title}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">{f.description}</p>
               </motion.div>
             ))}
           </div>
         </div>
-      </section>
+      </Section>
 
-      {/* Tech Stack */}
-      <section className="py-28 px-6">
+      {/* ─── Tech Stack ─── */}
+      <Section className="py-24 px-5">
         <div className="mx-auto max-w-4xl">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}
-            className="text-center mb-12">
-            <span className="text-sm font-semibold text-primary uppercase tracking-widest">Technology</span>
-            <h2 className="mt-3 text-3xl sm:text-4xl font-bold tracking-tight">Under the Hood</h2>
-          </motion.div>
-
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}
-            className="glass-card rounded-3xl p-10 sm:p-12">
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
+          <div className="text-center mb-10">
+            <span className="text-[11px] font-semibold text-primary uppercase tracking-[0.2em]">Technology</span>
+            <h2 className="mt-2.5 text-3xl sm:text-4xl font-bold tracking-tight">Under the Hood</h2>
+          </div>
+          <div className="glass-card rounded-2xl p-8 sm:p-10">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
               {techStack.map((t, i) => (
                 <motion.div key={t.name} custom={i} variants={scaleIn} initial="hidden" whileInView="visible" viewport={{ once: true }}
-                  className="glass rounded-xl p-4 text-center hover:shadow-md transition-all duration-200">
-                  <span className="text-sm font-bold">{t.name}</span>
-                  <p className="text-[11px] text-muted-foreground mt-1">{t.desc}</p>
+                  className="glass rounded-lg p-3 text-center hover-glow"
+                >
+                  <span className="text-xs font-bold">{t.name}</span>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{t.desc}</p>
                 </motion.div>
               ))}
             </div>
-            <div className="border-t border-border/50 pt-6">
-              <h4 className="text-sm font-semibold mb-3">Detection Capabilities</h4>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="border-t border-border/40 pt-5">
+              <h4 className="text-xs font-semibold mb-2.5">Detection Capabilities</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {[
                   "Severity-weighted regex pattern matching",
                   "12 red flag + 9 green flag categories",
@@ -285,83 +356,85 @@ export default function Landing() {
                   "Triggered keyword extraction",
                   "Transparent, explainable AI decisions",
                 ].map((item) => (
-                  <div key={item} className="flex items-start gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                    <span className="text-sm text-muted-foreground">{item}</span>
+                  <div key={item} className="flex items-start gap-1.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-primary mt-0.5 shrink-0" />
+                    <span className="text-xs text-muted-foreground">{item}</span>
                   </div>
                 ))}
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
-      </section>
+      </Section>
 
-      {/* Academic Credibility */}
-      <section className="py-28 px-6">
+      {/* ─── Academic ─── */}
+      <Section className="py-24 px-5">
         <div className="mx-auto max-w-4xl">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.6 }}
-            className="glass-card rounded-3xl p-10 sm:p-12 text-center relative overflow-hidden">
-            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-primary to-blue-500" />
-            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto mb-6 animate-float-tilt">
-              <FileCheck className="w-8 h-8 text-primary" />
+          <div className="glass-card rounded-2xl p-8 sm:p-10 text-center relative overflow-hidden">
+            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+            <div className="w-14 h-14 rounded-xl bg-primary/8 flex items-center justify-center mx-auto mb-5 animate-float-tilt">
+              <FileCheck className="w-7 h-7 text-primary" />
             </div>
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-4 text-gradient">Academically Grounded</h2>
-            <p className="text-muted-foreground max-w-xl mx-auto mb-8">
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight mb-3 text-gradient">Academically Grounded</h2>
+            <p className="text-sm text-muted-foreground max-w-lg mx-auto mb-7 leading-relaxed">
               Detection heuristics informed by research from MIT Media Lab, Stanford Internet Observatory,
-              Reuters Institute, and the LIAR Dataset (12.8K labeled statements).
+              Reuters Institute, and the LIAR Dataset.
             </p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               {[
                 { icon: Users, label: "Named Sources", desc: "Credibility tracking" },
                 { icon: TrendingUp, label: "Severity Scoring", desc: "Weighted patterns" },
-                { icon: MessageSquare, label: "Explainable AI", desc: "Transparent verdicts" },
+                { icon: Eye, label: "Explainable AI", desc: "Transparent verdicts" },
                 { icon: BarChart3, label: "Visual Reports", desc: "Charts & breakdowns" },
               ].map((item, i) => (
                 <motion.div key={item.label} custom={i} variants={scaleIn} initial="hidden" whileInView="visible" viewport={{ once: true }}
-                  className="glass rounded-xl p-4">
-                  <item.icon className="w-5 h-5 text-primary mx-auto mb-2" />
-                  <span className="text-xs font-semibold block">{item.label}</span>
-                  <span className="text-[10px] text-muted-foreground">{item.desc}</span>
+                  className="glass rounded-lg p-3"
+                >
+                  <item.icon className="w-4 h-4 text-primary mx-auto mb-1.5" />
+                  <span className="text-[11px] font-semibold block">{item.label}</span>
+                  <span className="text-[9px] text-muted-foreground">{item.desc}</span>
                 </motion.div>
               ))}
             </div>
-          </motion.div>
+          </div>
         </div>
-      </section>
+      </Section>
 
-      {/* CTA */}
-      <section className="py-28 px-6">
-        <div className="mx-auto max-w-3xl text-center">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ duration: 0.6 }}
-            className="glass-strong rounded-3xl px-8 py-16 sm:px-16 relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
+      {/* ─── CTA ─── */}
+      <Section className="py-24 px-5">
+        <div className="mx-auto max-w-2xl text-center">
+          <div className="glass-strong rounded-2xl px-8 py-14 sm:px-14 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-b from-primary/5 to-transparent" />
             <div className="relative">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[oklch(0.50_0.20_210)] via-[oklch(0.48_0.18_195)] to-[oklch(0.45_0.16_175)] flex items-center justify-center mx-auto mb-6 shadow-xl shadow-primary/30 animate-pulse-glow animate-float-faster">
-                <Shield className="w-8 h-8 text-primary-foreground" />
+              <div className="w-14 h-14 rounded-xl bg-primary flex items-center justify-center mx-auto mb-5 glow-cyan animate-pulse-glow">
+                <Shield className="w-7 h-7 text-primary-foreground" />
               </div>
-              <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-gradient">Ready to Fact-Check?</h2>
-              <p className="mt-4 text-muted-foreground max-w-md mx-auto">
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-gradient">Ready to Fact-Check?</h2>
+              <p className="mt-3 text-sm text-muted-foreground max-w-sm mx-auto">
                 Start analyzing articles with NLP-powered detection. No sign-up required.
               </p>
-              <Button size="lg" className="cursor-pointer mt-8 bg-gradient-to-r from-[oklch(0.50_0.20_210)] via-[oklch(0.48_0.18_195)] to-[oklch(0.45_0.16_175)] hover:opacity-90 text-primary-foreground gap-2 px-10 h-14 text-base glow-blue shadow-xl shadow-primary/30 animate-gradient border-0 hover-lift"
-                onClick={() => navigate("/dashboard")}>
-                Launch Veritas <ArrowRight className="w-5 h-5" />
+              <Button
+                size="lg"
+                className="cursor-pointer mt-7 bg-primary hover:bg-primary/85 text-primary-foreground gap-2 px-8 h-12 text-sm glow-cyan shadow-xl shadow-primary/20 animate-gradient border-0 hover-lift"
+                onClick={() => navigate("/dashboard")}
+              >
+                Launch Veritas <ArrowRight className="w-4 h-4" />
               </Button>
             </div>
-          </motion.div>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="py-8 px-6 border-t border-border/50">
-        <div className="mx-auto max-w-6xl flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center shadow-md shadow-primary/20">
-              <Shield className="w-4 h-4 text-primary-foreground" />
-            </div>
-            <span className="text-sm font-semibold">Veritas</span>
           </div>
-          <p className="text-xs text-muted-foreground">BSc Data Science Third Year Project — NLP-Based Misinformation Detection</p>
+        </div>
+      </Section>
+
+      {/* ─── Footer ─── */}
+      <footer className="py-6 px-5 border-t border-border/30">
+        <div className="mx-auto max-w-5xl flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
+              <Shield className="w-3 h-3 text-primary-foreground" />
+            </div>
+            <span className="text-xs font-semibold">Veritas</span>
+          </div>
+          <p className="text-[10px] text-muted-foreground">BSc Data Science Third Year Project — NLP-Based Misinformation Detection</p>
         </div>
       </footer>
     </div>
