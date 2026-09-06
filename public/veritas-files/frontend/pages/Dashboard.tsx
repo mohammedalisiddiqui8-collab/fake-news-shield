@@ -9,7 +9,7 @@ import {
   Shield, Search, Clock, Home, Loader2, CheckCircle2, AlertTriangle,
   XCircle, FileText, Link, Trash2, ChevronRight, Brain, BarChart3,
   Sparkles, ArrowLeft, ClipboardPaste, BookOpen, TrendingUp,
-  Sun, Moon, Download, Share2, Lightbulb, Target,
+  Sun, Moon, Download, Share2, Lightbulb, Target, Activity,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { CredibilityGauge } from "@/components/CredibilityGauge";
 import { StatsView } from "@/components/StatsView";
 import { MethodologyView } from "@/components/MethodologyView";
+import { TiltCard } from "@/components/TiltCard";
 
 /* ─── Types ─── */
 type Verdict = "likely_real" | "likely_fake" | "uncertain";
@@ -294,51 +295,58 @@ export default function Dashboard() {
           {activeView === "analyze" && (
             <motion.div key="analyze" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.25 }}>
 
-              {/* Pipeline animation overlay */}
+              {/* Pipeline animation overlay with radar sweep */}
               <AnimatePresence>
                 {isAnalyzing && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-[60] bg-background/90 backdrop-blur-sm flex items-center justify-center">
-                    <div className="glass-card rounded-2xl p-8 sm:p-10 max-w-sm w-full mx-4 text-center">
-                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-5">
-                        <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                    className="fixed inset-0 z-[60] bg-background/95 backdrop-blur-md flex items-center justify-center">
+                    <div className="glass-card rounded-2xl p-8 sm:p-10 max-w-sm w-full mx-4 text-center relative overflow-hidden">
+                      {/* Radar sweep background */}
+                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        <div className="w-48 h-48 rounded-full border border-primary/10" />
+                        <div className="absolute w-36 h-36 rounded-full border border-primary/8" />
+                        <div className="absolute w-24 h-24 rounded-full border border-primary/5" />
+                        <div className="absolute w-64 h-64 rounded-full radar-sweep" style={{ opacity: 0.3 }} />
                       </div>
-                      <h3 className="text-sm font-semibold mb-6">Verification Pipeline</h3>
-                      <div className="space-y-1.5">
-                        {pipelineSteps.map((step, i) => {
-                          const isActive = i === pipelineStep;
-                          const isDone = i < pipelineStep;
-                          return (
-                            <motion.div key={step.key}
-                              initial={{ opacity: 0, x: -10 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: i * 0.08 }}
-                              className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-300 ${
-                                isActive ? "bg-primary/10 border border-primary/20" : isDone ? "opacity-60" : "opacity-30"
-                              }`}
-                            >
-                              <div className={`w-5 h-5 rounded-md flex items-center justify-center ${
-                                isDone ? "bg-primary/20" : isActive ? "bg-primary/15 status-pulse" : "bg-muted/20"
-                              }`}>
-                                {isDone ? (
-                                  <CheckCircle2 className="w-3 h-3 text-primary" />
-                                ) : isActive ? (
-                                  <Loader2 className="w-3 h-3 text-primary animate-spin" />
-                                ) : (
-                                  <step.icon className="w-3 h-3 text-muted-foreground/50" />
-                                )}
-                              </div>
-                              <span className={`text-[10px] font-mono tracking-wider ${
-                                isActive ? "text-primary font-semibold" : isDone ? "text-muted-foreground" : "text-muted-foreground/40"
-                              }`}>
-                                {step.label}
-                              </span>
-                              {isDone && (
-                                <CheckCircle2 className="w-3 h-3 text-primary/50 ml-auto" />
-                              )}
-                            </motion.div>
-                          );
-                        })}
+                      <div className="relative z-10">
+                        <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-5 glow-ring">
+                          <Activity className="w-7 h-7 text-primary animate-spin-slow" />
+                        </div>
+                        <h3 className="text-sm font-semibold mb-1 text-gradient">Verification Pipeline</h3>
+                        <p className="text-[10px] text-muted-foreground mb-6">Analyzing content patterns...</p>
+                        <div className="space-y-1">
+                          {pipelineSteps.map((step, i) => {
+                            const isActive = i === pipelineStep;
+                            const isDone = i < pipelineStep;
+                            return (
+                              <motion.div key={step.key}
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: i * 0.08 }}
+                                className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-300 ${
+                                  isActive ? "bg-primary/10 border border-primary/20" : isDone ? "opacity-60" : "opacity-25"
+                                }`}>
+                                <div className={`w-5 h-5 rounded-md flex items-center justify-center transition-all duration-300 ${
+                                  isDone ? "bg-primary/20" : isActive ? "bg-primary/15 status-pulse" : "bg-muted/15"
+                                }`}>
+                                  {isDone ? (
+                                    <CheckCircle2 className="w-3 h-3 text-primary" />
+                                  ) : isActive ? (
+                                    <Loader2 className="w-3 h-3 text-primary animate-spin" />
+                                  ) : (
+                                    <step.icon className="w-3 h-3 text-muted-foreground/40" />
+                                  )}
+                                </div>
+                                <span className={`text-[10px] font-mono tracking-wider transition-all duration-300 ${
+                                  isActive ? "text-primary font-semibold" : isDone ? "text-muted-foreground" : "text-muted-foreground/30"
+                                }`}>
+                                  {step.label}
+                                </span>
+                                {isDone && <CheckCircle2 className="w-3 h-3 text-primary/40 ml-auto" />}
+                              </motion.div>
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
                   </motion.div>
@@ -452,9 +460,9 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              {/* Verdict Card */}
-              <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4, delay: 0.08 }}
-                className={`glass-card rounded-xl p-5 sm:p-7 border ${vc.border} mb-4 relative overflow-hidden`}>
+              {/* Verdict Card with Tilt + Animated Border */}
+              <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4, delay: 0.08 }} className="mb-4">
+              <TiltCard className={`glass-card rounded-xl p-5 sm:p-7 border ${vc.border} relative overflow-hidden`} intensity={6}>
                 <div className="absolute inset-0 pointer-events-none"
                   style={{ background: `radial-gradient(ellipse at 30% 20%, ${vc.glowColor} / 6%) 0%, transparent 50%)` }} />
                 <div className="relative flex flex-col sm:flex-row items-center gap-5">
@@ -499,6 +507,7 @@ export default function Dashboard() {
                       className="h-full rounded-full" style={{ background: `linear-gradient(90deg, ${vc.glowColor}, ${vc.glowColor} / 70%)` }} />
                   </div>
                 </div>
+              </TiltCard>
               </motion.div>
 
               {/* Category Breakdown */}
@@ -559,8 +568,8 @@ export default function Dashboard() {
                 <p className="text-xs leading-relaxed text-muted-foreground">{currentResult.reasoning}</p>
               </motion.div>
 
-              {/* Red / Green Flags */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+              {/* Red / Green Flags with scanline */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3 scanline-overlay">
                 <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.25, delay: 0.3 }}
                   className="glass-card rounded-xl p-4 sm:p-5">
                   <div className="flex items-center gap-2 mb-3">

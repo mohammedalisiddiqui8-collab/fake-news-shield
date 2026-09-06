@@ -298,6 +298,87 @@
     animation: statusPulse 2s ease-in-out infinite;
   }
 
+  /* ─── Radar Sweep ─── */
+  .radar-sweep {
+    position: relative;
+    overflow: hidden;
+  }
+  .radar-sweep::after {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: conic-gradient(from 0deg, transparent 0deg, oklch(0.72 0.16 195 / 15%) 30deg, transparent 60deg);
+    animation: radarSweep 2s linear infinite;
+    pointer-events: none;
+  }
+
+  /* ─── Scanline Overlay ─── */
+  .scanline-overlay {
+    position: relative;
+  }
+  .scanline-overlay::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      oklch(0 0 0 / 3%) 2px,
+      oklch(0 0 0 / 3%) 4px
+    );
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* ─── Animated Border ─── */
+  .animated-border {
+    position: relative;
+  }
+  .animated-border::before {
+    content: "";
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: conic-gradient(from var(--border-angle, 0deg), transparent 60%, oklch(0.72 0.16 195 / 30%) 80%, transparent 100%);
+    animation: rotateBorder 4s linear infinite;
+    z-index: -1;
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask-composite: exclude;
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    padding: 1px;
+  }
+
+  /* ─── Glow Pulse Ring ─── */
+  .glow-ring {
+    box-shadow:
+      0 0 0 1px oklch(0.72 0.16 195 / 10%),
+      0 0 0 4px oklch(0.72 0.16 195 / 5%),
+      0 0 0 8px oklch(0.72 0.16 195 / 2%);
+    animation: glowRingPulse 3s ease-in-out infinite;
+  }
+
+  /* ─── Matrix Rain (subtle) ─── */
+  .matrix-bg {
+    position: relative;
+  }
+  .matrix-bg::after {
+    content: "01 10 00 11 01 11 10 01";
+    position: absolute;
+    inset: 0;
+    font-family: monospace;
+    font-size: 8px;
+    line-height: 12px;
+    color: oklch(0.72 0.16 195 / 4%);
+    overflow: hidden;
+    pointer-events: none;
+    word-break: break-all;
+    letter-spacing: 2px;
+    animation: matrixScroll 20s linear infinite;
+  }
+
   .scan-line {
     animation: scanLine 2s ease-in-out infinite;
   }
@@ -376,6 +457,31 @@
 @keyframes borderGlow {
   0%, 100% { border-color: oklch(0.72 0.16 195 / 15%); }
   50% { border-color: oklch(0.72 0.16 195 / 30%); }
+}
+
+@keyframes radarSweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes rotateBorder {
+  from { --border-angle: 0deg; }
+  to { --border-angle: 360deg; }
+}
+
+@keyframes glowRingPulse {
+  0%, 100% { box-shadow: 0 0 0 1px oklch(0.72 0.16 195 / 10%), 0 0 0 4px oklch(0.72 0.16 195 / 5%), 0 0 0 8px oklch(0.72 0.16 195 / 2%); }
+  50% { box-shadow: 0 0 0 1px oklch(0.72 0.16 195 / 20%), 0 0 0 6px oklch(0.72 0.16 195 / 8%), 0 0 0 12px oklch(0.72 0.16 195 / 3%); }
+}
+
+@keyframes matrixScroll {
+  from { transform: translateY(-50%); }
+  to { transform: translateY(0%); }
+}
+
+@keyframes textReveal {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0 0 0 0); }
 }
 
 /* ─── Selection ─── */
