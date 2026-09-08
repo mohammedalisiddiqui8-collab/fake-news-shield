@@ -106,27 +106,60 @@ function NewspaperVisual() {
             Scientists Confirm New Species Discovered in Deep Ocean Expedition
           </h4>
 
-          {/* Press photo */}
-          <div className="w-full h-28 sm:h-36 rounded overflow-hidden mb-3 relative bg-[#c8c1b4]">
-            <svg viewBox="0 0 400 160" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
-              <rect width="400" height="160" fill="#b8b0a2" />
-              <rect width="400" height="60" fill="#d4cfc4" />
-              <line x1="0" y1="60" x2="400" y2="60" stroke="#a09a8e" strokeWidth="0.5" />
-              <path d="M0 80 Q50 75 100 80 T200 80 T300 80 T400 80" fill="none" stroke="#a09a8e" strokeWidth="0.5" opacity="0.5" />
-              <path d="M0 90 Q60 85 120 90 T240 90 T360 90 T400 90" fill="none" stroke="#a09a8e" strokeWidth="0.3" opacity="0.4" />
-              <rect x="150" y="45" width="100" height="20" rx="3" fill="#6b7268" />
-              <rect x="160" y="35" width="20" height="15" rx="1" fill="#5a6354" />
-              <line x1="195" y1="15" x2="195" y2="35" stroke="#4a5244" strokeWidth="1.5" />
-              <polygon points="195,15 210,25 195,30" fill="#6b7268" opacity="0.7" />
-              <ellipse cx="200" cy="120" rx="15" ry="8" fill="#4a5244" />
-              <ellipse cx="200" cy="120" rx="12" ry="6" fill="#5a6354" />
-              <circle cx="200" cy="118" r="3" fill="#8a9180" />
-              <line x1="195" y1="65" x2="200" y2="112" stroke="#4a5244" strokeWidth="0.5" strokeDasharray="2,2" />
-              <ellipse cx="100" cy="100" rx="8" ry="3" fill="#5a6354" opacity="0.3" />
-              <ellipse cx="300" cy="95" rx="6" ry="2.5" fill="#5a6354" opacity="0.25" />
+          {/* Press photo - Newsroom scene */}
+          <div className="w-full h-32 sm:h-44 rounded overflow-hidden mb-3 relative bg-[#2a2d28]">
+            <svg viewBox="0 0 500 200" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
+              <defs>
+                <radialGradient id="spotlight" cx="50%" cy="30%" r="60%">
+                  <stop offset="0%" stopColor="#8a9180" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="#2a2d28" stopOpacity="0" />
+                </radialGradient>
+              </defs>
+              {/* Dark background */}
+              <rect width="500" height="200" fill="#2a2d28" />
+              <rect width="500" height="200" fill="url(#spotlight)" />
+              {/* Back wall with shelves/frames */}
+              <rect x="20" y="10" width="460" height="60" fill="#353832" rx="2" />
+              <rect x="40" y="18" width="50" height="35" fill="#4a4d46" rx="1" />
+              <rect x="100" y="18" width="50" height="35" fill="#4a4d46" rx="1" />
+              <rect x="160" y="18" width="50" height="35" fill="#4a4d46" rx="1" />
+              {/* Person 1 - reading newspaper (silhouette) */}
+              <circle cx="120" cy="100" r="12" fill="#4a4d46" />
+              <rect x="108" y="112" width="24" height="40" rx="4" fill="#4a4d46" />
+              {/* Newspaper in hands */}
+              <rect x="90" y="120" width="35" height="25" rx="1" fill="#d8d2c5" transform="rotate(-8 107 132)" />
+              <line x1="93" y1="125" x2="122" y2="122" stroke="#8a8478" strokeWidth="0.5" />
+              <line x1="93" y1="128" x2="120" y2="125" stroke="#8a8478" strokeWidth="0.5" />
+              <line x1="93" y1="131" x2="118" y2="128" stroke="#8a8478" strokeWidth="0.5" />
+              {/* Person 2 - typing at desk */}
+              <circle cx="250" cy="95" r="12" fill="#5a5d56" />
+              <rect x="238" y="107" width="24" height="42" rx="4" fill="#5a5d56" />
+              {/* Typing hands */}
+              <rect x="230" y="145" width="40" height="3" rx="1" fill="#6b7268" />
+              <rect x="225" y="148" width="50" height="2" rx="1" fill="#4a4d46" />
+              {/* Person 3 - standing with clipboard */}
+              <circle cx="380" cy="90" r="13" fill="#4a4d46" />
+              <rect x="367" y="103" width="26" height="45" rx="4" fill="#4a4d46" />
+              {/* Clipboard */}
+              <rect x="390" y="115" width="18" height="24" rx="1" fill="#d8d2c5" />
+              <line x1="393" y1="120" x2="405" y2="120" stroke="#8a8478" strokeWidth="0.5" />
+              <line x1="393" y1="123" x2="403" y2="123" stroke="#8a8478" strokeWidth="0.5" />
+              <line x1="393" y1="126" x2="404" y2="126" stroke="#8a8478" strokeWidth="0.5" />
+              {/* Desk surface */}
+              <rect x="200" y="150" width="120" height="4" rx="1" fill="#5a5d56" />
+              {/* Microphone on desk */}
+              <line x1="260" y1="135" x2="260" y2="150" stroke="#6b7268" strokeWidth="2" />
+              <ellipse cx="260" cy="133" rx="5" ry="4" fill="#6b7268" />
+              {/* Camera/tripod in background */}
+              <line x1="320" y1="100" x2="320" y2="150" stroke="#4a4d46" strokeWidth="1.5" />
+              <rect x="315" y="96" width="10" height="8" rx="1" fill="#5a5d56" />
+              {/* Ambient light particles */}
+              <circle cx="180" cy="50" r="1" fill="#8a9180" opacity="0.3" />
+              <circle cx="350" cy="40" r="1.5" fill="#8a9180" opacity="0.2" />
+              <circle cx="420" cy="55" r="1" fill="#8a9180" opacity="0.25" />
             </svg>
-            <div className="absolute bottom-0 left-0 right-0 bg-[#1e2522]/50 px-2 py-1">
-              <p className="text-[5px] text-white/80 italic" style={{ fontFamily: "'Source Serif 4', serif" }}>Fig. 1 — Research vessel deploying submersible at the Mariana Trench, 2025</p>
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#1e2522]/80 to-transparent px-3 py-1.5">
+              <p className="text-[6px] text-white/80 italic" style={{ fontFamily: "'Source Serif 4', serif" }}>Press room — Journalists covering breaking news, 2025</p>
             </div>
           </div>
 
