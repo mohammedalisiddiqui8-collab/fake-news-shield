@@ -7,7 +7,188 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
-import { useRef } from "react";
+import { useRef, useState, useEffect } from "react";
+
+/* ─── Animated Tagline ─── */
+const taglines = [
+  "Truth over noise.",
+  "Clarity over chaos.",
+  "Facts over fiction.",
+  "Evidence over opinion.",
+  "Insight over impulse.",
+];
+
+function AnimatedTagline() {
+  const [index, setIndex] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [displayed, setDisplayed] = useState("");
+  const currentPhrase = taglines[index];
+
+  useEffect(() => {
+    if (!isDeleting) {
+      if (displayed.length < currentPhrase.length) {
+        const timer = setTimeout(() => setDisplayed(currentPhrase.slice(0, displayed.length + 1)), 50);
+        return () => clearTimeout(timer);
+      } else {
+        const timer = setTimeout(() => setIsDeleting(true), 2200);
+        return () => clearTimeout(timer);
+      }
+    } else {
+      if (displayed.length > 0) {
+        const timer = setTimeout(() => setDisplayed(displayed.slice(0, -1)), 30);
+        return () => clearTimeout(timer);
+      } else {
+        setIsDeleting(false);
+        setIndex((prev) => (prev + 1) % taglines.length);
+      }
+    }
+  }, [displayed, isDeleting, currentPhrase, index]);
+
+  return (
+    <span style={{ fontFamily: "'DM Serif Display', serif" }}>
+      {displayed}
+      <span className="inline-block w-[2px] h-[0.8em] bg-primary ml-0.5 align-middle animate-pulse" />
+    </span>
+  );
+}
+
+/* ─── Newspaper Collage Visual ─── */
+function NewspaperVisual() {
+  return (
+    <div className="relative">
+      {/* Back newspaper layer */}
+      <motion.div
+        initial={{ opacity: 0, rotate: -3, x: -10 }}
+        animate={{ opacity: 1, rotate: -2, x: 0 }}
+        transition={{ duration: 0.8, delay: 0.4 }}
+        className="absolute -top-6 -left-6 w-[95%] h-[90%] bg-[#EDE8DE] border border-border rounded-sm shadow-sm"
+      >
+        {/* Faux newspaper header */}
+        <div className="p-5">
+          <div className="border-b-2 border-foreground/80 pb-2 mb-3">
+            <p className="text-[7px] uppercase tracking-[0.3em] text-muted-foreground/60 text-center">The Daily Tribune</p>
+            <p className="text-[6px] text-muted-foreground/40 text-center mt-0.5">Est. 2024 — Independent Journalism</p>
+          </div>
+          <div className="space-y-2">
+            <div className="h-2 bg-muted-foreground/8 rounded w-full" />
+            <div className="h-2 bg-muted-foreground/8 rounded w-4/5" />
+            <div className="h-2 bg-muted-foreground/8 rounded w-3/5" />
+          </div>
+          <div className="mt-3 grid grid-cols-3 gap-1.5">
+            <div className="h-8 bg-muted-foreground/6 rounded" />
+            <div className="h-8 bg-muted-foreground/6 rounded" />
+            <div className="h-8 bg-muted-foreground/6 rounded" />
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Main newspaper layer */}
+      <motion.div
+        initial={{ opacity: 0, rotate: 1, y: 10 }}
+        animate={{ opacity: 1, rotate: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.2 }}
+        className="relative bg-card border border-border rounded-sm shadow-md overflow-hidden"
+      >
+        {/* Masthead */}
+        <div className="border-b-2 border-foreground/90 px-6 pt-5 pb-3">
+          <div className="flex items-center justify-between">
+            <p className="text-[8px] text-muted-foreground uppercase tracking-widest">Vol. CXII — No. 34,891</p>
+            <p className="text-[8px] text-muted-foreground uppercase tracking-widest">Price: Free</p>
+          </div>
+          <h3 className="text-center text-xl sm:text-2xl tracking-tight mt-1" style={{ fontFamily: "'DM Serif Display', serif" }}>
+            NEWS
+          </h3>
+          <div className="flex items-center justify-center gap-3 mt-0.5">
+            <div className="h-px bg-foreground/20 flex-1" />
+            <p className="text-[7px] uppercase tracking-[0.2em] text-muted-foreground italic" style={{ fontFamily: "'Source Serif 4', serif" }}>
+              Truth Matters
+            </p>
+            <div className="h-px bg-foreground/20 flex-1" />
+          </div>
+        </div>
+
+        {/* Article body */}
+        <div className="p-6">
+          <h4 className="text-sm font-bold leading-snug mb-2" style={{ fontFamily: "'DM Serif Display', serif" }}>
+            Breaking: Scientists Confirm New Discovery in Deep Ocean Exploration
+          </h4>
+          <div className="space-y-1.5 mb-3">
+            <div className="h-1.5 bg-muted-foreground/7 rounded w-full" />
+            <div className="h-1.5 bg-muted-foreground/7 rounded w-11/12" />
+            <div className="h-1.5 bg-muted-foreground/7 rounded w-full" />
+            <div className="h-1.5 bg-muted-foreground/7 rounded w-9/12" />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <div className="h-1.5 bg-muted-foreground/6 rounded w-full" />
+              <div className="h-1.5 bg-muted-foreground/6 rounded w-full" />
+              <div className="h-1.5 bg-muted-foreground/6 rounded w-4/5" />
+              <div className="h-1.5 bg-muted-foreground/6 rounded w-full" />
+              <div className="h-1.5 bg-muted-foreground/6 rounded w-3/4" />
+            </div>
+            <div className="bg-muted/60 rounded p-3">
+              <div className="h-1 bg-muted-foreground/10 rounded w-full mb-1.5" />
+              <div className="h-1 bg-muted-foreground/10 rounded w-4/5 mb-1.5" />
+              <div className="h-1 bg-muted-foreground/10 rounded w-full" />
+            </div>
+          </div>
+        </div>
+
+        {/* Footer stamp */}
+        <div className="px-6 pb-4">
+          <div className="border-t border-border pt-2 flex items-center justify-between">
+            <span className="text-[7px] text-muted-foreground/50 uppercase tracking-widest">Page A1</span>
+            <div className="flex items-center gap-1.5 bg-primary/8 px-2 py-0.5 rounded">
+              <CheckCircle2 className="w-2.5 h-2.5 text-primary" />
+              <span className="text-[7px] text-primary font-semibold uppercase tracking-wider">Verified by Veritas</span>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Floating verification card */}
+      <motion.div
+        initial={{ opacity: 0, y: 16, scale: 0.9 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.6, delay: 0.8 }}
+        className="absolute -bottom-4 -right-4 bg-card border border-border rounded-lg p-3 shadow-lg max-w-[200px]"
+      >
+        <div className="flex items-center gap-2 mb-1.5">
+          <div className="w-5 h-5 rounded bg-primary/10 flex items-center justify-center">
+            <Shield className="w-3 h-3 text-primary" />
+          </div>
+          <span className="text-[9px] font-semibold text-primary uppercase tracking-wider">Credibility Score</span>
+        </div>
+        <div className="flex items-baseline gap-1">
+          <span className="text-xl font-bold text-primary" style={{ fontFamily: "'DM Serif Display', serif" }}>92%</span>
+          <span className="text-[9px] text-muted-foreground">Likely Credible</span>
+        </div>
+        <div className="mt-1.5 h-1 rounded-full bg-muted overflow-hidden">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: "92%" }}
+            transition={{ duration: 1.2, delay: 1.2, ease: [0.22, 1, 0.36, 1] }}
+            className="h-full rounded-full bg-primary"
+          />
+        </div>
+      </motion.div>
+
+      {/* Floating red flag card */}
+      <motion.div
+        initial={{ opacity: 0, x: -16, scale: 0.9 }}
+        animate={{ opacity: 1, x: 0, scale: 1 }}
+        transition={{ duration: 0.6, delay: 1.0 }}
+        className="absolute -bottom-2 -left-8 bg-card border border-destructive/20 rounded-lg p-2.5 shadow-lg max-w-[160px]"
+      >
+        <div className="flex items-center gap-1.5">
+          <AlertTriangle className="w-3 h-3 text-destructive" />
+          <span className="text-[9px] font-semibold text-destructive">3 Red Flags</span>
+        </div>
+        <p className="text-[8px] text-muted-foreground mt-0.5 leading-relaxed">Sensationalism, anonymous sources, urgency language</p>
+      </motion.div>
+    </div>
+  );
+}
 
 /* ─── Animation Variants ─── */
 const fadeUp = {
@@ -16,19 +197,6 @@ const fadeUp = {
     opacity: 1, y: 0,
     transition: { delay: i * 0.08, duration: 0.6, ease: [0.22, 1, 0.36, 1] as [number, number, number, number] },
   }),
-};
-
-const stagger = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08, delayChildren: 0.2 },
-  },
-};
-
-const item = {
-  hidden: { opacity: 0, y: 16 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } },
 };
 
 /* ─── Data ─── */
@@ -138,12 +306,13 @@ export default function Landing() {
                 style={{ fontFamily: "'DM Serif Display', serif", color: "#1E2522" }}>
                 Veritas
               </motion.h1>
-              <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
+              {/* Animated tagline */}
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.7, delay: 0.4 }}
-                className="text-3xl sm:text-4xl lg:text-5xl leading-[1.1] tracking-tight mb-6"
-                style={{ fontFamily: "'DM Serif Display', serif", color: "#1E2522" }}>
-                Truth over noise.
-              </motion.h2>
+                className="text-3xl sm:text-4xl lg:text-5xl leading-[1.1] tracking-tight mb-6 min-h-[1.3em]"
+                style={{ color: "#1E2522" }}>
+                <AnimatedTagline />
+              </motion.div>
               <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 0.5 }}
                 className="text-sm sm:text-base text-muted-foreground max-w-md leading-relaxed mb-8">
@@ -185,47 +354,11 @@ export default function Landing() {
               </motion.div>
             </motion.div>
 
-            {/* Right: Editorial Visual */}
+            {/* Right: Newspaper Visual */}
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.3 }}
               className="relative hidden lg:block">
-              <div className="relative">
-                {/* Newspaper stack visual */}
-                <div className="absolute -top-4 -left-4 w-full h-full bg-muted rounded-lg transform rotate-[-2deg]" />
-                <div className="absolute -top-2 -left-2 w-full h-full bg-card border border-border rounded-lg transform rotate-[-1deg]" />
-                <div className="relative bg-card border border-border rounded-lg p-8 shadow-sm">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-8 h-8 rounded bg-primary flex items-center justify-center">
-                      <Newspaper className="w-4 h-4 text-primary-foreground" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground font-semibold">Verification Report</p>
-                      <p className="text-[9px] text-muted-foreground/60">Veritas Analysis Engine</p>
-                    </div>
-                  </div>
-                  <div className="editorial-rule mb-4" />
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-primary" />
-                      <span className="text-xs font-medium">VERIFY</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-accent" />
-                      <span className="text-xs font-medium">ANALYZE</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full bg-destructive" />
-                      <span className="text-xs font-medium">STAY INFORMED</span>
-                    </div>
-                  </div>
-                  <div className="editorial-rule my-4" />
-                  <div className="bg-muted rounded p-3">
-                    <p className="text-[10px] text-muted-foreground leading-relaxed italic" style={{ fontFamily: "'Source Serif 4', serif" }}>
-                      "Not everything you read is true, but everything deserves a closer look."
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <NewspaperVisual />
             </motion.div>
           </div>
         </div>
