@@ -257,7 +257,7 @@ export default function Dashboard() {
       {/* ─── Ambient Background ─── */}
       <div className="fixed inset-0 pointer-events-none -z-10">
         <div className="absolute -top-32 -left-32 w-[450px] h-[450px] rounded-full bg-primary/4 blur-[100px] animate-float-faster" />
-        <div className="absolute top-1/3 -right-28 w-[350px] h-[350px] rounded-full blur-[80px] animate-float" style={{ background: "oklch(0.60 0.12 210 / 3%)" }} />
+        <div className="absolute top-1/3 -right-28 w-[350px] h-[350px] rounded-full blur-[80px] animate-float" style={{ background: "oklch(0.60 0.12 70 / 4%)" }} />
         <div className="absolute bottom-[-100px] left-1/3 w-[380px] h-[380px] rounded-full bg-primary/3 blur-[110px] animate-float-slower" />
       </div>
 
@@ -265,7 +265,7 @@ export default function Dashboard() {
       <nav className="sticky top-0 z-50 glass-strong border-b border-border/30">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 h-12 sm:h-14 flex items-center justify-between">
           <button type="button" className="cursor-pointer flex items-center gap-2" onClick={() => navigate("/")}>
-            <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center glow-cyan">
+            <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center glow-gold">
               <Shield className="w-3.5 h-3.5 text-primary-foreground" />
             </div>
             <span className="font-bold tracking-tight hidden sm:inline text-sm">Veritas</span>
@@ -432,7 +432,7 @@ export default function Dashboard() {
               </div>
 
               {/* Analyze button */}
-              <Button size="lg" className="cursor-pointer w-full bg-primary hover:bg-primary/85 text-primary-foreground gap-2 h-11 text-sm glow-cyan"
+              <Button size="lg" className="cursor-pointer w-full bg-primary hover:bg-primary/85 text-primary-foreground gap-2 h-11 text-sm glow-gold"
                 onClick={handleAnalyze} disabled={isAnalyzing || !inputText.trim()}>
                 <Sparkles className="w-4 h-4" />Analyze Content
               </Button>

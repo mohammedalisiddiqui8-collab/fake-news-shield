@@ -103,7 +103,7 @@ export default function Landing() {
         <ParticleNetwork className="opacity-40" />
         {/* Ambient orbs */}
         <div className="absolute -top-32 -left-32 w-[500px] h-[500px] rounded-full bg-primary/5 blur-[120px] animate-float-slow" />
-        <div className="absolute top-1/3 -right-32 w-[400px] h-[400px] rounded-full blur-[100px] animate-float" style={{ background: "oklch(0.60 0.12 210 / 4%)" }} />
+        <div className="absolute top-1/3 -right-32 w-[400px] h-[400px] rounded-full blur-[100px] animate-float" style={{ background: "oklch(0.58 0.10 65 / 5%)" }} />
         <div className="absolute bottom-0 left-1/4 w-[600px] h-[350px] rounded-full bg-primary/3 blur-[130px] animate-float-delay" />
       </div>
 

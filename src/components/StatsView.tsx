@@ -66,7 +66,7 @@ export function StatsView({ analyses }: StatsViewProps) {
   const confBuckets = [
     { range: "35-50%", count: 0, fill: "#64748b" },
     { range: "50-65%", count: 0, fill: "#fbbf24" },
-    { range: "65-80%", count: 0, fill: "#38bdf8" },
+    { range: "65-80%", count: 0, fill: "#b8860b" },
     { range: "80-95%", count: 0, fill: "#34d399" },
   ];
   for (const a of analyses) {
@@ -78,7 +78,7 @@ export function StatsView({ analyses }: StatsViewProps) {
 
   const statCards = [
     { label: "Total", value: totalAnalyses, icon: BarChart3, color: "text-primary", bg: "bg-primary/8" },
-    { label: "Avg. Confidence", value: `${avgConfidence}%`, icon: TrendingUp, color: "text-cyan-400", bg: "bg-cyan-500/8" },
+    { label: "Avg. Confidence", value: `${avgConfidence}%`, icon: TrendingUp, color: "text-primary", bg: "bg-primary/8" },
     { label: "Red Flags", value: totalRedFlags, icon: AlertTriangle, color: "text-red-400", bg: "bg-red-500/8" },
     { label: "Green Flags", value: totalGreenFlags, icon: CheckCircle2, color: "text-emerald-400", bg: "bg-emerald-500/8" },
   ];
@@ -136,11 +136,11 @@ export function StatsView({ analyses }: StatsViewProps) {
                   </Pie>
                   <Tooltip
                     contentStyle={{
-                      background: "oklch(0.12 0.03 240 / 90%)",
-                      border: "1px solid oklch(0.22 0.03 220 / 40%)",
+                      background: "oklch(0.14 0.018 70 / 90%)",
+                      border: "1px solid oklch(0.26 0.02 70 / 40%)",
                       borderRadius: "8px",
                       fontSize: "11px",
-                      color: "oklch(0.88 0.01 230)",
+                      color: "oklch(0.88 0.01 75)",
                       backdropFilter: "blur(12px)",
                     }}
                   />
@@ -170,15 +170,15 @@ export function StatsView({ analyses }: StatsViewProps) {
             </h3>
             <ResponsiveContainer width="100%" height={180}>
               <BarChart data={confBuckets}>
-                <XAxis dataKey="range" tick={{ fontSize: 10, fill: "oklch(0.50 0.03 230)" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: "oklch(0.50 0.03 230)" }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <XAxis dataKey="range" tick={{ fontSize: 10, fill: "oklch(0.50 0.03 75)" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: "oklch(0.50 0.03 75)" }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <Tooltip
                   contentStyle={{
-                    background: "oklch(0.12 0.03 240 / 90%)",
-                    border: "1px solid oklch(0.22 0.03 220 / 40%)",
+                    background: "oklch(0.14 0.018 70 / 90%)",
+                    border: "1px solid oklch(0.26 0.02 70 / 40%)",
                     borderRadius: "8px",
                     fontSize: "11px",
-                    color: "oklch(0.88 0.01 230)",
+                    color: "oklch(0.88 0.01 75)",
                     backdropFilter: "blur(12px)",
                   }}
                 />
