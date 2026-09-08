@@ -55,41 +55,32 @@ function AnimatedTagline() {
 /* ─── Editorial Newspaper Illustration ─── */
 function NewspaperVisual() {
   return (
-    <div className="relative w-full max-w-lg mx-auto">
-      {/* ── Back newspaper (rotated left) ── */}
+    <div className="w-full max-w-md mx-auto">
+      {/* Back newspaper peeking */}
       <motion.div
-        initial={{ opacity: 0, x: -15, rotate: -6 }}
-        animate={{ opacity: 0.7, x: 0, rotate: -4 }}
-        transition={{ duration: 0.8, delay: 0.2 }}
-        className="absolute top-0 left-0 w-[75%] bg-[#f0ede4] border border-[#d8d2c5] rounded-sm shadow-md overflow-hidden"
-        style={{ zIndex: 1 }}
+        initial={{ opacity: 0, x: -10 }}
+        animate={{ opacity: 0.6, x: 0 }}
+        transition={{ duration: 0.7, delay: 0.2 }}
+        className="bg-[#f0ede4] border border-[#d8d2c5] rounded-sm shadow-sm overflow-hidden ml-6 mr-4 mb-[-60px] relative z-[1]"
       >
-        <div className="p-4">
-          <div className="border-b border-[#bfb8a8] pb-2 mb-2">
+        <div className="p-3">
+          <div className="border-b border-[#bfb8a8] pb-1.5 mb-1.5">
             <p className="text-[5px] uppercase tracking-[0.25em] text-[#8a8478] text-center font-semibold">The Daily Chronicle</p>
-            <p className="text-[4px] text-[#a09a8e] text-center mt-0.5">Est. 1952 — Independent Journalism</p>
           </div>
           <div className="space-y-1">
             <div className="h-1 bg-[#d8d2c5]/80 rounded w-full" />
             <div className="h-1 bg-[#d8d2c5]/80 rounded w-4/5" />
             <div className="h-1 bg-[#d8d2c5]/80 rounded w-full" />
-            <div className="h-1 bg-[#d8d2c5]/80 rounded w-3/5" />
-          </div>
-          <div className="mt-2 grid grid-cols-3 gap-1">
-            <div className="h-5 bg-[#d8d2c5]/60 rounded" />
-            <div className="h-5 bg-[#d8d2c5]/60 rounded" />
-            <div className="h-5 bg-[#d8d2c5]/60 rounded" />
           </div>
         </div>
       </motion.div>
 
-      {/* ── Main newspaper (rotated right) ── */}
+      {/* Main newspaper */}
       <motion.div
-        initial={{ opacity: 0, y: 20, rotate: 2 }}
-        animate={{ opacity: 1, y: 0, rotate: 1.5 }}
-        transition={{ duration: 0.8, delay: 0.35 }}
-        className="relative bg-[#fffcf6] border border-[#d8d2c5] rounded-sm shadow-xl overflow-hidden"
-        style={{ zIndex: 2 }}
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.7, delay: 0.35 }}
+        className="bg-[#fffcf6] border border-[#d8d2c5] rounded-sm shadow-xl overflow-hidden relative z-[2]"
       >
         {/* Masthead */}
         <div className="border-b-2 border-[#1e2522]/80 px-5 pt-4 pb-2">
@@ -115,38 +106,25 @@ function NewspaperVisual() {
             Scientists Confirm New Species Discovered in Deep Ocean Expedition
           </h4>
 
-          {/* Press photo area - detailed SVG illustration */}
+          {/* Press photo */}
           <div className="w-full h-28 sm:h-36 rounded overflow-hidden mb-3 relative bg-[#c8c1b4]">
             <svg viewBox="0 0 400 160" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
-              {/* Water/sea base */}
               <rect width="400" height="160" fill="#b8b0a2" />
-              {/* Sky area */}
               <rect width="400" height="60" fill="#d4cfc4" />
-              {/* Horizon line */}
               <line x1="0" y1="60" x2="400" y2="60" stroke="#a09a8e" strokeWidth="0.5" />
-              {/* Water waves */}
               <path d="M0 80 Q50 75 100 80 T200 80 T300 80 T400 80" fill="none" stroke="#a09a8e" strokeWidth="0.5" opacity="0.5" />
               <path d="M0 90 Q60 85 120 90 T240 90 T360 90 T400 90" fill="none" stroke="#a09a8e" strokeWidth="0.3" opacity="0.4" />
-              {/* Research vessel */}
               <rect x="150" y="45" width="100" height="20" rx="3" fill="#6b7268" />
               <rect x="160" y="35" width="20" height="15" rx="1" fill="#5a6354" />
-              {/* Mast */}
               <line x1="195" y1="15" x2="195" y2="35" stroke="#4a5244" strokeWidth="1.5" />
               <polygon points="195,15 210,25 195,30" fill="#6b7268" opacity="0.7" />
-              {/* Submersible */}
               <ellipse cx="200" cy="120" rx="15" ry="8" fill="#4a5244" />
               <ellipse cx="200" cy="120" rx="12" ry="6" fill="#5a6354" />
               <circle cx="200" cy="118" r="3" fill="#8a9180" />
-              {/* Cable */}
               <line x1="195" y1="65" x2="200" y2="112" stroke="#4a5244" strokeWidth="0.5" strokeDasharray="2,2" />
-              {/* Fish silhouettes */}
               <ellipse cx="100" cy="100" rx="8" ry="3" fill="#5a6354" opacity="0.3" />
               <ellipse cx="300" cy="95" rx="6" ry="2.5" fill="#5a6354" opacity="0.25" />
-              {/* Text overlay bars */}
-              <rect x="20" y="145" width="360" height="2" fill="#1e2522" opacity="0.05" />
-              <rect x="20" y="150" width="280" height="1.5" fill="#1e2522" opacity="0.04" />
             </svg>
-            {/* Photo caption */}
             <div className="absolute bottom-0 left-0 right-0 bg-[#1e2522]/50 px-2 py-1">
               <p className="text-[5px] text-white/80 italic" style={{ fontFamily: "'Source Serif 4', serif" }}>Fig. 1 — Research vessel deploying submersible at the Mariana Trench, 2025</p>
             </div>
@@ -175,7 +153,7 @@ function NewspaperVisual() {
         <div className="px-5 pb-3">
           <div className="border-t border-[#d8d2c5] pt-1.5 flex items-center justify-between">
             <span className="text-[5px] text-[#a09a8e] uppercase tracking-[0.15em]">Page A1</span>
-            <div className="flex items-center gap-1 bg-[#174a45]/8 px-1.5 py-0.5 rounded">
+            <div className="flex items-center gap-1 bg-[#174a45]/10 px-1.5 py-0.5 rounded">
               <CheckCircle2 className="w-2 h-2 text-[#174a45]" />
               <span className="text-[5px] text-[#174a45] font-semibold uppercase tracking-wider">Verified by Veritas</span>
             </div>
@@ -183,66 +161,41 @@ function NewspaperVisual() {
         </div>
       </motion.div>
 
-      {/* ── Small action cards ── */}
-      <motion.div
-        initial={{ opacity: 0, x: 10 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5, delay: 0.6 }}
-        className="absolute top-0 right-0 space-y-1 z-10"
-      >
+      {/* Action cards row */}
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.6 }} className="flex gap-2 justify-center mt-4">
         {["VERIFY", "ANALYZE", "STAY INFORMED"].map((text, i) => (
-          <motion.div
-            key={text}
-            initial={{ opacity: 0, x: 8 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3, delay: 0.7 + i * 0.08 }}
-            className="bg-[#fffcf6] border border-[#d8d2c5] rounded px-2 py-0.5 shadow-sm flex items-center gap-1"
-          >
+          <motion.div key={text} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.7 + i * 0.08 }}
+            className="bg-[#fffcf6] border border-[#d8d2c5] rounded px-2 py-1 shadow-sm flex items-center gap-1">
             <div className="w-1 h-1 rounded-full bg-[#174a45]" />
             <span className="text-[6px] font-semibold uppercase tracking-wider text-[#174a45]">{text}</span>
           </motion.div>
         ))}
       </motion.div>
 
-      {/* ── Credibility card ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 12, scale: 0.95 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.5, delay: 0.85 }}
-        className="absolute -bottom-4 left-[5%] bg-[#fffcf6] border border-[#d8d2c5] rounded-lg p-2.5 shadow-lg z-10"
-      >
-        <div className="flex items-center gap-1.5 mb-1">
-          <div className="w-4 h-4 rounded bg-[#174a45]/10 flex items-center justify-center">
-            <Shield className="w-2.5 h-2.5 text-[#174a45]" />
+      {/* Score cards row */}
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.8 }} className="flex gap-2 justify-center mt-3">
+        <div className="bg-[#fffcf6] border border-[#d8d2c5] rounded-lg p-2.5 shadow-md">
+          <div className="flex items-center gap-1.5 mb-1">
+            <div className="w-4 h-4 rounded bg-[#174a45]/10 flex items-center justify-center">
+              <Shield className="w-2.5 h-2.5 text-[#174a45]" />
+            </div>
+            <span className="text-[7px] font-semibold text-[#174a45] uppercase tracking-wider">Credibility</span>
           </div>
-          <span className="text-[7px] font-semibold text-[#174a45] uppercase tracking-wider">Credibility</span>
+          <div className="flex items-baseline gap-1">
+            <span className="text-base font-bold text-[#174a45]" style={{ fontFamily: "'DM Serif Display', serif" }}>92%</span>
+            <span className="text-[7px] text-[#8a8478]">Likely Credible</span>
+          </div>
+          <div className="mt-1 h-1 rounded-full bg-[#e8e3d8] overflow-hidden w-24">
+            <motion.div initial={{ width: 0 }} animate={{ width: "92%" }} transition={{ duration: 1.2, delay: 1.2, ease: [0.22, 1, 0.36, 1] }} className="h-full rounded-full bg-[#174a45]" />
+          </div>
         </div>
-        <div className="flex items-baseline gap-1">
-          <span className="text-base font-bold text-[#174a45]" style={{ fontFamily: "'DM Serif Display', serif" }}>92%</span>
-          <span className="text-[7px] text-[#8a8478]">Likely Credible</span>
+        <div className="bg-[#fffcf6] border border-[#b34a3c]/20 rounded-lg p-2.5 shadow-md">
+          <div className="flex items-center gap-1">
+            <AlertTriangle className="w-2.5 h-2.5 text-[#b34a3c]" />
+            <span className="text-[7px] font-semibold text-[#b34a3c]">3 Red Flags</span>
+          </div>
+          <p className="text-[6px] text-[#8a8478] mt-0.5 leading-relaxed">Sensationalism, anonymous sources</p>
         </div>
-        <div className="mt-1 h-1 rounded-full bg-[#e8e3d8] overflow-hidden">
-          <motion.div
-            initial={{ width: 0 }}
-            animate={{ width: "92%" }}
-            transition={{ duration: 1.2, delay: 1.2, ease: [0.22, 1, 0.36, 1] }}
-            className="h-full rounded-full bg-[#174a45]"
-          />
-        </div>
-      </motion.div>
-
-      {/* ── Red flag card ── */}
-      <motion.div
-        initial={{ opacity: 0, x: -10, scale: 0.95 }}
-        animate={{ opacity: 1, x: 0, scale: 1 }}
-        transition={{ duration: 0.5, delay: 1.0 }}
-        className="absolute -bottom-2 right-[10%] bg-[#fffcf6] border border-[#b34a3c]/20 rounded-lg p-2 shadow-lg z-10"
-      >
-        <div className="flex items-center gap-1">
-          <AlertTriangle className="w-2.5 h-2.5 text-[#b34a3c]" />
-          <span className="text-[7px] font-semibold text-[#b34a3c]">3 Red Flags</span>
-        </div>
-        <p className="text-[6px] text-[#8a8478] mt-0.5 leading-relaxed">Sensationalism, anonymous sources</p>
       </motion.div>
     </div>
   );
@@ -339,17 +292,12 @@ export default function Landing() {
       <motion.section style={{ opacity: heroOpacity, scale: heroScale }} className="relative pt-28 pb-12 px-5">
         <div className="mx-auto max-w-6xl">
           <div className="grid grid-cols-1 gap-8 items-center">
-            {/* Left: Text */}
             <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.2 }} className="max-w-xl">
               <motion.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}
-                className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground mb-4">
-                Fake News Detection
-              </motion.p>
+                className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground mb-4">Fake News Detection</motion.p>
               <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.35 }}
                 className="text-5xl sm:text-6xl lg:text-7xl leading-[1.05] tracking-tight mb-2"
-                style={{ fontFamily: "'DM Serif Display', serif", color: "#1E2522" }}>
-                Veritas
-              </motion.h1>
+                style={{ fontFamily: "'DM Serif Display', serif", color: "#1E2522" }}>Veritas</motion.h1>
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.4 }}
                 className="text-3xl sm:text-4xl lg:text-5xl leading-[1.1] tracking-tight mb-6 min-h-[1.3em]" style={{ color: "#1E2522" }}>
                 <AnimatedTagline />
@@ -379,8 +327,7 @@ export default function Landing() {
               </motion.div>
             </motion.div>
 
-            {/* Right: Newspaper Visual */}
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, delay: 0.3 }} className="relative">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, delay: 0.3 }}>
               <NewspaperVisual />
             </motion.div>
           </div>
