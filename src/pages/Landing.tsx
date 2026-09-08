@@ -3,7 +3,6 @@ import {
   Shield, Brain, Search, BarChart3, Eye, Zap,
   CheckCircle2, AlertTriangle, XCircle, ArrowRight,
   Globe, FileCheck, TrendingUp, Users,
-  ChevronRight, BookOpen, Newspaper,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
@@ -52,435 +51,418 @@ function AnimatedTagline() {
   );
 }
 
-/* ─── Photographic Cityscape Press Photo ─── */
-function CityPhoto() {
-  return (
-    <svg viewBox="0 0 480 320" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
-      <defs>
-        <linearGradient id="csSky" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#78746c" />
-          <stop offset="50%" stopColor="#9e9a90" />
-          <stop offset="100%" stopColor="#c5c0b5" />
-        </linearGradient>
-        <linearGradient id="csDistant" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#908c84" />
-          <stop offset="100%" stopColor="#aaa6a0" />
-        </linearGradient>
-        <linearGradient id="csRoad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#6a6660" />
-          <stop offset="100%" stopColor="#504e48" />
-        </linearGradient>
-        <linearGradient id="csBldgDark" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#3a3834" />
-          <stop offset="100%" stopColor="#2a2824" />
-        </linearGradient>
-        <linearGradient id="csBldgMid" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#555350" />
-          <stop offset="100%" stopColor="#444240" />
-        </linearGradient>
-        <linearGradient id="csHaze" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#b5b0a8" stopOpacity="0" />
-          <stop offset="60%" stopColor="#b5b0a8" stopOpacity="0.3" />
-          <stop offset="100%" stopColor="#c5c0b8" stopOpacity="0.7" />
-        </linearGradient>
-        <filter id="csGrain">
-          <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch" />
-          <feColorMatrix type="saturate" values="0" />
-          <feBlend in="SourceGraphic" mode="multiply" />
-        </filter>
-      </defs>
-
-      {/* Sky */}
-      <rect width="480" height="320" fill="url(#csSky)" />
-
-      {/* Clouds */}
-      <ellipse cx="80" cy="45" rx="55" ry="18" fill="#b0aca4" opacity="0.4" />
-      <ellipse cx="110" cy="40" rx="40" ry="15" fill="#b8b4ac" opacity="0.3" />
-      <ellipse cx="320" cy="55" rx="60" ry="14" fill="#b0aca4" opacity="0.35" />
-      <ellipse cx="400" cy="35" rx="45" ry="12" fill="#b5b1a8" opacity="0.25" />
-
-      {/* Distant hills */}
-      <path d="M0 160 Q60 130 120 145 Q180 120 240 140 Q300 115 360 135 Q420 120 480 150 L480 200 L0 200 Z" fill="url(#csDistant)" opacity="0.5" />
-
-      {/* Background buildings (far) */}
-      <rect x="15" y="140" width="18" height="60" fill="#7a7874" opacity="0.5" />
-      <rect x="38" y="130" width="14" height="70" fill="#807c78" opacity="0.45" />
-      <rect x="56" y="145" width="20" height="55" fill="#787570" opacity="0.5" />
-      <rect x="80" y="135" width="16" height="65" fill="#7a7874" opacity="0.4" />
-      <rect x="410" y="142" width="15" height="58" fill="#7a7874" opacity="0.45" />
-      <rect x="430" y="135" width="18" height="65" fill="#807c78" opacity="0.4" />
-      <rect x="452" y="148" width="20" height="52" fill="#787570" opacity="0.5" />
-
-      {/* Mid buildings */}
-      <rect x="25" y="115" width="28" height="85" fill="#5a5855" opacity="0.6" />
-      <rect x="60" y="100" width="24" height="100" fill="#605e5a" opacity="0.55" />
-      <rect x="90" y="110" width="30" height="90" fill="#555350" opacity="0.6" />
-
-      {/* Main tall building (center-left) */}
-      <rect x="145" y="55" width="48" height="145" fill="url(#csBldgDark)" />
-      <rect x="147" y="57" width="44" height="141" fill="#353330" />
-      {/* Spire */}
-      <polygon points="169,55 164,20 174,20" fill="#3a3835" />
-      <rect x="167.5" y="12" width="3" height="10" fill="#444240" />
-      {/* Windows - 6 rows x 4 cols */}
-      {[0,1,2,3,4,5].map(r => [0,1,2,3].map(c => (
-        <rect key={`w1-${r}-${c}`} x={151 + c * 10} y={62 + r * 18} width="6" height="10" rx="0.5"
-          fill={((r + c) % 3 === 0) ? "#c5c0b5" : ((r + c) % 2 === 0) ? "#2a2824" : "#1a1814"}
-          opacity={((r + c) % 3 === 0) ? 0.7 : 0.6} />
-      )))}
-      {/* Building details */}
-      <rect x="160" y="195" width="18" height="5" fill="#2a2824" />
-
-      {/* Second tall building (center) */}
-      <rect x="200" y="75" width="42" height="125" fill="url(#csBldgMid)" />
-      <rect x="202" y="77" width="38" height="121" fill="#4a4845" />
-      {/* Windows */}
-      {[0,1,2,3,4,5].map(r => [0,1,2].map(c => (
-        <rect key={`w2-${r}-${c}`} x={206 + c * 12} y={82 + r * 16} width="7" height="9" rx="0.5"
-          fill={((r + c) % 3 === 0) ? "#d5d0c8" : ((r + c) % 2 === 0) ? "#3a3835" : "#2a2824"}
-          opacity={((r + c) % 3 === 0) ? 0.65 : 0.55} />
-      )))}
-
-      {/* Domed building */}
-      <rect x="255" y="120" width="38" height="80" fill="#5a5855" />
-      <ellipse cx="274" cy="120" rx="22" ry="14" fill="#5a5855" />
-      <ellipse cx="274" cy="120" rx="19" ry="11" fill="#656360" />
-      {/* Dome detail lines */}
-      <line x1="274" y1="109" x2="274" y2="106" stroke="#5a5855" strokeWidth="1.5" />
-      <circle cx="274" cy="105" r="2" fill="#5a5855" />
-      {/* Windows */}
-      {[0,1,2].map(r => [0,1,2].map(c => (
-        <rect key={`w3-${r}-${c}`} x={260 + c * 10} y={128 + r * 14} width="5" height="8" rx="0.5"
-          fill={(r + c) % 2 === 0 ? "#c5c0b8" : "#4a4845"} opacity="0.6" />
-      )))}
-
-      {/* Right building */}
-      <rect x="305" y="90" width="50" height="110" fill="url(#csBldgMid)" />
-      <rect x="307" y="92" width="46" height="106" fill="#504e4a" />
-      {[0,1,2,3,4].map(r => [0,1,2,3].map(c => (
-        <rect key={`w4-${r}-${c}`} x={311 + c * 10} y={97 + r * 18} width="6" height="10" rx="0.5"
-          fill={(r + c) % 2 === 0 ? "#d0ccc4" : "#3a3835"} opacity={((r + c) % 3 === 0) ? 0.6 : 0.5} />
-      )))}
-
-      {/* Small building */}
-      <rect x="365" y="140" width="25" height="60" fill="#605e5a" />
-      {[0,1,2].map(r => [0,1].map(c => (
-        <rect key={`w5-${r}-${c}`} x={370 + c * 10} y={148 + r * 14} width="5" height="8" rx="0.5"
-          fill={r % 2 === 0 ? "#b5b0a8" : "#4a4845"} opacity="0.6" />
-      )))}
-
-      {/* Church with steeple */}
-      <rect x="100" y="130" width="22" height="70" fill="#5a5855" />
-      <polygon points="111,130 105,95 117,95" fill="#5a5855" />
-      <rect x="109.5" y="87" width="3" height="12" fill="#605e5a" />
-      <circle cx="111" cy="86" r="2" fill="#605e5a" />
-      {/* Church windows (arched) */}
-      <rect x="106" y="138" width="5" height="10" rx="2" fill="#b5b0a8" opacity="0.5" />
-      <rect x="114" y="138" width="5" height="10" rx="2" fill="#b5b0a8" opacity="0.5" />
-
-      {/* Trees along street */}
-      {[30, 125, 395, 445].map((x, i) => (
-        <g key={`tree-${i}`}>
-          <rect x={x} y="205" width="2.5" height="15" fill="#3a3835" />
-          <ellipse cx={x + 1.25} cy="198" rx="10" ry="14" fill="#3a3835" opacity="0.85" />
-          <ellipse cx={x - 2} cy="195" rx="8" ry="11" fill="#444240" opacity="0.7" />
-        </g>
-      ))}
-
-      {/* Street / road */}
-      <rect x="0" y="210" width="480" height="110" fill="url(#csRoad)" />
-      {/* Sidewalk */}
-      <rect x="0" y="210" width="480" height="8" fill="#706e68" opacity="0.5" />
-
-      {/* Lane markings */}
-      {[0,55,110,165,220,275,330,385,440].map((x, i) => (
-        <rect key={`lane-${i}`} x={x} y="262" width="30" height="2" rx="1" fill="#8a8884" opacity="0.35" />
-      ))}
-
-      {/* Cars */}
-      <g>
-        <rect x="70" y="240" width="44" height="14" rx="3" fill="#4a4845" />
-        <rect x="65" y="236" width="36" height="8" rx="2" fill="#555350" />
-        <rect x="70" y="236" width="12" height="6" rx="1" fill="#787570" opacity="0.5" />
-        <circle cx="80" cy="255" r="4" fill="#3a3835" />
-        <circle cx="105" cy="255" r="4" fill="#3a3835" />
-        <circle cx="80" cy="255" r="2" fill="#555350" />
-        <circle cx="105" cy="255" r="2" fill="#555350" />
-      </g>
-      <g>
-        <rect x="280" y="270" width="50" height="15" rx="3" fill="#555350" opacity="0.7" />
-        <rect x="275" y="266" width="40" height="9" rx="2" fill="#605e5a" opacity="0.7" />
-        <rect x="280" y="266" width="14" height="7" rx="1" fill="#787570" opacity="0.4" />
-        <circle cx="292" cy="286" r="4" fill="#3a3835" opacity="0.7" />
-        <circle cx="318" cy="286" r="4" fill="#3a3835" opacity="0.7" />
-      </g>
-
-      {/* Street lamps */}
-      <rect x="165" y="195" width="2" height="30" fill="#5a5855" />
-      <rect x="159" y="193" width="14" height="3" rx="1" fill="#656360" />
-      <ellipse cx="166" cy="192" rx="4" ry="2.5" fill="#d5d0c8" opacity="0.4" />
-
-      <rect x="340" y="195" width="2" height="30" fill="#5a5855" />
-      <rect x="334" y="193" width="14" height="3" rx="1" fill="#656360" />
-      <ellipse cx="341" cy="192" rx="4" ry="2.5" fill="#d5d0c8" opacity="0.4" />
-
-      {/* Atmospheric haze overlay */}
-      <rect width="480" height="320" fill="url(#csHaze)" />
-
-      {/* Grain overlay */}
-      <rect width="480" height="320" fill="transparent" filter="url(#csGrain)" opacity="0.04" />
-    </svg>
-  );
-}
-
-/* ─── Photographic People Reading ─── */
-function PeoplePhoto() {
-  return (
-    <svg viewBox="0 0 360 240" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
-      <defs>
-        <radialGradient id="ppLight" cx="35%" cy="30%" r="60%">
-          <stop offset="0%" stopColor="#a5a098" stopOpacity="0.3" />
-          <stop offset="100%" stopColor="#6a6560" stopOpacity="0" />
-        </radialGradient>
-        <linearGradient id="ppWall" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#8a8580" />
-          <stop offset="100%" stopColor="#7a7570" />
-        </linearGradient>
-      </defs>
-
-      {/* Room background */}
-      <rect width="360" height="240" fill="#7a7570" />
-      <rect width="360" height="130" fill="#858078" />
-
-      {/* Wall details - frames */}
-      <rect x="25" y="18" width="45" height="35" rx="1" fill="#8a8580" stroke="#6a6560" strokeWidth="1" />
-      <rect x="28" y="21" width="39" height="29" fill="#6a6560" />
-      <rect x="270" y="22" width="40" height="30" rx="1" fill="#8a8580" stroke="#6a6560" strokeWidth="1" />
-      <rect x="273" y="25" width="34" height="24" fill="#6a6560" />
-
-      {/* Window light beam (left side) */}
-      <polygon points="0,0 60,0 90,240 0,240" fill="#b5b0a8" opacity="0.06" />
-
-      {/* Table */}
-      <rect x="30" y="130" width="300" height="6" rx="1" fill="#5a5550" />
-      <rect x="55" y="136" width="8" height="55" fill="#4a4540" />
-      <rect x="295" y="136" width="8" height="55" fill="#4a4540" />
-
-      {/* Person 1 (left) - reading newspaper */}
-      <circle cx="110" cy="82" r="16" fill="#5a5550" />
-      <ellipse cx="110" cy="78" rx="14" ry="10" fill="#656058" />
-      {/* Hair */}
-      <path d="M96 78 Q100 65 110 64 Q120 65 124 78" fill="#4a4540" />
-      {/* Body */}
-      <rect x="94" y="98" width="32" height="34" rx="6" fill="#504e48" />
-      {/* Arms */}
-      <rect x="82" y="102" width="14" height="28" rx="5" fill="#504e48" transform="rotate(12 89 116)" />
-      <rect x="124" y="102" width="14" height="28" rx="5" fill="#504e48" transform="rotate(-12 131 116)" />
-
-      {/* Newspaper held by person 1 */}
-      <rect x="75" y="110" width="85" height="58" rx="1" fill="#d5d0c8" transform="rotate(-5 117 139)" />
-      <line x1="117" y1="110" x2="117" y2="168" stroke="#c0bbb4" strokeWidth="0.6" transform="rotate(-5 117 139)" />
-      {/* Headline */}
-      <rect x="82" y="115" width="30" height="5" rx="0.5" fill="#8a8580" opacity="0.7" transform="rotate(-5 97 117)" />
-      {/* Text lines left column */}
-      {[0,1,2,3,4,5,6,7].map(i => (
-        <rect key={`nl1-${i}`} x="82" y={125 + i * 4.5} width={22 + (i % 3) * 4} height="1.2" rx="0.3"
-          fill="#a5a098" opacity="0.55" transform="rotate(-5 93 127)" />
-      ))}
-      {/* Text lines right column */}
-      {[0,1,2,3,4,5,6,7].map(i => (
-        <rect key={`nr1-${i}`} x="122" y={115 + i * 4.5} width={24 + (i % 3) * 3} height="1.2" rx="0.3"
-          fill="#a5a098" opacity="0.55" transform="rotate(-5 134 117)" />
-      ))}
-      {/* Small photo in newspaper */}
-      <rect x="83" y="148" width="15" height="12" fill="#9a9590" opacity="0.6" transform="rotate(-5 90 154)" />
-
-      {/* Person 2 (right) - standing, holding clipboard */}
-      <circle cx="240" cy="72" r="15" fill="#6a6560" />
-      <ellipse cx="240" cy="68" rx="13" ry="9" fill="#757068" />
-      <path d="M227 68 Q232 55 240 54 Q248 55 253 68" fill="#555350" />
-      {/* Body */}
-      <rect x="225" y="87" width="30" height="40" rx="5" fill="#5a5855" />
-      {/* Arms */}
-      <rect x="220" y="90" width="10" height="24" rx="4" fill="#5a5855" transform="rotate(8 225 102)" />
-      <rect x="250" y="90" width="10" height="24" rx="4" fill="#5a5855" transform="rotate(-15 255 102)" />
-      {/* Clipboard */}
-      <rect x="255" y="100" width="20" height="28" rx="1" fill="#d5d0c8" opacity="0.7" transform="rotate(-5 265 114)" />
-      <rect x="258" y="104" width="14" height="2" fill="#a5a098" opacity="0.5" transform="rotate(-5 265 105)" />
-      <rect x="258" y="109" width="12" height="1.5" fill="#a5a098" opacity="0.4" transform="rotate(-5 264 110)" />
-      <rect x="258" y="113" width="14" height="1.5" fill="#a5a098" opacity="0.4" transform="rotate(-5 264 114)" />
-
-      {/* Person 3 (center, sitting, typing) */}
-      <circle cx="180" cy="88" r="13" fill="#5a5550" />
-      <ellipse cx="180" cy="85" rx="11" ry="8" fill="#656058" />
-      <path d="M169 84 Q174 73 180 72 Q186 73 191 84" fill="#4a4540" />
-      {/* Body */}
-      <rect x="167" y="101" width="26" height="30" rx="5" fill="#504e48" />
-      {/* Arms on desk */}
-      <rect x="158" y="110" width="12" height="20" rx="4" fill="#504e48" transform="rotate(15 164 120)" />
-      <rect x="190" y="110" width="12" height="20" rx="4" fill="#504e48" transform="rotate(-15 196 120)" />
-      {/* Laptop */}
-      <rect x="155" y="125" width="50" height="3" rx="0.5" fill="#4a4845" />
-      <rect x="160" y="110" width="40" height="18" rx="1" fill="#3a3835" />
-      <rect x="162" y="112" width="36" height="14" fill="#444240" />
-      {/* Screen glow */}
-      <rect x="164" y="114" width="32" height="10" fill="#555350" opacity="0.3" />
-
-      {/* Coffee cup on table */}
-      <rect x="305" y="118" width="14" height="12" rx="1" fill="#d5d0c8" opacity="0.6" />
-      <ellipse cx="312" cy="118" rx="8" ry="2" fill="#c5c0b8" opacity="0.6" />
-      {/* Steam */}
-      <path d="M309 114 Q311 108 313 114" fill="none" stroke="#c5c0b8" strokeWidth="0.7" opacity="0.3" />
-      <path d="M311 112 Q313 106 315 112" fill="none" stroke="#c5c0b8" strokeWidth="0.5" opacity="0.25" />
-
-      {/* Papers scattered on table */}
-      <rect x="180" y="120" width="30" height="20" rx="0.5" fill="#d0ccc4" opacity="0.5" transform="rotate(8 195 130)" />
-      <rect x="230" y="118" width="25" height="18" rx="0.5" fill="#c8c4bc" opacity="0.4" transform="rotate(-5 242 127)" />
-
-      {/* Ambient light */}
-      <rect width="360" height="240" fill="url(#ppLight)" />
-
-      {/* Subtle vignette */}
-      <rect width="360" height="240" fill="transparent" opacity="0.15"
-        style={{ filter: "drop-shadow(inset 0 0 40px rgba(0,0,0,0.3))" }} />
-    </svg>
-  );
-}
-
-/* ─── Newspaper Collage Visual ─── */
+/* ─── Newspaper Collage Visual (CSS-based, guaranteed to render) ─── */
 function NewspaperVisual() {
   return (
-    <div className="w-full max-w-lg mx-auto">
-      {/* Back newspaper clipping */}
+    <div className="w-full max-w-lg mx-auto relative" style={{ minHeight: 420 }}>
+      {/* ── Back newspaper clipping ── */}
       <motion.div
-        initial={{ opacity: 0, rotate: -6, x: -15 }}
-        animate={{ opacity: 1, rotate: -3.5, x: 0 }}
+        initial={{ opacity: 0, rotate: -5, x: -10 }}
+        animate={{ opacity: 1, rotate: -3, x: 0 }}
         transition={{ duration: 0.8, delay: 0.2 }}
-        className="bg-[#fffcf6] border border-[#d8d2c5] rounded-sm shadow-lg overflow-hidden ml-6 mr-14 mb-[-50px] relative z-[1] w-[72%]"
+        className="absolute left-4 sm:left-6 top-0 w-[70%] rounded-sm shadow-lg overflow-hidden z-[1]"
+        style={{ background: "#fffcf6", border: "1px solid #d8d2c5" }}
       >
-        <div className="border-b border-[#d8d2c5] px-3 pt-2 pb-1">
-          <p className="text-[5px] uppercase tracking-[0.2em] text-[#8a8478] text-center font-semibold" style={{ fontFamily: "'DM Serif Display', serif" }}>
-            The Morning Chronicle
-          </p>
-          <p className="text-[4px] text-center text-[#b5b0a8] uppercase tracking-[0.15em]">Est. 1923 — Final Edition</p>
+        {/* Masthead */}
+        <div className="border-b px-3 pt-2 pb-1" style={{ borderColor: "#d8d2c5" }}>
+          <p className="text-center font-semibold uppercase" style={{
+            fontSize: 7, letterSpacing: "0.2em", color: "#8a8478",
+            fontFamily: "'DM Serif Display', serif"
+          }}>The Morning Chronicle</p>
+          <p className="text-center uppercase" style={{
+            fontSize: 5, letterSpacing: "0.15em", color: "#b5b0a8"
+          }}>Est. 1923 — Final Edition</p>
         </div>
-        <div className="w-full h-24 overflow-hidden bg-[#e8e4dc]">
-          <PeoplePhoto />
+        {/* Photo area - warm grayscale room scene */}
+        <div className="w-full relative" style={{
+          height: 120, background: "linear-gradient(135deg, #7a7570 0%, #8a8580 30%, #6a6560 100%)"
+        }}>
+          {/* Window light */}
+          <div className="absolute" style={{
+            top: 0, left: 0, width: "30%", height: "100%",
+            background: "linear-gradient(135deg, rgba(180,175,168,0.3) 0%, transparent 100%)"
+          }} />
+          {/* Table */}
+          <div className="absolute" style={{
+            bottom: 30, left: "15%", width: "70%", height: 6,
+            background: "#5a5550", borderRadius: 1
+          }} />
+          {/* Person 1 - reading */}
+          <div className="absolute" style={{ left: "20%", bottom: 38 }}>
+            <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#5a5550", marginBottom: -4 }} />
+            <div style={{ width: 32, height: 30, borderRadius: "6px 6px 0 0", background: "#504e48" }} />
+            {/* Newspaper in hands */}
+            <div className="absolute" style={{
+              top: 20, left: -15, width: 55, height: 35,
+              background: "#d5d0c8", borderRadius: 1,
+              transform: "rotate(-8deg)"
+            }}>
+              <div className="absolute" style={{
+                top: 8, left: 6, width: 20, height: 3,
+                background: "#8a8580", borderRadius: 0.5, opacity: 0.7
+              }} />
+              <div className="absolute" style={{
+                top: 14, left: 6, width: 18, height: 1.5,
+                background: "#a5a098", borderRadius: 0.5, opacity: 0.5
+              }} />
+              <div className="absolute" style={{
+                top: 18, left: 6, width: 16, height: 1.5,
+                background: "#a5a098", borderRadius: 0.5, opacity: 0.5
+              }} />
+              <div className="absolute" style={{
+                top: 22, left: 6, width: 20, height: 1.5,
+                background: "#a5a098", borderRadius: 0.5, opacity: 0.5
+              }} />
+              <div className="absolute" style={{
+                top: 26, left: 6, width: 14, height: 1.5,
+                background: "#a5a098", borderRadius: 0.5, opacity: 0.5
+              }} />
+              <div className="absolute" style={{
+                top: 8, left: 28, width: 18, height: 1.5,
+                background: "#a5a098", borderRadius: 0.5, opacity: 0.5
+              }} />
+              <div className="absolute" style={{
+                top: 12, left: 28, width: 20, height: 1.5,
+                background: "#a5a098", borderRadius: 0.5, opacity: 0.5
+              }} />
+              <div className="absolute" style={{
+                top: 16, left: 28, width: 15, height: 1.5,
+                background: "#a5a098", borderRadius: 0.5, opacity: 0.5
+              }} />
+            </div>
+          </div>
+          {/* Person 2 - standing */}
+          <div className="absolute" style={{ right: "20%", bottom: 38 }}>
+            <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#6a6560", marginBottom: -3 }} />
+            <div style={{ width: 28, height: 34, borderRadius: "5px 5px 0 0", background: "#5a5855" }} />
+          </div>
+          {/* Coffee cup */}
+          <div className="absolute" style={{
+            bottom: 36, right: "32%", width: 12, height: 10,
+            background: "#d5d0c8", borderRadius: "0 0 2px 2px", opacity: 0.6
+          }} />
+          {/* Wall frames */}
+          <div className="absolute" style={{
+            top: 12, left: "8%", width: 30, height: 22,
+            border: "1px solid #6a6560", borderRadius: 1, background: "#6a6560"
+          }} />
+          <div className="absolute" style={{
+            top: 15, right: "10%", width: 25, height: 20,
+            border: "1px solid #6a6560", borderRadius: 1, background: "#6a6560"
+          }} />
         </div>
+        {/* Text lines */}
         <div className="p-2.5 space-y-1">
-          <div className="h-1 bg-[#d8d2c5]/70 rounded w-full" />
-          <div className="h-1 bg-[#d8d2c5]/70 rounded w-4/5" />
-          <div className="h-1 bg-[#d8d2c5]/70 rounded w-full" />
-          <div className="h-1 bg-[#d8d2c5]/70 rounded w-3/4" />
+          <div style={{ height: 4, background: "#d8d2c5", borderRadius: 2, opacity: 0.7, width: "100%" }} />
+          <div style={{ height: 4, background: "#d8d2c5", borderRadius: 2, opacity: 0.7, width: "80%" }} />
+          <div style={{ height: 4, background: "#d8d2c5", borderRadius: 2, opacity: 0.7, width: "95%" }} />
+          <div style={{ height: 4, background: "#d8d2c5", borderRadius: 2, opacity: 0.7, width: "70%" }} />
         </div>
       </motion.div>
 
-      {/* Main newspaper front page */}
+      {/* ── Main newspaper front page ── */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, delay: 0.4 }}
-        className="bg-[#fffcf6] border border-[#d8d2c5] rounded-sm shadow-2xl overflow-hidden relative z-[2]"
+        className="relative rounded-sm shadow-2xl overflow-hidden z-[2]"
+        style={{
+          background: "#fffcf6", border: "1px solid #d8d2c5",
+          marginTop: 120
+        }}
       >
         {/* Masthead */}
-        <div className="border-b-2 border-[#1e2522]/80 px-5 pt-3 pb-2">
+        <div className="px-5 pt-3 pb-2" style={{ borderBottom: "2px solid rgba(30,37,34,0.8)" }}>
           <div className="flex items-center justify-between">
-            <p className="text-[5px] text-[#8a8478] uppercase tracking-[0.2em]">Vol. CXII — No. 34,891</p>
-            <p className="text-[5px] text-[#8a8478] uppercase tracking-[0.2em]">Monday, Sep 8, 2026</p>
+            <span className="uppercase" style={{ fontSize: 6, color: "#8a8478", letterSpacing: "0.2em" }}>
+              Vol. CXII — No. 34,891
+            </span>
+            <span className="uppercase" style={{ fontSize: 6, color: "#8a8478", letterSpacing: "0.2em" }}>
+              Monday, Sep 8, 2026
+            </span>
           </div>
-          <h3 className="text-center text-xl sm:text-2xl tracking-tight mt-1 text-[#1e2522]" style={{ fontFamily: "'DM Serif Display', serif" }}>NEWS</h3>
+          <h3 className="text-center mt-1" style={{
+            fontFamily: "'DM Serif Display', serif",
+            fontSize: 28, color: "#1e2522", letterSpacing: "-0.02em"
+          }}>NEWS</h3>
           <div className="flex items-center justify-center gap-2 mt-0.5">
-            <div className="h-px bg-[#1e2522]/20 flex-1" />
-            <p className="text-[6px] uppercase tracking-[0.2em] text-[#8a8478] italic" style={{ fontFamily: "'Source Serif 4', serif" }}>Truth Matters</p>
-            <div className="h-px bg-[#1e2522]/20 flex-1" />
+            <div style={{ height: 1, flex: 1, background: "rgba(30,37,34,0.2)" }} />
+            <span className="italic uppercase" style={{
+              fontSize: 7, color: "#8a8478", letterSpacing: "0.2em",
+              fontFamily: "'Source Serif 4', serif"
+            }}>Truth Matters</span>
+            <div style={{ height: 1, flex: 1, background: "rgba(30,37,34,0.2)" }} />
           </div>
         </div>
 
-        {/* Article content */}
-        <div className="p-4">
-          <h4 className="text-xs sm:text-sm font-bold leading-snug mb-3 text-[#1e2522]" style={{ fontFamily: "'DM Serif Display', serif" }}>
+        {/* Article headline */}
+        <div className="px-5 pt-4 pb-2">
+          <h4 style={{
+            fontFamily: "'DM Serif Display', serif",
+            fontSize: 14, fontWeight: 700, lineHeight: 1.3,
+            color: "#1e2522"
+          }}>
             Scientists Confirm New Species Discovered in Deep Ocean Expedition
           </h4>
-          {/* Press photo - cityscape */}
-          <div className="w-full h-40 sm:h-52 rounded-sm overflow-hidden mb-3 relative border border-[#d8d2c5]">
-            <CityPhoto />
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-[#1e2522]/70 via-[#1e2522]/30 to-transparent px-3 py-2">
-              <p className="text-[7px] text-white/80 italic" style={{ fontFamily: "'Source Serif 4', serif" }}>
-                Downtown financial district — Aerial survey, September 2025
-              </p>
-            </div>
+        </div>
+
+        {/* Press photo — cityscape */}
+        <div className="mx-5 relative mb-3" style={{
+          height: 180, border: "1px solid #d8d2c5", borderRadius: 2,
+          overflow: "hidden",
+          background: "linear-gradient(180deg, #78746c 0%, #9e9a90 40%, #c5c0b5 100%)"
+        }}>
+          {/* Clouds */}
+          <div className="absolute" style={{
+            top: 15, left: "15%", width: 80, height: 20,
+            borderRadius: 10, background: "#b0aca4", opacity: 0.4
+          }} />
+          <div className="absolute" style={{
+            top: 10, left: "55%", width: 60, height: 16,
+            borderRadius: 8, background: "#b8b4ac", opacity: 0.3
+          }} />
+
+          {/* Distant hills */}
+          <div className="absolute" style={{
+            top: 50, left: 0, right: 0, height: 40,
+            background: "linear-gradient(180deg, #908c84, #aaa6a0)",
+            opacity: 0.5, clipPath: "polygon(0 60%, 10% 40%, 20% 55%, 35% 30%, 50% 50%, 65% 25%, 80% 45%, 90% 35%, 100% 55%, 100% 100%, 0 100%)"
+          }} />
+
+          {/* Background buildings */}
+          <div className="absolute" style={{ bottom: 50, left: "3%", width: 18, height: 60, background: "#7a7874", opacity: 0.5 }} />
+          <div className="absolute" style={{ bottom: 50, left: "9%", width: 14, height: 70, background: "#807c78", opacity: 0.45 }} />
+          <div className="absolute" style={{ bottom: 50, left: "15%", width: 20, height: 55, background: "#787570", opacity: 0.5 }} />
+
+          {/* Main tall building */}
+          <div className="absolute" style={{ bottom: 50, left: "28%", width: 48, height: 130, background: "linear-gradient(180deg, #3a3834, #2a2824)" }}>
+            {/* Spire */}
+            <div className="absolute" style={{
+              top: -15, left: "50%", transform: "translateX(-50%)",
+              width: 0, height: 0,
+              borderLeft: "10px solid transparent",
+              borderRight: "10px solid transparent",
+              borderBottom: "18px solid #3a3835"
+            }} />
+            <div className="absolute" style={{ top: -25, left: "50%", transform: "translateX(-50%)", width: 3, height: 12, background: "#444240" }} />
+            {/* Windows grid */}
+            {[0,1,2,3,4,5].map(r => [0,1,2,3].map(c => (
+              <div key={`w1-${r}-${c}`} className="absolute" style={{
+                top: 8 + r * 18, left: 5 + c * 11, width: 7, height: 10, borderRadius: 0.5,
+                background: (r + c) % 3 === 0 ? "rgba(197,192,181,0.7)" : (r + c) % 2 === 0 ? "#2a2824" : "#1a1814"
+              }} />
+            )))}
           </div>
-          {/* Two-column article text */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <div className="h-[3px] bg-[#1e2522]/30 rounded w-3/4 mb-1.5" />
-              <div className="h-1 bg-[#d8d2c5]/60 rounded w-full" />
-              <div className="h-1 bg-[#d8d2c5]/60 rounded w-full" />
-              <div className="h-1 bg-[#d8d2c5]/60 rounded w-4/5" />
-              <div className="h-1 bg-[#d8d2c5]/60 rounded w-full" />
-              <div className="h-1 bg-[#d8d2c5]/60 rounded w-3/4" />
-              <div className="h-1 bg-[#d8d2c5]/60 rounded w-full" />
-              <div className="h-1 bg-[#d8d2c5]/60 rounded w-5/6" />
+
+          {/* Second tall building */}
+          <div className="absolute" style={{ bottom: 50, left: "46%", width: 40, height: 110, background: "linear-gradient(180deg, #555350, #444240)" }}>
+            {[0,1,2,3,4].map(r => [0,1,2].map(c => (
+              <div key={`w2-${r}-${c}`} className="absolute" style={{
+                top: 8 + r * 18, left: 5 + c * 12, width: 7, height: 9, borderRadius: 0.5,
+                background: (r + c) % 2 === 0 ? "rgba(208,204,196,0.65)" : "#3a3835"
+              }} />
+            )))}
+          </div>
+
+          {/* Domed building */}
+          <div className="absolute" style={{ bottom: 50, left: "64%", width: 36, height: 80, background: "#5a5855" }}>
+            <div className="absolute" style={{
+              top: -12, left: "50%", transform: "translateX(-50%)",
+              width: 44, height: 22, borderRadius: "50% 50% 0 0",
+              background: "#5a5855"
+            }} />
+            {[0,1,2].map(r => [0,1,2].map(c => (
+              <div key={`w3-${r}-${c}`} className="absolute" style={{
+                top: 14 + r * 14, left: 5 + c * 10, width: 5, height: 8, borderRadius: 0.5,
+                background: (r + c) % 2 === 0 ? "rgba(197,192,184,0.6)" : "#4a4845"
+              }} />
+            )))}
+          </div>
+
+          {/* Right buildings */}
+          <div className="absolute" style={{ bottom: 50, right: "8%", width: 30, height: 90, background: "linear-gradient(180deg, #504e4a, #444240)" }} />
+          <div className="absolute" style={{ bottom: 50, right: "3%", width: 22, height: 60, background: "#605e5a" }} />
+
+          {/* Church */}
+          <div className="absolute" style={{ bottom: 50, left: "20%", width: 20, height: 70, background: "#5a5855" }}>
+            <div className="absolute" style={{
+              top: -18, left: "50%", transform: "translateX(-50%)",
+              width: 0, height: 0,
+              borderLeft: "12px solid transparent",
+              borderRight: "12px solid transparent",
+              borderBottom: "20px solid #5a5855"
+            }} />
+            <div className="absolute" style={{ top: -28, left: "50%", transform: "translateX(-50%)", width: 3, height: 12, background: "#605e5a" }} />
+          </div>
+
+          {/* Trees */}
+          {[5, 22, 78, 92].map((pct, i) => (
+            <div key={`tree-${i}`} className="absolute" style={{ bottom: 50, left: `${pct}%` }}>
+              <div style={{ width: 2.5, height: 15, background: "#3a3835" }} />
+              <div className="absolute" style={{
+                top: -12, left: "50%", transform: "translateX(-50%)",
+                width: 20, height: 24, borderRadius: "50%",
+                background: "#3a3835", opacity: 0.85
+              }} />
             </div>
-            <div className="space-y-1">
-              <div className="h-[3px] bg-[#1e2522]/30 rounded w-2/3 mb-1.5" />
-              <div className="h-1 bg-[#d8d2c5]/60 rounded w-full" />
-              <div className="h-1 bg-[#d8d2c5]/60 rounded w-5/6" />
-              <div className="h-1 bg-[#d8d2c5]/60 rounded w-full" />
-              <div className="h-1 bg-[#d8d2c5]/60 rounded w-3/4" />
-              <div className="h-1 bg-[#d8d2c5]/60 rounded w-full" />
-              <div className="h-1 bg-[#d8d2c5]/60 rounded w-4/5" />
-              <div className="h-1 bg-[#d8d2c5]/60 rounded w-full" />
+          ))}
+
+          {/* Road */}
+          <div className="absolute" style={{
+            bottom: 0, left: 0, right: 0, height: 50,
+            background: "linear-gradient(180deg, #6a6660, #504e48)"
+          }} />
+          {/* Lane markings */}
+          {[0,15,30,45,60,75,90].map((pct, i) => (
+            <div key={`lane-${i}`} className="absolute" style={{
+              bottom: 15, left: `${pct}%`, width: 30, height: 2,
+              background: "#8a8884", opacity: 0.35, borderRadius: 1
+            }} />
+          ))}
+
+          {/* Cars */}
+          <div className="absolute" style={{ bottom: 22, left: "18%" }}>
+            <div style={{ width: 40, height: 12, background: "#4a4845", borderRadius: 3, position: "relative" }}>
+              <div className="absolute" style={{ top: -6, left: 4, width: 30, height: 6, background: "#555350", borderRadius: 2 }} />
+              <div className="absolute" style={{ top: -6, left: 4, width: 10, height: 5, background: "rgba(120,117,112,0.5)", borderRadius: 1 }} />
             </div>
+            <div className="absolute" style={{ bottom: -2, left: 6, width: 8, height: 8, borderRadius: "50%", background: "#3a3835" }} />
+            <div className="absolute" style={{ bottom: -2, right: 6, width: 8, height: 8, borderRadius: "50%", background: "#3a3835" }} />
+          </div>
+
+          <div className="absolute" style={{ bottom: 28, right: "30%" }}>
+            <div style={{ width: 44, height: 13, background: "#555350", borderRadius: 3, opacity: 0.7, position: "relative" }}>
+              <div className="absolute" style={{ top: -5, left: 4, width: 34, height: 6, background: "#605e5a", borderRadius: 2, opacity: 0.7 }} />
+            </div>
+            <div className="absolute" style={{ bottom: -2, left: 6, width: 8, height: 8, borderRadius: "50%", background: "#3a3835", opacity: 0.7 }} />
+            <div className="absolute" style={{ bottom: -2, right: 6, width: 8, height: 8, borderRadius: "50%", background: "#3a3835", opacity: 0.7 }} />
+          </div>
+
+          {/* Street lamps */}
+          <div className="absolute" style={{ bottom: 48, left: "35%" }}>
+            <div style={{ width: 2, height: 25, background: "#5a5855" }} />
+            <div className="absolute" style={{ top: -3, left: -6, width: 14, height: 3, background: "#656360", borderRadius: 1 }} />
+          </div>
+
+          {/* Haze overlay */}
+          <div className="absolute" style={{
+            inset: 0,
+            background: "linear-gradient(180deg, transparent 0%, rgba(181,176,168,0.3) 70%, rgba(197,192,184,0.7) 100%)"
+          }} />
+
+          {/* Caption */}
+          <div className="absolute bottom-0 left-0 right-0 px-3 py-2" style={{
+            background: "linear-gradient(transparent, rgba(30,37,34,0.7))"
+          }}>
+            <p className="italic" style={{
+              fontSize: 7, color: "rgba(255,255,255,0.8)",
+              fontFamily: "'Source Serif 4', serif"
+            }}>
+              Downtown financial district — Aerial survey, September 2025
+            </p>
+          </div>
+        </div>
+
+        {/* Two-column text */}
+        <div className="px-5 pb-3 grid grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <div style={{ height: 3, background: "rgba(30,37,34,0.3)", borderRadius: 2, width: "75%", marginBottom: 6 }} />
+            {[0,1,2,3,4,5,6,7].map(i => (
+              <div key={i} style={{
+                height: 4, background: "rgba(216,210,197,0.6)", borderRadius: 2,
+                width: `${90 + (i % 3) * 5}%`
+              }} />
+            ))}
+          </div>
+          <div className="space-y-1">
+            <div style={{ height: 3, background: "rgba(30,37,34,0.3)", borderRadius: 2, width: "65%", marginBottom: 6 }} />
+            {[0,1,2,3,4,5,6,7].map(i => (
+              <div key={i} style={{
+                height: 4, background: "rgba(216,210,197,0.6)", borderRadius: 2,
+                width: `${85 + (i % 3) * 7}%`
+              }} />
+            ))}
           </div>
         </div>
 
         {/* Footer */}
-        <div className="px-4 pb-3">
-          <div className="border-t border-[#d8d2c5] pt-1.5 flex items-center justify-between">
-            <span className="text-[5px] text-[#a09a8e] uppercase tracking-[0.15em]">Page A1</span>
-            <div className="flex items-center gap-1 bg-[#174a45]/10 px-1.5 py-0.5 rounded">
-              <CheckCircle2 className="w-2 h-2 text-[#174a45]" />
-              <span className="text-[5px] text-[#174a45] font-semibold uppercase tracking-wider">Verified by Veritas</span>
+        <div className="px-5 pb-3">
+          <div className="flex items-center justify-between pt-1.5" style={{ borderTop: "1px solid #d8d2c5" }}>
+            <span className="uppercase" style={{ fontSize: 5, color: "#a09a8e", letterSpacing: "0.15em" }}>Page A1</span>
+            <div className="flex items-center gap-1 px-1.5 py-0.5 rounded" style={{ background: "rgba(23,74,69,0.1)" }}>
+              <CheckCircle2 className="w-2 h-2" style={{ color: "#174a45" }} />
+              <span className="font-semibold uppercase" style={{ fontSize: 5, color: "#174a45", letterSpacing: "0.1em" }}>
+                Verified by Veritas
+              </span>
             </div>
           </div>
         </div>
       </motion.div>
 
-      {/* Action label cards */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.7 }} className="flex gap-2 justify-center mt-5">
+      {/* ── Action label cards ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.7 }}
+        className="flex gap-2 justify-center mt-5"
+      >
         {["VERIFY", "ANALYZE", "STAY INFORMED"].map((text, i) => (
-          <motion.div key={text} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.8 + i * 0.08 }}
-            className="bg-[#fffcf6] border border-[#d8d2c5] rounded px-2.5 py-1 shadow-sm flex items-center gap-1.5">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#174a45]" />
-            <span className="text-[6px] font-semibold uppercase tracking-wider text-[#174a45]">{text}</span>
+          <motion.div
+            key={text}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.8 + i * 0.08 }}
+            className="rounded px-2.5 py-1 shadow-sm flex items-center gap-1.5"
+            style={{ background: "#fffcf6", border: "1px solid #d8d2c5" }}
+          >
+            <div className="w-1.5 h-1.5 rounded-full" style={{ background: "#174a45" }} />
+            <span className="font-semibold uppercase" style={{ fontSize: 6, color: "#174a45", letterSpacing: "0.1em" }}>
+              {text}
+            </span>
           </motion.div>
         ))}
       </motion.div>
 
-      {/* Score cards */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.9 }} className="flex gap-3 justify-center mt-3">
-        <div className="bg-[#fffcf6] border border-[#d8d2c5] rounded-lg p-3 shadow-md">
+      {/* ── Score cards ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.9 }}
+        className="flex gap-3 justify-center mt-3"
+      >
+        <div className="rounded-lg p-3 shadow-md" style={{ background: "#fffcf6", border: "1px solid #d8d2c5" }}>
           <div className="flex items-center gap-1.5 mb-1">
-            <div className="w-4 h-4 rounded bg-[#174a45]/10 flex items-center justify-center">
-              <Shield className="w-2.5 h-2.5 text-[#174a45]" />
+            <div className="rounded flex items-center justify-center" style={{ width: 16, height: 16, background: "rgba(23,74,69,0.1)" }}>
+              <Shield className="w-2.5 h-2.5" style={{ color: "#174a45" }} />
             </div>
-            <span className="text-[7px] font-semibold text-[#174a45] uppercase tracking-wider">Credibility</span>
+            <span className="font-semibold uppercase" style={{ fontSize: 7, color: "#174a45", letterSpacing: "0.1em" }}>
+              Credibility
+            </span>
           </div>
           <div className="flex items-baseline gap-1">
-            <span className="text-base font-bold text-[#174a45]" style={{ fontFamily: "'DM Serif Display', serif" }}>92%</span>
-            <span className="text-[7px] text-[#8a8478]">Likely Credible</span>
+            <span className="font-bold" style={{ fontSize: 18, color: "#174a45", fontFamily: "'DM Serif Display', serif" }}>
+              92%
+            </span>
+            <span style={{ fontSize: 7, color: "#8a8478" }}>Likely Credible</span>
           </div>
-          <div className="mt-1 h-1.5 rounded-full bg-[#e8e3d8] overflow-hidden w-28">
-            <motion.div initial={{ width: 0 }} animate={{ width: "92%" }} transition={{ duration: 1.2, delay: 1.4, ease: [0.22, 1, 0.36, 1] }} className="h-full rounded-full bg-[#174a45]" />
+          <div className="mt-1 rounded-full overflow-hidden" style={{ height: 6, background: "#e8e3d8", width: 112 }}>
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: "92%" }}
+              transition={{ duration: 1.2, delay: 1.4, ease: [0.22, 1, 0.36, 1] }}
+              className="h-full rounded-full"
+              style={{ background: "#174a45" }}
+            />
           </div>
         </div>
-        <div className="bg-[#fffcf6] border border-[#b34a3c]/20 rounded-lg p-3 shadow-md">
+        <div className="rounded-lg p-3 shadow-md" style={{ background: "#fffcf6", border: "1px solid rgba(179,74,60,0.2)" }}>
           <div className="flex items-center gap-1">
-            <AlertTriangle className="w-2.5 h-2.5 text-[#b34a3c]" />
-            <span className="text-[7px] font-semibold text-[#b34a3c]">3 Red Flags</span>
+            <AlertTriangle className="w-2.5 h-2.5" style={{ color: "#b34a3c" }} />
+            <span className="font-semibold" style={{ fontSize: 7, color: "#b34a3c" }}>3 Red Flags</span>
           </div>
-          <p className="text-[6px] text-[#8a8478] mt-0.5 leading-relaxed">Sensationalism, anonymous sources</p>
+          <p className="mt-0.5 leading-relaxed" style={{ fontSize: 6, color: "#8a8478" }}>
+            Sensationalism, anonymous sources
+          </p>
         </div>
       </motion.div>
     </div>
@@ -577,7 +559,7 @@ export default function Landing() {
       {/* ─── Hero ─── */}
       <motion.section style={{ opacity: heroOpacity, scale: heroScale }} className="relative pt-28 pb-12 px-5">
         <div className="mx-auto max-w-6xl">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 items-start">
             <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.2 }} className="max-w-xl">
               <motion.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}
                 className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground mb-4">Fake News Detection</motion.p>
