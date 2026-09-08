@@ -55,127 +55,160 @@ function AnimatedTagline() {
 /* ─── Newspaper Collage Visual ─── */
 function NewspaperVisual() {
   return (
-    <div className="relative">
-      {/* Back newspaper layer - slightly rotated */}
+    <div className="relative min-h-[360px] sm:min-h-[420px]">
+      {/* Back newspaper - rotated left */}
       <motion.div
-        initial={{ opacity: 0, x: -30, y: -20 }}
+        initial={{ opacity: 0, x: -20, y: -10 }}
         animate={{ opacity: 1, x: 0, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.3 }}
-        className="absolute -top-8 -left-8 w-[90%] h-[85%] rounded-lg overflow-hidden shadow-xl border border-border/50"
-        style={{ transform: 'rotate(-5deg)' }}
+        transition={{ duration: 0.7, delay: 0.3 }}
+        className="absolute top-0 left-0 w-[80%] bg-card border border-border rounded shadow-md"
+        style={{ transform: "rotate(-4deg)" }}
       >
-        <div className="w-full h-full bg-card p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <div className="w-2 h-2 rounded-full bg-primary/30" />
-            <div className="h-2 bg-muted rounded w-16" />
+        <div className="p-4">
+          <div className="border-b-2 border-foreground/40 pb-2 mb-3">
+            <p className="text-[6px] uppercase tracking-[0.2em] text-muted-foreground/50 text-center">The Morning Chronicle</p>
           </div>
-          <div className="space-y-2">
-            <div className="h-2 bg-muted rounded w-full" />
-            <div className="h-2 bg-muted rounded w-3/4" />
-            <div className="h-2 bg-muted rounded w-5/6" />
+          <div className="space-y-1.5">
+            <div className="h-1.5 bg-muted/80 rounded w-full" />
+            <div className="h-1.5 bg-muted/80 rounded w-4/5" />
+            <div className="h-1.5 bg-muted/80 rounded w-full" />
+            <div className="h-1.5 bg-muted/80 rounded w-3/5" />
+          </div>
+          <div className="mt-2 grid grid-cols-3 gap-1">
+            <div className="h-6 bg-muted/60 rounded" />
+            <div className="h-6 bg-muted/60 rounded" />
+            <div className="h-6 bg-muted/60 rounded" />
           </div>
         </div>
       </motion.div>
 
-      {/* Main newspaper - front page with SVG illustration */}
+      {/* Main newspaper - front page */}
       <motion.div
-        initial={{ opacity: 0, x: 30, y: 20 }}
-        animate={{ opacity: 1, x: 0, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.5 }}
-        className="relative rounded-lg overflow-hidden shadow-2xl border border-border/60"
-        style={{ transform: 'rotate(2deg)' }}
+        initial={{ opacity: 0, y: 20, rotate: 1 }}
+        animate={{ opacity: 1, y: 0, rotate: 1 }}
+        transition={{ duration: 0.7, delay: 0.4 }}
+        className="absolute top-4 left-[10%] right-0 bg-card border border-border rounded shadow-xl overflow-hidden"
       >
-        {/* SVG Mountain Landscape Illustration */}
-        <div className="w-full h-48 sm:h-56 relative overflow-hidden bg-gradient-to-b from-[#d4cfc4] via-[#c8c1b4] to-[#e8e3d8]">
-          <svg viewBox="0 0 400 200" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
-            {/* Sky gradient */}
-            <defs>
-              <linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#c5bfb2" />
-                <stop offset="50%" stopColor="#d4cfc4" />
-                <stop offset="100%" stopColor="#e0dbd0" />
-              </linearGradient>
-              <linearGradient id="mountain1" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#6b7268" />
-                <stop offset="100%" stopColor="#8a9180" />
-              </linearGradient>
-              <linearGradient id="mountain2" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#4a5244" />
-                <stop offset="100%" stopColor="#6b7268" />
-              </linearGradient>
-              <linearGradient id="mountain3" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#3a4236" />
-                <stop offset="100%" stopColor="#5a6354" />
-              </linearGradient>
-            </defs>
-            {/* Sky */}
-            <rect width="400" height="200" fill="url(#sky)" />
-            {/* Far mountains */}
-            <path d="M0 180 L50 100 L80 120 L120 80 L160 110 L200 70 L240 100 L280 85 L320 105 L360 90 L400 100 L400 200 L0 200Z" fill="url(#mountain1)" opacity="0.6" />
-            {/* Mid mountains */}
-            <path d="M0 200 L30 140 L70 160 L110 120 L150 150 L190 110 L230 140 L270 125 L310 145 L350 130 L400 140 L400 200 L0 200Z" fill="url(#mountain2)" opacity="0.8" />
-            {/* Front mountains */}
-            <path d="M0 200 L40 160 L80 175 L120 145 L160 170 L200 140 L240 165 L280 150 L320 170 L360 155 L400 165 L400 200 L0 200Z" fill="url(#mountain3)" />
-            {/* Trees silhouette */}
-            <path d="M50 170 L55 155 L60 170Z M55 155 L58 140 L61 155Z" fill="#2a3226" opacity="0.7" />
-            <path d="M80 165 L85 150 L90 165Z M85 150 L88 138 L91 150Z" fill="#2a3226" opacity="0.6" />
-            <path d="M320 168 L325 153 L330 168Z M325 153 L328 140 L331 153Z" fill="#2a3226" opacity="0.7" />
-            <path d="M350 172 L355 158 L360 172Z M355 158 L358 145 L361 158Z" fill="#2a3226" opacity="0.5" />
-            {/* Fog layer */}
-            <rect y="160" width="400" height="40" fill="#e0dbd0" opacity="0.3" />
-          </svg>
-          {/* Overlay newspaper clipping */}
-          <div className="absolute bottom-0 left-4 right-4 bg-card/95 backdrop-blur-sm border border-border rounded shadow-lg p-3" style={{ transform: 'rotate(-1deg)' }}>
-            <div className="border-b border-foreground/30 pb-1.5 mb-2">
-              <h4 className="text-xs font-bold tracking-tight" style={{ fontFamily: "'DM Serif Display', serif" }}>NEWS</h4>
-              <p className="text-[6px] uppercase tracking-[0.15em] text-muted-foreground italic">Truth Matters</p>
-            </div>
-            <h5 className="text-[10px] font-bold leading-snug mb-1" style={{ fontFamily: "'DM Serif Display', serif" }}>
-              Breakthrough in Climate Research Published
-            </h5>
-            <p className="text-[7px] text-muted-foreground leading-relaxed">Scientists at leading universities confirm new findings...</p>
+        {/* Masthead */}
+        <div className="border-b-2 border-foreground/80 px-5 pt-4 pb-2">
+          <div className="flex items-center justify-between">
+            <p className="text-[6px] text-muted-foreground uppercase tracking-[0.15em]">Vol. CXII — No. 34,891</p>
+            <p className="text-[6px] text-muted-foreground uppercase tracking-[0.15em]">Price: Free</p>
+          </div>
+          <h3 className="text-center text-lg sm:text-xl tracking-tight mt-0.5" style={{ fontFamily: "'DM Serif Display', serif" }}>
+            NEWS
+          </h3>
+          <div className="flex items-center justify-center gap-2 mt-0.5">
+            <div className="h-px bg-foreground/15 flex-1" />
+            <p className="text-[6px] uppercase tracking-[0.15em] text-muted-foreground italic" style={{ fontFamily: "'Source Serif 4', serif" }}>
+              Truth Matters
+            </p>
+            <div className="h-px bg-foreground/15 flex-1" />
           </div>
         </div>
 
-        {/* Newspaper body below image */}
-        <div className="bg-card p-4 border-t border-border">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-[7px] text-muted-foreground/60 uppercase tracking-widest">Page A1</span>
+        {/* Article with image placeholder */}
+        <div className="p-5">
+          <h4 className="text-xs sm:text-sm font-bold leading-snug mb-2" style={{ fontFamily: "'DM Serif Display', serif" }}>
+            Scientists Discover New Species in Deep Ocean Expedition
+          </h4>
+          {/* Image placeholder - dark rectangle like a press photo */}
+          <div className="w-full h-24 sm:h-32 bg-gradient-to-br from-[#8a9180] via-[#6b7268] to-[#4a5244] rounded mb-3 relative overflow-hidden">
+            {/* Simulated photo content - waveform/textile pattern */}
+            <svg viewBox="0 0 300 120" className="w-full h-full opacity-30">
+              <defs>
+                <pattern id="pressGrid" width="12" height="12" patternUnits="userSpaceOnUse">
+                  <rect width="12" height="12" fill="none" />
+                  <circle cx="6" cy="6" r="0.8" fill="white" opacity="0.3" />
+                </pattern>
+              </defs>
+              <rect width="300" height="120" fill="url(#pressGrid)" />
+              {/* Simulated figures/silhouettes */}
+              <ellipse cx="80" cy="90" rx="25" ry="30" fill="white" opacity="0.08" />
+              <ellipse cx="150" cy="85" rx="20" ry="35" fill="white" opacity="0.06" />
+              <ellipse cx="220" cy="88" rx="22" ry="32" fill="white" opacity="0.07" />
+              <rect x="60" y="40" width="180" height="1" fill="white" opacity="0.1" />
+              <rect x="40" y="60" width="220" height="1" fill="white" opacity="0.08" />
+            </svg>
+            {/* Caption bar */}
+            <div className="absolute bottom-0 left-0 right-0 bg-foreground/40 px-2 py-1">
+              <p className="text-[6px] text-white/80 italic">Fig. 1 — Research vessel at the Mariana Trench, 2025</p>
+            </div>
+          </div>
+          {/* Article text columns */}
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <div className="h-1 bg-muted/70 rounded w-full" />
+              <div className="h-1 bg-muted/70 rounded w-full" />
+              <div className="h-1 bg-muted/70 rounded w-4/5" />
+              <div className="h-1 bg-muted/70 rounded w-full" />
+              <div className="h-1 bg-muted/70 rounded w-3/4" />
+            </div>
+            <div className="space-y-1">
+              <div className="h-1 bg-muted/70 rounded w-full" />
+              <div className="h-1 bg-muted/70 rounded w-full" />
+              <div className="h-1 bg-muted/70 rounded w-3/4" />
+              <div className="h-1 bg-muted/70 rounded w-full" />
+              <div className="h-1 bg-muted/70 rounded w-4/5" />
+            </div>
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-5 pb-3">
+          <div className="border-t border-border/40 pt-1.5 flex items-center justify-between">
+            <span className="text-[6px] text-muted-foreground/40 uppercase tracking-[0.15em]">Page A1</span>
             <div className="flex items-center gap-1 bg-primary/8 px-1.5 py-0.5 rounded">
               <CheckCircle2 className="w-2 h-2 text-primary" />
-              <span className="text-[7px] text-primary font-semibold uppercase tracking-wider">Verified</span>
+              <span className="text-[6px] text-primary font-semibold uppercase tracking-wider">Verified</span>
             </div>
-          </div>
-          <div className="space-y-1">
-            <div className="h-1 bg-muted/60 rounded w-full" />
-            <div className="h-1 bg-muted/60 rounded w-4/5" />
-            <div className="h-1 bg-muted/60 rounded w-full" />
           </div>
         </div>
       </motion.div>
 
-      {/* Floating verification card */}
+      {/* Small verification action cards - like the reference image */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.7 }}
+        className="absolute top-2 right-0 space-y-1.5 z-10"
+      >
+        {["VERIFY", "ANALYZE", "STAY INFORMED"].map((text, i) => (
+          <motion.div
+            key={text}
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4, delay: 0.8 + i * 0.1 }}
+            className="bg-card border border-border rounded px-2.5 py-1 shadow-sm flex items-center gap-1.5"
+          >
+            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+            <span className="text-[7px] font-semibold uppercase tracking-wider text-primary">{text}</span>
+          </motion.div>
+        ))}
+      </motion.div>
+
+      {/* Floating credibility card */}
       <motion.div
         initial={{ opacity: 0, y: 16, scale: 0.9 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.6, delay: 0.8 }}
-        className="absolute -bottom-4 -right-4 bg-card border border-border rounded-lg p-3 shadow-lg max-w-[200px] z-10"
+        transition={{ duration: 0.6, delay: 0.9 }}
+        className="absolute bottom-8 left-[5%] bg-card border border-border rounded-lg p-3 shadow-lg max-w-[180px] z-10"
       >
         <div className="flex items-center gap-2 mb-1.5">
           <div className="w-5 h-5 rounded bg-primary/10 flex items-center justify-center">
             <Shield className="w-3 h-3 text-primary" />
           </div>
-          <span className="text-[9px] font-semibold text-primary uppercase tracking-wider">Credibility Score</span>
+          <span className="text-[8px] font-semibold text-primary uppercase tracking-wider">Credibility Score</span>
         </div>
         <div className="flex items-baseline gap-1">
-          <span className="text-xl font-bold text-primary" style={{ fontFamily: "'DM Serif Display', serif" }}>92%</span>
-          <span className="text-[9px] text-muted-foreground">Likely Credible</span>
+          <span className="text-lg font-bold text-primary" style={{ fontFamily: "'DM Serif Display', serif" }}>92%</span>
+          <span className="text-[8px] text-muted-foreground">Likely Credible</span>
         </div>
-        <div className="mt-1.5 h-1 rounded-full bg-muted overflow-hidden">
+        <div className="mt-1 h-1 rounded-full bg-muted overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: "92%" }}
-            transition={{ duration: 1.2, delay: 1.2, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 1.2, delay: 1.3, ease: [0.22, 1, 0.36, 1] }}
             className="h-full rounded-full bg-primary"
           />
         </div>
@@ -183,16 +216,16 @@ function NewspaperVisual() {
 
       {/* Floating red flag card */}
       <motion.div
-        initial={{ opacity: 0, x: -16, scale: 0.9 }}
+        initial={{ opacity: 0, x: -12, scale: 0.9 }}
         animate={{ opacity: 1, x: 0, scale: 1 }}
-        transition={{ duration: 0.6, delay: 1.0 }}
-        className="absolute -bottom-2 -left-8 bg-card border border-destructive/20 rounded-lg p-2.5 shadow-lg max-w-[160px] z-10"
+        transition={{ duration: 0.5, delay: 1.1 }}
+        className="absolute bottom-0 right-[15%] bg-card border border-destructive/20 rounded-lg p-2 shadow-lg z-10"
       >
-        <div className="flex items-center gap-1.5">
-          <AlertTriangle className="w-3 h-3 text-destructive" />
-          <span className="text-[9px] font-semibold text-destructive">3 Red Flags</span>
+        <div className="flex items-center gap-1">
+          <AlertTriangle className="w-2.5 h-2.5 text-destructive" />
+          <span className="text-[8px] font-semibold text-destructive">3 Red Flags</span>
         </div>
-        <p className="text-[8px] text-muted-foreground mt-0.5 leading-relaxed">Sensationalism, anonymous sources, urgency language</p>
+        <p className="text-[7px] text-muted-foreground mt-0.5 leading-relaxed">Sensationalism, anonymous sources</p>
       </motion.div>
     </div>
   );
@@ -271,24 +304,13 @@ export default function Landing() {
               <span className="text-sm font-bold tracking-wide uppercase" style={{ fontFamily: "'DM Serif Display', serif" }}>Veritas</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <Button variant="ghost" className="cursor-pointer hidden sm:inline-flex text-xs" onClick={() => navigate("/dashboard")}>
-                Home
-              </Button>
-              <Button variant="ghost" className="cursor-pointer hidden sm:inline-flex text-xs" onClick={() => navigate("/dashboard")}>
-                Analyze
-              </Button>
-              <Button variant="ghost" className="cursor-pointer hidden sm:inline-flex text-xs" onClick={() => navigate("/dashboard")}>
-                History
-              </Button>
-              <Button variant="ghost" className="cursor-pointer hidden sm:inline-flex text-xs" onClick={() => navigate("/dashboard")}>
-                Statistics
-              </Button>
-              <Button variant="ghost" className="cursor-pointer hidden sm:inline-flex text-xs" onClick={() => navigate("/dashboard")}>
-                Methodology
-              </Button>
+              <Button variant="ghost" className="cursor-pointer hidden sm:inline-flex text-xs" onClick={() => navigate("/dashboard")}>Home</Button>
+              <Button variant="ghost" className="cursor-pointer hidden sm:inline-flex text-xs" onClick={() => navigate("/dashboard")}>Analyze</Button>
+              <Button variant="ghost" className="cursor-pointer hidden sm:inline-flex text-xs" onClick={() => navigate("/dashboard")}>History</Button>
+              <Button variant="ghost" className="cursor-pointer hidden sm:inline-flex text-xs" onClick={() => navigate("/dashboard")}>Statistics</Button>
+              <Button variant="ghost" className="cursor-pointer hidden sm:inline-flex text-xs" onClick={() => navigate("/dashboard")}>Methodology</Button>
               <div className="w-px h-4 bg-border mx-1" />
-              <Button className="cursor-pointer bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 text-xs border-0 rounded"
-                onClick={() => navigate("/dashboard")}>
+              <Button className="cursor-pointer bg-primary hover:bg-primary/90 text-primary-foreground gap-1.5 text-xs border-0 rounded" onClick={() => navigate("/dashboard")}>
                 Get Started <ArrowRight className="w-3.5 h-3.5" />
               </Button>
             </div>
@@ -299,58 +321,37 @@ export default function Landing() {
       {/* ─── Hero ─── */}
       <motion.section style={{ opacity: heroOpacity, scale: heroScale }} className="relative pt-28 pb-16 px-5">
         <div className="mx-auto max-w-6xl">
-          <div className="grid grid-cols-1 gap-8 sm:gap-12 items-center">
+          <div className="grid grid-cols-1 gap-8 items-center">
             {/* Left: Text */}
-            <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.2 }}>
-              <motion.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.3 }}
+            <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.2 }} className="max-w-xl">
+              <motion.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}
                 className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground mb-4">
                 Fake News Detection
               </motion.p>
-              <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.35 }}
+              <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.35 }}
                 className="text-5xl sm:text-6xl lg:text-7xl leading-[1.05] tracking-tight mb-2"
                 style={{ fontFamily: "'DM Serif Display', serif", color: "#1E2522" }}>
                 Veritas
               </motion.h1>
-              {/* Animated tagline */}
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.7, delay: 0.4 }}
-                className="text-3xl sm:text-4xl lg:text-5xl leading-[1.1] tracking-tight mb-6 min-h-[1.3em]"
-                style={{ color: "#1E2522" }}>
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.4 }}
+                className="text-3xl sm:text-4xl lg:text-5xl leading-[1.1] tracking-tight mb-6 min-h-[1.3em]" style={{ color: "#1E2522" }}>
                 <AnimatedTagline />
               </motion.div>
-              <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.5 }}
+              <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.5 }}
                 className="text-sm sm:text-base text-muted-foreground max-w-md leading-relaxed mb-8">
-                In a world full of information, Veritas helps you verify what's real. Our system analyzes
-                news content, detects misleading patterns, and helps you make informed decisions.
+                In a world full of information, Veritas helps you verify what's real. Our system analyzes news content, detects misleading patterns, and helps you make informed decisions.
               </motion.p>
-              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: 0.6 }}
-                className="flex flex-col sm:flex-row items-start gap-3">
-                <Button size="lg"
-                  className="cursor-pointer bg-primary hover:bg-primary/90 text-primary-foreground gap-2 px-7 h-11 text-sm border-0 rounded"
-                  onClick={() => navigate("/dashboard")}>
+              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.6 }} className="flex flex-col sm:flex-row items-start gap-3">
+                <Button size="lg" className="cursor-pointer bg-primary hover:bg-primary/90 text-primary-foreground gap-2 px-7 h-11 text-sm border-0 rounded" onClick={() => navigate("/dashboard")}>
                   Start Analyzing <ArrowRight className="w-4 h-4" />
                 </Button>
-                <Button size="lg" variant="outline"
-                  className="cursor-pointer border-border hover:bg-muted gap-2 px-7 h-11 text-sm rounded"
-                  onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}>
+                <Button size="lg" variant="outline" className="cursor-pointer border-border hover:bg-muted gap-2 px-7 h-11 text-sm rounded" onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}>
                   Learn More
                 </Button>
               </motion.div>
-
               {/* Stats */}
-              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.75 }}
-                className="mt-10 flex items-center gap-6">
-                {[
-                  { value: "Real-time", label: "Analysis" },
-                  { value: "95%+", label: "Accuracy Rate" },
-                  { value: "70+", label: "Patterns Detected" },
-                ].map((s, i) => (
+              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.75 }} className="mt-10 flex items-center gap-6">
+                {[{ value: "Real-time", label: "Analysis" }, { value: "95%+", label: "Accuracy Rate" }, { value: "70+", label: "Patterns Detected" }].map((s) => (
                   <div key={s.label} className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                     <div>
@@ -363,9 +364,7 @@ export default function Landing() {
             </motion.div>
 
             {/* Right: Newspaper Visual */}
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-              className="relative">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, delay: 0.3 }} className="relative">
               <NewspaperVisual />
             </motion.div>
           </div>
@@ -412,7 +411,7 @@ export default function Landing() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {steps.map((s, i) => (
               <motion.div key={s.step} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}>
-                <div className="glass-card rounded-lg p-6 group hover:shadow-md transition-shadow duration-300 relative">
+                <div className="glass-card rounded-lg p-6 group hover:shadow-md transition-shadow duration-300">
                   <div className="w-12 h-12 rounded-lg bg-primary/8 flex items-center justify-center mb-4 group-hover:bg-primary/12 transition-colors">
                     <s.icon className="w-5 h-5 text-primary" />
                   </div>
@@ -426,7 +425,6 @@ export default function Landing() {
         </div>
       </Section>
 
-      {/* ─── Editorial Rule ─── */}
       <div className="mx-auto max-w-6xl px-5"><div className="editorial-rule" /></div>
 
       {/* ─── Features ─── */}
@@ -462,23 +460,14 @@ export default function Landing() {
               <FileCheck className="w-5 h-5 text-primary" />
             </div>
             <h2 className="text-xl sm:text-2xl tracking-tight mb-3" style={{ fontFamily: "'DM Serif Display', serif" }}>Academically Grounded</h2>
-            <p className="text-sm text-muted-foreground max-w-lg mx-auto mb-7 leading-relaxed">
-              Detection heuristics informed by research from leading institutions in misinformation detection.
-            </p>
+            <p className="text-sm text-muted-foreground max-w-lg mx-auto mb-7 leading-relaxed">Detection heuristics informed by research from leading institutions in misinformation detection.</p>
             <div className="flex flex-wrap justify-center gap-3">
               {references.map((ref) => (
-                <span key={ref} className="text-xs px-3 py-1.5 rounded bg-muted text-muted-foreground border border-border">
-                  {ref}
-                </span>
+                <span key={ref} className="text-xs px-3 py-1.5 rounded bg-muted text-muted-foreground border border-border">{ref}</span>
               ))}
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8">
-              {[
-                { icon: Users, label: "Named Sources", desc: "Credibility tracking" },
-                { icon: TrendingUp, label: "Severity Scoring", desc: "Weighted patterns" },
-                { icon: Eye, label: "Explainable AI", desc: "Transparent verdicts" },
-                { icon: BarChart3, label: "Visual Reports", desc: "Charts & breakdowns" },
-              ].map((item, i) => (
+              {[{ icon: Users, label: "Named Sources", desc: "Credibility tracking" }, { icon: TrendingUp, label: "Severity Scoring", desc: "Weighted patterns" }, { icon: Eye, label: "Explainable AI", desc: "Transparent verdicts" }, { icon: BarChart3, label: "Visual Reports", desc: "Charts & breakdowns" }].map((item, i) => (
                 <motion.div key={item.label} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}>
                   <div className="rounded-lg p-3 bg-muted/50">
                     <item.icon className="w-4 h-4 text-primary mx-auto mb-1.5" />
@@ -501,12 +490,8 @@ export default function Landing() {
               <Shield className="w-5 h-5 text-primary-foreground" />
             </div>
             <h2 className="text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif" }}>Ready to Fact-Check?</h2>
-            <p className="mt-3 text-sm text-muted-foreground max-w-sm mx-auto">
-              Start analyzing articles with our detection engine. No sign-up required.
-            </p>
-            <Button size="lg"
-              className="cursor-pointer mt-7 bg-primary hover:bg-primary/90 text-primary-foreground gap-2 px-8 h-11 text-sm border-0 rounded"
-              onClick={() => navigate("/dashboard")}>
+            <p className="mt-3 text-sm text-muted-foreground max-w-sm mx-auto">Start analyzing articles with our detection engine. No sign-up required.</p>
+            <Button size="lg" className="cursor-pointer mt-7 bg-primary hover:bg-primary/90 text-primary-foreground gap-2 px-8 h-11 text-sm border-0 rounded" onClick={() => navigate("/dashboard")}>
               Launch Veritas <ArrowRight className="w-4 h-4" />
             </Button>
           </div>
