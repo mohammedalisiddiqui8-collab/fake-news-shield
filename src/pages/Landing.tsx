@@ -56,92 +56,100 @@ function AnimatedTagline() {
 function NewspaperVisual() {
   return (
     <div className="relative">
-      {/* Back newspaper layer */}
+      {/* Back newspaper layer - slightly rotated */}
       <motion.div
-        initial={{ opacity: 0, rotate: -3, x: -10 }}
-        animate={{ opacity: 1, rotate: -2, x: 0 }}
-        transition={{ duration: 0.8, delay: 0.4 }}
-        className="absolute -top-6 -left-6 w-[95%] h-[90%] bg-[#EDE8DE] border border-border rounded-sm shadow-sm"
+        initial={{ opacity: 0, x: -30, y: -20 }}
+        animate={{ opacity: 1, x: 0, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.3 }}
+        className="absolute -top-8 -left-8 w-[90%] h-[85%] rounded-lg overflow-hidden shadow-xl border border-border/50"
+        style={{ transform: 'rotate(-5deg)' }}
       >
-        {/* Faux newspaper header */}
-        <div className="p-5">
-          <div className="border-b-2 border-foreground/80 pb-2 mb-3">
-            <p className="text-[7px] uppercase tracking-[0.3em] text-muted-foreground/60 text-center">The Daily Tribune</p>
-            <p className="text-[6px] text-muted-foreground/40 text-center mt-0.5">Est. 2024 — Independent Journalism</p>
+        <div className="w-full h-full bg-card p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-2 h-2 rounded-full bg-primary/30" />
+            <div className="h-2 bg-muted rounded w-16" />
           </div>
           <div className="space-y-2">
-            <div className="h-2 bg-muted-foreground/8 rounded w-full" />
-            <div className="h-2 bg-muted-foreground/8 rounded w-4/5" />
-            <div className="h-2 bg-muted-foreground/8 rounded w-3/5" />
-          </div>
-          <div className="mt-3 grid grid-cols-3 gap-1.5">
-            <div className="h-8 bg-muted-foreground/6 rounded" />
-            <div className="h-8 bg-muted-foreground/6 rounded" />
-            <div className="h-8 bg-muted-foreground/6 rounded" />
+            <div className="h-2 bg-muted rounded w-full" />
+            <div className="h-2 bg-muted rounded w-3/4" />
+            <div className="h-2 bg-muted rounded w-5/6" />
           </div>
         </div>
       </motion.div>
 
-      {/* Main newspaper layer */}
+      {/* Main newspaper - front page with SVG illustration */}
       <motion.div
-        initial={{ opacity: 0, rotate: 1, y: 10 }}
-        animate={{ opacity: 1, rotate: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.2 }}
-        className="relative bg-card border border-border rounded-sm shadow-md overflow-hidden"
+        initial={{ opacity: 0, x: 30, y: 20 }}
+        animate={{ opacity: 1, x: 0, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.5 }}
+        className="relative rounded-lg overflow-hidden shadow-2xl border border-border/60"
+        style={{ transform: 'rotate(2deg)' }}
       >
-        {/* Masthead */}
-        <div className="border-b-2 border-foreground/90 px-6 pt-5 pb-3">
-          <div className="flex items-center justify-between">
-            <p className="text-[8px] text-muted-foreground uppercase tracking-widest">Vol. CXII — No. 34,891</p>
-            <p className="text-[8px] text-muted-foreground uppercase tracking-widest">Price: Free</p>
-          </div>
-          <h3 className="text-center text-xl sm:text-2xl tracking-tight mt-1" style={{ fontFamily: "'DM Serif Display', serif" }}>
-            NEWS
-          </h3>
-          <div className="flex items-center justify-center gap-3 mt-0.5">
-            <div className="h-px bg-foreground/20 flex-1" />
-            <p className="text-[7px] uppercase tracking-[0.2em] text-muted-foreground italic" style={{ fontFamily: "'Source Serif 4', serif" }}>
-              Truth Matters
-            </p>
-            <div className="h-px bg-foreground/20 flex-1" />
+        {/* SVG Mountain Landscape Illustration */}
+        <div className="w-full h-48 sm:h-56 relative overflow-hidden bg-gradient-to-b from-[#d4cfc4] via-[#c8c1b4] to-[#e8e3d8]">
+          <svg viewBox="0 0 400 200" className="w-full h-full" preserveAspectRatio="xMidYMid slice">
+            {/* Sky gradient */}
+            <defs>
+              <linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#c5bfb2" />
+                <stop offset="50%" stopColor="#d4cfc4" />
+                <stop offset="100%" stopColor="#e0dbd0" />
+              </linearGradient>
+              <linearGradient id="mountain1" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#6b7268" />
+                <stop offset="100%" stopColor="#8a9180" />
+              </linearGradient>
+              <linearGradient id="mountain2" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#4a5244" />
+                <stop offset="100%" stopColor="#6b7268" />
+              </linearGradient>
+              <linearGradient id="mountain3" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#3a4236" />
+                <stop offset="100%" stopColor="#5a6354" />
+              </linearGradient>
+            </defs>
+            {/* Sky */}
+            <rect width="400" height="200" fill="url(#sky)" />
+            {/* Far mountains */}
+            <path d="M0 180 L50 100 L80 120 L120 80 L160 110 L200 70 L240 100 L280 85 L320 105 L360 90 L400 100 L400 200 L0 200Z" fill="url(#mountain1)" opacity="0.6" />
+            {/* Mid mountains */}
+            <path d="M0 200 L30 140 L70 160 L110 120 L150 150 L190 110 L230 140 L270 125 L310 145 L350 130 L400 140 L400 200 L0 200Z" fill="url(#mountain2)" opacity="0.8" />
+            {/* Front mountains */}
+            <path d="M0 200 L40 160 L80 175 L120 145 L160 170 L200 140 L240 165 L280 150 L320 170 L360 155 L400 165 L400 200 L0 200Z" fill="url(#mountain3)" />
+            {/* Trees silhouette */}
+            <path d="M50 170 L55 155 L60 170Z M55 155 L58 140 L61 155Z" fill="#2a3226" opacity="0.7" />
+            <path d="M80 165 L85 150 L90 165Z M85 150 L88 138 L91 150Z" fill="#2a3226" opacity="0.6" />
+            <path d="M320 168 L325 153 L330 168Z M325 153 L328 140 L331 153Z" fill="#2a3226" opacity="0.7" />
+            <path d="M350 172 L355 158 L360 172Z M355 158 L358 145 L361 158Z" fill="#2a3226" opacity="0.5" />
+            {/* Fog layer */}
+            <rect y="160" width="400" height="40" fill="#e0dbd0" opacity="0.3" />
+          </svg>
+          {/* Overlay newspaper clipping */}
+          <div className="absolute bottom-0 left-4 right-4 bg-card/95 backdrop-blur-sm border border-border rounded shadow-lg p-3" style={{ transform: 'rotate(-1deg)' }}>
+            <div className="border-b border-foreground/30 pb-1.5 mb-2">
+              <h4 className="text-xs font-bold tracking-tight" style={{ fontFamily: "'DM Serif Display', serif" }}>NEWS</h4>
+              <p className="text-[6px] uppercase tracking-[0.15em] text-muted-foreground italic">Truth Matters</p>
+            </div>
+            <h5 className="text-[10px] font-bold leading-snug mb-1" style={{ fontFamily: "'DM Serif Display', serif" }}>
+              Breakthrough in Climate Research Published
+            </h5>
+            <p className="text-[7px] text-muted-foreground leading-relaxed">Scientists at leading universities confirm new findings...</p>
           </div>
         </div>
 
-        {/* Article body */}
-        <div className="p-6">
-          <h4 className="text-sm font-bold leading-snug mb-2" style={{ fontFamily: "'DM Serif Display', serif" }}>
-            Breaking: Scientists Confirm New Discovery in Deep Ocean Exploration
-          </h4>
-          <div className="space-y-1.5 mb-3">
-            <div className="h-1.5 bg-muted-foreground/7 rounded w-full" />
-            <div className="h-1.5 bg-muted-foreground/7 rounded w-11/12" />
-            <div className="h-1.5 bg-muted-foreground/7 rounded w-full" />
-            <div className="h-1.5 bg-muted-foreground/7 rounded w-9/12" />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <div className="h-1.5 bg-muted-foreground/6 rounded w-full" />
-              <div className="h-1.5 bg-muted-foreground/6 rounded w-full" />
-              <div className="h-1.5 bg-muted-foreground/6 rounded w-4/5" />
-              <div className="h-1.5 bg-muted-foreground/6 rounded w-full" />
-              <div className="h-1.5 bg-muted-foreground/6 rounded w-3/4" />
-            </div>
-            <div className="bg-muted/60 rounded p-3">
-              <div className="h-1 bg-muted-foreground/10 rounded w-full mb-1.5" />
-              <div className="h-1 bg-muted-foreground/10 rounded w-4/5 mb-1.5" />
-              <div className="h-1 bg-muted-foreground/10 rounded w-full" />
+        {/* Newspaper body below image */}
+        <div className="bg-card p-4 border-t border-border">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[7px] text-muted-foreground/60 uppercase tracking-widest">Page A1</span>
+            <div className="flex items-center gap-1 bg-primary/8 px-1.5 py-0.5 rounded">
+              <CheckCircle2 className="w-2 h-2 text-primary" />
+              <span className="text-[7px] text-primary font-semibold uppercase tracking-wider">Verified</span>
             </div>
           </div>
-        </div>
-
-        {/* Footer stamp */}
-        <div className="px-6 pb-4">
-          <div className="border-t border-border pt-2 flex items-center justify-between">
-            <span className="text-[7px] text-muted-foreground/50 uppercase tracking-widest">Page A1</span>
-            <div className="flex items-center gap-1.5 bg-primary/8 px-2 py-0.5 rounded">
-              <CheckCircle2 className="w-2.5 h-2.5 text-primary" />
-              <span className="text-[7px] text-primary font-semibold uppercase tracking-wider">Verified by Veritas</span>
-            </div>
+          <div className="space-y-1">
+            <div className="h-1 bg-muted/60 rounded w-full" />
+            <div className="h-1 bg-muted/60 rounded w-4/5" />
+            <div className="h-1 bg-muted/60 rounded w-full" />
           </div>
         </div>
       </motion.div>
@@ -151,7 +159,7 @@ function NewspaperVisual() {
         initial={{ opacity: 0, y: 16, scale: 0.9 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.6, delay: 0.8 }}
-        className="absolute -bottom-4 -right-4 bg-card border border-border rounded-lg p-3 shadow-lg max-w-[200px]"
+        className="absolute -bottom-4 -right-4 bg-card border border-border rounded-lg p-3 shadow-lg max-w-[200px] z-10"
       >
         <div className="flex items-center gap-2 mb-1.5">
           <div className="w-5 h-5 rounded bg-primary/10 flex items-center justify-center">
@@ -178,7 +186,7 @@ function NewspaperVisual() {
         initial={{ opacity: 0, x: -16, scale: 0.9 }}
         animate={{ opacity: 1, x: 0, scale: 1 }}
         transition={{ duration: 0.6, delay: 1.0 }}
-        className="absolute -bottom-2 -left-8 bg-card border border-destructive/20 rounded-lg p-2.5 shadow-lg max-w-[160px]"
+        className="absolute -bottom-2 -left-8 bg-card border border-destructive/20 rounded-lg p-2.5 shadow-lg max-w-[160px] z-10"
       >
         <div className="flex items-center gap-1.5">
           <AlertTriangle className="w-3 h-3 text-destructive" />
@@ -291,7 +299,7 @@ export default function Landing() {
       {/* ─── Hero ─── */}
       <motion.section style={{ opacity: heroOpacity, scale: heroScale }} className="relative pt-28 pb-16 px-5">
         <div className="mx-auto max-w-6xl">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-12 items-center">
             {/* Left: Text */}
             <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.2 }}>
@@ -341,7 +349,7 @@ export default function Landing() {
                 {[
                   { value: "Real-time", label: "Analysis" },
                   { value: "95%+", label: "Accuracy Rate" },
-                  { value: "Trusted by", label: "Millions" },
+                  { value: "70+", label: "Patterns Detected" },
                 ].map((s, i) => (
                   <div key={s.label} className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary" />
@@ -357,7 +365,7 @@ export default function Landing() {
             {/* Right: Newspaper Visual */}
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.3 }}
-              className="relative hidden lg:block">
+              className="relative hidden sm:block">
               <NewspaperVisual />
             </motion.div>
           </div>
