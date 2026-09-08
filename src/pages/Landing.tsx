@@ -299,7 +299,7 @@ export default function Landing() {
       {/* ─── Hero ─── */}
       <motion.section style={{ opacity: heroOpacity, scale: heroScale }} className="relative pt-28 pb-16 px-5">
         <div className="mx-auto max-w-6xl">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 sm:gap-12 items-center">
+          <div className="grid grid-cols-1 gap-8 sm:gap-12 items-center">
             {/* Left: Text */}
             <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.7, delay: 0.2 }}>
@@ -365,7 +365,7 @@ export default function Landing() {
             {/* Right: Newspaper Visual */}
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.3 }}
-              className="relative hidden sm:block">
+              className="relative">
               <NewspaperVisual />
             </motion.div>
           </div>
