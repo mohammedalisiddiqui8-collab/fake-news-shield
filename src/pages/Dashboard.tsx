@@ -251,28 +251,24 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* ─── Nav ─── */}
-      <nav className="sticky top-0 z-50 bg-card border-b border-border">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 h-12 sm:h-14 flex items-center justify-between">
+      {/* ─── Nav — Dark Green ─── */}
+      <nav className="sticky top-0 z-50" style={{ background: "#174A45" }}>
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 h-12 flex items-center justify-between">
           <button type="button" className="cursor-pointer flex items-center gap-2" onClick={() => navigate("/")}>
-            <div className="w-7 h-7 rounded bg-primary flex items-center justify-center">
-              <Shield className="w-3.5 h-3.5 text-primary-foreground" />
-            </div>
-            <span className="font-bold tracking-wide uppercase hidden sm:inline text-sm" style={{ fontFamily: "'DM Serif Display', serif" }}>Veritas</span>
+            <Shield className="w-5 h-5" style={{ color: "#FFFCF6" }} />
+            <span className="font-bold tracking-wide uppercase text-sm" style={{ fontFamily: "'DM Serif Display', serif", color: "#FFFCF6" }}>Veritas</span>
           </button>
           <div className="flex items-center gap-0.5">
             {navItems.map(item => (
-              <Button key={item.key} variant={activeView === item.key ? "default" : "ghost"} size="sm"
-                className={`cursor-pointer gap-1 text-[10px] sm:text-xs px-2 sm:px-2.5 h-7 rounded ${activeView === item.key ? "bg-primary text-primary-foreground" : ""}`}
+              <Button key={item.key} variant="ghost" size="sm"
+                className={`cursor-pointer gap-1 text-[10px] sm:text-xs px-2 sm:px-2.5 h-7 rounded ${activeView === item.key ? "" : ""}`}
+                style={activeView === item.key ? { background: "rgba(255,252,246,0.15)", color: "#FFFCF6" } : { color: "rgba(255,252,246,0.7)" }}
                 disabled={item.disabled} onClick={() => setActiveView(item.key)}>
                 <item.icon className="w-3 h-3" /><span className="hidden md:inline">{item.label}</span>
               </Button>
             ))}
-            <div className="w-px h-4 bg-border mx-0.5" />
-            <Button variant="ghost" size="icon" className="cursor-pointer h-7 w-7" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
-              {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
-            </Button>
-            <Button variant="ghost" size="icon" className="cursor-pointer h-7 w-7" onClick={() => navigate("/")}>
+            <div className="w-px h-4 mx-1" style={{ background: "rgba(255,252,246,0.2)" }} />
+            <Button variant="ghost" size="icon" className="cursor-pointer h-7 w-7" style={{ color: "rgba(255,252,246,0.7)" }} onClick={() => navigate("/")}>
               <Home className="w-3.5 h-3.5" />
             </Button>
           </div>
@@ -411,31 +407,6 @@ export default function Dashboard() {
                 onClick={handleAnalyze} disabled={isAnalyzing || !inputText.trim()}>
                 Analyze Content <ArrowRight className="w-4 h-4" />
               </Button>
-
-              {/* ── Right-side visual (landscape + quote) ── */}
-              <div className="hidden lg:block mt-6">
-                <div className="rounded-xl overflow-hidden border border-border" style={{ background: "linear-gradient(180deg, #c8c0b0 0%, #b8b0a0 50%, #a8a090 100%)", height: 200 }}>
-                  <svg width="100%" height="100%" viewBox="0 0 500 200" preserveAspectRatio="xMidYMid slice">
-                    <rect width="500" height="200" fill="url(#aSky)" />
-                    <defs><linearGradient id="aSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#d4cdc0" /><stop offset="100%" stopColor="#b8b0a0" /></linearGradient></defs>
-                    <path d="M0 120 L80 60 L160 90 L240 40 L320 80 L400 50 L500 100 L500 200 L0 200Z" fill="#6b6358" opacity="0.6" />
-                    <path d="M0 150 L60 100 L140 130 L220 80 L300 120 L380 90 L500 130 L500 200 L0 200Z" fill="#4a4238" opacity="0.8" />
-                    <path d="M0 170 L100 140 L200 160 L300 135 L400 155 L500 145 L500 200 L0 200Z" fill="#3a3228" />
-                    {[80, 180, 280, 380].map((x, i) => (
-                      <g key={i}><rect x={x - 1} y={130 + (i % 2) * 10} width="2" height="14" fill="#2a2420" /><polygon points={`${x - 6},${135 + (i % 2) * 10} ${x},${122 + (i % 2) * 10} ${x + 6},${135 + (i % 2) * 10}`} fill="#4a4840" /></g>
-                    ))}
-                    {/* Magnifying glass */}
-                    <circle cx="380" cy="70" r="35" fill="none" stroke="#174A45" strokeWidth="3" opacity="0.7" />
-                    <line x1="405" y1="95" x2="430" y2="120" stroke="#174A45" strokeWidth="4" strokeLinecap="round" opacity="0.7" />
-                    <circle cx="380" cy="70" r="30" fill="rgba(23,74,69,0.05)" />
-                  </svg>
-                </div>
-                <div className="mt-4 glass-card rounded-lg p-4">
-                  <p className="text-xs italic text-muted-foreground leading-relaxed" style={{ fontFamily: "'DM Serif Display', serif" }}>
-                    &ldquo;Not everything you read is true, but everything deserves a closer look.&rdquo;
-                  </p>
-                </div>
-              </div>
 
               {/* ── Feature cards ── */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
