@@ -6,172 +6,142 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
-import { useRef, useState, useEffect } from "react";
+import { useRef } from "react";
 
-/* ─── Animated Tagline ─── */
-const taglines = [
-  "Truth over noise.",
-  "Clarity over chaos.",
-  "Facts over fiction.",
-  "Evidence over opinion.",
-  "Insight over impulse.",
-];
-
-function AnimatedTagline() {
-  const [index, setIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [displayed, setDisplayed] = useState("");
-  const currentPhrase = taglines[index];
-
-  useEffect(() => {
-    if (!isDeleting) {
-      if (displayed.length < currentPhrase.length) {
-        const timer = setTimeout(() => setDisplayed(currentPhrase.slice(0, displayed.length + 1)), 50);
-        return () => clearTimeout(timer);
-      } else {
-        const timer = setTimeout(() => setIsDeleting(true), 2200);
-        return () => clearTimeout(timer);
-      }
-    } else {
-      if (displayed.length > 0) {
-        const timer = setTimeout(() => setDisplayed(displayed.slice(0, -1)), 30);
-        return () => clearTimeout(timer);
-      } else {
-        setIsDeleting(false);
-        setIndex((prev) => (prev + 1) % taglines.length);
-      }
-    }
-  }, [displayed, isDeleting, currentPhrase, index]);
-
+/* ─── Mountain Landscape + Newspaper Collage ─── */
+function NewspaperCollage() {
   return (
-    <span style={{ fontFamily: "'DM Serif Display', serif" }}>
-      {displayed}
-      <span className="inline-block w-[2px] h-[0.8em] bg-primary ml-0.5 align-middle animate-pulse" />
-    </span>
-  );
-}
-
-/* ─── Abstract Editorial Graphic ─── */
-function EditorialGraphic() {
-  return (
-    <div className="relative w-full max-w-md mx-auto" style={{ height: 340 }}>
-      {/* Main abstract shape - layered translucent rectangles */}
+    <div className="relative w-full" style={{ minHeight: 420 }}>
+      {/* ── Mountain landscape background ── */}
       <motion.div
-        initial={{ opacity: 0, scale: 0.9, rotate: -2 }}
-        animate={{ opacity: 1, scale: 1, rotate: 0 }}
-        transition={{ duration: 1, delay: 0.5 }}
-        className="absolute"
-        style={{
-          top: 20, right: 10, width: 220, height: 280,
-          background: "rgba(23,74,69,0.06)",
-          border: "1px solid rgba(23,74,69,0.12)",
-          borderRadius: 4,
-        }}
-      />
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9, rotate: 2 }}
-        animate={{ opacity: 1, scale: 1, rotate: 0 }}
-        transition={{ duration: 1, delay: 0.7 }}
-        className="absolute"
-        style={{
-          top: 40, right: 30, width: 200, height: 260,
-          background: "rgba(184,135,58,0.05)",
-          border: "1px solid rgba(184,135,58,0.1)",
-          borderRadius: 4,
-        }}
-      />
-
-      {/* Central shield icon */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.9 }}
-        className="absolute flex items-center justify-center"
-        style={{
-          top: 80, right: 60, width: 120, height: 120,
-          background: "rgba(23,74,69,0.08)",
-          borderRadius: 12,
-          border: "1px solid rgba(23,74,69,0.15)",
-        }}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 1, delay: 0.3 }}
+        className="rounded-xl overflow-hidden border border-[#d8d2c5]"
+        style={{ background: "linear-gradient(180deg, #c8c0b0 0%, #b8b0a0 30%, #a8a090 60%, #989080 100%)", height: 300 }}
       >
-        <Shield className="w-12 h-12" style={{ color: "#174A45" }} />
+        <svg width="100%" height="100%" viewBox="0 0 500 300" preserveAspectRatio="xMidYMid slice">
+          {/* Sky */}
+          <rect width="500" height="300" fill="url(#skyGrad)" />
+          <defs>
+            <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#d4cdc0" />
+              <stop offset="50%" stopColor="#c8c0b0" />
+              <stop offset="100%" stopColor="#b8b0a0" />
+            </linearGradient>
+          </defs>
+          {/* Clouds */}
+          <ellipse cx="120" cy="50" rx="60" ry="18" fill="rgba(255,252,246,0.4)" />
+          <ellipse cx="100" cy="48" rx="40" ry="14" fill="rgba(255,252,246,0.3)" />
+          <ellipse cx="380" cy="70" rx="50" ry="15" fill="rgba(255,252,246,0.35)" />
+          {/* Far mountains */}
+          <path d="M0 180 L60 110 L120 140 L180 90 L240 130 L300 100 L360 120 L420 95 L500 150 L500 300 L0 300Z" fill="#8a8278" opacity="0.5" />
+          {/* Mid mountains */}
+          <path d="M0 200 L40 150 L100 170 L150 120 L200 160 L260 130 L320 155 L380 125 L440 150 L500 170 L500 300 L0 300Z" fill="#6b6358" opacity="0.7" />
+          {/* Near mountains */}
+          <path d="M0 230 L50 180 L100 200 L160 155 L220 190 L280 165 L340 185 L400 160 L460 180 L500 200 L500 300 L0 300Z" fill="#4a4238" opacity="0.85" />
+          {/* Foreground hills */}
+          <path d="M0 260 L80 230 L160 245 L240 220 L320 240 L400 225 L500 250 L500 300 L0 300Z" fill="#3a3228" />
+          {/* Trees on ridgeline */}
+          {[60, 130, 200, 270, 340, 410].map((x, i) => (
+            <g key={i}>
+              <rect x={x - 1.5} y={195 + (i % 2) * 8} width="3" height="18" fill="#2a2420" />
+              <polygon points={`${x - 8},${200 + (i % 2) * 8} ${x},${185 + (i % 2) * 8} ${x + 8},${200 + (i % 2) * 8}`} fill="#3a3830" />
+              <polygon points={`${x - 6},${195 + (i % 2) * 8} ${x},${182 + (i % 2) * 8} ${x + 6},${195 + (i % 2) * 8}`} fill="#4a4840" />
+            </g>
+          ))}
+          {/* Fog layer */}
+          <rect y="240" width="500" height="60" fill="url(#fogGrad)" />
+          <defs>
+            <linearGradient id="fogGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="rgba(180,172,160,0)" />
+              <stop offset="100%" stopColor="rgba(180,172,160,0.6)" />
+            </linearGradient>
+          </defs>
+        </svg>
       </motion.div>
 
-      {/* Floating stat cards */}
+      {/* ── Newspaper clipping overlay ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 20, rotate: -1 }}
+        animate={{ opacity: 1, y: 0, rotate: -1 }}
+        transition={{ duration: 0.7, delay: 0.6 }}
+        className="absolute bottom-4 left-4 right-[35%] rounded border border-[#d8d2c5] overflow-hidden shadow-lg"
+        style={{ background: "#FFFCF6" }}
+      >
+        {/* Masthead */}
+        <div className="px-3 pt-2 pb-1 border-b border-[#d8d2c5]">
+          <div className="flex items-center justify-between">
+            <span className="text-[8px] font-bold uppercase tracking-[0.2em]" style={{ color: "#174A45" }}>NEWS</span>
+            <span className="text-[6px] text-[#6B7268]">Vol. XLII — No. 8</span>
+          </div>
+          <div className="text-center border-y border-[#d8d2c5] py-0.5 my-0.5">
+            <span className="text-[7px] font-semibold italic" style={{ color: "#1E2522" }}>Truth Matters</span>
+          </div>
+        </div>
+        {/* Article snippet */}
+        <div className="px-3 py-2">
+          <h4 className="text-[8px] font-bold leading-tight mb-1" style={{ color: "#1E2522", fontFamily: "'DM Serif Display', serif" }}>
+            Scientists Discover New Species in Deep Ocean Expedition
+          </h4>
+          <div className="space-y-0.5">
+            {[85, 70, 90, 60, 75].map((w, i) => (
+              <div key={i} className="h-[2px] rounded" style={{ width: `${w}%`, background: "#E8E3D8" }} />
+            ))}
+          </div>
+        </div>
+        {/* Footer */}
+        <div className="px-3 py-1 border-t border-[#d8d2c5] flex items-center justify-between">
+          <span className="text-[5px] text-[#6B7268]">Page A1</span>
+          <div className="flex items-center gap-0.5">
+            <CheckCircle2 className="w-1.5 h-1.5" style={{ color: "#174A45" }} />
+            <span className="text-[5px] font-semibold" style={{ color: "#174A45" }}>Verified</span>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* ── Floating action cards ── */}
       <motion.div
         initial={{ opacity: 0, x: 20 }}
         animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.6, delay: 1.1 }}
-        className="absolute rounded-lg p-3 shadow-sm"
-        style={{
-          top: 30, right: 0,
-          background: "#FFFCF6",
-          border: "1px solid #D8D2C5",
-        }}
+        transition={{ duration: 0.5, delay: 0.8 }}
+        className="absolute top-6 right-3 space-y-1.5"
       >
-        <span className="font-bold block" style={{ fontSize: 20, color: "#174A45", fontFamily: "'DM Serif Display', serif" }}>95%</span>
-        <span style={{ fontSize: 10, color: "#6B7268" }}>Accuracy</span>
+        {["VERIFY", "ANALYZE", "STAY INFORMED"].map((text, i) => (
+          <motion.div
+            key={text}
+            initial={{ opacity: 0, x: 12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: 0.9 + i * 0.1 }}
+            className="bg-[#FFFCF6] border border-[#d8d2c5] rounded px-2.5 py-1 shadow-sm flex items-center gap-1.5"
+          >
+            <div className="w-1 h-1 rounded-full" style={{ background: "#174A45" }} />
+            <span className="text-[7px] font-semibold uppercase tracking-wider" style={{ color: "#174A45" }}>{text}</span>
+          </motion.div>
+        ))}
       </motion.div>
 
+      {/* ── Credibility floating card ── */}
       <motion.div
-        initial={{ opacity: 0, x: -20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.6, delay: 1.3 }}
-        className="absolute rounded-lg p-3 shadow-sm"
-        style={{
-          bottom: 50, right: 20,
-          background: "#FFFCF6",
-          border: "1px solid #D8D2C5",
-        }}
-      >
-        <div className="flex items-center gap-1.5">
-          <div className="w-2 h-2 rounded-full" style={{ background: "#B34A3C" }} />
-          <span className="font-semibold" style={{ fontSize: 11, color: "#1E2522" }}>3 Red Flags</span>
-        </div>
-        <span style={{ fontSize: 9, color: "#6B7268" }}>detected in analysis</span>
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 1.5 }}
-        className="absolute rounded-lg p-3 shadow-sm"
-        style={{
-          bottom: 30, right: 140,
-          background: "#FFFCF6",
-          border: "1px solid #D8D2C5",
-        }}
+        transition={{ duration: 0.5, delay: 1.1 }}
+        className="absolute bottom-6 right-4 bg-[#FFFCF6] border border-[#d8d2c5] rounded-lg p-3 shadow-md"
+        style={{ width: 120 }}
       >
-        <div className="flex items-center gap-1.5">
-          <CheckCircle2 className="w-3 h-3" style={{ color: "#174A45" }} />
-          <span className="font-semibold" style={{ fontSize: 11, color: "#174A45" }}>Verified</span>
+        <span className="text-[7px] text-[#6B7268] uppercase tracking-wider font-semibold block mb-1">Confidence</span>
+        <span className="text-lg font-bold" style={{ color: "#174A45", fontFamily: "'DM Serif Display', serif" }}>92%</span>
+        <div className="h-1 rounded-full bg-[#E8E3D8] mt-1.5 overflow-hidden">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: "92%" }}
+            transition={{ duration: 1, delay: 1.3 }}
+            className="h-full rounded-full"
+            style={{ background: "#174A45" }}
+          />
         </div>
-        <span style={{ fontSize: 9, color: "#6B7268" }}>source confirmed</span>
+        <span className="text-[6px] text-[#174A45] font-medium mt-1 block">Likely Credible</span>
       </motion.div>
-
-      {/* Decorative lines */}
-      <motion.div
-        initial={{ scaleX: 0 }}
-        animate={{ scaleX: 1 }}
-        transition={{ duration: 0.8, delay: 1.0 }}
-        className="absolute"
-        style={{
-          top: 160, right: 10, width: 250, height: 1,
-          background: "linear-gradient(90deg, transparent, #D8D2C5, transparent)",
-          transformOrigin: "left",
-        }}
-      />
-      <motion.div
-        initial={{ scaleX: 0 }}
-        animate={{ scaleX: 1 }}
-        transition={{ duration: 0.8, delay: 1.2 }}
-        className="absolute"
-        style={{
-          top: 220, right: 30, width: 180, height: 1,
-          background: "linear-gradient(90deg, transparent, rgba(184,135,58,0.3), transparent)",
-          transformOrigin: "right",
-        }}
-      />
     </div>
   );
 }
@@ -264,19 +234,18 @@ export default function Landing() {
       </motion.nav>
 
       {/* ─── Hero ─── */}
-      <motion.section style={{ opacity: heroOpacity, scale: heroScale }} className="relative pt-28 pb-16 px-5">
+      <motion.section style={{ opacity: heroOpacity, scale: heroScale }} className="relative pt-28 pb-12 px-5">
         <div className="mx-auto max-w-6xl">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 items-center">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
             <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.2 }} className="max-w-xl">
               <motion.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}
                 className="text-xs font-semibold uppercase tracking-[0.25em] text-muted-foreground mb-4">Fake News Detection</motion.p>
               <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.35 }}
-                className="text-5xl sm:text-6xl lg:text-7xl leading-[1.05] tracking-tight mb-2"
+                className="text-5xl sm:text-6xl lg:text-7xl leading-[1.05] tracking-tight mb-1"
                 style={{ fontFamily: "'DM Serif Display', serif", color: "#1E2522" }}>Veritas</motion.h1>
-              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.4 }}
-                className="text-3xl sm:text-4xl lg:text-5xl leading-[1.1] tracking-tight mb-6 min-h-[1.3em]" style={{ color: "#1E2522" }}>
-                <AnimatedTagline />
-              </motion.div>
+              <motion.h2 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.4 }}
+                className="text-3xl sm:text-4xl lg:text-5xl leading-[1.1] tracking-tight mb-6"
+                style={{ fontFamily: "'DM Serif Display', serif", color: "#1E2522" }}>Truth over noise.</motion.h2>
               <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.5 }}
                 className="text-sm sm:text-base text-muted-foreground max-w-md leading-relaxed mb-8">
                 In a world full of information, Veritas helps you verify what's real. Our system analyzes news content, detects misleading patterns, and helps you make informed decisions.
@@ -290,7 +259,7 @@ export default function Landing() {
                 </Button>
               </motion.div>
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.75 }} className="mt-10 flex items-center gap-6">
-                {[{ value: "Real-time", label: "Analysis" }, { value: "95%+", label: "Accuracy Rate" }, { value: "70+", label: "Patterns Detected" }].map((s) => (
+                {[{ value: "Real-time", label: "Analysis" }, { value: "95%+", label: "Accuracy Rate" }, { value: "Trusted by", label: "Millions" }].map((s) => (
                   <div key={s.label} className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full bg-primary" />
                     <div>
@@ -303,7 +272,7 @@ export default function Landing() {
             </motion.div>
 
             <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, delay: 0.3 }}>
-              <EditorialGraphic />
+              <NewspaperCollage />
             </motion.div>
           </div>
         </div>

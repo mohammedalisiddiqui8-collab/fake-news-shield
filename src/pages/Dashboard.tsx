@@ -9,7 +9,7 @@ import {
   Shield, Search, Clock, Home, Loader2, CheckCircle2, AlertTriangle,
   XCircle, FileText, Link, Trash2, ChevronRight, Brain, BarChart3,
   ArrowLeft, ClipboardPaste, BookOpen, TrendingUp,
-  Sun, Moon, Download, Share2, Lightbulb, Target, Activity, ArrowRight,
+  Sun, Moon, Download, Share2, Lightbulb, Target, Activity, ArrowRight, Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -133,6 +133,7 @@ export default function Dashboard() {
   const [activeView, setActiveView] = useState<ViewType>("analyze");
   const [currentTip, setCurrentTip] = useState(0);
   const [pipelineStep, setPipelineStep] = useState(-1);
+  const [resultTab, setResultTab] = useState<"overview" | "linguistic" | "source" | "logical" | "findings">("overview");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -410,6 +411,47 @@ export default function Dashboard() {
                 onClick={handleAnalyze} disabled={isAnalyzing || !inputText.trim()}>
                 Analyze Content <ArrowRight className="w-4 h-4" />
               </Button>
+
+              {/* ── Right-side visual (landscape + quote) ── */}
+              <div className="hidden lg:block mt-6">
+                <div className="rounded-xl overflow-hidden border border-border" style={{ background: "linear-gradient(180deg, #c8c0b0 0%, #b8b0a0 50%, #a8a090 100%)", height: 200 }}>
+                  <svg width="100%" height="100%" viewBox="0 0 500 200" preserveAspectRatio="xMidYMid slice">
+                    <rect width="500" height="200" fill="url(#aSky)" />
+                    <defs><linearGradient id="aSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#d4cdc0" /><stop offset="100%" stopColor="#b8b0a0" /></linearGradient></defs>
+                    <path d="M0 120 L80 60 L160 90 L240 40 L320 80 L400 50 L500 100 L500 200 L0 200Z" fill="#6b6358" opacity="0.6" />
+                    <path d="M0 150 L60 100 L140 130 L220 80 L300 120 L380 90 L500 130 L500 200 L0 200Z" fill="#4a4238" opacity="0.8" />
+                    <path d="M0 170 L100 140 L200 160 L300 135 L400 155 L500 145 L500 200 L0 200Z" fill="#3a3228" />
+                    {[80, 180, 280, 380].map((x, i) => (
+                      <g key={i}><rect x={x - 1} y={130 + (i % 2) * 10} width="2" height="14" fill="#2a2420" /><polygon points={`${x - 6},${135 + (i % 2) * 10} ${x},${122 + (i % 2) * 10} ${x + 6},${135 + (i % 2) * 10}`} fill="#4a4840" /></g>
+                    ))}
+                    {/* Magnifying glass */}
+                    <circle cx="380" cy="70" r="35" fill="none" stroke="#174A45" strokeWidth="3" opacity="0.7" />
+                    <line x1="405" y1="95" x2="430" y2="120" stroke="#174A45" strokeWidth="4" strokeLinecap="round" opacity="0.7" />
+                    <circle cx="380" cy="70" r="30" fill="rgba(23,74,69,0.05)" />
+                  </svg>
+                </div>
+                <div className="mt-4 glass-card rounded-lg p-4">
+                  <p className="text-xs italic text-muted-foreground leading-relaxed" style={{ fontFamily: "'DM Serif Display', serif" }}>
+                    &ldquo;Not everything you read is true, but everything deserves a closer look.&rdquo;
+                  </p>
+                </div>
+              </div>
+
+              {/* ── Feature cards ── */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
+                {[{ icon: Brain, title: "AI-Powered Analysis", desc: "Advanced NLP & ML models" }, { icon: Search, title: "Multiple Checks", desc: "Source, logic, language & more" }, { icon: BarChart3, title: "Detailed Reports", desc: "Clear, simple, actionable" }].map((f, i) => (
+                  <motion.div key={f.title} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.08 }}
+                    className="glass-card rounded-lg p-3.5 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded bg-primary/8 flex items-center justify-center shrink-0">
+                      <f.icon className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <span className="text-[11px] font-semibold block">{f.title}</span>
+                      <span className="text-[9px] text-muted-foreground">{f.desc}</span>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
             </motion.div>
           )}
 
@@ -418,13 +460,52 @@ export default function Dashboard() {
             <motion.div key="result" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.25 }}>
 
-              {/* Back + actions */}
-              <div className="flex items-center justify-between mb-5">
-                <button type="button" className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                  onClick={() => setActiveView("analyze")}>
-                  <ArrowLeft className="w-3.5 h-3.5" />New Analysis
-                </button>
-                <div className="flex gap-1.5">
+              {/* Sidebar + Content layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-[180px_1fr] gap-5">
+                {/* Sidebar */}
+                <div className="hidden lg:block">
+                  <div className="sticky top-20 space-y-1">
+                    <button type="button" className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer mb-4"
+                      onClick={() => setActiveView("analyze")}>
+                      <ArrowLeft className="w-3.5 h-3.5" />Back to Analyze
+                    </button>
+                    <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-2">Analysis Results</p>
+                    {([
+                      { key: "overview" as const, label: "Overview", icon: BarChart3 },
+                      { key: "linguistic" as const, label: "Linguistic Analysis", icon: Search },
+                      { key: "source" as const, label: "Source Analysis", icon: Globe },
+                      { key: "logical" as const, label: "Logical Consistency", icon: Brain },
+                      { key: "findings" as const, label: "Key Findings", icon: AlertTriangle },
+                    ]).map(item => (
+                      <button key={item.key} type="button"
+                        className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-[11px] transition-colors cursor-pointer text-left ${
+                          resultTab === item.key ? "bg-primary/8 text-primary font-semibold" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        }`}
+                        onClick={() => setResultTab(item.key)}>
+                        <item.icon className="w-3 h-3 shrink-0" />{item.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Mobile back + actions */}
+                <div className="lg:hidden flex items-center justify-between mb-3">
+                  <button type="button" className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+                    onClick={() => setActiveView("analyze")}>
+                    <ArrowLeft className="w-3.5 h-3.5" />New Analysis
+                  </button>
+                  <div className="flex gap-1.5">
+                    <Button variant="outline" size="sm" className="cursor-pointer gap-1 text-[10px] h-7 border-border rounded" onClick={handleExport}>
+                      <Download className="w-3 h-3" />Export
+                    </Button>
+                    <Button variant="outline" size="sm" className="cursor-pointer gap-1 text-[10px] h-7 border-border rounded" onClick={handleShare}>
+                      <Share2 className="w-3 h-3" />Share
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Desktop actions */}
+                <div className="hidden lg:flex justify-end gap-1.5 mb-3">
                   <Button variant="outline" size="sm" className="cursor-pointer gap-1 text-[10px] h-7 border-border rounded" onClick={handleExport}>
                     <Download className="w-3 h-3" />Export
                   </Button>
@@ -432,7 +513,6 @@ export default function Dashboard() {
                     <Share2 className="w-3 h-3" />Share
                   </Button>
                 </div>
-              </div>
 
               {/* Verdict Card */}
               <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.35, delay: 0.05 }} className="mb-4">
@@ -600,6 +680,8 @@ export default function Dashboard() {
                   }
                 </p>
               </motion.div>
+
+              </div>{/* end grid */}
             </motion.div>
           )}
 

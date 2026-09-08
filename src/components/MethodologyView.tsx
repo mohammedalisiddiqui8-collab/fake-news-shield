@@ -1,178 +1,124 @@
 import { motion } from "framer-motion";
-import {
-  Brain,
-  Layers,
-  Search,
-  BarChart3,
-  Shield,
-  BookOpen,
-  Target,
-  GitBranch,
-} from "lucide-react";
+import { Search, Brain, BarChart3, Shield } from "lucide-react";
 
-const sections = [
+const steps = [
   {
-    icon: Brain,
-    title: "System Architecture",
-    content: "Veritas employs a multi-layered NLP analysis pipeline built on Convex (serverless backend) with a React frontend. The architecture follows a modular design pattern where detection heuristics are separated from scoring logic and presentation layers.",
-    details: [
-      "Serverless Convex backend with real-time data synchronization",
-      "React + TypeScript frontend with Vite for fast builds",
-      "Shadcn/UI component library with custom theme",
-      "Framer Motion for smooth, meaningful animations",
-    ],
-  },
-  {
-    icon: Layers,
-    title: "Three-Layer Analysis Pipeline",
-    content: "The detection engine operates in three sequential layers: pattern extraction, severity scoring, and verdict calculation. Each layer builds on the output of the previous one.",
-    details: [
-      "Layer 1: Regex-based linguistic pattern extraction with weighted matching",
-      "Layer 2: Category-level severity scoring (red flags vs. green flags)",
-      "Layer 3: Ratio-based verdict calculation with confidence calibration",
-      "Each layer is independently testable and auditable",
-    ],
-  },
-  {
+    num: 1,
+    title: "Text Processing",
+    description: "We clean and structure the input text using NLP techniques.",
     icon: Search,
-    title: "Red Flag Detection (12 Categories)",
-    content: "The system identifies 12 distinct categories of misinformation indicators, each with severity-weighted patterns:",
-    details: [
-      "Sensationalist language — emotionally manipulative words and phrases",
-      "Clickbait patterns — common headline manipulation tactics",
-      "Anonymous sourcing — vague attribution without named individuals",
-      "Fear-mongering — alarmist framing designed to provoke anxiety",
-      "Conspiracy language — conspiratorial rhetoric and framing",
-      "Excessive capitalization — non-professional formatting",
-      "Emoji overuse — unprofessional content indicators",
-      "ALL CAPS emphasis — shouting via typography",
-      "Multi-exclamation marks — emotional punctuation abuse",
-      "Urgency language — pressure tactics to force sharing",
-      "Missing citations — no sources, URLs, or references",
-      "Inappropriate length — too short for genuine articles",
-    ],
   },
   {
-    icon: Target,
-    title: "Green Flag Detection (9 Categories)",
-    content: "Simultaneously, the system evaluates credibility indicators consistent with established journalistic standards:",
-    details: [
-      "Named sources with credentials and specific attributions",
-      "Quantitative data — statistics, percentages, dollar amounts",
-      "Credible institutions — Reuters, BBC, universities, journals",
-      "Temporal specificity — exact dates, timelines, event markers",
-      "Balanced reporting — multiple perspectives, counterarguments",
-      "Journalistic structure — who, what, where, when, why framework",
-      "Neutral tone — absence of emotional or manipulative language",
-      "Appropriate length — 80-800 words, consistent with news articles",
-      "Named quotes — direct attributions to specific individuals",
-    ],
+    num: 2,
+    title: "Multi-Layer Analysis",
+    description: "We check for linguistic patterns, source credibility, logical consistency and more.",
+    icon: Brain,
   },
   {
+    num: 3,
+    title: "Risk Scoring",
+    description: "Our model assigns a credibility score based on multiple factors.",
     icon: BarChart3,
-    title: "Scoring Methodology",
-    content: "Verdicts are determined by calculating the ratio of red flag severity scores to green flag severity scores, then applying calibrated thresholds:",
-    details: [
-      "Red flag ratio >= 0.65 → Likely Misleading (confidence 55-95%)",
-      "Green flag ratio >= 0.65 → Likely Credible (confidence 55-95%)",
-      "Ratio difference > 0.1 → Leaning verdict (confidence 42-78%)",
-      "Balanced scores → Uncertain (confidence 35-50%)",
-      "Confidence is calibrated to prevent overconfident claims",
-    ],
   },
   {
-    icon: GitBranch,
-    title: "Why Rule-Based Over ML?",
-    content: "The system deliberately uses rule-based NLP rather than trained ML models. This design decision is grounded in the requirements of media literacy tools:",
-    details: [
-      "Explainability — every decision can be traced to specific patterns",
-      "Transparency — users see exactly why content was flagged",
-      "No training data required — works immediately without labeled datasets",
-      "Interpretability — critical for educational and academic applications",
-      "Consistency — deterministic output for the same input",
-      "Trade-off acknowledged: ML models could achieve higher accuracy but sacrifice explainability",
-    ],
-  },
-  {
-    icon: BookOpen,
-    title: "Academic References",
-    content: "The detection heuristics are informed by established misinformation research:",
-    details: [
-      "MIT Media Lab — Fake News detection using linguistic feature extraction",
-      "First Draft News — Misinformation taxonomy and indicator framework",
-      "Stanford Internet Observatory — Virality Project pattern analysis",
-      "Reuters Institute — Digital News Report credibility framework",
-      "LIAR Dataset (Wang, 2017) — 12.8K labeled statements for NLP research",
-      "MediaWise — Teen media literacy indicators research",
-    ],
-  },
-  {
+    num: 4,
+    title: "Final Verdict",
+    description: "You get a clear, easy-to-understand result with detailed insights.",
     icon: Shield,
-    title: "Limitations & Future Work",
-    content: "The current approach has acknowledged limitations that could be addressed in future versions:",
-    details: [
-      "Does not cross-reference claims against external fact-check databases",
-      "No image/video analysis (only text-based content)",
-      "Rule-based system requires manual pattern updates",
-      "Future: Fine-tuned BERT classifier on LIAR dataset",
-      "Future: TF-IDF vectorization for topic modeling",
-      "Future: Google Fact Check Tools API integration",
-      "Future: Image forensics for manipulated media detection",
-    ],
   },
 ];
 
 export function MethodologyView() {
   return (
-    <div className="space-y-3">
+    <div className="space-y-5">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass-card rounded-lg p-5"
+        className="text-center mb-2"
       >
-        <div className="flex items-center gap-2.5 mb-2">
-          <div className="w-9 h-9 rounded bg-primary/8 flex items-center justify-center">
-            <BookOpen className="w-4 h-4 text-primary" />
-          </div>
-          <div>
-            <h2 className="text-sm font-bold" style={{ fontFamily: "'DM Serif Display', serif" }}>Technical Methodology</h2>
-            <p className="text-[10px] text-muted-foreground">
-              How Veritas detects misinformation — for academic reference
-            </p>
-          </div>
-        </div>
+        <span className="text-xs font-semibold uppercase tracking-[0.25em] text-primary">Our Approach</span>
+        <h2 className="mt-2 text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif" }}>How Veritas Works</h2>
+        <p className="mt-2 text-xs text-muted-foreground max-w-md mx-auto">We combine advanced AI with proven fact-checking methodologies to give you reliable results.</p>
       </motion.div>
 
-      {/* Sections */}
-      {sections.map((section, i) => (
+      {/* Steps + Visual */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        {/* Steps */}
+        <div className="space-y-4">
+          {steps.map((step, i) => (
+            <motion.div
+              key={step.num}
+              initial={{ opacity: 0, x: -12 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3, delay: i * 0.1 }}
+              className="flex items-start gap-3.5"
+            >
+              <div className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ background: "#174A45", color: "#FFFCF6" }}>
+                <span className="text-xs font-bold">{step.num}</span>
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold mb-0.5" style={{ fontFamily: "'DM Serif Display', serif" }}>{step.title}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">{step.description}</p>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Landscape illustration */}
         <motion.div
-          key={section.title}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.25, delay: i * 0.04 }}
-          className="glass-card rounded-lg p-5 relative"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="rounded-xl overflow-hidden border border-border"
+          style={{ background: "linear-gradient(180deg, #c8c0b0 0%, #b8b0a0 50%, #a8a090 100%)", height: 240 }}
         >
-          <div className="absolute top-0 left-0 w-0.5 h-full rounded-l" style={{ background: "#174A45", opacity: 0.15 }} />
-          <div className="flex items-center gap-2.5 mb-2">
-            <div className="w-8 h-8 rounded bg-primary/8 flex items-center justify-center shrink-0">
-              <section.icon className="w-3.5 h-3.5 text-primary" />
-            </div>
-            <h3 className="text-sm font-bold" style={{ fontFamily: "'DM Serif Display', serif" }}>{section.title}</h3>
-          </div>
-          <p className="text-xs text-muted-foreground leading-relaxed mb-2.5">
-            {section.content}
-          </p>
-          <ul className="space-y-1">
-            {section.details.map((detail) => (
-              <li key={detail} className="flex items-start gap-1.5 text-[10px] text-muted-foreground leading-relaxed">
-                <div className="w-1 h-1 rounded-full bg-primary mt-1.5 shrink-0" />
-                {detail}
-              </li>
+          <svg width="100%" height="100%" viewBox="0 0 500 240" preserveAspectRatio="xMidYMid slice">
+            <rect width="500" height="240" fill="url(#mSky)" />
+            <defs>
+              <linearGradient id="mSky" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#d4cdc0" />
+                <stop offset="100%" stopColor="#b8b0a0" />
+              </linearGradient>
+            </defs>
+            {/* Mountains */}
+            <path d="M0 140 L80 70 L160 100 L240 50 L320 90 L400 60 L500 110 L500 240 L0 240Z" fill="#6b6358" opacity="0.5" />
+            <path d="M0 170 L60 110 L140 140 L220 90 L300 130 L380 100 L500 140 L500 240 L0 240Z" fill="#4a4238" opacity="0.75" />
+            <path d="M0 190 L100 155 L200 175 L300 150 L400 170 L500 160 L500 240 L0 240Z" fill="#3a3228" />
+            {/* Trees */}
+            {[80, 180, 280, 380].map((x, i) => (
+              <g key={i}>
+                <rect x={x - 1.5} y={155 + (i % 2) * 10} width="3" height="16" fill="#2a2420" />
+                <polygon points={`${x - 7},${160 + (i % 2) * 10} ${x},${147 + (i % 2) * 10} ${x + 7},${160 + (i % 2) * 10}`} fill="#4a4840" />
+              </g>
             ))}
-          </ul>
+            {/* Fog */}
+            <rect y="200" width="500" height="40" fill="url(#mFog)" />
+            <defs>
+              <linearGradient id="mFog" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="rgba(180,172,160,0)" />
+                <stop offset="100%" stopColor="rgba(180,172,160,0.6)" />
+              </linearGradient>
+            </defs>
+            {/* Magnifying glass */}
+            <circle cx="350" cy="80" r="40" fill="none" stroke="#174A45" strokeWidth="3" opacity="0.6" />
+            <line x1="378" y1="108" x2="410" y2="140" stroke="#174A45" strokeWidth="4" strokeLinecap="round" opacity="0.6" />
+            <circle cx="350" cy="80" r="35" fill="rgba(23,74,69,0.04)" />
+          </svg>
         </motion.div>
-      ))}
+      </div>
+
+      {/* Quote */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className="glass-card rounded-lg p-4 text-center"
+      >
+        <p className="text-xs italic text-muted-foreground" style={{ fontFamily: "'DM Serif Display', serif" }}>
+          &ldquo;Better information leads to better decisions.&rdquo;
+        </p>
+      </motion.div>
     </div>
   );
 }
