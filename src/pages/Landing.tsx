@@ -8,6 +8,14 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
 import { useRef, useState, useEffect } from "react";
 
+/* ─── Dynamic Date ─── */
+function getFormattedDate() {
+  const now = new Date();
+  const days = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  return `${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
+}
+
 /* ─── Animated Tagline ─── */
 const taglines = [
   "Truth over noise.",
@@ -263,7 +271,7 @@ function NewspaperVisual() {
         <div className="px-5 pt-3 pb-2">
           <div className="flex items-center justify-between mb-1.5">
             <span className="text-[7px] uppercase tracking-[0.15em]" style={{ color: "#6B7268" }}>Vol. CXII — No. 34,891</span>
-            <span className="text-[7px] uppercase tracking-[0.1em]" style={{ color: "#6B7268" }}>Monday, Sep 8, 2026</span>
+            <span className="text-[7px] uppercase tracking-[0.1em]" style={{ color: "#6B7268" }}>{getFormattedDate()}</span>
           </div>
           <div className="text-center py-2">
             <h2 className="text-3xl sm:text-4xl tracking-wide" style={{ fontFamily: "'DM Serif Display', serif", color: "#1E2522", fontWeight: 400 }}>NEWS</h2>
@@ -317,23 +325,7 @@ function NewspaperVisual() {
         {/* Footer */}
         <div className="px-5 py-2 border-t flex items-center justify-between" style={{ borderColor: "#D8D2C5" }}>
           <span className="text-[6px] uppercase tracking-wider" style={{ color: "#6B7268" }}>Page A1</span>
-          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded" style={{ background: "#174A4510" }}>
-            <CheckCircle2 className="w-2.5 h-2.5" style={{ color: "#174A45" }} />
-            <span className="text-[6px] font-semibold uppercase tracking-wider" style={{ color: "#174A45" }}>Verified by Veritas</span>
-          </div>
         </div>
-      </motion.div>
-
-      {/* ── Verification Stamp (rotated) ── */}
-      <motion.div
-        initial={{ opacity: 0, rotate: -15, scale: 0.6 }}
-        animate={{ opacity: 1, rotate: -12, scale: 1 }}
-        transition={{ duration: 0.4, delay: 1.0 }}
-        className="absolute -top-2 right-6 z-20 border-2 rounded px-3 py-1.5"
-        style={{ borderColor: "#174A45", transform: "rotate(-12deg)", background: "rgba(255,252,246,0.9)" }}
-      >
-        <span className="text-[10px] font-bold uppercase tracking-[0.15em] block" style={{ color: "#174A45" }}>VERIFIED</span>
-        <span className="text-[5px] block text-center" style={{ color: "#6B7268" }}>by Veritas NLP</span>
       </motion.div>
 
       {/* ── Action cards ── */}
