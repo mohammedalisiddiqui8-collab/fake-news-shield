@@ -8,8 +8,8 @@ import { toast } from "sonner";
 import {
   Shield, Search, Clock, Home, Loader2, CheckCircle2, AlertTriangle,
   XCircle, FileText, Link, Trash2, ChevronRight, Brain, BarChart3,
-  Sparkles, ArrowLeft, ClipboardPaste, BookOpen, TrendingUp,
-  Sun, Moon, Download, Share2, Lightbulb, Target, Activity,
+  ArrowLeft, ClipboardPaste, BookOpen, TrendingUp,
+  Sun, Moon, Download, Share2, Lightbulb, Target, Activity, ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,7 +17,6 @@ import { Badge } from "@/components/ui/badge";
 import { CredibilityGauge } from "@/components/CredibilityGauge";
 import { StatsView } from "@/components/StatsView";
 import { MethodologyView } from "@/components/MethodologyView";
-import { TiltCard } from "@/components/TiltCard";
 
 /* ─── Types ─── */
 type Verdict = "likely_real" | "likely_fake" | "uncertain";
@@ -42,24 +41,24 @@ interface AnalysisResult {
   wordCount: number;
 }
 
-/* ─── Verdict Config ─── */
+/* ─── Verdict Config (editorial palette) ─── */
 const verdictConfig: Record<Verdict, {
   label: string; icon: typeof CheckCircle2; color: string; bg: string;
-  border: string; glowColor: string; description: string;
+  border: string; accentColor: string; description: string;
 }> = {
   likely_real: {
-    label: "Likely Real", icon: CheckCircle2, color: "text-emerald-400",
-    bg: "bg-emerald-500/10", border: "border-emerald-500/25", glowColor: "oklch(0.65 0.20 160)",
+    label: "Likely Credible", icon: CheckCircle2, color: "text-primary",
+    bg: "bg-primary/8", border: "border-primary/20", accentColor: "#174A45",
     description: "This content appears to be based on credible sourcing and journalistic standards.",
   },
   uncertain: {
-    label: "Uncertain", icon: AlertTriangle, color: "text-amber-400",
-    bg: "bg-amber-500/10", border: "border-amber-500/25", glowColor: "oklch(0.75 0.18 80)",
+    label: "Uncertain", icon: AlertTriangle, color: "text-accent",
+    bg: "bg-accent/10", border: "border-accent/25", accentColor: "#B8873A",
     description: "This content has a mix of credible and questionable elements. Exercise caution.",
   },
   likely_fake: {
-    label: "Likely Fake", icon: XCircle, color: "text-red-400",
-    bg: "bg-red-500/10", border: "border-red-500/25", glowColor: "oklch(0.60 0.22 25)",
+    label: "Likely Misleading", icon: XCircle, color: "text-destructive",
+    bg: "bg-destructive/10", border: "border-destructive/20", accentColor: "#B34A3C",
     description: "This content shows multiple indicators of misinformation or manipulation.",
   },
 };
@@ -136,13 +135,11 @@ export default function Dashboard() {
   const [pipelineStep, setPipelineStep] = useState(-1);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  /* Rotate tips */
   useEffect(() => {
     const interval = setInterval(() => setCurrentTip(t => (t + 1) % mediaLiteracyTips.length), 7000);
     return () => clearInterval(interval);
   }, []);
 
-  /* Ctrl+Enter */
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && activeView === "analyze" && !isAnalyzing && inputText.trim()) {
@@ -154,7 +151,6 @@ export default function Dashboard() {
     return () => window.removeEventListener("keydown", handler);
   }, [activeView, isAnalyzing, inputText]);
 
-  /* Pipeline animation */
   useEffect(() => {
     if (!isAnalyzing) return;
     setPipelineStep(0);
@@ -248,37 +244,30 @@ export default function Dashboard() {
     { key: "analyze" as ViewType, icon: Search, label: "Analyze" },
     { key: "result" as ViewType, icon: BarChart3, label: "Results", disabled: !currentResult },
     { key: "history" as ViewType, icon: Clock, label: "History" },
-    { key: "stats" as ViewType, icon: TrendingUp, label: "Stats" },
-    { key: "methodology" as ViewType, icon: BookOpen, label: "Method" },
+    { key: "stats" as ViewType, icon: TrendingUp, label: "Statistics" },
+    { key: "methodology" as ViewType, icon: BookOpen, label: "Methodology" },
   ];
 
   return (
-    <div className="min-h-screen gradient-bg text-foreground">
-      {/* ─── Ambient Background ─── */}
-      <div className="fixed inset-0 pointer-events-none -z-10">
-        <div className="absolute -top-32 -left-32 w-[450px] h-[450px] rounded-full bg-primary/4 blur-[100px] animate-float-faster" />
-        <div className="absolute top-1/3 -right-28 w-[350px] h-[350px] rounded-full blur-[80px] animate-float" style={{ background: "oklch(0.60 0.12 70 / 4%)" }} />
-        <div className="absolute bottom-[-100px] left-1/3 w-[380px] h-[380px] rounded-full bg-primary/3 blur-[110px] animate-float-slower" />
-      </div>
-
+    <div className="min-h-screen bg-background text-foreground">
       {/* ─── Nav ─── */}
-      <nav className="sticky top-0 z-50 glass-strong border-b border-border/30">
+      <nav className="sticky top-0 z-50 bg-card border-b border-border">
         <div className="mx-auto max-w-6xl px-4 sm:px-6 h-12 sm:h-14 flex items-center justify-between">
           <button type="button" className="cursor-pointer flex items-center gap-2" onClick={() => navigate("/")}>
-            <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center glow-gold">
+            <div className="w-7 h-7 rounded bg-primary flex items-center justify-center">
               <Shield className="w-3.5 h-3.5 text-primary-foreground" />
             </div>
-            <span className="font-bold tracking-tight hidden sm:inline text-sm">Veritas</span>
+            <span className="font-bold tracking-wide uppercase hidden sm:inline text-sm" style={{ fontFamily: "'DM Serif Display', serif" }}>Veritas</span>
           </button>
           <div className="flex items-center gap-0.5">
             {navItems.map(item => (
               <Button key={item.key} variant={activeView === item.key ? "default" : "ghost"} size="sm"
-                className={`cursor-pointer gap-1 text-[10px] sm:text-xs px-2 sm:px-2.5 h-7 ${activeView === item.key ? "bg-primary text-primary-foreground" : ""}`}
+                className={`cursor-pointer gap-1 text-[10px] sm:text-xs px-2 sm:px-2.5 h-7 rounded ${activeView === item.key ? "bg-primary text-primary-foreground" : ""}`}
                 disabled={item.disabled} onClick={() => setActiveView(item.key)}>
                 <item.icon className="w-3 h-3" /><span className="hidden md:inline">{item.label}</span>
               </Button>
             ))}
-            <div className="w-px h-4 bg-border/30 mx-0.5" />
+            <div className="w-px h-4 bg-border mx-0.5" />
             <Button variant="ghost" size="icon" className="cursor-pointer h-7 w-7" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
               {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
             </Button>
@@ -293,60 +282,51 @@ export default function Dashboard() {
         <AnimatePresence mode="wait">
           {/* ═══ ANALYZE ═══ */}
           {activeView === "analyze" && (
-            <motion.div key="analyze" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.25 }}>
+            <motion.div key="analyze" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }}>
 
-              {/* Pipeline animation overlay with radar sweep */}
+              {/* Pipeline overlay */}
               <AnimatePresence>
                 {isAnalyzing && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-[60] bg-background/95 backdrop-blur-md flex items-center justify-center">
-                    <div className="glass-card rounded-2xl p-8 sm:p-10 max-w-sm w-full mx-4 text-center relative overflow-hidden">
-                      {/* Radar sweep background */}
-                      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                        <div className="w-48 h-48 rounded-full border border-primary/10" />
-                        <div className="absolute w-36 h-36 rounded-full border border-primary/8" />
-                        <div className="absolute w-24 h-24 rounded-full border border-primary/5" />
-                        <div className="absolute w-64 h-64 rounded-full radar-sweep" style={{ opacity: 0.3 }} />
+                    className="fixed inset-0 z-[60] bg-background/95 backdrop-blur-sm flex items-center justify-center">
+                    <div className="glass-card rounded-lg p-8 sm:p-10 max-w-sm w-full mx-4 text-center">
+                      <div className="w-12 h-12 rounded bg-primary/8 flex items-center justify-center mx-auto mb-5">
+                        <Activity className="w-6 h-6 text-primary animate-spin-slow" />
                       </div>
-                      <div className="relative z-10">
-                        <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-5 glow-ring">
-                          <Activity className="w-7 h-7 text-primary animate-spin-slow" />
-                        </div>
-                        <h3 className="text-sm font-semibold mb-1 text-gradient">Verification Pipeline</h3>
-                        <p className="text-[10px] text-muted-foreground mb-6">Analyzing content patterns...</p>
-                        <div className="space-y-1">
-                          {pipelineSteps.map((step, i) => {
-                            const isActive = i === pipelineStep;
-                            const isDone = i < pipelineStep;
-                            return (
-                              <motion.div key={step.key}
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: i * 0.08 }}
-                                className={`flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-300 ${
-                                  isActive ? "bg-primary/10 border border-primary/20" : isDone ? "opacity-60" : "opacity-25"
-                                }`}>
-                                <div className={`w-5 h-5 rounded-md flex items-center justify-center transition-all duration-300 ${
-                                  isDone ? "bg-primary/20" : isActive ? "bg-primary/15 status-pulse" : "bg-muted/15"
-                                }`}>
-                                  {isDone ? (
-                                    <CheckCircle2 className="w-3 h-3 text-primary" />
-                                  ) : isActive ? (
-                                    <Loader2 className="w-3 h-3 text-primary animate-spin" />
-                                  ) : (
-                                    <step.icon className="w-3 h-3 text-muted-foreground/40" />
-                                  )}
-                                </div>
-                                <span className={`text-[10px] font-mono tracking-wider transition-all duration-300 ${
-                                  isActive ? "text-primary font-semibold" : isDone ? "text-muted-foreground" : "text-muted-foreground/30"
-                                }`}>
-                                  {step.label}
-                                </span>
-                                {isDone && <CheckCircle2 className="w-3 h-3 text-primary/40 ml-auto" />}
-                              </motion.div>
-                            );
-                          })}
-                        </div>
+                      <h3 className="text-sm font-semibold mb-1" style={{ fontFamily: "'DM Serif Display', serif" }}>Verification Pipeline</h3>
+                      <p className="text-[10px] text-muted-foreground mb-6">Analyzing content patterns...</p>
+                      <div className="space-y-1">
+                        {pipelineSteps.map((step, i) => {
+                          const isActive = i === pipelineStep;
+                          const isDone = i < pipelineStep;
+                          return (
+                            <motion.div key={step.key}
+                              initial={{ opacity: 0, x: -8 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: i * 0.08 }}
+                              className={`flex items-center gap-2.5 px-3 py-2 rounded transition-all duration-300 ${
+                                isActive ? "bg-primary/8 border border-primary/15" : isDone ? "opacity-60" : "opacity-25"
+                              }`}>
+                              <div className={`w-5 h-5 rounded flex items-center justify-center transition-all duration-300 ${
+                                isDone ? "bg-primary/15" : isActive ? "bg-primary/10 status-pulse" : "bg-muted"
+                              }`}>
+                                {isDone ? (
+                                  <CheckCircle2 className="w-3 h-3 text-primary" />
+                                ) : isActive ? (
+                                  <Loader2 className="w-3 h-3 text-primary animate-spin" />
+                                ) : (
+                                  <step.icon className="w-3 h-3 text-muted-foreground/40" />
+                                )}
+                              </div>
+                              <span className={`text-[10px] font-mono tracking-wider transition-all duration-300 ${
+                                isActive ? "text-primary font-semibold" : isDone ? "text-muted-foreground" : "text-muted-foreground/30"
+                              }`}>
+                                {step.label}
+                              </span>
+                              {isDone && <CheckCircle2 className="w-3 h-3 text-primary/30 ml-auto" />}
+                            </motion.div>
+                          );
+                        })}
                       </div>
                     </div>
                   </motion.div>
@@ -355,42 +335,36 @@ export default function Dashboard() {
 
               {/* Header */}
               <div className="mb-5">
-                <div className="flex items-center gap-2.5 mb-1">
-                  <div className="w-9 h-9 rounded-lg bg-primary/8 flex items-center justify-center">
-                    <Brain className="w-4 h-4 text-primary" />
-                  </div>
-                  <div>
-                    <h1 className="text-lg sm:text-xl font-bold tracking-tight">Analyze Content</h1>
-                    <p className="text-[11px] text-muted-foreground">Paste any news article or content to verify</p>
-                  </div>
-                </div>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.2em] mb-1">Analyze Article</p>
+                <h1 className="text-xl sm:text-2xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif" }}>Check the truth. In seconds.</h1>
+                <p className="text-xs text-muted-foreground mt-1">Paste the news article, headline or text below and let Veritas analyze it for potential misinformation.</p>
               </div>
 
               {/* Tip */}
               <motion.div key={currentTip} initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }}
-                className="glass-card rounded-xl p-3 mb-3 flex items-start gap-2.5">
-                <Lightbulb className="w-3.5 h-3.5 text-amber-400 mt-0.5 shrink-0" />
+                className="glass-card rounded-lg p-3 mb-3 flex items-start gap-2.5">
+                <Lightbulb className="w-3.5 h-3.5 text-accent mt-0.5 shrink-0" />
                 <p className="text-[11px] text-muted-foreground leading-relaxed">{mediaLiteracyTips[currentTip]}</p>
               </motion.div>
 
               {/* Input type toggle */}
               <div className="flex gap-1.5 mb-3">
                 <Button variant={inputType === "text" ? "default" : "outline"}
-                  className={`cursor-pointer gap-1.5 text-[11px] h-8 ${inputType === "text" ? "bg-primary text-primary-foreground" : "glass"}`}
+                  className={`cursor-pointer gap-1.5 text-[11px] h-8 rounded ${inputType === "text" ? "bg-primary text-primary-foreground" : "border-border"}`}
                   onClick={() => setInputType("text")}>
                   <FileText className="w-3 h-3" />Paste Text
                 </Button>
                 <Button variant={inputType === "url" ? "default" : "outline"}
-                  className={`cursor-pointer gap-1.5 text-[11px] h-8 ${inputType === "url" ? "bg-primary text-primary-foreground" : "glass"}`}
+                  className={`cursor-pointer gap-1.5 text-[11px] h-8 rounded ${inputType === "url" ? "bg-primary text-primary-foreground" : "border-border"}`}
                   onClick={() => setInputType("url")}>
                   <Link className="w-3 h-3" />Paste URL
                 </Button>
               </div>
 
               {/* Textarea */}
-              <div className="glass-card rounded-xl p-0.5 mb-3">
+              <div className="glass-card rounded-lg p-0.5 mb-3">
                 <Textarea ref={textareaRef} value={inputText} onChange={e => setInputText(e.target.value)}
-                  placeholder={inputType === "text" ? "Paste a news article, social media post, or any text content here..." : "Paste a news URL here..."}
+                  placeholder={inputType === "text" ? "Paste your news article, headline or text here..." : "Paste a news URL here..."}
                   className="min-h-[160px] sm:min-h-[180px] border-0 bg-transparent resize-none focus-visible:ring-0 focus-visible:ring-offset-0 text-sm leading-relaxed" />
               </div>
 
@@ -413,7 +387,7 @@ export default function Dashboard() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
                   {sampleTexts.map(sample => (
                     <button key={sample.label} type="button"
-                      className="glass-card rounded-xl p-3.5 text-left hover-glow cursor-pointer group transition-all duration-200"
+                      className="glass-card rounded-lg p-3.5 text-left hover:shadow-sm cursor-pointer group transition-all duration-200 border border-border"
                       onClick={() => { setInputText(sample.text); setInputType("text"); }}>
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-[11px] font-semibold text-primary truncate">{sample.label}</span>
@@ -421,7 +395,7 @@ export default function Dashboard() {
                       </div>
                       <p className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed">{sample.text.slice(0, 70)}...</p>
                       <div className="flex items-center gap-1.5 mt-1.5">
-                        <Badge variant="outline" className={`text-[9px] px-1.5 py-0 ${sample.type === "real" ? "border-emerald-500/25 text-emerald-400" : "border-red-500/25 text-red-400"}`}>
+                        <Badge variant="outline" className={`text-[9px] px-1.5 py-0 ${sample.type === "real" ? "border-primary/25 text-primary" : "border-destructive/25 text-destructive"}`}>
                           {sample.type === "real" ? "Real" : "Fake"}
                         </Badge>
                         <Badge variant="outline" className="text-[9px] px-1.5 py-0 text-muted-foreground">{sample.category}</Badge>
@@ -432,88 +406,85 @@ export default function Dashboard() {
               </div>
 
               {/* Analyze button */}
-              <Button size="lg" className="cursor-pointer w-full bg-primary hover:bg-primary/85 text-primary-foreground gap-2 h-11 text-sm glow-gold"
+              <Button size="lg" className="cursor-pointer w-full bg-primary hover:bg-primary/90 text-primary-foreground gap-2 h-11 text-sm rounded"
                 onClick={handleAnalyze} disabled={isAnalyzing || !inputText.trim()}>
-                <Sparkles className="w-4 h-4" />Analyze Content
+                Analyze Content <ArrowRight className="w-4 h-4" />
               </Button>
             </motion.div>
           )}
 
           {/* ═══ RESULT ═══ */}
           {activeView === "result" && currentResult && vc && (
-            <motion.div key="result" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}>
+            <motion.div key="result" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.25 }}>
 
               {/* Back + actions */}
               <div className="flex items-center justify-between mb-5">
-                <button type="button" className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer hover-lift"
+                <button type="button" className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
                   onClick={() => setActiveView("analyze")}>
                   <ArrowLeft className="w-3.5 h-3.5" />New Analysis
                 </button>
                 <div className="flex gap-1.5">
-                  <Button variant="outline" size="sm" className="cursor-pointer gap-1 text-[10px] h-7 glass border-primary/15" onClick={handleExport}>
+                  <Button variant="outline" size="sm" className="cursor-pointer gap-1 text-[10px] h-7 border-border rounded" onClick={handleExport}>
                     <Download className="w-3 h-3" />Export
                   </Button>
-                  <Button variant="outline" size="sm" className="cursor-pointer gap-1 text-[10px] h-7 glass border-primary/15" onClick={handleShare}>
+                  <Button variant="outline" size="sm" className="cursor-pointer gap-1 text-[10px] h-7 border-border rounded" onClick={handleShare}>
                     <Share2 className="w-3 h-3" />Share
                   </Button>
                 </div>
               </div>
 
-              {/* Verdict Card with Tilt + Animated Border */}
-              <motion.div initial={{ opacity: 0, scale: 0.97 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4, delay: 0.08 }} className="mb-4">
-              <TiltCard className={`glass-card rounded-xl p-5 sm:p-7 border ${vc.border} relative overflow-hidden`} intensity={6}>
-                <div className="absolute inset-0 pointer-events-none"
-                  style={{ background: `radial-gradient(ellipse at 30% 20%, ${vc.glowColor} / 6%) 0%, transparent 50%)` }} />
-                <div className="relative flex flex-col sm:flex-row items-center gap-5">
-                  <CredibilityGauge confidence={currentResult.confidence} verdict={currentResult.verdict} size={140} />
-                  <div className="flex-1 text-center sm:text-left">
-                    <div className="flex items-center gap-2.5 mb-2 justify-center sm:justify-start">
-                      <div className={`w-9 h-9 rounded-lg ${vc.bg} flex items-center justify-center`}>
-                        <vc.icon className={`w-4 h-4 ${vc.color}`} />
+              {/* Verdict Card */}
+              <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.35, delay: 0.05 }} className="mb-4">
+                <div className={`glass-card rounded-lg p-5 sm:p-7 border ${vc.border} relative overflow-hidden`}>
+                  <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: vc.accentColor }} />
+                  <div className="relative flex flex-col sm:flex-row items-center gap-5">
+                    <CredibilityGauge confidence={currentResult.confidence} verdict={currentResult.verdict} size={140} />
+                    <div className="flex-1 text-center sm:text-left">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-[0.15em] font-semibold mb-1">Verdict</p>
+                      <div className="flex items-center gap-2.5 mb-2 justify-center sm:justify-start">
+                        <div className={`w-8 h-8 rounded ${vc.bg} flex items-center justify-center`}>
+                          <vc.icon className={`w-4 h-4 ${vc.color}`} />
+                        </div>
+                        <h2 className={`text-lg sm:text-xl font-bold ${vc.color}`} style={{ fontFamily: "'DM Serif Display', serif" }}>{vc.label}</h2>
                       </div>
-                      <div>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-[0.15em] font-semibold">Verdict</p>
-                        <h2 className={`text-lg sm:text-xl font-bold ${vc.color}`}>{vc.label}</h2>
+                      <p className="text-xs text-muted-foreground leading-relaxed">{vc.description}</p>
+                      <div className="flex items-center gap-3 mt-2.5 justify-center sm:justify-start flex-wrap">
+                        {currentResult.redFlags.length > 0 && (
+                          <div className="flex items-center gap-1">
+                            <AlertTriangle className="w-3 h-3 text-destructive" />
+                            <span className="text-[10px] text-destructive font-medium">{currentResult.redFlags.length} red</span>
+                          </div>
+                        )}
+                        {currentResult.greenFlags.length > 0 && (
+                          <div className="flex items-center gap-1">
+                            <CheckCircle2 className="w-3 h-3 text-primary" />
+                            <span className="text-[10px] text-primary font-medium">{currentResult.greenFlags.length} green</span>
+                          </div>
+                        )}
+                        <span className="text-[9px] text-muted-foreground/60">{currentResult.wordCount} words</span>
                       </div>
                     </div>
-                    <p className="text-xs text-muted-foreground leading-relaxed">{vc.description}</p>
-                    <div className="flex items-center gap-3 mt-2.5 justify-center sm:justify-start flex-wrap">
-                      {currentResult.redFlags.length > 0 && (
-                        <div className="flex items-center gap-1">
-                          <AlertTriangle className="w-3 h-3 text-red-400" />
-                          <span className="text-[10px] text-red-400 font-medium">{currentResult.redFlags.length} red</span>
-                        </div>
-                      )}
-                      {currentResult.greenFlags.length > 0 && (
-                        <div className="flex items-center gap-1">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                          <span className="text-[10px] text-emerald-400 font-medium">{currentResult.greenFlags.length} green</span>
-                        </div>
-                      )}
-                      <span className="text-[9px] text-muted-foreground/60">{currentResult.wordCount} words</span>
+                  </div>
+                  {/* Confidence bar */}
+                  <div className="relative mt-5">
+                    <div className="flex items-center justify-between text-[10px] mb-1">
+                      <span className="text-muted-foreground">Confidence</span>
+                      <span className="font-semibold" style={{ color: vc.accentColor }}><AnimatedNumber value={currentResult.confidence} />%</span>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                      <motion.div initial={{ width: 0 }} animate={{ width: `${currentResult.confidence}%` }}
+                        transition={{ duration: 0.8, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                        className="h-full rounded-full" style={{ background: vc.accentColor }} />
                     </div>
                   </div>
                 </div>
-                {/* Confidence bar */}
-                <div className="relative mt-5">
-                  <div className="flex items-center justify-between text-[10px] mb-1">
-                    <span className="text-muted-foreground">Confidence</span>
-                    <span className="font-semibold text-gradient"><AnimatedNumber value={currentResult.confidence} />%</span>
-                  </div>
-                  <div className="h-1.5 rounded-full bg-muted/20 overflow-hidden">
-                    <motion.div initial={{ width: 0 }} animate={{ width: `${currentResult.confidence}%` }}
-                      transition={{ duration: 0.8, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                      className="h-full rounded-full" style={{ background: `linear-gradient(90deg, ${vc.glowColor}, ${vc.glowColor} / 70%)` }} />
-                  </div>
-                </div>
-              </TiltCard>
               </motion.div>
 
               {/* Category Breakdown */}
               {currentResult.categoryBreakdown.length > 0 && (
-                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.12 }}
-                  className="glass-card rounded-xl p-4 sm:p-5 mb-3">
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.1 }}
+                  className="glass-card rounded-lg p-4 sm:p-5 mb-3">
                   <div className="flex items-center gap-1.5 mb-3">
                     <Target className="w-3.5 h-3.5 text-primary" />
                     <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em]">Category Breakdown</h3>
@@ -523,16 +494,16 @@ export default function Dashboard() {
                       const pct = Math.round((cat.score / cat.maxScore) * 100);
                       return (
                         <motion.div key={cat.category} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.2, delay: 0.15 + i * 0.03 }}>
+                          transition={{ duration: 0.2, delay: 0.12 + i * 0.03 }}>
                           <div className="flex items-center justify-between text-[10px] mb-0.5">
                             <span className="font-medium">{cat.category}</span>
-                            <span className={cat.type === "red" ? "text-red-400" : "text-emerald-400"}>{pct}%</span>
+                            <span className={cat.type === "red" ? "text-destructive" : "text-primary"}>{pct}%</span>
                           </div>
-                          <div className="h-1 rounded-full bg-muted/15 overflow-hidden">
+                          <div className="h-1 rounded-full bg-muted overflow-hidden">
                             <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }}
-                              transition={{ duration: 0.5, delay: 0.2 + i * 0.04 }}
+                              transition={{ duration: 0.5, delay: 0.15 + i * 0.04 }}
                               className="h-full rounded-full"
-                              style={{ background: cat.type === "red" ? "oklch(0.60 0.22 25)" : "oklch(0.65 0.20 160)" }} />
+                              style={{ background: cat.type === "red" ? "#B34A3C" : "#174A45" }} />
                           </div>
                         </motion.div>
                       );
@@ -543,68 +514,68 @@ export default function Dashboard() {
 
               {/* Keywords */}
               {currentResult.triggeredKeywords.length > 0 && (
-                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.18 }}
-                  className="glass-card rounded-xl p-4 sm:p-5 mb-3">
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.15 }}
+                  className="glass-card rounded-lg p-4 sm:p-5 mb-3">
                   <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-2.5">Detected Keywords</h3>
                   <div className="flex flex-wrap gap-1">
                     {currentResult.triggeredKeywords.map(kw => (
-                      <Badge key={kw} variant="outline" className="text-[9px] border-red-500/25 text-red-400 bg-red-500/5">{kw}</Badge>
+                      <Badge key={kw} variant="outline" className="text-[9px] border-destructive/25 text-destructive bg-destructive/5 rounded">{kw}</Badge>
                     ))}
                   </div>
                 </motion.div>
               )}
 
               {/* Summary */}
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.22 }}
-                className="glass-card rounded-xl p-4 sm:p-5 mb-3">
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.18 }}
+                className="glass-card rounded-lg p-4 sm:p-5 mb-3">
                 <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-2">Summary</h3>
                 <p className="text-xs leading-relaxed">{currentResult.summary}</p>
               </motion.div>
 
               {/* Reasoning */}
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.26 }}
-                className="glass-card rounded-xl p-4 sm:p-5 mb-3">
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.22 }}
+                className="glass-card rounded-lg p-4 sm:p-5 mb-3">
                 <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-2">Reasoning</h3>
                 <p className="text-xs leading-relaxed text-muted-foreground">{currentResult.reasoning}</p>
               </motion.div>
 
-              {/* Red / Green Flags with scanline */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3 scanline-overlay">
-                <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.25, delay: 0.3 }}
-                  className="glass-card rounded-xl p-4 sm:p-5">
+              {/* Red / Green Flags */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.25, delay: 0.26 }}
+                  className="glass-card rounded-lg p-4 sm:p-5">
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="w-6 h-6 rounded-md bg-red-500/10 flex items-center justify-center">
-                      <AlertTriangle className="w-3 h-3 text-red-400" />
+                    <div className="w-6 h-6 rounded bg-destructive/8 flex items-center justify-center">
+                      <AlertTriangle className="w-3 h-3 text-destructive" />
                     </div>
-                    <h3 className="text-xs font-semibold text-red-400">Red Flags</h3>
-                    {currentResult.redFlags.length > 0 && <Badge variant="outline" className="border-red-500/25 text-red-400 text-[9px] ml-auto">{currentResult.redFlags.length}</Badge>}
+                    <h3 className="text-xs font-semibold text-destructive">Red Flags</h3>
+                    {currentResult.redFlags.length > 0 && <Badge variant="outline" className="border-destructive/25 text-destructive text-[9px] ml-auto rounded">{currentResult.redFlags.length}</Badge>}
                   </div>
                   {currentResult.redFlags.length === 0 ? (
                     <p className="text-[10px] text-muted-foreground italic">No red flags detected</p>
                   ) : (
                     <ul className="space-y-1.5">{currentResult.redFlags.map((flag, i) => (
                       <li key={i} className="flex items-start gap-1.5 text-[10px] leading-relaxed">
-                        <XCircle className="w-3 h-3 text-red-400 mt-0.5 shrink-0" />
+                        <XCircle className="w-3 h-3 text-destructive mt-0.5 shrink-0" />
                         <span className="text-muted-foreground">{flag}</span>
                       </li>
                     ))}</ul>
                   )}
                 </motion.div>
-                <motion.div initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.25, delay: 0.34 }}
-                  className="glass-card rounded-xl p-4 sm:p-5">
+                <motion.div initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.25, delay: 0.3 }}
+                  className="glass-card rounded-lg p-4 sm:p-5">
                   <div className="flex items-center gap-2 mb-3">
-                    <div className="w-6 h-6 rounded-md bg-emerald-500/10 flex items-center justify-center">
-                      <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                    <div className="w-6 h-6 rounded bg-primary/8 flex items-center justify-center">
+                      <CheckCircle2 className="w-3 h-3 text-primary" />
                     </div>
-                    <h3 className="text-xs font-semibold text-emerald-400">Green Flags</h3>
-                    {currentResult.greenFlags.length > 0 && <Badge variant="outline" className="border-emerald-500/25 text-emerald-400 text-[9px] ml-auto">{currentResult.greenFlags.length}</Badge>}
+                    <h3 className="text-xs font-semibold text-primary">Green Flags</h3>
+                    {currentResult.greenFlags.length > 0 && <Badge variant="outline" className="border-primary/25 text-primary text-[9px] ml-auto rounded">{currentResult.greenFlags.length}</Badge>}
                   </div>
                   {currentResult.greenFlags.length === 0 ? (
                     <p className="text-[10px] text-muted-foreground italic">No green flags detected</p>
                   ) : (
                     <ul className="space-y-1.5">{currentResult.greenFlags.map((flag, i) => (
                       <li key={i} className="flex items-start gap-1.5 text-[10px] leading-relaxed">
-                        <CheckCircle2 className="w-3 h-3 text-emerald-400 mt-0.5 shrink-0" />
+                        <CheckCircle2 className="w-3 h-3 text-primary mt-0.5 shrink-0" />
                         <span className="text-muted-foreground">{flag}</span>
                       </li>
                     ))}</ul>
@@ -613,16 +584,16 @@ export default function Dashboard() {
               </div>
 
               {/* Highlighted content */}
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.38 }}
-                className="glass-card rounded-xl p-4 sm:p-5">
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.34 }}
+                className="glass-card rounded-lg p-4 sm:p-5">
                 <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-2">
-                  Analyzed Content {currentResult.triggeredKeywords.length > 0 && <span className="text-red-400 normal-case">(highlighted)</span>}
+                  Analyzed Content {currentResult.triggeredKeywords.length > 0 && <span className="text-destructive normal-case">(highlighted)</span>}
                 </h3>
                 <p className="text-[11px] text-muted-foreground leading-relaxed max-h-36 overflow-auto whitespace-pre-wrap">
                   {currentResult.triggeredKeywords.length > 0
                     ? getHighlightedParts(inputText, currentResult.triggeredKeywords).map((part, i) =>
                         part.highlighted
-                          ? <span key={i} className="bg-red-500/12 text-red-400 font-medium px-0.5 rounded">{part.text}</span>
+                          ? <span key={i} className="bg-destructive/10 text-destructive font-medium px-0.5 rounded">{part.text}</span>
                           : <span key={i}>{part.text}</span>
                       )
                     : inputText
@@ -634,51 +605,45 @@ export default function Dashboard() {
 
           {/* ═══ HISTORY ═══ */}
           {activeView === "history" && (
-            <motion.div key="history" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.25 }}>
+            <motion.div key="history" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }}>
               <div className="mb-5">
-                <div className="flex items-center gap-2.5 mb-1">
-                  <div className="w-9 h-9 rounded-lg bg-primary/8 flex items-center justify-center">
-                    <Clock className="w-4 h-4 text-primary" />
-                  </div>
-                  <div>
-                    <h1 className="text-lg sm:text-xl font-bold tracking-tight">History</h1>
-                    <p className="text-[11px] text-muted-foreground">Your recent detection results</p>
-                  </div>
-                </div>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.2em] mb-1">Analysis History</p>
+                <h1 className="text-xl sm:text-2xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif" }}>Your Past Verifications</h1>
+                <p className="text-xs text-muted-foreground mt-1">View and manage your previously analyzed articles.</p>
               </div>
               {!analyses ? (
-                <div className="glass-card rounded-xl p-10 text-center">
+                <div className="glass-card rounded-lg p-10 text-center">
                   <Loader2 className="w-5 h-5 animate-spin text-muted-foreground mx-auto" />
                 </div>
               ) : analyses.length === 0 ? (
-                <div className="glass-card rounded-xl p-10 text-center">
-                  <div className="w-12 h-12 rounded-xl bg-primary/8 flex items-center justify-center mx-auto mb-3">
+                <div className="glass-card rounded-lg p-10 text-center">
+                  <div className="w-12 h-12 rounded bg-primary/8 flex items-center justify-center mx-auto mb-3">
                     <Search className="w-5 h-5 text-primary" />
                   </div>
-                  <h3 className="text-base font-semibold mb-1">No analyses yet</h3>
+                  <h3 className="text-base font-semibold mb-1" style={{ fontFamily: "'DM Serif Display', serif" }}>No analyses yet</h3>
                   <p className="text-xs text-muted-foreground mb-5">Start by analyzing your first piece of content.</p>
-                  <Button className="cursor-pointer bg-primary text-primary-foreground gap-1.5 text-xs h-9" onClick={() => setActiveView("analyze")}>
-                    <Sparkles className="w-3.5 h-3.5" />Analyze Content
+                  <Button className="cursor-pointer bg-primary text-primary-foreground gap-1.5 text-xs h-9 rounded" onClick={() => setActiveView("analyze")}>
+                    Analyze Content
                   </Button>
                 </div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-0">
                   {analyses.map((analysis, i) => {
                     const avc = verdictConfig[analysis.verdict];
                     return (
                       <motion.div key={analysis._id}
                         initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.2, delay: i * 0.04 }}
-                        className="glass-card rounded-xl p-3.5 hover-glow cursor-pointer group" onClick={() => handleLoadFromHistory(analysis)}>
+                        className="glass-card rounded-lg p-3.5 hover:shadow-sm cursor-pointer group border-b border-border last:border-b-0 first:rounded-b-none last:rounded-t-none" onClick={() => handleLoadFromHistory(analysis)}>
                         <div className="flex items-start gap-3">
-                          <div className={`w-8 h-8 rounded-lg ${avc.bg} flex items-center justify-center shrink-0`}>
+                          <div className={`w-8 h-8 rounded ${avc.bg} flex items-center justify-center shrink-0`}>
                             <avc.icon className={`w-3.5 h-3.5 ${avc.color}`} />
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
                               <span className={`text-[11px] font-semibold ${avc.color}`}>{avc.label}</span>
-                              <Badge variant="outline" className={`text-[9px] ${avc.border} ${avc.color}`}>{analysis.confidence}%</Badge>
-                              <Badge variant="outline" className="text-[9px] ml-auto">{analysis.inputType === "url" ? "URL" : "Text"}</Badge>
+                              <Badge variant="outline" className={`text-[9px] ${avc.border} ${avc.color} rounded`}>{analysis.confidence}%</Badge>
+                              <Badge variant="outline" className="text-[9px] ml-auto rounded">{analysis.inputType === "url" ? "URL" : "Text"}</Badge>
                             </div>
                             <p className="text-[10px] text-muted-foreground line-clamp-1 mb-0.5">{analysis.summary}</p>
                             <p className="text-[9px] text-muted-foreground/50 line-clamp-1">{analysis.inputText.slice(0, 100)}</p>
@@ -701,31 +666,25 @@ export default function Dashboard() {
 
           {/* ═══ STATS ═══ */}
           {activeView === "stats" && (
-            <motion.div key="stats" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.25 }}>
+            <motion.div key="stats" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }}>
               <div className="mb-5">
-                <div className="flex items-center gap-2.5 mb-1">
-                  <div className="w-9 h-9 rounded-lg bg-primary/8 flex items-center justify-center">
-                    <TrendingUp className="w-4 h-4 text-primary" />
-                  </div>
-                  <div>
-                    <h1 className="text-lg sm:text-xl font-bold tracking-tight">Statistics</h1>
-                    <p className="text-[11px] text-muted-foreground">Overview of your analysis activity</p>
-                  </div>
-                </div>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.2em] mb-1">Insights & Statistics</p>
+                <h1 className="text-xl sm:text-2xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif" }}>The Bigger Picture</h1>
+                <p className="text-xs text-muted-foreground mt-1">Explore trends, patterns, and insights from analyzed articles.</p>
               </div>
               {!analyses ? (
-                <div className="glass-card rounded-xl p-10 text-center">
+                <div className="glass-card rounded-lg p-10 text-center">
                   <Loader2 className="w-5 h-5 animate-spin text-muted-foreground mx-auto" />
                 </div>
               ) : analyses.length === 0 ? (
-                <div className="glass-card rounded-xl p-10 text-center">
-                  <div className="w-12 h-12 rounded-xl bg-primary/8 flex items-center justify-center mx-auto mb-3">
+                <div className="glass-card rounded-lg p-10 text-center">
+                  <div className="w-12 h-12 rounded bg-primary/8 flex items-center justify-center mx-auto mb-3">
                     <TrendingUp className="w-5 h-5 text-primary" />
                   </div>
-                  <h3 className="text-base font-semibold mb-1">No data yet</h3>
+                  <h3 className="text-base font-semibold mb-1" style={{ fontFamily: "'DM Serif Display', serif" }}>No data yet</h3>
                   <p className="text-xs text-muted-foreground mb-5">Analyze some content to see statistics.</p>
-                  <Button className="cursor-pointer bg-primary text-primary-foreground gap-1.5 text-xs h-9" onClick={() => setActiveView("analyze")}>
-                    <Sparkles className="w-3.5 h-3.5" />Analyze Content
+                  <Button className="cursor-pointer bg-primary text-primary-foreground gap-1.5 text-xs h-9 rounded" onClick={() => setActiveView("analyze")}>
+                    Analyze Content
                   </Button>
                 </div>
               ) : (
@@ -736,17 +695,11 @@ export default function Dashboard() {
 
           {/* ═══ METHODOLOGY ═══ */}
           {activeView === "methodology" && (
-            <motion.div key="methodology" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} transition={{ duration: 0.25 }}>
+            <motion.div key="methodology" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }}>
               <div className="mb-5">
-                <div className="flex items-center gap-2.5 mb-1">
-                  <div className="w-9 h-9 rounded-lg bg-primary/8 flex items-center justify-center">
-                    <BookOpen className="w-4 h-4 text-primary" />
-                  </div>
-                  <div>
-                    <h1 className="text-lg sm:text-xl font-bold tracking-tight">Methodology</h1>
-                    <p className="text-[11px] text-muted-foreground">Technical documentation of the detection approach</p>
-                  </div>
-                </div>
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.2em] mb-1">Our Approach</p>
+                <h1 className="text-xl sm:text-2xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif" }}>How Veritas Works</h1>
+                <p className="text-xs text-muted-foreground mt-1">A detailed look at the fact-checking process behind every analysis.</p>
               </div>
               <MethodologyView />
             </motion.div>

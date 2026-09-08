@@ -6,21 +6,18 @@ interface CredibilityGaugeProps {
   size?: number;
 }
 
-const verdictColors: Record<string, { stroke: string; glow: string; bg: string }> = {
+const verdictColors: Record<string, { stroke: string; track: string }> = {
   likely_real: {
-    stroke: "#34d399",
-    glow: "rgba(52, 211, 153, 0.25)",
-    bg: "rgba(52, 211, 153, 0.06)",
+    stroke: "#174A45",
+    track: "#E8E3D8",
   },
   uncertain: {
-    stroke: "#fbbf24",
-    glow: "rgba(251, 191, 36, 0.25)",
-    bg: "rgba(251, 191, 36, 0.06)",
+    stroke: "#B8873A",
+    track: "#E8E3D8",
   },
   likely_fake: {
-    stroke: "#f87171",
-    glow: "rgba(248, 113, 113, 0.25)",
-    bg: "rgba(248, 113, 113, 0.06)",
+    stroke: "#B34A3C",
+    track: "#E8E3D8",
   },
 };
 
@@ -38,12 +35,6 @@ export function CredibilityGauge({
 
   return (
     <div className="relative inline-flex items-center justify-center">
-      {/* Soft glow */}
-      <div
-        className="absolute rounded-full blur-xl"
-        style={{ width: size * 0.65, height: size * 0.65, background: colors.glow }}
-      />
-
       <svg
         width={size}
         height={size}
@@ -56,9 +47,8 @@ export function CredibilityGauge({
           cy={center}
           r={radius}
           fill="none"
-          stroke="currentColor"
+          stroke={colors.track}
           strokeWidth={strokeWidth}
-          className="text-muted/15"
         />
 
         {/* Progress */}
@@ -74,7 +64,6 @@ export function CredibilityGauge({
           initial={{ strokeDashoffset: circumference }}
           animate={{ strokeDashoffset: circumference - progress }}
           transition={{ duration: 1.2, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-          style={{ filter: `drop-shadow(0 0 8px ${colors.glow})` }}
         />
       </svg>
 
@@ -84,7 +73,8 @@ export function CredibilityGauge({
           initial={{ opacity: 0, scale: 0.6 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="text-2xl font-extrabold tracking-tight text-gradient"
+          className="text-2xl font-bold tracking-tight"
+          style={{ color: colors.stroke, fontFamily: "'DM Serif Display', serif" }}
         >
           {confidence}%
         </motion.span>

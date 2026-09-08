@@ -30,15 +30,15 @@ interface StatsViewProps {
 }
 
 const COLORS = {
-  likely_real: "#34d399",
-  uncertain: "#fbbf24",
-  likely_fake: "#f87171",
+  likely_real: "#174A45",
+  uncertain: "#B8873A",
+  likely_fake: "#B34A3C",
 };
 
 const VERDICT_LABELS = {
-  likely_real: "Likely Real",
+  likely_real: "Likely Credible",
   uncertain: "Uncertain",
-  likely_fake: "Likely Fake",
+  likely_fake: "Likely Misleading",
 };
 
 export function StatsView({ analyses }: StatsViewProps) {
@@ -64,10 +64,10 @@ export function StatsView({ analyses }: StatsViewProps) {
   ).filter((d) => d.value > 0);
 
   const confBuckets = [
-    { range: "35-50%", count: 0, fill: "#64748b" },
-    { range: "50-65%", count: 0, fill: "#fbbf24" },
-    { range: "65-80%", count: 0, fill: "#b8860b" },
-    { range: "80-95%", count: 0, fill: "#34d399" },
+    { range: "35-50%", count: 0, fill: "#6B7268" },
+    { range: "50-65%", count: 0, fill: "#B8873A" },
+    { range: "65-80%", count: 0, fill: "#356B63" },
+    { range: "80-95%", count: 0, fill: "#174A45" },
   ];
   for (const a of analyses) {
     if (a.confidence < 50) confBuckets[0].count++;
@@ -77,10 +77,10 @@ export function StatsView({ analyses }: StatsViewProps) {
   }
 
   const statCards = [
-    { label: "Total", value: totalAnalyses, icon: BarChart3, color: "text-primary", bg: "bg-primary/8" },
-    { label: "Avg. Confidence", value: `${avgConfidence}%`, icon: TrendingUp, color: "text-primary", bg: "bg-primary/8" },
-    { label: "Red Flags", value: totalRedFlags, icon: AlertTriangle, color: "text-red-400", bg: "bg-red-500/8" },
-    { label: "Green Flags", value: totalGreenFlags, icon: CheckCircle2, color: "text-emerald-400", bg: "bg-emerald-500/8" },
+    { label: "Total Analyzed", value: totalAnalyses, icon: BarChart3, color: "text-primary", bg: "bg-primary/8" },
+    { label: "Avg. Confidence", value: `${avgConfidence}%`, icon: TrendingUp, color: "text-accent", bg: "bg-accent/8" },
+    { label: "Red Flags", value: totalRedFlags, icon: AlertTriangle, color: "text-destructive", bg: "bg-destructive/8" },
+    { label: "Green Flags", value: totalGreenFlags, icon: CheckCircle2, color: "text-primary", bg: "bg-primary/8" },
   ];
 
   return (
@@ -93,15 +93,15 @@ export function StatsView({ analyses }: StatsViewProps) {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25, delay: i * 0.06 }}
-            className="glass-card rounded-xl p-3.5"
+            className="glass-card rounded-lg p-3.5"
           >
             <div className="flex items-center gap-1.5 mb-1.5">
-              <div className={`w-6 h-6 rounded-md ${card.bg} flex items-center justify-center`}>
+              <div className={`w-6 h-6 rounded ${card.bg} flex items-center justify-center`}>
                 <card.icon className={`w-3 h-3 ${card.color}`} />
               </div>
               <span className="text-[10px] text-muted-foreground">{card.label}</span>
             </div>
-            <span className="text-lg font-bold text-gradient">{card.value}</span>
+            <span className="text-lg font-bold" style={{ color: card.color === "text-primary" ? "#174A45" : card.color === "text-accent" ? "#B8873A" : "#B34A3C" }}>{card.value}</span>
           </motion.div>
         ))}
       </div>
@@ -113,7 +113,7 @@ export function StatsView({ analyses }: StatsViewProps) {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25, delay: 0.25 }}
-            className="glass-card rounded-xl p-5"
+            className="glass-card rounded-lg p-5"
           >
             <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-3">
               Verdict Distribution
@@ -136,12 +136,11 @@ export function StatsView({ analyses }: StatsViewProps) {
                   </Pie>
                   <Tooltip
                     contentStyle={{
-                      background: "oklch(0.14 0.018 70 / 90%)",
-                      border: "1px solid oklch(0.26 0.02 70 / 40%)",
-                      borderRadius: "8px",
+                      background: "#FFFCF6",
+                      border: "1px solid #D8D2C5",
+                      borderRadius: "6px",
                       fontSize: "11px",
-                      color: "oklch(0.88 0.01 75)",
-                      backdropFilter: "blur(12px)",
+                      color: "#1E2522",
                     }}
                   />
                 </PieChart>
@@ -163,26 +162,25 @@ export function StatsView({ analyses }: StatsViewProps) {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25, delay: 0.3 }}
-            className="glass-card rounded-xl p-5"
+            className="glass-card rounded-lg p-5"
           >
             <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-3">
               Confidence Distribution
             </h3>
             <ResponsiveContainer width="100%" height={180}>
               <BarChart data={confBuckets}>
-                <XAxis dataKey="range" tick={{ fontSize: 10, fill: "oklch(0.50 0.03 75)" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: "oklch(0.50 0.03 75)" }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <XAxis dataKey="range" tick={{ fontSize: 10, fill: "#6B7268" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: "#6B7268" }} axisLine={false} tickLine={false} allowDecimals={false} />
                 <Tooltip
                   contentStyle={{
-                    background: "oklch(0.14 0.018 70 / 90%)",
-                    border: "1px solid oklch(0.26 0.02 70 / 40%)",
-                    borderRadius: "8px",
+                    background: "#FFFCF6",
+                    border: "1px solid #D8D2C5",
+                    borderRadius: "6px",
                     fontSize: "11px",
-                    color: "oklch(0.88 0.01 75)",
-                    backdropFilter: "blur(12px)",
+                    color: "#1E2522",
                   }}
                 />
-                <Bar dataKey="count" radius={[5, 5, 0, 0]}>
+                <Bar dataKey="count" radius={[3, 3, 0, 0]}>
                   {confBuckets.map((entry) => (
                     <Cell key={entry.range} fill={entry.fill} />
                   ))}

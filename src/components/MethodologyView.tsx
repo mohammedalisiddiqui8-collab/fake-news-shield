@@ -18,7 +18,7 @@ const sections = [
     details: [
       "Serverless Convex backend with real-time data synchronization",
       "React + TypeScript frontend with Vite for fast builds",
-      "Shadcn/UI component library with custom dark theme",
+      "Shadcn/UI component library with custom theme",
       "Framer Motion for smooth, meaningful animations",
     ],
   },
@@ -73,10 +73,10 @@ const sections = [
     title: "Scoring Methodology",
     content: "Verdicts are determined by calculating the ratio of red flag severity scores to green flag severity scores, then applying calibrated thresholds:",
     details: [
-      "Red flag ratio >= 0.65 -> Likely Fake (confidence 55-95%)",
-      "Green flag ratio >= 0.65 -> Likely Real (confidence 55-95%)",
-      "Ratio difference > 0.1 -> Leaning verdict (confidence 42-78%)",
-      "Balanced scores -> Uncertain (confidence 35-50%)",
+      "Red flag ratio >= 0.65 → Likely Misleading (confidence 55-95%)",
+      "Green flag ratio >= 0.65 → Likely Credible (confidence 55-95%)",
+      "Ratio difference > 0.1 → Leaning verdict (confidence 42-78%)",
+      "Balanced scores → Uncertain (confidence 35-50%)",
       "Confidence is calibrated to prevent overconfident claims",
     ],
   },
@@ -90,7 +90,7 @@ const sections = [
       "No training data required — works immediately without labeled datasets",
       "Interpretability — critical for educational and academic applications",
       "Consistency — deterministic output for the same input",
-      "Trade-off acknowledged: ML models (BERT, RoBERTa) could achieve higher accuracy but sacrifice explainability",
+      "Trade-off acknowledged: ML models could achieve higher accuracy but sacrifice explainability",
     ],
   },
   {
@@ -114,7 +114,7 @@ const sections = [
       "Does not cross-reference claims against external fact-check databases",
       "No image/video analysis (only text-based content)",
       "Rule-based system requires manual pattern updates",
-      "Future: Fine-tuned BERT classifier on LIAR dataset (12.8K statements)",
+      "Future: Fine-tuned BERT classifier on LIAR dataset",
       "Future: TF-IDF vectorization for topic modeling",
       "Future: Google Fact Check Tools API integration",
       "Future: Image forensics for manipulated media detection",
@@ -129,14 +129,14 @@ export function MethodologyView() {
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="glass-card rounded-xl p-5"
+        className="glass-card rounded-lg p-5"
       >
         <div className="flex items-center gap-2.5 mb-2">
-          <div className="w-9 h-9 rounded-lg bg-primary/8 flex items-center justify-center">
+          <div className="w-9 h-9 rounded bg-primary/8 flex items-center justify-center">
             <BookOpen className="w-4 h-4 text-primary" />
           </div>
           <div>
-            <h2 className="text-sm font-bold">Technical Methodology</h2>
+            <h2 className="text-sm font-bold" style={{ fontFamily: "'DM Serif Display', serif" }}>Technical Methodology</h2>
             <p className="text-[10px] text-muted-foreground">
               How Veritas detects misinformation — for academic reference
             </p>
@@ -151,13 +151,14 @@ export function MethodologyView() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.25, delay: i * 0.04 }}
-          className="glass-card rounded-xl p-5"
+          className="glass-card rounded-lg p-5 relative"
         >
+          <div className="absolute top-0 left-0 w-0.5 h-full rounded-l" style={{ background: "#174A45", opacity: 0.15 }} />
           <div className="flex items-center gap-2.5 mb-2">
-            <div className="w-8 h-8 rounded-lg bg-primary/8 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded bg-primary/8 flex items-center justify-center shrink-0">
               <section.icon className="w-3.5 h-3.5 text-primary" />
             </div>
-            <h3 className="text-sm font-bold">{section.title}</h3>
+            <h3 className="text-sm font-bold" style={{ fontFamily: "'DM Serif Display', serif" }}>{section.title}</h3>
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed mb-2.5">
             {section.content}
