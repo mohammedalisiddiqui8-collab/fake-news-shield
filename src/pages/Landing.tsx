@@ -7,10 +7,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
 import { useRef, useState, useEffect } from "react";
-import GlyphPortal from "@/components/ui/glyph-portal";
-
-/* Veritas v2 — Editorial Design + Glyph Portal */
-
 /* ─── Dynamic Date ─── */
 function getFormattedDate() {
   const now = new Date();
@@ -537,55 +533,6 @@ export default function Landing() {
       </section>
 
       <div className="mx-auto max-w-6xl px-5"><div className="editorial-rule" /></div>
-
-      {/* ─── Glyph Portal: Scroll-Driven Typography ─── */}
-      <section className="relative" style={{ background: "#F4F1EA" }}>
-        <div className="text-center pt-16 pb-4 px-5">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.3em]" style={{ color: "#174A45" }}>Interactive Experience</span>
-          <h2 className="mt-3 text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#1E2522" }}>Scroll to Explore</h2>
-          <p className="mt-2 text-xs max-w-sm mx-auto" style={{ color: "#6B7268" }}>Hover over a letter, then scroll down to zoom through it.</p>
-        </div>
-        <GlyphPortal
-          word="VERITAS"
-          focusChar="R"
-          scrollLength={2.8}
-          fontFamily="'DM Serif Display', serif"
-          fontWeight={700}
-          style={{
-            "--gp-paper": "#F4F1EA",
-            "--gp-ink": "#174A45",
-            "--gp-field": "#174A45",
-            "--gp-foreground": "#FFFCF6",
-          } as any}
-          background={
-            <div className="w-full h-full flex items-center justify-center" style={{ background: "#174A45" }}>
-              <div className="text-center px-8 max-w-lg">
-                <div className="flex items-center justify-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded border flex items-center justify-center" style={{ borderColor: "rgba(255,252,246,0.2)", background: "rgba(255,252,246,0.05)" }}>
-                    <Shield className="w-5 h-5" style={{ color: "#B8873A" }} />
-                  </div>
-                  <span className="text-lg font-bold tracking-wide uppercase" style={{ fontFamily: "'DM Serif Display', serif", color: "#FFFCF6" }}>Veritas</span>
-                </div>
-                <p className="text-sm leading-relaxed mb-4" style={{ color: "rgba(255,252,246,0.7)" }}>
-                  Misinformation detection powered by NLP pattern analysis,
-                  source credibility scoring, and logical consistency evaluation.
-                </p>
-                <div className="flex items-center justify-center gap-6">
-                  {[{ n: "70+", l: "Patterns" }, { n: "95%", l: "Accuracy" }, { n: "<1s", l: "Speed" }].map(s => (
-                    <div key={s.l} className="text-center">
-                      <span className="text-lg font-bold block" style={{ color: "#B8873A" }}>{s.n}</span>
-                      <span className="text-[10px] uppercase tracking-wider" style={{ color: "rgba(255,252,246,0.5)" }}>{s.l}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          }
-        >
-          <h2 style={{ fontFamily: "'DM Serif Display', serif", color: "#FFFCF6" }}>Truth Over Noise</h2>
-          <p style={{ color: "rgba(255,252,246,0.7)" }}>Veritas cuts through misinformation with precision.</p>
-        </GlyphPortal>
-      </section>
 
       <div className="mx-auto max-w-6xl px-5"><div className="editorial-rule" /></div>
 
