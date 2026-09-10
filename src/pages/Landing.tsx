@@ -6,7 +6,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
+import { useTilt } from "@/hooks/use-tilt";
 /* ─── Dynamic Date ─── */
 function getFormattedDate() {
   const now = new Date();
@@ -404,6 +405,38 @@ function NewspaperVisual() {
   );
 }
 
+/* ─── 3D Tilt Card Wrapper ─── */
+function TiltCard({ children, className = "", style = {} }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
+  const [ref, onMouseMove, onMouseLeave] = useTilt(6);
+  return (
+    <div
+      ref={ref}
+      onMouseMove={onMouseMove}
+      onMouseLeave={onMouseLeave}
+      className={className}
+      style={{ transition: "transform 0.15s ease-out, box-shadow 0.3s ease", transformStyle: "preserve-3d", willChange: "transform", ...style }}
+    >
+      {children}
+    </div>
+  );
+}
+
+/* ─── 3D Floating Element ─── */
+function Floating3D({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30, rotateX: 15 }}
+      whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] }}
+      style={{ perspective: "800px", transformStyle: "preserve-3d" }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
+
 /* ─── Animation Variants ─── */
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -513,19 +546,24 @@ export default function Landing() {
               </motion.div>
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.75 }} className="mt-10 flex items-center gap-6">
                 {[{ value: "Real-time", label: "Analysis" }, { value: "95%+", label: "Accuracy Rate" }, { value: "70+", label: "Patterns Detected" }].map((s) => (
-                  <div key={s.label} className="flex items-center gap-2">
+                  <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.8 + ["Real-time","95%+","70+"].indexOf(s.value) * 0.1 }} className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full" style={{ background: "#174A45" }} />
                     <div>
                       <span className="text-xs font-semibold block leading-tight" style={{ color: "#1E2522" }}>{s.value}</span>
                       <span className="text-[10px]" style={{ color: "#6B7268" }}>{s.label}</span>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </motion.div>
             </motion.div>
 
-            {/* Right: Newspaper with cityscape */}
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, delay: 0.3 }}>
+            {/* Right: Newspaper with cityscape — 3D perspective */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, rotateY: -8, rotateX: 3 }}
+              animate={{ opacity: 1, scale: 1, rotateY: 0, rotateX: 0 }}
+              transition={{ duration: 0.9, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              style={{ perspective: "1200px", transformStyle: "preserve-3d" }}
+            >
               <NewspaperVisual />
             </motion.div>
           </div>
@@ -546,8 +584,8 @@ export default function Landing() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {verdictExamples.map((v, i) => (
-              <motion.div key={v.verdict} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}>
-                <div className="rounded border p-5 relative overflow-hidden group hover:shadow-md transition-shadow duration-300" style={{ background: "#FFFCF6", borderColor: "#D8D2C5" }}>
+              <Floating3D key={v.verdict} delay={i * 0.12}>
+                <TiltCard className="rounded border p-5 relative overflow-hidden group" style={{ background: "#FFFCF6", borderColor: "#D8D2C5", boxShadow: "0 4px 20px rgba(30,37,34,0.04)" }}>
                   <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: v.color }} />
                   <div className="flex items-center gap-2.5 mb-3">
                     <div className="w-8 h-8 rounded flex items-center justify-center" style={{ background: `${v.color}10` }}>
@@ -560,8 +598,8 @@ export default function Landing() {
                     <span className="text-[10px] uppercase tracking-wider" style={{ color: "#6B7268" }}>Confidence</span>
                   </div>
                   <p className="text-xs leading-relaxed" style={{ color: "#6B7268" }}>{v.sample}</p>
-                </div>
-              </motion.div>
+                </TiltCard>
+              </Floating3D>
             ))}
           </div>
         </div>
@@ -577,16 +615,16 @@ export default function Landing() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
             {steps.map((s, i) => (
-              <motion.div key={s.step} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}>
-                <div className="rounded border p-6 group hover:shadow-md transition-shadow duration-300" style={{ background: "#FFFCF6", borderColor: "#D8D2C5" }}>
+              <Floating3D key={s.step} delay={i * 0.12}>
+                <TiltCard className="rounded border p-6 group" style={{ background: "#FFFCF6", borderColor: "#D8D2C5", boxShadow: "0 4px 20px rgba(30,37,34,0.04)" }}>
                   <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-4" style={{ background: "#174A4510" }}>
                     <s.icon className="w-5 h-5" style={{ color: "#174A45" }} />
                   </div>
                   <span className="text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: "#174A45", opacity: 0.5 }}>Step {s.step}</span>
                   <h3 className="mt-1 text-lg font-semibold" style={{ fontFamily: "'DM Serif Display', serif", color: "#1E2522" }}>{s.title}</h3>
                   <p className="mt-2 text-xs leading-relaxed" style={{ color: "#6B7268" }}>{s.description}</p>
-                </div>
-              </motion.div>
+                </TiltCard>
+              </Floating3D>
             ))}
           </div>
         </div>
@@ -604,15 +642,15 @@ export default function Landing() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {features.map((f, i) => (
-              <motion.div key={f.title} custom={i} variants={fadeUp} initial="hidden" whileInView="visible" viewport={{ once: true }}>
-                <div className="rounded border p-5 group hover:shadow-md transition-shadow duration-300" style={{ background: "#FFFCF6", borderColor: "#D8D2C5" }}>
+              <Floating3D key={f.title} delay={i * 0.08}>
+                <TiltCard className="rounded border p-5 group" style={{ background: "#FFFCF6", borderColor: "#D8D2C5", boxShadow: "0 4px 20px rgba(30,37,34,0.04)" }}>
                   <div className="w-9 h-9 rounded flex items-center justify-center mb-3" style={{ background: "#174A4510" }}>
                     <f.icon className="w-4 h-4" style={{ color: "#174A45" }} />
                   </div>
                   <h3 className="text-sm font-semibold mb-1.5" style={{ color: "#1E2522" }}>{f.title}</h3>
                   <p className="text-xs leading-relaxed" style={{ color: "#6B7268" }}>{f.description}</p>
-                </div>
-              </motion.div>
+                </TiltCard>
+              </Floating3D>
             ))}
           </div>
         </div>
@@ -621,7 +659,7 @@ export default function Landing() {
       {/* ─── Academic References ─── */}
       <Section className="py-20 px-5">
         <div className="mx-auto max-w-4xl">
-          <div className="rounded border p-8 sm:p-10 text-center relative overflow-hidden" style={{ background: "#FFFCF6", borderColor: "#D8D2C5" }}>
+          <div className="rounded border p-8 sm:p-10 text-center relative overflow-hidden" style={{ background: "#FFFCF6", borderColor: "#D8D2C5", boxShadow: "0 8px 40px rgba(30,37,34,0.06)" }}>
             <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: "#174A45", opacity: 0.15 }} />
             <div className="w-12 h-12 rounded-lg flex items-center justify-center mx-auto mb-5" style={{ background: "#174A4510" }}>
               <FileCheck className="w-5 h-5" style={{ color: "#174A45" }} />
@@ -651,7 +689,7 @@ export default function Landing() {
       {/* ─── CTA ─── */}
       <Section className="py-20 px-5">
         <div className="mx-auto max-w-2xl text-center">
-          <div className="rounded border px-8 py-14 sm:px-14 relative overflow-hidden" style={{ background: "#174A45", borderColor: "#174A45" }}>
+          <div className="rounded border px-8 py-14 sm:px-14 relative overflow-hidden" style={{ background: "#174A45", borderColor: "#174A45", boxShadow: "0 20px 60px rgba(23,74,69,0.2), 0 4px 16px rgba(23,74,69,0.1)" }}>
             <Shield className="w-8 h-8 mx-auto mb-5" style={{ color: "#FFFCF6" }} />
             <h2 className="text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#FFFCF6" }}>Ready to Fact-Check?</h2>
             <p className="mt-3 text-sm max-w-sm mx-auto" style={{ color: "rgba(255,252,246,0.7)" }}>Start analyzing articles with our detection engine. No sign-up required.</p>
