@@ -9,6 +9,8 @@ import { useNavigate } from "react-router";
 import { useRef, useState, useEffect } from "react";
 import GlyphPortal from "@/components/ui/glyph-portal";
 
+/* Veritas v2 — Editorial Design + Glyph Portal */
+
 /* ─── Dynamic Date ─── */
 function getFormattedDate() {
   const now = new Date();
