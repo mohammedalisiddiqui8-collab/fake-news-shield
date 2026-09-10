@@ -406,14 +406,16 @@ function NewspaperVisual() {
   );
 }
 
-/* ─── 3D Tilt Card Wrapper ─── */
+/* ─── 3D Tilt Card Wrapper (mouse + touch) ─── */
 function TiltCard({ children, className = "", style = {} }: { children: React.ReactNode; className?: string; style?: React.CSSProperties }) {
-  const [ref, onMouseMove, onMouseLeave] = useTilt(6);
+  const [ref, onMouseMove, onMouseLeave, onTouchMove] = useTilt(6);
   return (
     <div
       ref={ref}
       onMouseMove={onMouseMove}
       onMouseLeave={onMouseLeave}
+      onTouchMove={onTouchMove}
+      onTouchEnd={onMouseLeave}
       className={className}
       style={{ transition: "transform 0.15s ease-out, box-shadow 0.3s ease", transformStyle: "preserve-3d", willChange: "transform", ...style }}
     >
@@ -422,19 +424,43 @@ function TiltCard({ children, className = "", style = {} }: { children: React.Re
   );
 }
 
-/* ─── 3D Floating Element ─── */
+/* ─── 3D Floating Element (scroll-triggered, works on mobile) ─── */
 function Floating3D({ children, delay = 0, className = "" }: { children: React.ReactNode; delay?: number; className?: string }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30, rotateX: 15 }}
-      whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
-      viewport={{ once: true }}
-      transition={{ duration: 0.7, delay, ease: [0.22, 1, 0.36, 1] }}
+      initial={{ opacity: 0, y: 40, rotateX: 20, scale: 0.95 }}
+      whileInView={{ opacity: 1, y: 0, rotateX: 0, scale: 1 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ duration: 0.8, delay, ease: [0.22, 1, 0.36, 1] }}
       style={{ perspective: "800px", transformStyle: "preserve-3d" }}
       className={className}
     >
       {children}
     </motion.div>
+  );
+}
+
+/* ─── Scroll-Driven 3D Parallax Layer ─── */
+function ParallaxLayer({ children, speed = 0.15, className = "" }: { children: React.ReactNode; speed?: number; className?: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const onScroll = () => {
+      const rect = el.getBoundingClientRect();
+      const viewH = window.innerHeight;
+      const progress = (viewH - rect.top) / (viewH + rect.height);
+      const y = (progress - 0.5) * speed * 100;
+      el.style.transform = `translateY(${y}px)`;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    onScroll();
+    return () => window.removeEventListener("scroll", onScroll);
+  }, [speed]);
+  return (
+    <div ref={ref} className={className} style={{ transition: "transform 0.1s linear" }}>
+      {children}
+    </div>
   );
 }
 
@@ -518,11 +544,11 @@ export default function Landing() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative pt-20 pb-12 px-5 paper-texture">
+      <section className="relative pt-20 pb-12 px-5 paper-texture" style={{ perspective: "1200px" }}>
         <div className="mx-auto max-w-6xl">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
-            {/* Left: Editorial text */}
-            <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.2 }}>
+            {/* Left: Editorial text — 3D float in */}
+            <motion.div initial={{ opacity: 0, y: 30, rotateY: -5 }} animate={{ opacity: 1, y: 0, rotateY: 0 }} transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }} style={{ transformStyle: "preserve-3d" }}>
               <motion.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}
                 className="text-[10px] font-semibold uppercase tracking-[0.3em] mb-4" style={{ color: "#174A45" }}>Fake News Detection</motion.p>
               <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.35 }}
@@ -545,7 +571,7 @@ export default function Landing() {
                   Learn More
                 </Button>
               </motion.div>
-              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.75 }} className="mt-10 flex items-center gap-6">
+              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.75 }} className="mt-10 flex items-center gap-6 flex-wrap">
                 {[{ value: "Real-time", label: "Analysis" }, { value: "95%+", label: "Accuracy Rate" }, { value: "70+", label: "Patterns Detected" }].map((s) => (
                   <motion.div key={s.label} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.8 + ["Real-time","95%+","70+"].indexOf(s.value) * 0.1 }} className="flex items-center gap-2">
                     <div className="w-1.5 h-1.5 rounded-full" style={{ background: "#174A45" }} />
@@ -558,14 +584,16 @@ export default function Landing() {
               </motion.div>
             </motion.div>
 
-            {/* Right: Newspaper with cityscape — 3D perspective */}
+            {/* Right: Newspaper with cityscape — 3D perspective + parallax */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.92, rotateY: -8, rotateX: 3 }}
-              animate={{ opacity: 1, scale: 1, rotateY: 0, rotateX: 0 }}
-              transition={{ duration: 0.9, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+              initial={{ opacity: 0, scale: 0.9, rotateY: -12, rotateX: 5 }}
+              animate={{ opacity: 1, scale: 1, rotateY: 2, rotateX: -1 }}
+              transition={{ duration: 1, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
               style={{ perspective: "1200px", transformStyle: "preserve-3d" }}
             >
-              <NewspaperVisual />
+              <ParallaxLayer speed={0.08}>
+                <NewspaperVisual />
+              </ParallaxLayer>
             </motion.div>
           </div>
         </div>
@@ -575,7 +603,7 @@ export default function Landing() {
 
       <div className="mx-auto max-w-6xl px-5"><div className="editorial-rule" /></div>
 
-      {/* ─── Verdict Examples ─── */}
+      {/* ─── Verdict Examples (3D tilt + scroll entrance) ─── */}
       <Section className="py-16 px-5">
         <div className="mx-auto max-w-5xl">
           <div className="text-center mb-12">
@@ -689,15 +717,22 @@ export default function Landing() {
 
       {/* ─── CTA ─── */}
       <Section className="py-20 px-5">
-        <div className="mx-auto max-w-2xl text-center">
-          <div className="rounded border px-8 py-14 sm:px-14 relative overflow-hidden" style={{ background: "#174A45", borderColor: "#174A45", boxShadow: "0 20px 60px rgba(23,74,69,0.2), 0 4px 16px rgba(23,74,69,0.1)" }}>
+        <div className="mx-auto max-w-2xl text-center" style={{ perspective: "1000px" }}>
+          <motion.div
+            initial={{ opacity: 0, y: 30, rotateX: 8 }}
+            whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+            style={{ transformStyle: "preserve-3d" }}
+            className="rounded border px-8 py-14 sm:px-14 relative overflow-hidden"
+          >
             <Shield className="w-8 h-8 mx-auto mb-5" style={{ color: "#FFFCF6" }} />
             <h2 className="text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#FFFCF6" }}>Ready to Fact-Check?</h2>
             <p className="mt-3 text-sm max-w-sm mx-auto" style={{ color: "rgba(255,252,246,0.7)" }}>Start analyzing articles with our detection engine. No sign-up required.</p>
             <Button size="lg" className="cursor-pointer mt-7 gap-2 px-8 h-11 text-sm border-0 rounded" style={{ background: "#FFFCF6", color: "#174A45" }} onClick={() => navigate("/dashboard")}>
               Launch Veritas <ArrowRight className="w-4 h-4" />
             </Button>
-          </div>
+          </motion.div>
         </div>
       </Section>
 

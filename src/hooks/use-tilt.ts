@@ -1,26 +1,22 @@
-import { useCallback, useRef, type RefObject } from "react";
+import { useCallback, useRef } from "react";
 
 /**
- * Returns a ref and mouse-move handler that applies a subtle 3D tilt
- * based on cursor position within the element.
- *
- * Usage:
- *   const [ref, onMouseMove, onMouseLeave] = useTilt();
- *   <div ref={ref} onMouseMove={onMouseMove} onMouseLeave={onMouseLeave}>
+ * 3D tilt that works on BOTH mouse (desktop) and touch (mobile).
+ * On mobile, touch and drag across the card to see the tilt.
  */
 export function useTilt(maxTilt = 8) {
   const ref = useRef<HTMLDivElement>(null);
   const raf = useRef(0);
 
-  const onMouseMove = useCallback(
-    (e: React.MouseEvent<HTMLDivElement>) => {
+  const applyTilt = useCallback(
+    (clientX: number, clientY: number) => {
       cancelAnimationFrame(raf.current);
       raf.current = requestAnimationFrame(() => {
         const el = ref.current;
         if (!el) return;
         const rect = el.getBoundingClientRect();
-        const x = (e.clientX - rect.left) / rect.width;
-        const y = (e.clientY - rect.top) / rect.height;
+        const x = (clientX - rect.left) / rect.width;
+        const y = (clientY - rect.top) / rect.height;
         const tiltX = (0.5 - y) * maxTilt;
         const tiltY = (x - 0.5) * maxTilt;
         el.style.transform = `perspective(600px) rotateX(${tiltX}deg) rotateY(${tiltY}deg) scale3d(1.02,1.02,1.02)`;
@@ -29,7 +25,7 @@ export function useTilt(maxTilt = 8) {
     [maxTilt]
   );
 
-  const onMouseLeave = useCallback(() => {
+  const reset = useCallback(() => {
     cancelAnimationFrame(raf.current);
     const el = ref.current;
     if (el) {
@@ -37,27 +33,40 @@ export function useTilt(maxTilt = 8) {
     }
   }, []);
 
-  return [ref, onMouseMove, onMouseLeave] as const;
+  const onMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => applyTilt(e.clientX, e.clientY),
+    [applyTilt]
+  );
+
+  const onTouchMove = useCallback(
+    (e: React.TouchEvent<HTMLDivElement>) => {
+      if (e.touches.length === 1) {
+        applyTilt(e.touches[0].clientX, e.touches[0].clientY);
+      }
+    },
+    [applyTilt]
+  );
+
+  return [ref, onMouseMove, reset, onTouchMove] as const;
 }
 
 /**
- * Returns a ref and handler for a "glare" effect — a specular highlight
- * that follows the cursor across the card surface.
+ * Glare highlight effect — works on mouse and touch.
  */
 export function useGlare() {
   const ref = useRef<HTMLDivElement>(null);
 
-  const onMouseMove = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+  const update = useCallback((clientX: number, clientY: number) => {
     const el = ref.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    const x = ((clientX - rect.left) / rect.width) * 100;
+    const y = ((clientY - rect.top) / rect.height) * 100;
     el.style.setProperty("--glare-x", `${x}%`);
     el.style.setProperty("--glare-y", `${y}%`);
   }, []);
 
-  const onMouseLeave = useCallback(() => {
+  const reset = useCallback(() => {
     const el = ref.current;
     if (el) {
       el.style.setProperty("--glare-x", "50%");
@@ -65,5 +74,17 @@ export function useGlare() {
     }
   }, []);
 
-  return [ref, onMouseMove, onMouseLeave] as const;
+  const onMouseMove = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => update(e.clientX, e.clientY),
+    [update]
+  );
+
+  const onTouchMove = useCallback(
+    (e: React.TouchEvent<HTMLDivElement>) => {
+      if (e.touches.length === 1) update(e.touches[0].clientX, e.touches[0].clientY);
+    },
+    [update]
+  );
+
+  return [ref, onMouseMove, reset, onTouchMove] as const;
 }
