@@ -6,8 +6,9 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
-import { useRef, useState, useEffect, useCallback } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useTilt } from "@/hooks/use-tilt";
+
 /* ─── Dynamic Date ─── */
 function getFormattedDate() {
   const now = new Date();
