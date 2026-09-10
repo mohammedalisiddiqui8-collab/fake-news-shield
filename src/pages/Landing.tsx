@@ -483,7 +483,7 @@ export default function Landing() {
         </div>
       </nav>
 
-      {/* ─── Hero ─── */}
+      {/* Hero Section */}
       <section className="relative pt-20 pb-12 px-5 paper-texture">
         <div className="mx-auto max-w-6xl">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
