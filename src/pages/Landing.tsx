@@ -525,7 +525,7 @@ export default function Landing() {
               <motion.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}
                 className="text-[10px] font-semibold uppercase tracking-[0.3em] mb-4" style={{ color: "#174A45" }}>Fake News Detection</motion.p>
               <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.35 }}
-                className="text-5xl sm:text-6xl lg:text-7xl leading-[1.05] tracking-tight mb-1"
+                className="text-7xl sm:text-8xl lg:text-[7rem] leading-[1.0] tracking-tight mb-1"
                 style={{ fontFamily: "'DM Serif Display', serif", color: "#1E2522" }}>Veritas</motion.h1>
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, delay: 0.4 }}
                 className="text-3xl sm:text-4xl lg:text-5xl leading-[1.1] tracking-tight mb-6 min-h-[1.3em]"
