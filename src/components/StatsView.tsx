@@ -31,9 +31,9 @@ interface StatsViewProps {
 }
 
 const COLORS = {
-  likely_real: "#174A45",
-  uncertain: "#B8873A",
-  likely_fake: "#B34A3C",
+  likely_real: "#607568",
+  uncertain: "#A58B5B",
+  likely_fake: "#A9574D",
 };
 
 const VERDICT_LABELS = {
@@ -83,10 +83,10 @@ export function StatsView({ analyses }: StatsViewProps) {
     }));
 
   const statCards = [
-    { label: "Total Articles Analyzed", value: totalAnalyses, icon: BarChart3, color: "#174A45", trend: "+12%", trendUp: true },
-    { label: "Likely Credible", value: verdictCounts.likely_real, pct: `${crediblePct}%`, icon: CheckCircle2, color: "#174A45", trend: `${crediblePct}%`, trendUp: true },
-    { label: "Likely Misleading", value: verdictCounts.likely_fake, pct: `${misleadingPct}%`, icon: AlertTriangle, color: "#B34A3C", trend: `${misleadingPct}%`, trendUp: false },
-    { label: "Uncertain", value: verdictCounts.uncertain, pct: `${uncertainPct}%`, icon: TrendingUp, color: "#B8873A", trend: `${uncertainPct}%`, trendUp: false },
+    { label: "Total Articles Analyzed", value: totalAnalyses, icon: BarChart3, color: "#607568", trend: "+12%", trendUp: true },
+    { label: "Likely Credible", value: verdictCounts.likely_real, pct: `${crediblePct}%`, icon: CheckCircle2, color: "#607568", trend: `${crediblePct}%`, trendUp: true },
+    { label: "Likely Misleading", value: verdictCounts.likely_fake, pct: `${misleadingPct}%`, icon: AlertTriangle, color: "#A9574D", trend: `${misleadingPct}%`, trendUp: false },
+    { label: "Uncertain", value: verdictCounts.uncertain, pct: `${uncertainPct}%`, icon: TrendingUp, color: "#A58B5B", trend: `${uncertainPct}%`, trendUp: false },
   ];
 
   return (
@@ -119,8 +119,8 @@ export function StatsView({ analyses }: StatsViewProps) {
             <div className="flex items-baseline gap-2">
               <span className="text-2xl font-bold" style={{ color: card.color, fontFamily: "'DM Serif Display', serif" }}>{card.value}</span>
               <div className="flex items-center gap-0.5">
-                <ArrowUpRight className="w-2.5 h-2.5" style={{ color: card.trendUp ? "#174A45" : "#B34A3C" }} />
-                <span className="text-[9px] font-medium" style={{ color: card.trendUp ? "#174A45" : "#B34A3C" }}>{card.trend}</span>
+                <ArrowUpRight className="w-2.5 h-2.5" style={{ color: card.trendUp ? "#607568" : "#A9574D" }} />
+                <span className="text-[9px] font-medium" style={{ color: card.trendUp ? "#607568" : "#A9574D" }}>{card.trend}</span>
               </div>
             </div>
           </motion.div>
@@ -201,7 +201,7 @@ export function StatsView({ analyses }: StatsViewProps) {
                       animate={{ width: `${flag.pct}%` }}
                       transition={{ duration: 0.5, delay: 0.35 + i * 0.05 }}
                       className="h-full rounded-full"
-                      style={{ background: "#B34A3C" }}
+                      style={{ background: "#A9574D" }}
                     />
                   </div>
                 </div>

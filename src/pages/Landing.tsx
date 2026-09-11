@@ -39,7 +39,7 @@ function AnimatedTagline() {
   return (
     <span style={{ fontFamily: "'DM Serif Display', serif" }}>
       {displayed}
-      <span className="inline-block w-[1.5px] h-[0.85em] ml-0.5 align-middle" style={{ background: "#3EE8B8", animation: "blink 1s step-end infinite" }} />
+      <span className="inline-block w-[1.5px] h-[0.85em] ml-0.5 align-middle" style={{ background: "#8FA596", animation: "blink 1s step-end infinite" }} />
     </span>
   );
 }
@@ -145,9 +145,9 @@ const features = [
 ];
 
 const verdictExamples = [
-  { label: "Likely Credible", icon: CheckCircle2, color: "#3EE8B8", confidence: 92, sample: "Named officials, cited statistics, balanced perspectives from multiple sources." },
-  { label: "Uncertain", icon: AlertTriangle, color: "#D4A85C", confidence: 54, sample: "Mixes verified facts with unverified claims from unnamed sources." },
-  { label: "Likely Misleading", icon: XCircle, color: "#E85D4A", confidence: 87, sample: "Sensational headline, anonymous 'experts', unverifiable statistics." },
+  { label: "Likely Credible", icon: CheckCircle2, color: "#8FA596", confidence: 92, sample: "Named officials, cited statistics, balanced perspectives from multiple sources." },
+  { label: "Uncertain", icon: AlertTriangle, color: "#A58B5B", confidence: 54, sample: "Mixes verified facts with unverified claims from unnamed sources." },
+  { label: "Likely Misleading", icon: XCircle, color: "#A9574D", confidence: 87, sample: "Sensational headline, anonymous 'experts', unverifiable statistics." },
 ];
 
 const references = ["MIT Media Lab", "Stanford Internet Observatory", "Reuters Institute", "LIAR Dataset (Wang, 2017)"];
@@ -164,22 +164,22 @@ export default function Landing() {
     <div className="min-h-screen bg-background text-foreground overflow-hidden">
 
       {/* ─── Navigation ─── */}
-      <nav className="fixed top-0 left-0 right-0 z-50" style={{ background: "rgba(8,10,9,0.92)", backdropFilter: "blur(16px)", borderBottom: "1px solid #1A211E" }}>
+      <nav className="fixed top-0 left-0 right-0 z-50" style={{ background: "rgba(8,10,9,0.92)", backdropFilter: "blur(16px)", borderBottom: "1px solid #292A27" }}>
         <div className="mx-auto max-w-7xl px-5 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <Shield className="w-4 h-4" style={{ color: "#3EE8B8" }} />
-            <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ fontFamily: "'DM Serif Display', serif", color: "#E2DDD4" }}>Veritas</span>
+            <Shield className="w-4 h-4" style={{ color: "#8FA596" }} />
+            <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>Veritas</span>
           </div>
           <div className="hidden md:flex items-center gap-1">
             {["Analyze", "History", "Statistics", "Methodology"].map((label) => (
-              <Button key={label} variant="ghost" className="cursor-pointer text-[10px] h-7 px-3 tracking-wide" style={{ color: "#6B7270" }} onClick={() => navigate("/dashboard")}>
+              <Button key={label} variant="ghost" className="cursor-pointer text-[10px] h-7 px-3 tracking-wide" style={{ color: "#9A9E98" }} onClick={() => navigate("/dashboard")}>
                 {label.toUpperCase()}
               </Button>
             ))}
           </div>
           <MagneticBtn
             className="cursor-pointer text-[10px] font-semibold h-8 px-5 tracking-[0.12em]"
-            style={{ background: "#3EE8B8", color: "#080A09", borderRadius: "2px" }}
+            style={{ background: "#8FA596", color: "#0B0D0C", borderRadius: "2px" }}
             onClick={() => navigate("/dashboard")}>
             START ANALYZING
           </MagneticBtn>
@@ -200,39 +200,39 @@ export default function Landing() {
             <div className="col-span-12 lg:col-span-7">
               {/* Thin line */}
               <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 0.8, delay: 0.2 }}
-                className="h-px mb-6 origin-left" style={{ background: "linear-gradient(90deg, #3EE8B8 0%, #3EE8B8 40%, transparent 100%)", maxWidth: 120 }} />
+                className="h-px mb-6 origin-left" style={{ background: "linear-gradient(90deg, #8FA596 0%, #8FA596 40%, transparent 100%)", maxWidth: 120 }} />
 
               <motion.p initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.3 }}
-                className="text-[9px] tracking-[0.35em] uppercase mb-4 font-medium" style={{ color: "#3EE8B8" }}>
+                className="text-[9px] tracking-[0.35em] uppercase mb-4 font-medium" style={{ color: "#8FA596" }}>
                 Intelligent Misinformation Detection
               </motion.p>
 
               <motion.h1 initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
                 className="text-6xl sm:text-7xl lg:text-[5.5rem] xl:text-[6.5rem] leading-[0.92] tracking-tight mb-2"
-                style={{ fontFamily: "'DM Serif Display', serif", color: "#E2DDD4" }}>
+                style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>
                 VERITAS
               </motion.h1>
 
               <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.5 }}
                 className="text-xl sm:text-2xl lg:text-3xl leading-tight mb-8 min-h-[1.2em]"
-                style={{ color: "#6B7270" }}>
+                style={{ color: "#9A9E98" }}>
                 <AnimatedTagline />
               </motion.div>
 
               <motion.p initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.6 }}
-                className="text-sm max-w-lg leading-relaxed mb-10 text-balance" style={{ color: "#6B7270" }}>
+                className="text-sm max-w-lg leading-relaxed mb-10 text-balance" style={{ color: "#9A9E98" }}>
                 An intelligent misinformation detection system that analyzes language, source credibility and logical consistency.
               </motion.p>
 
               <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.7 }}
                 className="flex flex-col sm:flex-row items-start gap-3">
                 <MagneticBtn className="cursor-pointer gap-2 px-7 py-3 text-[11px] font-semibold tracking-[0.1em] flex items-center"
-                  style={{ background: "#3EE8B8", color: "#080A09", borderRadius: "2px" }}
+                  style={{ background: "#8FA596", color: "#0B0D0C", borderRadius: "2px" }}
                   onClick={() => navigate("/dashboard")}>
                   START ANALYZING <ArrowRight className="w-3.5 h-3.5" />
                 </MagneticBtn>
                 <Button size="lg" variant="outline" className="cursor-pointer text-[11px] px-7 py-3 tracking-wide"
-                  style={{ borderColor: "#1A211E", color: "#6B7270", borderRadius: "2px" }}
+                  style={{ borderColor: "#292A27", color: "#9A9E98", borderRadius: "2px" }}
                   onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}>
                   EXPLORE VERITAS
                 </Button>
@@ -248,10 +248,10 @@ export default function Landing() {
                 { label: "Detection accuracy on benchmark data", value: 95, suffix: "%+" },
               ].map((s, i) => (
                 <div key={s.label} className="flex-1 lg:flex-none">
-                  <div className="text-2xl lg:text-3xl font-bold" style={{ fontFamily: "'DM Serif Display', serif", color: "#E2DDD4" }}>
+                  <div className="text-2xl lg:text-3xl font-bold" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>
                     <CountUp target={s.value} suffix={s.suffix} />
                   </div>
-                  <div className="text-[9px] tracking-wide mt-1 font-medium" style={{ color: "#6B7270" }}>{s.label}</div>
+                  <div className="text-[9px] tracking-wide mt-1 font-medium" style={{ color: "#9A9E98" }}>{s.label}</div>
                 </div>
               ))}
             </motion.div>
@@ -259,20 +259,20 @@ export default function Landing() {
         </motion.div>
 
         {/* Bottom gradient */}
-        <div className="absolute bottom-0 left-0 right-0 h-24 z-10" style={{ background: "linear-gradient(transparent, #080A09)" }} />
+        <div className="absolute bottom-0 left-0 right-0 h-24 z-10" style={{ background: "linear-gradient(transparent, #0B0D0C)" }} />
       </section>
 
       {/* ─── Thin Rule ─── */}
-      <div className="mx-auto max-w-7xl px-5"><div className="h-px" style={{ background: "#1A211E" }} /></div>
+      <div className="mx-auto max-w-7xl px-5"><div className="h-px" style={{ background: "#292A27" }} /></div>
 
       {/* ─── Verdict Examples ─── */}
       <Section className="py-20 sm:py-28 px-5">
         <div className="mx-auto max-w-6xl">
           <div className="grid grid-cols-12 gap-4 mb-14">
             <div className="col-span-12 lg:col-span-8">
-              <div className="h-px mb-4" style={{ background: "linear-gradient(90deg, #3EE8B8 0%, #3EE8B8 30%, transparent 100%)", maxWidth: 80 }} />
-              <span className="text-[9px] tracking-[0.3em] uppercase font-medium" style={{ color: "#3EE8B8" }}>Detection Results</span>
-              <h2 className="mt-2 text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#E2DDD4" }}>What You'll Get</h2>
+              <div className="h-px mb-4" style={{ background: "linear-gradient(90deg, #8FA596 0%, #8FA596 30%, transparent 100%)", maxWidth: 80 }} />
+              <span className="text-[9px] tracking-[0.3em] uppercase font-medium" style={{ color: "#8FA596" }}>Detection Results</span>
+              <h2 className="mt-2 text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>What You'll Get</h2>
             </div>
           </div>
 
@@ -284,7 +284,7 @@ export default function Landing() {
                 viewport={{ once: true, margin: "-30px" }}
                 transition={{ duration: 0.6, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}>
                 <Card3D className="p-5 relative overflow-hidden"
-                  style={{ background: "#0E1210", border: "1px solid #1A211E", borderRadius: "2px" }}>
+                  style={{ background: "#0F1110", border: "1px solid #292A27", borderRadius: "2px" }}>
                   <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: v.color }} />
                   <div className="flex items-center gap-2 mb-3">
                     <v.icon className="w-4 h-4" style={{ color: v.color }} />
@@ -292,9 +292,9 @@ export default function Landing() {
                   </div>
                   <div className="flex items-baseline gap-1.5 mb-3">
                     <span className="text-3xl font-bold" style={{ color: v.color, fontFamily: "'DM Serif Display', serif" }}>{v.confidence}</span>
-                    <span className="text-[10px] tracking-[0.1em] uppercase" style={{ color: "#6B7270" }}>% Confidence</span>
+                    <span className="text-[10px] tracking-[0.1em] uppercase" style={{ color: "#9A9E98" }}>% Confidence</span>
                   </div>
-                  <p className="text-[11px] leading-relaxed" style={{ color: "#6B7270" }}>{v.sample}</p>
+                  <p className="text-[11px] leading-relaxed" style={{ color: "#9A9E98" }}>{v.sample}</p>
                 </Card3D>
               </motion.div>
             ))}
@@ -303,12 +303,12 @@ export default function Landing() {
       </Section>
 
       {/* ─── How It Works ─── */}
-      <Section className="py-20 sm:py-28 px-5" id="how-it-works" style={{ borderTop: "1px solid #1A211E" }}>
+      <Section className="py-20 sm:py-28 px-5" id="how-it-works" style={{ borderTop: "1px solid #292A27" }}>
         <div className="mx-auto max-w-6xl">
           <div className="text-center mb-16">
-            <div className="h-px mb-4 mx-auto" style={{ background: "linear-gradient(90deg, transparent, #3EE8B8, transparent)", maxWidth: 60 }} />
-            <span className="text-[9px] tracking-[0.3em] uppercase font-medium" style={{ color: "#3EE8B8" }}>Our Approach</span>
-            <h2 className="mt-2 text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#E2DDD4" }}>How Veritas Works</h2>
+            <div className="h-px mb-4 mx-auto" style={{ background: "linear-gradient(90deg, transparent, #8FA596, transparent)", maxWidth: 60 }} />
+            <span className="text-[9px] tracking-[0.3em] uppercase font-medium" style={{ color: "#8FA596" }}>Our Approach</span>
+            <h2 className="mt-2 text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>How Veritas Works</h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -319,13 +319,13 @@ export default function Landing() {
                 viewport={{ once: true, margin: "-30px" }}
                 transition={{ duration: 0.6, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}>
                 <Card3D className="p-5"
-                  style={{ background: "#0E1210", border: "1px solid #1A211E", borderRadius: "2px" }}>
+                  style={{ background: "#0F1110", border: "1px solid #292A27", borderRadius: "2px" }}>
                   <div className="w-10 h-10 rounded-sm flex items-center justify-center mb-4" style={{ background: "rgba(62,232,184,0.05)" }}>
-                    <s.icon className="w-4 h-4" style={{ color: "#3EE8B8" }} />
+                    <s.icon className="w-4 h-4" style={{ color: "#8FA596" }} />
                   </div>
-                  <span className="text-[9px] font-bold tracking-[0.2em]" style={{ color: "#3EE8B8", opacity: 0.5 }}>STEP {s.step}</span>
-                  <h3 className="mt-1.5 text-base" style={{ fontFamily: "'DM Serif Display', serif", color: "#E2DDD4" }}>{s.title}</h3>
-                  <p className="mt-1.5 text-[11px] leading-relaxed" style={{ color: "#6B7270" }}>{s.description}</p>
+                  <span className="text-[9px] font-bold tracking-[0.2em]" style={{ color: "#8FA596", opacity: 0.5 }}>STEP {s.step}</span>
+                  <h3 className="mt-1.5 text-base" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>{s.title}</h3>
+                  <p className="mt-1.5 text-[11px] leading-relaxed" style={{ color: "#9A9E98" }}>{s.description}</p>
                 </Card3D>
               </motion.div>
             ))}
@@ -334,13 +334,13 @@ export default function Landing() {
       </Section>
 
       {/* ─── Features ─── */}
-      <Section className="py-20 sm:py-28 px-5" style={{ borderTop: "1px solid #1A211E" }}>
+      <Section className="py-20 sm:py-28 px-5" style={{ borderTop: "1px solid #292A27" }}>
         <div className="mx-auto max-w-6xl">
           <div className="grid grid-cols-12 gap-4 mb-14">
             <div className="col-span-12 lg:col-span-8">
-              <div className="h-px mb-4" style={{ background: "linear-gradient(90deg, #D4A85C 0%, #D4A85C 30%, transparent 100%)", maxWidth: 80 }} />
-              <span className="text-[9px] tracking-[0.3em] uppercase font-medium" style={{ color: "#D4A85C" }}>Capabilities</span>
-              <h2 className="mt-2 text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#E2DDD4" }}>Built for Media Literacy</h2>
+              <div className="h-px mb-4" style={{ background: "linear-gradient(90deg, #A58B5B 0%, #A58B5B 30%, transparent 100%)", maxWidth: 80 }} />
+              <span className="text-[9px] tracking-[0.3em] uppercase font-medium" style={{ color: "#A58B5B" }}>Capabilities</span>
+              <h2 className="mt-2 text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>Built for Media Literacy</h2>
             </div>
           </div>
 
@@ -352,12 +352,12 @@ export default function Landing() {
                 viewport={{ once: true, margin: "-20px" }}
                 transition={{ duration: 0.5, delay: i * 0.06, ease: [0.22, 1, 0.36, 1] }}>
                 <Card3D className="p-5"
-                  style={{ background: "#0E1210", border: "1px solid #1A211E", borderRadius: "2px" }}>
+                  style={{ background: "#0F1110", border: "1px solid #292A27", borderRadius: "2px" }}>
                   <div className="w-8 h-8 rounded-sm flex items-center justify-center mb-3" style={{ background: "rgba(62,232,184,0.05)" }}>
-                    <f.icon className="w-3.5 h-3.5" style={{ color: "#3EE8B8" }} />
+                    <f.icon className="w-3.5 h-3.5" style={{ color: "#8FA596" }} />
                   </div>
-                  <h3 className="text-[13px] font-semibold mb-1" style={{ color: "#E2DDD4" }}>{f.title}</h3>
-                  <p className="text-[11px] leading-relaxed" style={{ color: "#6B7270" }}>{f.description}</p>
+                  <h3 className="text-[13px] font-semibold mb-1" style={{ color: "#F1F2EE" }}>{f.title}</h3>
+                  <p className="text-[11px] leading-relaxed" style={{ color: "#9A9E98" }}>{f.description}</p>
                 </Card3D>
               </motion.div>
             ))}
@@ -366,32 +366,32 @@ export default function Landing() {
       </Section>
 
       {/* ─── Academic References ─── */}
-      <Section className="py-20 sm:py-28 px-5" style={{ borderTop: "1px solid #1A211E" }}>
+      <Section className="py-20 sm:py-28 px-5" style={{ borderTop: "1px solid #292A27" }}>
         <div className="mx-auto max-w-5xl">
           <motion.div initial={{ opacity: 0, y: 28 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
             transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
             className="p-8 sm:p-10 text-center relative overflow-hidden"
-            style={{ background: "#0E1210", border: "1px solid #1A211E", borderRadius: "2px" }}>
-            <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, #3EE8B8, transparent)" }} />
+            style={{ background: "#0F1110", border: "1px solid #292A27", borderRadius: "2px" }}>
+            <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, #8FA596, transparent)" }} />
             <div className="w-10 h-10 rounded-sm flex items-center justify-center mx-auto mb-4" style={{ background: "rgba(62,232,184,0.05)" }}>
-              <FileCheck className="w-4 h-4" style={{ color: "#3EE8B8" }} />
+              <FileCheck className="w-4 h-4" style={{ color: "#8FA596" }} />
             </div>
-            <h2 className="text-lg sm:text-xl tracking-tight mb-2" style={{ fontFamily: "'DM Serif Display', serif", color: "#E2DDD4" }}>Academically Grounded</h2>
-            <p className="text-[12px] max-w-md mx-auto mb-6 leading-relaxed" style={{ color: "#6B7270" }}>Detection heuristics informed by research from leading institutions.</p>
+            <h2 className="text-lg sm:text-xl tracking-tight mb-2" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>Academically Grounded</h2>
+            <p className="text-[12px] max-w-md mx-auto mb-6 leading-relaxed" style={{ color: "#9A9E98" }}>Detection heuristics informed by research from leading institutions.</p>
             <div className="flex flex-wrap justify-center gap-2">
               {references.map((ref) => (
                 <span key={ref} className="text-[10px] px-3 py-1.5 tracking-wide"
-                  style={{ background: "#161C19", color: "#6B7270", border: "1px solid #1A211E", borderRadius: "2px" }}>{ref}</span>
+                  style={{ background: "#141615", color: "#9A9E98", border: "1px solid #292A27", borderRadius: "2px" }}>{ref}</span>
               ))}
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8">
               {[{ icon: Users, label: "Named Sources", desc: "Credibility tracking" }, { icon: TrendingUp, label: "Severity Scoring", desc: "Weighted patterns" }, { icon: Eye, label: "Explainable AI", desc: "Transparent verdicts" }, { icon: BarChart3, label: "Visual Reports", desc: "Charts & breakdowns" }].map((item, i) => (
                 <motion.div key={item.label} initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: 0.1 + i * 0.06 }}>
-                  <div className="rounded-sm p-3" style={{ background: "#161C19" }}>
-                    <item.icon className="w-3.5 h-3.5 mx-auto mb-1.5" style={{ color: "#3EE8B8" }} />
-                    <span className="text-[10px] font-semibold block" style={{ color: "#E2DDD4" }}>{item.label}</span>
-                    <span className="text-[8px]" style={{ color: "#6B7270" }}>{item.desc}</span>
+                  <div className="rounded-sm p-3" style={{ background: "#141615" }}>
+                    <item.icon className="w-3.5 h-3.5 mx-auto mb-1.5" style={{ color: "#8FA596" }} />
+                    <span className="text-[10px] font-semibold block" style={{ color: "#F1F2EE" }}>{item.label}</span>
+                    <span className="text-[8px]" style={{ color: "#9A9E98" }}>{item.desc}</span>
                   </div>
                 </motion.div>
               ))}
@@ -401,18 +401,18 @@ export default function Landing() {
       </Section>
 
       {/* ─── CTA ─── */}
-      <Section className="py-20 sm:py-28 px-5" style={{ borderTop: "1px solid #1A211E" }}>
+      <Section className="py-20 sm:py-28 px-5" style={{ borderTop: "1px solid #292A27" }}>
         <div className="mx-auto max-w-2xl text-center">
           <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
             transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
             className="p-10 sm:p-14 relative overflow-hidden"
-            style={{ background: "#0E1210", border: "1px solid #1A211E", borderRadius: "2px" }}>
-            <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, #3EE8B8, transparent)" }} />
-            <Shield className="w-7 h-7 mx-auto mb-4" style={{ color: "#3EE8B8" }} />
-            <h2 className="text-xl sm:text-2xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#E2DDD4" }}>Ready to Fact-Check?</h2>
-            <p className="mt-2 text-[12px] max-w-xs mx-auto" style={{ color: "#6B7270" }}>No sign-up required. Paste any article and get an instant, evidence-backed verdict.</p>
+            style={{ background: "#0F1110", border: "1px solid #292A27", borderRadius: "2px" }}>
+            <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, #8FA596, transparent)" }} />
+            <Shield className="w-7 h-7 mx-auto mb-4" style={{ color: "#8FA596" }} />
+            <h2 className="text-xl sm:text-2xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>Ready to Fact-Check?</h2>
+            <p className="mt-2 text-[12px] max-w-xs mx-auto" style={{ color: "#9A9E98" }}>No sign-up required. Paste any article and get an instant, evidence-backed verdict.</p>
             <MagneticBtn className="cursor-pointer mt-6 gap-2 px-7 py-3 text-[11px] font-semibold tracking-[0.1em] inline-flex items-center"
-              style={{ background: "#3EE8B8", color: "#080A09", borderRadius: "2px" }}
+              style={{ background: "#8FA596", color: "#0B0D0C", borderRadius: "2px" }}
               onClick={() => navigate("/dashboard")}>
               LAUNCH VERITAS <ArrowRight className="w-3.5 h-3.5" />
             </MagneticBtn>
@@ -421,13 +421,13 @@ export default function Landing() {
       </Section>
 
       {/* ─── Footer ─── */}
-      <footer className="py-6 px-5" style={{ borderTop: "1px solid #1A211E" }}>
+      <footer className="py-6 px-5" style={{ borderTop: "1px solid #292A27" }}>
         <div className="mx-auto max-w-6xl flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Shield className="w-3.5 h-3.5" style={{ color: "#3EE8B8" }} />
-            <span className="text-[10px] font-bold tracking-[0.2em] uppercase" style={{ fontFamily: "'DM Serif Display', serif", color: "#E2DDD4" }}>Veritas</span>
+            <Shield className="w-3.5 h-3.5" style={{ color: "#8FA596" }} />
+            <span className="text-[10px] font-bold tracking-[0.2em] uppercase" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>Veritas</span>
           </div>
-          <p className="text-[9px] tracking-wide" style={{ color: "#6B7270" }}>BSc Data Science — NLP-Based Misinformation Detection</p>
+          <p className="text-[9px] tracking-wide" style={{ color: "#9A9E98" }}>BSc Data Science — NLP-Based Misinformation Detection</p>
         </div>
       </footer>
     </div>

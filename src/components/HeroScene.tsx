@@ -2,120 +2,110 @@
 import { useRef, useEffect } from "react";
 import * as THREE from "three";
 
-/* ─── Panel Data: realistic editorial content ─── */
+/* ─── LOCKED PALETTE ─── */
+const P = {
+  bg: "#0B0D0C",
+  text: "#F1F2EE",
+  secondary: "#9A9E98",
+  sage: "#607568",
+  verified: "#8FA596",
+  warning: "#A9574D",
+  gold: "#A58B5B",
+  border: "#292A27",
+  surface: "#0F1110",
+};
+
+/* ─── Panel Data ─── */
 const PANELS = [
-  // Main article — large, front-left
+  // Main article — left, prominent
   {
-    type: "article" as const,
     lines: [
-      { text: "THE DAILY CHRONICLE", size: 7, weight: 700, color: "#E2DDD4", y: 0 },
-      { text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━", size: 5, weight: 400, color: "#1A211E", y: 12 },
-      { text: "Scientists Confirm New Species", size: 14, weight: 700, color: "#E2DDD4", y: 28 },
-      { text: "Discovered in Deep Ocean", size: 14, weight: 700, color: "#E2DDD4", y: 46 },
-      { text: "Expedition", size: 14, weight: 700, color: "#E2DDD4", y: 64 },
-      { text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━", size: 5, weight: 400, color: "#1A211E", y: 80 },
-      { text: "Marine biologists from the University of Oxford", size: 7, weight: 400, color: "#6B7270", y: 96 },
-      { text: "have identified a previously unknown deep-sea", size: 7, weight: 400, color: "#6B7270", y: 108 },
-      { text: "species in the Mariana Trench at 8,200 meters.", size: 7, weight: 400, color: "#6B7270", y: 120 },
-      { text: "Lead researcher Dr. Sarah Chen published", size: 7, weight: 400, color: "#6B7270", y: 132 },
-      { text: "the findings in Nature on March 15, 2025.", size: 7, weight: 400, color: "#6B7270", y: 144 },
+      { text: "THE DAILY CHRONICLE", size: 6, weight: 600, color: P.secondary, y: 0 },
+      { text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", size: 3, color: P.border, y: 10 },
+      { text: "Scientists Confirm New Species", size: 12, weight: 700, color: P.text, y: 22 },
+      { text: "in Deep Ocean Expedition", size: 12, weight: 700, color: P.text, y: 38 },
+      { text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", size: 3, color: P.border, y: 52 },
+      { text: "Marine biologists from the University of", size: 6, color: P.secondary, y: 64 },
+      { text: "Oxford identified a previously unknown", size: 6, color: P.secondary, y: 74 },
+      { text: "deep-sea species at 8,200 meters depth.", size: 6, color: P.secondary, y: 84 },
+      { text: "Lead researcher Dr. Sarah Chen published", size: 6, color: P.secondary, y: 94 },
+      { text: "findings in Nature, March 2025.", size: 6, color: P.secondary, y: 104 },
     ],
-    w: 3.2, h: 2.4, x: -2.0, y: 0.3, z: 0, rot: 0.06,
-    bgColor: "#0E1210", borderColor: "#1A211E",
+    w: 3.0, h: 2.2, x: -1.8, y: 0.2, z: 0, rot: 0.04,
   },
-  // Credibility score card — overlapping, right
+  // Credibility score — right, overlapping
   {
-    type: "score" as const,
     lines: [
-      { text: "CREDIBILITY SCORE", size: 7, weight: 500, color: "#6B7270", y: 0 },
-      { text: "92", size: 48, weight: 700, color: "#3EE8B8", y: 30 },
-      { text: "LIKELY CREDIBLE", size: 9, weight: 600, color: "#3EE8B8", y: 88 },
-      { text: "━━━━━━━━━━━━━━━━━━", size: 4, weight: 400, color: "#1A211E", y: 104 },
-      { text: "Named sources: ✓", size: 7, weight: 400, color: "#3EE8B8", y: 118 },
-      { text: "Citations: ✓", size: 7, weight: 400, color: "#3EE8B8", y: 130 },
-      { text: "Balance: ✓", size: 7, weight: 400, color: "#3EE8B8", y: 142 },
-      { text: "Logic: ✓", size: 7, weight: 400, color: "#3EE8B8", y: 154 },
+      { text: "CREDIBILITY SCORE", size: 6, weight: 500, color: P.secondary, y: 0 },
+      { text: "92", size: 44, weight: 700, color: P.verified, y: 22 },
+      { text: "LIKELY CREDIBLE", size: 8, weight: 600, color: P.verified, y: 76 },
+      { text: "━━━━━━━━━━━━━━━━━━━", size: 3, color: P.border, y: 90 },
+      { text: "Named sources: verified", size: 5, color: P.verified, y: 102 },
+      { text: "Citations: confirmed", size: 5, color: P.verified, y: 114 },
+      { text: "Balance: adequate", size: 5, color: P.verified, y: 126 },
     ],
-    w: 1.8, h: 2.2, x: 1.6, y: 0.8, z: -0.4, rot: -0.04,
-    bgColor: "#0B0E0D", borderColor: "#3EE8B830",
+    w: 1.6, h: 1.8, x: 1.8, y: 0.6, z: -0.3, rot: -0.03,
   },
-  // Misleading article — back, angled
+  // Fake article — back right
   {
-    type: "article" as const,
     lines: [
-      { text: "EXPOSED!!!", size: 12, weight: 700, color: "#E85D4A", y: 0 },
-      { text: "Secret Cure Hidden", size: 11, weight: 700, color: "#E2DDD4", y: 18 },
-      { text: "by Big Pharma", size: 11, weight: 700, color: "#E2DDD4", y: 34 },
-      { text: "━━━━━━━━━━━━━━━━━━", size: 4, weight: 400, color: "#1A211E", y: 50 },
-      { text: "Anonymous insider known only as", size: 6, weight: 400, color: "#6B7270", y: 62 },
-      { text: "'Dr. Truth' revealed in a viral post", size: 6, weight: 400, color: "#6B7270", y: 74 },
-      { text: "that a simple mixture can cure", size: 6, weight: 400, color: "#6B7270", y: 86 },
-      { text: "ALL diseases!!!", size: 6, weight: 600, color: "#E85D4A", y: 98 },
+      { text: "EXPOSED!!!", size: 10, weight: 700, color: P.warning, y: 0 },
+      { text: "Secret Cure Hidden", size: 9, weight: 600, color: P.text, y: 16 },
+      { text: "by Big Pharma", size: 9, weight: 600, color: P.text, y: 30 },
+      { text: "━━━━━━━━━━━━━━━━━━━", size: 3, color: P.border, y: 44 },
+      { text: "Anonymous insider 'Dr. Truth'", size: 5, color: P.secondary, y: 56 },
+      { text: "reveals in viral post that a", size: 5, color: P.secondary, y: 66 },
+      { text: "simple mixture can cure ALL", size: 5, color: P.secondary, y: 76 },
+      { text: "diseases!!!", size: 5, weight: 600, color: P.warning, y: 86 },
     ],
-    w: 2.4, h: 1.8, x: 3.2, y: -0.6, z: -1.2, rot: -0.12,
-    bgColor: "#0E1210", borderColor: "#E85D4A25",
+    w: 2.0, h: 1.6, x: 3.0, y: -0.5, z: -0.9, rot: -0.08,
   },
-  // Source verification card
+  // Source verification
   {
-    type: "verification" as const,
     lines: [
-      { text: "SOURCE VERIFICATION", size: 7, weight: 600, color: "#D4A85C", y: 0 },
-      { text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━", size: 4, weight: 400, color: "#1A211E", y: 14 },
-      { text: "University of Oxford", size: 8, weight: 500, color: "#E2DDD4", y: 30 },
-      { text: "✓ Verified institution", size: 6, weight: 400, color: "#3EE8B8", y: 44 },
-      { text: "Journal: Nature", size: 8, weight: 500, color: "#E2DDD4", y: 62 },
-      { text: "✓ Peer-reviewed", size: 6, weight: 400, color: "#3EE8B8", y: 76 },
-      { text: "Lead: Dr. Sarah Chen", size: 8, weight: 500, color: "#E2DDD4", y: 94 },
-      { text: "✓ Named researcher", size: 6, weight: 400, color: "#3EE8B8", y: 108 },
-      { text: "NSF Funding: ✓", size: 6, weight: 400, color: "#3EE8B8", y: 126 },
+      { text: "SOURCE VERIFICATION", size: 6, weight: 500, color: P.gold, y: 0 },
+      { text: "━━━━━━━━━━━━━━━━━━━━━━━━", size: 3, color: P.border, y: 12 },
+      { text: "University of Oxford", size: 7, weight: 500, color: P.text, y: 24 },
+      { text: "✓ Verified institution", size: 5, color: P.verified, y: 38 },
+      { text: "Nature — Peer-reviewed", size: 7, weight: 500, color: P.text, y: 54 },
+      { text: "✓ Confirmed publication", size: 5, color: P.verified, y: 68 },
+      { text: "Dr. Sarah Chen", size: 7, weight: 500, color: P.text, y: 84 },
+      { text: "✓ Named researcher", size: 5, color: P.verified, y: 98 },
     ],
-    w: 2.0, h: 1.8, x: -0.2, y: -1.6, z: -0.6, rot: 0.03,
-    bgColor: "#0B0E0D", borderColor: "#D4A85C25",
+    w: 1.7, h: 1.5, x: 0.2, y: -1.4, z: -0.5, rot: 0.02,
   },
-  // Red flags card
+  // Red flags
   {
-    type: "flags" as const,
     lines: [
-      { text: "RED FLAGS", size: 7, weight: 600, color: "#E85D4A", y: 0 },
-      { text: "02 DETECTED", size: 8, weight: 700, color: "#E85D4A", y: 16 },
-      { text: "━━━━━━━━━━━━━━━━━━━━━", size: 4, weight: 400, color: "#1A211E", y: 32 },
-      { text: "✗ Anonymous sourcing", size: 6, weight: 400, color: "#E85D4A", y: 46 },
-      { text: "✗ No verifiable citations", size: 6, weight: 400, color: "#E85D4A", y: 58 },
+      { text: "RED FLAGS", size: 6, weight: 500, color: P.warning, y: 0 },
+      { text: "02 DETECTED", size: 7, weight: 600, color: P.warning, y: 14 },
+      { text: "━━━━━━━━━━━━━━━━━━━", size: 3, color: P.border, y: 28 },
+      { text: "✗ Anonymous sourcing", size: 5, color: P.warning, y: 40 },
+      { text: "✗ No verifiable citations", size: 5, color: P.warning, y: 52 },
     ],
-    w: 1.6, h: 1.2, x: 2.8, y: 2.0, z: -0.8, rot: 0.08,
-    bgColor: "#0E1210", borderColor: "#E85D4A20",
+    w: 1.4, h: 1.0, x: 2.6, y: 1.8, z: -0.6, rot: 0.05,
   },
   // Language analysis
   {
-    type: "analysis" as const,
     lines: [
-      { text: "LANGUAGE ANALYSIS", size: 7, weight: 600, color: "#3EE8B8", y: 0 },
-      { text: "━━━━━━━━━━━━━━━━━━━━━━━", size: 4, weight: 400, color: "#1A211E", y: 14 },
-      { text: "Tone: Professional", size: 6, weight: 400, color: "#6B7270", y: 28 },
-      { text: "Sensationalism: Low", size: 6, weight: 400, color: "#6B7270", y: 40 },
-      { text: "Emotional appeals: None", size: 6, weight: 400, color: "#6B7270", y: 52 },
-      { text: "ALL CAPS: No", size: 6, weight: 400, color: "#3EE8B8", y: 64 },
-      { text: "Exclamation marks: 0", size: 6, weight: 400, color: "#3EE8B8", y: 76 },
+      { text: "LANGUAGE ANALYSIS", size: 6, weight: 500, color: P.sage, y: 0 },
+      { text: "━━━━━━━━━━━━━━━━━━━━", size: 3, color: P.border, y: 12 },
+      { text: "Tone: Professional", size: 5, color: P.secondary, y: 24 },
+      { text: "Sensationalism: Low", size: 5, color: P.secondary, y: 36 },
+      { text: "Emotional appeals: None", size: 5, color: P.secondary, y: 48 },
+      { text: "ALL CAPS: No", size: 5, color: P.verified, y: 60 },
     ],
-    w: 1.6, h: 1.4, x: -3.4, y: -0.8, z: -0.9, rot: 0.1,
-    bgColor: "#0B0E0D", borderColor: "#3EE8B815",
+    w: 1.4, h: 1.2, x: -3.2, y: -0.6, z: -0.7, rot: 0.06,
   },
 ];
 
-/* ─── Connecting evidence lines ─── */
-const EVIDENCE_LINES = [
-  { from: 0, to: 1, color: "#3EE8B8" },   // article → credibility
-  { from: 0, to: 3, color: "#D4A85C" },   // article → source verification
-  { from: 2, to: 4, color: "#E85D4A" },   // fake article → red flags
-  { from: 0, to: 5, color: "#3EE8B8" },   // article → language analysis
-  { from: 1, to: 3, color: "#6B7270" },   // credibility → source verification
+/* ─── Evidence connections ─── */
+const LINES = [
+  { from: 0, to: 1, color: P.verified },
+  { from: 0, to: 3, color: P.gold },
+  { from: 2, to: 4, color: P.warning },
+  { from: 0, to: 5, color: P.sage },
 ];
-
-/* ─── Verification seal ─── */
-const SEAL = {
-  x: 0, y: 0.2, z: 0.5,
-  radius: 0.55,
-};
 
 function createPanelTexture(panel: typeof PANELS[0]): THREE.CanvasTexture {
   const scale = 2;
@@ -126,111 +116,104 @@ function createPanelTexture(panel: typeof PANELS[0]): THREE.CanvasTexture {
   canvas.height = ph;
   const ctx = canvas.getContext("2d")!;
   ctx.scale(scale, scale);
-
   const w = panel.w * 100;
   const h = panel.h * 100;
 
   // Background
-  ctx.fillStyle = panel.bgColor;
+  ctx.fillStyle = P.surface;
   ctx.fillRect(0, 0, w, h);
 
   // Border
-  const borderAlpha = panel.borderColor.includes("#") ? panel.borderColor.slice(-2) : "30";
-  ctx.strokeStyle = panel.borderColor;
+  ctx.strokeStyle = P.border;
   ctx.lineWidth = 0.5;
   ctx.strokeRect(3, 3, w - 6, h - 6);
 
-  // Top accent
-  const accentColor = panel.lines[0]?.color || "#3EE8B8";
-  ctx.fillStyle = accentColor + "40";
-  ctx.fillRect(3, 3, w - 6, 1.5);
+  // Top accent line
+  ctx.fillStyle = P.sage + "40";
+  ctx.fillRect(3, 3, w - 6, 1);
 
-  // Render text lines
+  // Text
   panel.lines.forEach((line) => {
-    ctx.font = `${line.weight} ${line.size}px 'Inter', 'Helvetica Neue', sans-serif`;
+    ctx.font = `${line.weight || 400} ${line.size}px 'Inter', sans-serif`;
     ctx.fillStyle = line.color;
     ctx.textBaseline = "top";
-    ctx.fillText(line.text, 14, 20 + line.y);
+    ctx.fillText(line.text, 12, 18 + line.y);
   });
 
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.needsUpdate = true;
-  return texture;
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.needsUpdate = true;
+  return tex;
 }
 
 function createSealTexture(): THREE.CanvasTexture {
   const scale = 2;
-  const size = 200 * scale;
+  const size = 180 * scale;
   const canvas = document.createElement("canvas");
   canvas.width = size;
   canvas.height = size;
   const ctx = canvas.getContext("2d")!;
   ctx.scale(scale, scale);
 
-  const cx = 100, cy = 100, r = 80;
+  const cx = 90, cy = 90, r = 70;
 
   // Outer ring
-  ctx.strokeStyle = "#3EE8B860";
-  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = P.sage + "50";
+  ctx.lineWidth = 1;
   ctx.beginPath();
   ctx.arc(cx, cy, r, 0, Math.PI * 2);
   ctx.stroke();
 
   // Inner ring
-  ctx.strokeStyle = "#3EE8B830";
+  ctx.strokeStyle = P.sage + "25";
   ctx.lineWidth = 0.5;
   ctx.beginPath();
-  ctx.arc(cx, cy, r - 10, 0, Math.PI * 2);
+  ctx.arc(cx, cy, r - 8, 0, Math.PI * 2);
   ctx.stroke();
 
-  // VERITAS text around the circle
-  ctx.font = "600 8px 'Inter', sans-serif";
-  ctx.fillStyle = "#3EE8B890";
+  // VERITAS text around circle
+  ctx.font = "500 6px 'Inter', sans-serif";
+  ctx.fillStyle = P.sage + "70";
   ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  const text = "· VERIFIED · VERITAS · ";
-  const angleStep = (Math.PI * 2) / text.length;
-  for (let i = 0; i < text.length; i++) {
-    const angle = -Math.PI / 2 + i * angleStep;
+  const txt = "· VERIFIED · VERITAS · ";
+  const step = (Math.PI * 2) / txt.length;
+  for (let i = 0; i < txt.length; i++) {
+    const a = -Math.PI / 2 + i * step;
     ctx.save();
-    ctx.translate(cx + Math.cos(angle) * (r - 20), cy + Math.sin(angle) * (r - 20));
-    ctx.rotate(angle + Math.PI / 2);
-    ctx.fillText(text[i], 0, 0);
+    ctx.translate(cx + Math.cos(a) * (r - 16), cy + Math.sin(a) * (r - 16));
+    ctx.rotate(a + Math.PI / 2);
+    ctx.fillText(txt[i], 0, 0);
     ctx.restore();
   }
 
-  // Center checkmark
-  ctx.strokeStyle = "#3EE8B8";
-  ctx.lineWidth = 2.5;
+  // Checkmark
+  ctx.strokeStyle = P.sage;
+  ctx.lineWidth = 2;
   ctx.lineCap = "round";
-  ctx.lineJoin = "round";
   ctx.beginPath();
-  ctx.moveTo(cx - 12, cy);
-  ctx.lineTo(cx - 4, cy + 10);
-  ctx.lineTo(cx + 14, cy - 10);
+  ctx.moveTo(cx - 10, cy);
+  ctx.lineTo(cx - 3, cy + 8);
+  ctx.lineTo(cx + 12, cy - 8);
   ctx.stroke();
 
-  // VERITAS text below
-  ctx.font = "700 10px 'Inter', sans-serif";
-  ctx.fillStyle = "#3EE8B8";
+  // VERITAS below
+  ctx.font = "600 8px 'Inter', sans-serif";
+  ctx.fillStyle = P.sage;
   ctx.textAlign = "center";
-  ctx.fillText("VERITAS", cx, cy + r - 8);
+  ctx.fillText("VERITAS", cx, cy + r - 5);
 
-  const texture = new THREE.CanvasTexture(canvas);
-  texture.needsUpdate = true;
-  return texture;
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.needsUpdate = true;
+  return tex;
 }
 
 export default function HeroScene() {
   const containerRef = useRef<HTMLDivElement>(null);
   const stateRef = useRef<{
-    scene: THREE.Scene;
-    camera: THREE.PerspectiveCamera;
     renderer: THREE.WebGLRenderer;
     panelMeshes: THREE.Mesh[];
-    lineMeshes: THREE.Line[];
     sealMesh: THREE.Mesh;
     scanPlane: THREE.Mesh;
+    camera: THREE.PerspectiveCamera;
     mouse: THREE.Vector2;
     targetMouse: THREE.Vector2;
     clock: THREE.Clock;
@@ -245,7 +228,7 @@ export default function HeroScene() {
     const h = container.clientHeight;
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x080A09, 0.06);
+    scene.fog = new THREE.FogExp2(0x0B0D0C, 0.05);
 
     const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
     camera.position.set(0, 0, 7);
@@ -258,98 +241,78 @@ export default function HeroScene() {
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(renderer.domElement);
 
-    // Lighting — editorial, directional
-    const ambient = new THREE.AmbientLight(0xffffff, 0.12);
-    scene.add(ambient);
-    const key = new THREE.DirectionalLight(0xE2DDD4, 0.5);
+    // Lighting
+    scene.add(new THREE.AmbientLight(0xffffff, 0.1));
+    const key = new THREE.DirectionalLight(0xF1F2EE, 0.4);
     key.position.set(4, 6, 5);
     key.castShadow = true;
     scene.add(key);
-    const fill = new THREE.PointLight(0x3EE8B8, 0.2, 20);
-    fill.position.set(-6, 2, 4);
+    const fill = new THREE.PointLight(0x607568, 0.15, 20);
+    fill.position.set(-5, 2, 4);
     scene.add(fill);
-    const rim = new THREE.PointLight(0xD4A85C, 0.1, 15);
+    const rim = new THREE.PointLight(0xA58B5B, 0.08, 15);
     rim.position.set(5, -4, -3);
     scene.add(rim);
 
-    // Create panel meshes
+    // Panels
     const panelMeshes: THREE.Mesh[] = [];
     PANELS.forEach((p) => {
-      const texture = createPanelTexture(p);
+      const tex = createPanelTexture(p);
       const geo = new THREE.PlaneGeometry(p.w, p.h);
       const mat = new THREE.MeshStandardMaterial({
-        map: texture,
-        transparent: true,
-        opacity: 0.95,
-        side: THREE.DoubleSide,
-        roughness: 0.85,
-        metalness: 0.05,
+        map: tex, transparent: true, opacity: 0.92,
+        side: THREE.DoubleSide, roughness: 0.9, metalness: 0.05,
       });
       const mesh = new THREE.Mesh(geo, mat);
       mesh.position.set(p.x, p.y, p.z);
       mesh.rotation.set(0, 0, p.rot);
       mesh.castShadow = true;
       mesh.receiveShadow = true;
-      mesh.userData = { baseX: p.x, baseY: p.y, baseZ: p.z, baseRot: p.rot, idx: panelMeshes.length };
+      mesh.userData = { bx: p.x, by: p.y, bz: p.z, br: p.rot, i: panelMeshes.length };
       scene.add(mesh);
       panelMeshes.push(mesh);
     });
 
-    // Verification seal
-    const sealTexture = createSealTexture();
-    const sealGeo = new THREE.PlaneGeometry(SEAL.radius * 2, SEAL.radius * 2);
-    const sealMat = new THREE.MeshStandardMaterial({
-      map: sealTexture,
-      transparent: true,
-      opacity: 0.85,
-      side: THREE.DoubleSide,
-      roughness: 0.3,
-      metalness: 0.6,
-    });
-    const sealMesh = new THREE.Mesh(sealGeo, sealMat);
-    sealMesh.position.set(SEAL.x, SEAL.y, SEAL.z);
+    // Seal
+    const sealTex = createSealTexture();
+    const sealMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.0, 1.0),
+      new THREE.MeshStandardMaterial({
+        map: sealTex, transparent: true, opacity: 0.7,
+        side: THREE.DoubleSide, roughness: 0.4, metalness: 0.5,
+      })
+    );
+    sealMesh.position.set(0, 0.3, 0.4);
     scene.add(sealMesh);
 
-    // Scanning plane — thin line that moves across panels
-    const scanGeo = new THREE.PlaneGeometry(0.015, 3.5);
-    const scanMat = new THREE.MeshBasicMaterial({
-      color: 0x3EE8B8,
-      transparent: true,
-      opacity: 0.3,
-      side: THREE.DoubleSide,
-    });
-    const scanPlane = new THREE.Mesh(scanGeo, scanMat);
+    // Scan line — muted sage
+    const scanPlane = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.01, 3.2),
+      new THREE.MeshBasicMaterial({ color: new THREE.Color(P.sage), transparent: true, opacity: 0.25, side: THREE.DoubleSide })
+    );
     scanPlane.position.z = 0.3;
     scene.add(scanPlane);
 
     // Evidence lines
-    const lineMeshes: THREE.Line[] = [];
-    EVIDENCE_LINES.forEach((l) => {
+    LINES.forEach((l) => {
       const from = PANELS[l.from];
       const to = PANELS[l.to];
       const mid = new THREE.Vector3(
-        (from.x + to.x) / 2,
-        (from.y + to.y) / 2,
-        Math.max(from.z, to.z) + 0.3
+        (from.x + to.x) / 2, (from.y + to.y) / 2,
+        Math.max(from.z, to.z) + 0.25
       );
       const curve = new THREE.QuadraticBezierCurve3(
-        new THREE.Vector3(from.x, from.y, from.z),
-        mid,
+        new THREE.Vector3(from.x, from.y, from.z), mid,
         new THREE.Vector3(to.x, to.y, to.z)
       );
-      const points = curve.getPoints(40);
-      const geo = new THREE.BufferGeometry().setFromPoints(points);
+      const geo = new THREE.BufferGeometry().setFromPoints(curve.getPoints(32));
       const mat = new THREE.LineBasicMaterial({
-        color: new THREE.Color(l.color),
-        transparent: true,
-        opacity: 0.1,
+        color: new THREE.Color(l.color), transparent: true, opacity: 0.08,
       });
-      const line = new THREE.Line(geo, mat);
-      scene.add(line);
-      lineMeshes.push(line);
+      scene.add(new THREE.Line(geo, mat));
     });
 
-    // State
+    // Mouse
     const mouse = new THREE.Vector2(0, 0);
     const targetMouse = new THREE.Vector2(0, 0);
     const clock = new THREE.Clock();
@@ -382,41 +345,35 @@ export default function HeroScene() {
       raf = requestAnimationFrame(animate);
       const t = clock.getElapsedTime();
 
-      // Smooth mouse
-      mouse.x += (targetMouse.x - mouse.x) * 0.035;
-      mouse.y += (targetMouse.y - mouse.y) * 0.035;
+      mouse.x += (targetMouse.x - mouse.x) * 0.03;
+      mouse.y += (targetMouse.y - mouse.y) * 0.03;
 
-      // Camera parallax
-      camera.position.x = mouse.x * 0.6;
-      camera.position.y = mouse.y * 0.35;
+      camera.position.x = mouse.x * 0.5;
+      camera.position.y = mouse.y * 0.3;
       camera.lookAt(0, 0, -1);
 
-      // Panel float — each at different speed based on depth
-      panelMeshes.forEach((mesh) => {
-        const ud = mesh.userData;
-        const depthFactor = (ud.baseZ + 2) * 0.5; // closer = more movement
-        mesh.position.x = ud.baseX + mouse.x * 0.12 * depthFactor;
-        mesh.position.y = ud.baseY + mouse.y * 0.08 * depthFactor + Math.sin(t * 0.25 + ud.idx * 1.3) * 0.03;
-        mesh.rotation.y = mouse.x * 0.015 * depthFactor;
-        mesh.rotation.x = mouse.y * 0.01 * depthFactor;
+      // Panel parallax — closer panels move more
+      panelMeshes.forEach((m) => {
+        const u = m.userData;
+        const d = (u.bz + 2) * 0.4;
+        m.position.x = u.bx + mouse.x * 0.1 * d;
+        m.position.y = u.by + mouse.y * 0.06 * d + Math.sin(t * 0.2 + u.i * 1.5) * 0.02;
+        m.rotation.y = mouse.x * 0.01 * d;
+        m.rotation.x = mouse.y * 0.008 * d;
       });
 
-      // Seal rotation and float
-      sealMesh.rotation.z = t * 0.1;
-      sealMesh.position.y = SEAL.y + Math.sin(t * 0.4) * 0.04;
-      sealMesh.position.x = SEAL.x + mouse.x * 0.05;
+      // Seal
+      sealMesh.rotation.z = t * 0.08;
+      sealMesh.position.y = 0.3 + Math.sin(t * 0.35) * 0.03;
 
-      // Scan line movement
-      scanPlane.position.x = -4 + ((t * 0.4) % 8);
-      scanPlane.material.opacity = 0.15 + Math.sin(t * 2) * 0.1;
+      // Scanner — smooth sweep
+      scanPlane.position.x = -4.5 + ((t * 0.35) % 9);
+      scanPlane.material.opacity = 0.12 + Math.sin(t * 1.5) * 0.08;
 
       renderer.render(scene, camera);
     };
 
-    stateRef.current = {
-      scene, camera, renderer, panelMeshes, lineMeshes, sealMesh, scanPlane,
-      mouse, targetMouse, clock, raf: 0,
-    };
+    stateRef.current = { renderer, panelMeshes, sealMesh, scanPlane, camera, mouse, targetMouse, clock, raf: 0 };
     animate();
 
     return () => {
@@ -429,7 +386,5 @@ export default function HeroScene() {
     };
   }, []);
 
-  return (
-    <div ref={containerRef} className="absolute inset-0 z-0" style={{ touchAction: "none" }} />
-  );
+  return <div ref={containerRef} className="absolute inset-0 z-0" style={{ touchAction: "none" }} />;
 }

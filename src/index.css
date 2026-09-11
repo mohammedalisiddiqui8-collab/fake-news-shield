@@ -43,39 +43,40 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* ─── LOCKED PALETTE ─── */
 :root {
   --radius: 0.25rem;
-  --background: #080A09;
-  --foreground: #E2DDD4;
-  --card: #0E1210;
-  --card-foreground: #E2DDD4;
-  --popover: #0E1210;
-  --popover-foreground: #E2DDD4;
-  --primary: #3EE8B8;
-  --primary-foreground: #080A09;
-  --secondary: #131916;
-  --secondary-foreground: #B8B2A8;
-  --muted: #161C19;
-  --muted-foreground: #6B7270;
-  --accent: #D4A85C;
-  --accent-foreground: #080A09;
-  --destructive: #E85D4A;
-  --border: #1A211E;
-  --input: #1A211E;
-  --ring: #3EE8B8;
-  --chart-1: #3EE8B8;
-  --chart-2: #5B8DEF;
-  --chart-3: #D4A85C;
-  --chart-4: #E85D4A;
-  --chart-5: #6B7270;
-  --sidebar: #0B0E0D;
-  --sidebar-foreground: #E2DDD4;
-  --sidebar-primary: #3EE8B8;
-  --sidebar-primary-foreground: #080A09;
-  --sidebar-accent: #131916;
-  --sidebar-accent-foreground: #E2DDD4;
-  --sidebar-border: #1A211E;
-  --sidebar-ring: #3EE8B8;
+  --background: #0B0D0C;
+  --foreground: #F1F2EE;
+  --card: #0F1110;
+  --card-foreground: #F1F2EE;
+  --popover: #0F1110;
+  --popover-foreground: #F1F2EE;
+  --primary: #607568;
+  --primary-foreground: #F1F2EE;
+  --secondary: #141615;
+  --secondary-foreground: #9A9E98;
+  --muted: #1A1C1B;
+  --muted-foreground: #9A9E98;
+  --accent: #A58B5B;
+  --accent-foreground: #0B0D0C;
+  --destructive: #A9574D;
+  --border: #292A27;
+  --input: #292A27;
+  --ring: #607568;
+  --chart-1: #8FA596;
+  --chart-2: #A58B5B;
+  --chart-3: #A9574D;
+  --chart-4: #607568;
+  --chart-5: #9A9E98;
+  --sidebar: #0D0F0E;
+  --sidebar-foreground: #F1F2EE;
+  --sidebar-primary: #607568;
+  --sidebar-primary-foreground: #F1F2EE;
+  --sidebar-accent: #141615;
+  --sidebar-accent-foreground: #F1F2EE;
+  --sidebar-border: #292A27;
+  --sidebar-ring: #607568;
 }
 
 @layer base {
@@ -94,27 +95,15 @@
 
 @layer utilities {
   .glass-card {
-    background: #0E1210;
-    border: 1px solid #1A211E;
+    background: #0F1110;
+    border: 1px solid #292A27;
     border-radius: 0.25rem;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.4), 0 0 0 0.5px rgba(255,255,255,0.015);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
   }
 
   .editorial-rule {
     height: 1px;
-    background: linear-gradient(90deg, transparent, #1A211E, transparent);
-  }
-
-  .grid-dot-bg {
-    background-image: radial-gradient(circle, rgba(62,232,184,0.04) 1px, transparent 1px);
-    background-size: 20px 20px;
-  }
-
-  .scanline-overlay {
-    background: repeating-linear-gradient(
-      0deg, transparent, transparent 2px,
-      rgba(62,232,184,0.006) 2px, rgba(62,232,184,0.006) 3px
-    );
+    background: #292A27;
   }
 
   .text-balance { text-wrap: balance; }
@@ -127,11 +116,6 @@
 
 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
-@keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(1.03); }
-}
-
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
@@ -142,24 +126,9 @@
   to { opacity: 1; transform: translateX(0); }
 }
 
-@keyframes drawLine {
-  from { transform: scaleX(0); }
-  to { transform: scaleX(1); }
-}
-
-@keyframes scanMove {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(100vh); }
-}
-
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-6px); }
-}
-
-@keyframes typewriter {
-  from { width: 0; }
-  to { width: 100%; }
+  50% { transform: translateY(-4px); }
 }
 
 @keyframes blink {
@@ -167,18 +136,23 @@
   50% { opacity: 0; }
 }
 
-::-webkit-scrollbar { width: 4px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #1A211E; border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: #3EE8B8; }
+@keyframes scanSweep {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100vw); }
+}
 
-::selection { background: rgba(62, 232, 184, 0.15); color: #E2DDD4; }
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #292A27; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #607568; }
+
+::selection { background: rgba(96, 117, 104, 0.2); color: #F1F2EE; }
 
 html { scroll-behavior: smooth; }
 
 .tiptap { outline: none; }
 .tiptap p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
-  float: left; color: #6B7270;
+  float: left; color: #9A9E98;
   pointer-events: none; height: 0;
 }

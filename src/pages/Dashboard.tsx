@@ -48,7 +48,7 @@ const verdictConfig: Record<Verdict, {
 }> = {
   likely_real: {
     label: "Likely Credible", icon: CheckCircle2, color: "text-primary",
-    bg: "bg-primary/8", border: "border-primary/20", accentColor: "#2DD4A8",
+    bg: "bg-primary/8", border: "border-primary/20", accentColor: "#8FA596",
     description: "This content appears to be based on credible sourcing and journalistic standards.",
   },
   uncertain: {
@@ -255,14 +255,14 @@ export default function Dashboard() {
       <nav className="sticky top-0 z-50"                style={{ background: "rgba(45,212,168,0.06)" }}>
         <div className="mx-auto max-w-6xl px-4 sm:px-6 h-12 flex items-center justify-between">
           <button type="button" className="cursor-pointer flex items-center gap-2" onClick={() => navigate("/")}>
-            <Shield className="w-5 h-5" style={{ color: "#FFFCF6" }} />
+            <Shield className="w-5 h-5" style={{ color: "#F1F2EE" }} />
             <span className="font-bold tracking-[0.15em] uppercase text-sm" style={{ fontFamily: "'DM Serif Display', serif", color: "#E8E4DC" }}>Veritas</span>
           </button>
           <div className="flex items-center gap-0.5">
             {navItems.map(item => (
               <Button key={item.key} variant="ghost" size="sm"
                 className={`cursor-pointer gap-1 text-[10px] sm:text-xs px-2 sm:px-2.5 h-7 rounded ${activeView === item.key ? "" : ""}`}
-                style={activeView === item.key ? { background: "rgba(45,212,168,0.1)", color: "#2DD4A8" } : { color: "#7A8280" }}
+                style={activeView === item.key ? { background: "rgba(45,212,168,0.1)", color: "#8FA596" } : { color: "#7A8280" }}
                 disabled={item.disabled} onClick={() => setActiveView(item.key)}>
                 <item.icon className="w-3 h-3" /><span className="hidden md:inline">{item.label}</span>
               </Button>
@@ -310,7 +310,7 @@ export default function Dashboard() {
                                 {isDone ? (
                                   <CheckCircle2 className="w-3 h-3 text-primary" />
                                 ) : isActive ? (
-                                  <Loader2 className="w-3 h-3 animate-spin" style={{color: "#2DD4A8"}} />
+                                  <Loader2 className="w-3 h-3 animate-spin" style={{color: "#8FA596"}} />
                                 ) : (
                                   <step.icon className="w-3 h-3 text-muted-foreground/40" />
                                 )}
@@ -554,7 +554,7 @@ export default function Dashboard() {
                             <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }}
                               transition={{ duration: 0.5, delay: 0.15 + i * 0.04 }}
                               className="h-full rounded-full"
-                              style={{ background: cat.type === "red" ? "#B34A3C" : "#174A45" }} />
+                              style={{ background: cat.type === "red" ? "#A9574D" : "#607568" }} />
                           </div>
                         </motion.div>
                       );
