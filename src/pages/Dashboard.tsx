@@ -48,17 +48,17 @@ const verdictConfig: Record<Verdict, {
 }> = {
   likely_real: {
     label: "Likely Credible", icon: CheckCircle2, color: "text-primary",
-    bg: "bg-primary/8", border: "border-primary/20", accentColor: "#174A45",
+    bg: "bg-primary/8", border: "border-primary/20", accentColor: "#2DD4A8",
     description: "This content appears to be based on credible sourcing and journalistic standards.",
   },
   uncertain: {
     label: "Uncertain", icon: AlertTriangle, color: "text-accent",
-    bg: "bg-accent/10", border: "border-accent/25", accentColor: "#B8873A",
+    bg: "bg-accent/10", border: "border-accent/25", accentColor: "#C4985A",
     description: "This content has a mix of credible and questionable elements. Exercise caution.",
   },
   likely_fake: {
     label: "Likely Misleading", icon: XCircle, color: "text-destructive",
-    bg: "bg-destructive/10", border: "border-destructive/20", accentColor: "#B34A3C",
+    bg: "bg-destructive/10", border: "border-destructive/20", accentColor: "#E85D4A",
     description: "This content shows multiple indicators of misinformation or manipulation.",
   },
 };
@@ -252,23 +252,23 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* ─── Nav — Dark Green ─── */}
-      <nav className="sticky top-0 z-50" style={{ background: "#174A45" }}>
+      <nav className="sticky top-0 z-50"                style={{ background: "rgba(45,212,168,0.06)" }}>
         <div className="mx-auto max-w-6xl px-4 sm:px-6 h-12 flex items-center justify-between">
           <button type="button" className="cursor-pointer flex items-center gap-2" onClick={() => navigate("/")}>
             <Shield className="w-5 h-5" style={{ color: "#FFFCF6" }} />
-            <span className="font-bold tracking-wide uppercase text-sm" style={{ fontFamily: "'DM Serif Display', serif", color: "#FFFCF6" }}>Veritas</span>
+            <span className="font-bold tracking-[0.15em] uppercase text-sm" style={{ fontFamily: "'DM Serif Display', serif", color: "#E8E4DC" }}>Veritas</span>
           </button>
           <div className="flex items-center gap-0.5">
             {navItems.map(item => (
               <Button key={item.key} variant="ghost" size="sm"
                 className={`cursor-pointer gap-1 text-[10px] sm:text-xs px-2 sm:px-2.5 h-7 rounded ${activeView === item.key ? "" : ""}`}
-                style={activeView === item.key ? { background: "rgba(255,252,246,0.15)", color: "#FFFCF6" } : { color: "rgba(255,252,246,0.7)" }}
+                style={activeView === item.key ? { background: "rgba(45,212,168,0.1)", color: "#2DD4A8" } : { color: "#7A8280" }}
                 disabled={item.disabled} onClick={() => setActiveView(item.key)}>
                 <item.icon className="w-3 h-3" /><span className="hidden md:inline">{item.label}</span>
               </Button>
             ))}
             <div className="w-px h-4 mx-1" style={{ background: "rgba(255,252,246,0.2)" }} />
-            <Button variant="ghost" size="icon" className="cursor-pointer h-7 w-7" style={{ color: "rgba(255,252,246,0.7)" }} onClick={() => navigate("/")}>
+            <Button variant="ghost" size="icon" className="cursor-pointer h-7 w-7" style={{ color: "#7A8280" }} onClick={() => navigate("/")}>
               <Home className="w-3.5 h-3.5" />
             </Button>
           </div>
@@ -310,7 +310,7 @@ export default function Dashboard() {
                                 {isDone ? (
                                   <CheckCircle2 className="w-3 h-3 text-primary" />
                                 ) : isActive ? (
-                                  <Loader2 className="w-3 h-3 text-primary animate-spin" />
+                                  <Loader2 className="w-3 h-3 animate-spin" style={{color: "#2DD4A8"}} />
                                 ) : (
                                   <step.icon className="w-3 h-3 text-muted-foreground/40" />
                                 )}
