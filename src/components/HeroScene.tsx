@@ -2,74 +2,219 @@
 import { useRef, useEffect } from "react";
 import * as THREE from "three";
 
-/* ─── Data: floating panels ─── */
+/* ─── Panel Data: realistic editorial content ─── */
 const PANELS = [
-  { text: "BREAKING: Scientists Confirm\nNew Species in Deep Ocean", color: "#E2DDD4", x: -3.2, y: 1.2, z: -1, rot: 0.15, w: 2.8, h: 1.6, opacity: 0.7 },
-  { text: "Anonymous Sources Claim\nGovernment Cover-Up", color: "#E85D4A", x: 2.8, y: 0.8, z: -2, rot: -0.12, w: 2.4, h: 1.4, opacity: 0.5 },
-  { text: "VERIFIED ✓\nNamed officials, cited statistics\nMultiple independent sources", color: "#3EE8B8", x: -2.5, y: -1.5, z: -0.5, rot: 0.08, w: 2.6, h: 1.2, opacity: 0.6 },
-  { text: "MISLEADING ✗\nSensational headline\nNo verifiable sources", color: "#E85D4A", x: 3.0, y: -1.0, z: -1.5, rot: -0.1, w: 2.2, h: 1.3, opacity: 0.45 },
-  { text: "CREDIBILITY: 92%\nSource: Nature Journal\nPeer-reviewed", color: "#D4A85C", x: -0.5, y: 2.0, z: -2.5, rot: 0.05, w: 2.0, h: 1.0, opacity: 0.35 },
-  { text: "FACT-CHECK RESULTS\n3 Red Flags Detected\nSeverity: HIGH", color: "#E85D4A", x: 0.8, y: -2.0, z: -1.8, rot: -0.06, w: 2.3, h: 1.1, opacity: 0.4 },
-  { text: "LIAR DATASET\nWang (2017)\n14,403 statements", color: "#6B7270", x: -4.0, y: 0.0, z: -3, rot: 0.2, w: 1.8, h: 0.9, opacity: 0.25 },
-  { text: "LOGICAL CONSISTENCY\nInternal contradictions: 0\nArgument structure: VALID", color: "#3EE8B8", x: 4.2, y: 0.2, z: -2.8, rot: -0.18, w: 2.0, h: 1.0, opacity: 0.3 },
+  // Main article — large, front-left
+  {
+    type: "article" as const,
+    lines: [
+      { text: "THE DAILY CHRONICLE", size: 7, weight: 700, color: "#E2DDD4", y: 0 },
+      { text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━", size: 5, weight: 400, color: "#1A211E", y: 12 },
+      { text: "Scientists Confirm New Species", size: 14, weight: 700, color: "#E2DDD4", y: 28 },
+      { text: "Discovered in Deep Ocean", size: 14, weight: 700, color: "#E2DDD4", y: 46 },
+      { text: "Expedition", size: 14, weight: 700, color: "#E2DDD4", y: 64 },
+      { text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━", size: 5, weight: 400, color: "#1A211E", y: 80 },
+      { text: "Marine biologists from the University of Oxford", size: 7, weight: 400, color: "#6B7270", y: 96 },
+      { text: "have identified a previously unknown deep-sea", size: 7, weight: 400, color: "#6B7270", y: 108 },
+      { text: "species in the Mariana Trench at 8,200 meters.", size: 7, weight: 400, color: "#6B7270", y: 120 },
+      { text: "Lead researcher Dr. Sarah Chen published", size: 7, weight: 400, color: "#6B7270", y: 132 },
+      { text: "the findings in Nature on March 15, 2025.", size: 7, weight: 400, color: "#6B7270", y: 144 },
+    ],
+    w: 3.2, h: 2.4, x: -2.0, y: 0.3, z: 0, rot: 0.06,
+    bgColor: "#0E1210", borderColor: "#1A211E",
+  },
+  // Credibility score card — overlapping, right
+  {
+    type: "score" as const,
+    lines: [
+      { text: "CREDIBILITY SCORE", size: 7, weight: 500, color: "#6B7270", y: 0 },
+      { text: "92", size: 48, weight: 700, color: "#3EE8B8", y: 30 },
+      { text: "LIKELY CREDIBLE", size: 9, weight: 600, color: "#3EE8B8", y: 88 },
+      { text: "━━━━━━━━━━━━━━━━━━", size: 4, weight: 400, color: "#1A211E", y: 104 },
+      { text: "Named sources: ✓", size: 7, weight: 400, color: "#3EE8B8", y: 118 },
+      { text: "Citations: ✓", size: 7, weight: 400, color: "#3EE8B8", y: 130 },
+      { text: "Balance: ✓", size: 7, weight: 400, color: "#3EE8B8", y: 142 },
+      { text: "Logic: ✓", size: 7, weight: 400, color: "#3EE8B8", y: 154 },
+    ],
+    w: 1.8, h: 2.2, x: 1.6, y: 0.8, z: -0.4, rot: -0.04,
+    bgColor: "#0B0E0D", borderColor: "#3EE8B830",
+  },
+  // Misleading article — back, angled
+  {
+    type: "article" as const,
+    lines: [
+      { text: "EXPOSED!!!", size: 12, weight: 700, color: "#E85D4A", y: 0 },
+      { text: "Secret Cure Hidden", size: 11, weight: 700, color: "#E2DDD4", y: 18 },
+      { text: "by Big Pharma", size: 11, weight: 700, color: "#E2DDD4", y: 34 },
+      { text: "━━━━━━━━━━━━━━━━━━", size: 4, weight: 400, color: "#1A211E", y: 50 },
+      { text: "Anonymous insider known only as", size: 6, weight: 400, color: "#6B7270", y: 62 },
+      { text: "'Dr. Truth' revealed in a viral post", size: 6, weight: 400, color: "#6B7270", y: 74 },
+      { text: "that a simple mixture can cure", size: 6, weight: 400, color: "#6B7270", y: 86 },
+      { text: "ALL diseases!!!", size: 6, weight: 600, color: "#E85D4A", y: 98 },
+    ],
+    w: 2.4, h: 1.8, x: 3.2, y: -0.6, z: -1.2, rot: -0.12,
+    bgColor: "#0E1210", borderColor: "#E85D4A25",
+  },
+  // Source verification card
+  {
+    type: "verification" as const,
+    lines: [
+      { text: "SOURCE VERIFICATION", size: 7, weight: 600, color: "#D4A85C", y: 0 },
+      { text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━", size: 4, weight: 400, color: "#1A211E", y: 14 },
+      { text: "University of Oxford", size: 8, weight: 500, color: "#E2DDD4", y: 30 },
+      { text: "✓ Verified institution", size: 6, weight: 400, color: "#3EE8B8", y: 44 },
+      { text: "Journal: Nature", size: 8, weight: 500, color: "#E2DDD4", y: 62 },
+      { text: "✓ Peer-reviewed", size: 6, weight: 400, color: "#3EE8B8", y: 76 },
+      { text: "Lead: Dr. Sarah Chen", size: 8, weight: 500, color: "#E2DDD4", y: 94 },
+      { text: "✓ Named researcher", size: 6, weight: 400, color: "#3EE8B8", y: 108 },
+      { text: "NSF Funding: ✓", size: 6, weight: 400, color: "#3EE8B8", y: 126 },
+    ],
+    w: 2.0, h: 1.8, x: -0.2, y: -1.6, z: -0.6, rot: 0.03,
+    bgColor: "#0B0E0D", borderColor: "#D4A85C25",
+  },
+  // Red flags card
+  {
+    type: "flags" as const,
+    lines: [
+      { text: "RED FLAGS", size: 7, weight: 600, color: "#E85D4A", y: 0 },
+      { text: "02 DETECTED", size: 8, weight: 700, color: "#E85D4A", y: 16 },
+      { text: "━━━━━━━━━━━━━━━━━━━━━", size: 4, weight: 400, color: "#1A211E", y: 32 },
+      { text: "✗ Anonymous sourcing", size: 6, weight: 400, color: "#E85D4A", y: 46 },
+      { text: "✗ No verifiable citations", size: 6, weight: 400, color: "#E85D4A", y: 58 },
+    ],
+    w: 1.6, h: 1.2, x: 2.8, y: 2.0, z: -0.8, rot: 0.08,
+    bgColor: "#0E1210", borderColor: "#E85D4A20",
+  },
+  // Language analysis
+  {
+    type: "analysis" as const,
+    lines: [
+      { text: "LANGUAGE ANALYSIS", size: 7, weight: 600, color: "#3EE8B8", y: 0 },
+      { text: "━━━━━━━━━━━━━━━━━━━━━━━", size: 4, weight: 400, color: "#1A211E", y: 14 },
+      { text: "Tone: Professional", size: 6, weight: 400, color: "#6B7270", y: 28 },
+      { text: "Sensationalism: Low", size: 6, weight: 400, color: "#6B7270", y: 40 },
+      { text: "Emotional appeals: None", size: 6, weight: 400, color: "#6B7270", y: 52 },
+      { text: "ALL CAPS: No", size: 6, weight: 400, color: "#3EE8B8", y: 64 },
+      { text: "Exclamation marks: 0", size: 6, weight: 400, color: "#3EE8B8", y: 76 },
+    ],
+    w: 1.6, h: 1.4, x: -3.4, y: -0.8, z: -0.9, rot: 0.1,
+    bgColor: "#0B0E0D", borderColor: "#3EE8B815",
+  },
 ];
 
-/* ─── Data: connecting lines ─── */
-const LINES = [
-  { from: 0, to: 2, color: "#3EE8B8" },
-  { from: 1, to: 3, color: "#E85D4A" },
-  { from: 0, to: 4, color: "#D4A85C" },
-  { from: 2, to: 5, color: "#3EE8B8" },
-  { from: 6, to: 0, color: "#6B7270" },
-  { from: 7, to: 3, color: "#6B7270" },
+/* ─── Connecting evidence lines ─── */
+const EVIDENCE_LINES = [
+  { from: 0, to: 1, color: "#3EE8B8" },   // article → credibility
+  { from: 0, to: 3, color: "#D4A85C" },   // article → source verification
+  { from: 2, to: 4, color: "#E85D4A" },   // fake article → red flags
+  { from: 0, to: 5, color: "#3EE8B8" },   // article → language analysis
+  { from: 1, to: 3, color: "#6B7270" },   // credibility → source verification
 ];
 
-/* ─── Data: evidence dots ─── */
-const DOTS = [
-  { x: -1.5, y: 0.5, z: 0.2, color: "#3EE8B8", size: 0.04 },
-  { x: 1.8, y: -0.3, z: 0.1, color: "#E85D4A", size: 0.03 },
-  { x: -0.8, y: -1.2, z: 0.3, color: "#D4A85C", size: 0.035 },
-  { x: 2.5, y: 1.5, z: 0.15, color: "#3EE8B8", size: 0.025 },
-  { x: -3.0, y: -0.8, z: 0.05, color: "#6B7270", size: 0.03 },
-  { x: 0.3, y: 1.8, z: 0.25, color: "#3EE8B8", size: 0.04 },
-  { x: 3.5, y: -1.5, z: 0.1, color: "#E85D4A", size: 0.025 },
-];
+/* ─── Verification seal ─── */
+const SEAL = {
+  x: 0, y: 0.2, z: 0.5,
+  radius: 0.55,
+};
 
-function createTextTexture(text: string, color: string, w: number, h: number): THREE.CanvasTexture {
-  const canvas = document.createElement("canvas");
+function createPanelTexture(panel: typeof PANELS[0]): THREE.CanvasTexture {
   const scale = 2;
-  canvas.width = w * 100 * scale;
-  canvas.height = h * 100 * scale;
+  const pw = panel.w * 100 * scale;
+  const ph = panel.h * 100 * scale;
+  const canvas = document.createElement("canvas");
+  canvas.width = pw;
+  canvas.height = ph;
   const ctx = canvas.getContext("2d")!;
   ctx.scale(scale, scale);
 
+  const w = panel.w * 100;
+  const h = panel.h * 100;
+
   // Background
-  ctx.fillStyle = "rgba(14, 18, 16, 0.85)";
-  ctx.fillRect(0, 0, w * 100, h * 100);
+  ctx.fillStyle = panel.bgColor;
+  ctx.fillRect(0, 0, w, h);
 
   // Border
-  ctx.strokeStyle = color + "30";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(4, 4, w * 100 - 8, h * 100 - 8);
+  const borderAlpha = panel.borderColor.includes("#") ? panel.borderColor.slice(-2) : "30";
+  ctx.strokeStyle = panel.borderColor;
+  ctx.lineWidth = 0.5;
+  ctx.strokeRect(3, 3, w - 6, h - 6);
 
-  // Top accent line
-  ctx.fillStyle = color + "60";
-  ctx.fillRect(4, 4, w * 100 - 8, 2);
+  // Top accent
+  const accentColor = panel.lines[0]?.color || "#3EE8B8";
+  ctx.fillStyle = accentColor + "40";
+  ctx.fillRect(3, 3, w - 6, 1.5);
 
-  // Text
-  const lines = text.split("\n");
-  const fontSize = Math.min(11, (w * 100 - 30) / Math.max(...lines.map(l => l.length)) * 1.1);
-  ctx.font = `500 ${fontSize}px 'Inter', sans-serif`;
-  ctx.fillStyle = color;
-  ctx.textBaseline = "top";
-
-  const lineH = fontSize * 1.5;
-  const totalH = lines.length * lineH;
-  const startY = (h * 100 - totalH) / 2;
-
-  lines.forEach((line, i) => {
-    ctx.fillText(line, 14, startY + i * lineH);
+  // Render text lines
+  panel.lines.forEach((line) => {
+    ctx.font = `${line.weight} ${line.size}px 'Inter', 'Helvetica Neue', sans-serif`;
+    ctx.fillStyle = line.color;
+    ctx.textBaseline = "top";
+    ctx.fillText(line.text, 14, 20 + line.y);
   });
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.needsUpdate = true;
+  return texture;
+}
+
+function createSealTexture(): THREE.CanvasTexture {
+  const scale = 2;
+  const size = 200 * scale;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d")!;
+  ctx.scale(scale, scale);
+
+  const cx = 100, cy = 100, r = 80;
+
+  // Outer ring
+  ctx.strokeStyle = "#3EE8B860";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // Inner ring
+  ctx.strokeStyle = "#3EE8B830";
+  ctx.lineWidth = 0.5;
+  ctx.beginPath();
+  ctx.arc(cx, cy, r - 10, 0, Math.PI * 2);
+  ctx.stroke();
+
+  // VERITAS text around the circle
+  ctx.font = "600 8px 'Inter', sans-serif";
+  ctx.fillStyle = "#3EE8B890";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  const text = "· VERIFIED · VERITAS · ";
+  const angleStep = (Math.PI * 2) / text.length;
+  for (let i = 0; i < text.length; i++) {
+    const angle = -Math.PI / 2 + i * angleStep;
+    ctx.save();
+    ctx.translate(cx + Math.cos(angle) * (r - 20), cy + Math.sin(angle) * (r - 20));
+    ctx.rotate(angle + Math.PI / 2);
+    ctx.fillText(text[i], 0, 0);
+    ctx.restore();
+  }
+
+  // Center checkmark
+  ctx.strokeStyle = "#3EE8B8";
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.beginPath();
+  ctx.moveTo(cx - 12, cy);
+  ctx.lineTo(cx - 4, cy + 10);
+  ctx.lineTo(cx + 14, cy - 10);
+  ctx.stroke();
+
+  // VERITAS text below
+  ctx.font = "700 10px 'Inter', sans-serif";
+  ctx.fillStyle = "#3EE8B8";
+  ctx.textAlign = "center";
+  ctx.fillText("VERITAS", cx, cy + r - 8);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.needsUpdate = true;
@@ -78,13 +223,14 @@ function createTextTexture(text: string, color: string, w: number, h: number): T
 
 export default function HeroScene() {
   const containerRef = useRef<HTMLDivElement>(null);
-  const sceneRef = useRef<{
+  const stateRef = useRef<{
     scene: THREE.Scene;
     camera: THREE.PerspectiveCamera;
     renderer: THREE.WebGLRenderer;
     panelMeshes: THREE.Mesh[];
     lineMeshes: THREE.Line[];
-    dotMeshes: THREE.Mesh[];
+    sealMesh: THREE.Mesh;
+    scanPlane: THREE.Mesh;
     mouse: THREE.Vector2;
     targetMouse: THREE.Vector2;
     clock: THREE.Clock;
@@ -98,140 +244,116 @@ export default function HeroScene() {
     const w = container.clientWidth;
     const h = container.clientHeight;
 
-    // Scene
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x080A09, 0.08);
+    scene.fog = new THREE.FogExp2(0x080A09, 0.06);
 
-    // Camera
-    const camera = new THREE.PerspectiveCamera(50, w / h, 0.1, 100);
-    camera.position.set(0, 0, 6);
+    const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
+    camera.position.set(0, 0, 7);
 
-    // Renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(w, h);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setClearColor(0x000000, 0);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(renderer.domElement);
 
-    // Lights
-    const ambient = new THREE.AmbientLight(0xffffff, 0.15);
+    // Lighting — editorial, directional
+    const ambient = new THREE.AmbientLight(0xffffff, 0.12);
     scene.add(ambient);
-    const key = new THREE.DirectionalLight(0xE2DDD4, 0.4);
-    key.position.set(5, 5, 5);
+    const key = new THREE.DirectionalLight(0xE2DDD4, 0.5);
+    key.position.set(4, 6, 5);
+    key.castShadow = true;
     scene.add(key);
-    const fill = new THREE.PointLight(0x3EE8B8, 0.3, 20);
-    fill.position.set(-5, 2, 3);
+    const fill = new THREE.PointLight(0x3EE8B8, 0.2, 20);
+    fill.position.set(-6, 2, 4);
     scene.add(fill);
-    const rim = new THREE.PointLight(0xD4A85C, 0.15, 15);
-    rim.position.set(3, -3, -2);
+    const rim = new THREE.PointLight(0xD4A85C, 0.1, 15);
+    rim.position.set(5, -4, -3);
     scene.add(rim);
 
     // Create panel meshes
     const panelMeshes: THREE.Mesh[] = [];
     PANELS.forEach((p) => {
-      const texture = createTextTexture(p.text, p.color, p.w, p.h);
+      const texture = createPanelTexture(p);
       const geo = new THREE.PlaneGeometry(p.w, p.h);
       const mat = new THREE.MeshStandardMaterial({
         map: texture,
         transparent: true,
-        opacity: p.opacity,
+        opacity: 0.95,
         side: THREE.DoubleSide,
-        roughness: 0.8,
-        metalness: 0.1,
+        roughness: 0.85,
+        metalness: 0.05,
       });
       const mesh = new THREE.Mesh(geo, mat);
       mesh.position.set(p.x, p.y, p.z);
       mesh.rotation.set(0, 0, p.rot);
-      mesh.userData = { baseX: p.x, baseY: p.y, baseZ: p.z, baseRot: p.rot, index: panelMeshes.length };
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      mesh.userData = { baseX: p.x, baseY: p.y, baseZ: p.z, baseRot: p.rot, idx: panelMeshes.length };
       scene.add(mesh);
       panelMeshes.push(mesh);
     });
 
-    // Create connecting lines
+    // Verification seal
+    const sealTexture = createSealTexture();
+    const sealGeo = new THREE.PlaneGeometry(SEAL.radius * 2, SEAL.radius * 2);
+    const sealMat = new THREE.MeshStandardMaterial({
+      map: sealTexture,
+      transparent: true,
+      opacity: 0.85,
+      side: THREE.DoubleSide,
+      roughness: 0.3,
+      metalness: 0.6,
+    });
+    const sealMesh = new THREE.Mesh(sealGeo, sealMat);
+    sealMesh.position.set(SEAL.x, SEAL.y, SEAL.z);
+    scene.add(sealMesh);
+
+    // Scanning plane — thin line that moves across panels
+    const scanGeo = new THREE.PlaneGeometry(0.015, 3.5);
+    const scanMat = new THREE.MeshBasicMaterial({
+      color: 0x3EE8B8,
+      transparent: true,
+      opacity: 0.3,
+      side: THREE.DoubleSide,
+    });
+    const scanPlane = new THREE.Mesh(scanGeo, scanMat);
+    scanPlane.position.z = 0.3;
+    scene.add(scanPlane);
+
+    // Evidence lines
     const lineMeshes: THREE.Line[] = [];
-    LINES.forEach((l) => {
+    EVIDENCE_LINES.forEach((l) => {
       const from = PANELS[l.from];
       const to = PANELS[l.to];
-      const points = [
+      const mid = new THREE.Vector3(
+        (from.x + to.x) / 2,
+        (from.y + to.y) / 2,
+        Math.max(from.z, to.z) + 0.3
+      );
+      const curve = new THREE.QuadraticBezierCurve3(
         new THREE.Vector3(from.x, from.y, from.z),
-        new THREE.Vector3(
-          (from.x + to.x) / 2,
-          (from.y + to.y) / 2,
-          (from.z + to.z) / 2 - 0.3
-        ),
-        new THREE.Vector3(to.x, to.y, to.z),
-      ];
-      const curve = new THREE.QuadraticBezierCurve3(...points);
-      const curvePoints = curve.getPoints(30);
-      const geo = new THREE.BufferGeometry().setFromPoints(curvePoints);
-      const color = new THREE.Color(l.color);
-      const mat = new THREE.LineBasicMaterial({ color, transparent: true, opacity: 0.12 });
+        mid,
+        new THREE.Vector3(to.x, to.y, to.z)
+      );
+      const points = curve.getPoints(40);
+      const geo = new THREE.BufferGeometry().setFromPoints(points);
+      const mat = new THREE.LineBasicMaterial({
+        color: new THREE.Color(l.color),
+        transparent: true,
+        opacity: 0.1,
+      });
       const line = new THREE.Line(geo, mat);
       scene.add(line);
       lineMeshes.push(line);
     });
-
-    // Create evidence dots
-    const dotMeshes: THREE.Mesh[] = [];
-    DOTS.forEach((d) => {
-      const geo = new THREE.SphereGeometry(d.size, 12, 12);
-      const mat = new THREE.MeshStandardMaterial({
-        color: new THREE.Color(d.color),
-        emissive: new THREE.Color(d.color),
-        emissiveIntensity: 0.6,
-        roughness: 0.2,
-        metalness: 0.8,
-      });
-      const mesh = new THREE.Mesh(geo, mat);
-      mesh.position.set(d.x, d.y, d.z);
-      mesh.userData = { baseY: d.y, phase: Math.random() * Math.PI * 2 };
-      scene.add(mesh);
-      dotMeshes.push(mesh);
-    });
-
-    // Central verification ring
-    const ringGeo = new THREE.TorusGeometry(0.6, 0.008, 16, 64);
-    const ringMat = new THREE.MeshStandardMaterial({
-      color: 0x3EE8B8,
-      emissive: 0x3EE8B8,
-      emissiveIntensity: 0.5,
-      transparent: true,
-      opacity: 0.4,
-      roughness: 0.2,
-      metalness: 0.8,
-    });
-    const ring = new THREE.Mesh(ringGeo, ringMat);
-    ring.rotation.x = Math.PI / 2;
-    scene.add(ring);
-
-    // Inner ring
-    const innerRing = new THREE.Mesh(
-      new THREE.TorusGeometry(0.42, 0.005, 16, 64),
-      new THREE.MeshStandardMaterial({ color: 0x1A211E, transparent: true, opacity: 0.3 })
-    );
-    innerRing.rotation.x = Math.PI / 2;
-    scene.add(innerRing);
-
-    // Checkmark
-    const checkGeo1 = new THREE.BoxGeometry(0.025, 0.2, 0.025);
-    const checkMat = new THREE.MeshStandardMaterial({ color: 0x3EE8B8, emissive: 0x3EE8B8, emissiveIntensity: 1, roughness: 0.1, metalness: 0.9 });
-    const check1 = new THREE.Mesh(checkGeo1, checkMat);
-    check1.position.set(-0.06, 0.0, 0);
-    check1.rotation.z = 0.5;
-    scene.add(check1);
-    const check2 = new THREE.Mesh(
-      new THREE.BoxGeometry(0.025, 0.32, 0.025),
-      checkMat
-    );
-    check2.position.set(0.04, 0.02, 0);
-    scene.add(check2);
 
     // State
     const mouse = new THREE.Vector2(0, 0);
     const targetMouse = new THREE.Vector2(0, 0);
     const clock = new THREE.Clock();
 
-    // Mouse handler
     const onMouse = (e: MouseEvent) => {
       targetMouse.x = (e.clientX / window.innerWidth) * 2 - 1;
       targetMouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
@@ -246,7 +368,6 @@ export default function HeroScene() {
     window.addEventListener("mousemove", onMouse, { passive: true });
     window.addEventListener("touchmove", onTouch, { passive: true });
 
-    // Resize
     const onResize = () => {
       const w2 = container.clientWidth;
       const h2 = container.clientHeight;
@@ -256,67 +377,59 @@ export default function HeroScene() {
     };
     window.addEventListener("resize", onResize);
 
-    // Animate
+    let raf = 0;
     const animate = () => {
+      raf = requestAnimationFrame(animate);
       const t = clock.getElapsedTime();
-      const raf = requestAnimationFrame(animate);
 
       // Smooth mouse
-      mouse.x += (targetMouse.x - mouse.x) * 0.04;
-      mouse.y += (targetMouse.y - mouse.y) * 0.04;
+      mouse.x += (targetMouse.x - mouse.x) * 0.035;
+      mouse.y += (targetMouse.y - mouse.y) * 0.035;
 
-      // Camera subtle movement
-      camera.position.x = mouse.x * 0.5;
-      camera.position.y = mouse.y * 0.3;
+      // Camera parallax
+      camera.position.x = mouse.x * 0.6;
+      camera.position.y = mouse.y * 0.35;
       camera.lookAt(0, 0, -1);
 
-      // Panel movement
+      // Panel float — each at different speed based on depth
       panelMeshes.forEach((mesh) => {
         const ud = mesh.userData;
-        mesh.position.x = ud.baseX + mouse.x * 0.15 * (ud.baseZ + 3);
-        mesh.position.y = ud.baseY + mouse.y * 0.1 * (ud.baseZ + 3) + Math.sin(t * 0.3 + ud.index) * 0.05;
-        mesh.rotation.y = mouse.x * 0.03;
-        mesh.rotation.x = mouse.y * 0.02;
+        const depthFactor = (ud.baseZ + 2) * 0.5; // closer = more movement
+        mesh.position.x = ud.baseX + mouse.x * 0.12 * depthFactor;
+        mesh.position.y = ud.baseY + mouse.y * 0.08 * depthFactor + Math.sin(t * 0.25 + ud.idx * 1.3) * 0.03;
+        mesh.rotation.y = mouse.x * 0.015 * depthFactor;
+        mesh.rotation.x = mouse.y * 0.01 * depthFactor;
       });
 
-      // Ring rotation
-      ring.rotation.z = t * 0.2;
-      innerRing.rotation.z = -t * 0.15;
-      ring.scale.setScalar(1 + Math.sin(t * 1.5) * 0.02);
+      // Seal rotation and float
+      sealMesh.rotation.z = t * 0.1;
+      sealMesh.position.y = SEAL.y + Math.sin(t * 0.4) * 0.04;
+      sealMesh.position.x = SEAL.x + mouse.x * 0.05;
 
-      // Dot float
-      dotMeshes.forEach((mesh) => {
-        const ud = mesh.userData;
-        mesh.position.y = ud.baseY + Math.sin(t * 0.8 + ud.phase) * 0.15;
-      });
+      // Scan line movement
+      scanPlane.position.x = -4 + ((t * 0.4) % 8);
+      scanPlane.material.opacity = 0.15 + Math.sin(t * 2) * 0.1;
 
       renderer.render(scene, camera);
-      sceneRef.current!.raf = raf;
     };
 
-    sceneRef.current = {
-      scene, camera, renderer, panelMeshes, lineMeshes, dotMeshes,
+    stateRef.current = {
+      scene, camera, renderer, panelMeshes, lineMeshes, sealMesh, scanPlane,
       mouse, targetMouse, clock, raf: 0,
     };
     animate();
 
     return () => {
-      cancelAnimationFrame(sceneRef.current?.raf ?? 0);
+      cancelAnimationFrame(raf);
       window.removeEventListener("mousemove", onMouse);
       window.removeEventListener("touchmove", onTouch);
       window.removeEventListener("resize", onResize);
       renderer.dispose();
-      if (container.contains(renderer.domElement)) {
-        container.removeChild(renderer.domElement);
-      }
+      if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
     };
   }, []);
 
   return (
-    <div
-      ref={containerRef}
-      className="absolute inset-0 z-0"
-      style={{ touchAction: "none" }}
-    />
+    <div ref={containerRef} className="absolute inset-0 z-0" style={{ touchAction: "none" }} />
   );
 }

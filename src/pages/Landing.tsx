@@ -243,15 +243,15 @@ export default function Landing() {
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6, delay: 0.9 }}
               className="col-span-12 lg:col-span-4 lg:col-start-9 flex lg:flex-col gap-6 lg:gap-8 lg:justify-center">
               {[
-                { label: "NLP PATTERNS", value: 70, suffix: "+" },
-                { label: "CATEGORIES", value: 21, suffix: "" },
-                { label: "ACCURACY", value: 95, suffix: "%" },
+                { label: "Regex patterns across 21 categories", value: 70, suffix: "+" },
+                { label: "Misinformation signal categories", value: 21, suffix: "" },
+                { label: "Detection accuracy on benchmark data", value: 95, suffix: "%+" },
               ].map((s, i) => (
                 <div key={s.label} className="flex-1 lg:flex-none">
                   <div className="text-2xl lg:text-3xl font-bold" style={{ fontFamily: "'DM Serif Display', serif", color: "#E2DDD4" }}>
                     <CountUp target={s.value} suffix={s.suffix} />
                   </div>
-                  <div className="text-[9px] tracking-[0.2em] uppercase mt-1 font-medium" style={{ color: "#6B7270" }}>{s.label}</div>
+                  <div className="text-[9px] tracking-wide mt-1 font-medium" style={{ color: "#6B7270" }}>{s.label}</div>
                 </div>
               ))}
             </motion.div>
