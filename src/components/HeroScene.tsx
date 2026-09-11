@@ -1,213 +1,155 @@
 "use client";
-import { useRef, useMemo, useCallback } from "react";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Float, Environment } from "@react-three/drei";
-import * as THREE from "three";
+import { useRef, useEffect, useState } from "react";
 
-/* ─── Floating Verification Ring ─── */
-function VerificationRing({ mouse }: { mouse: React.RefObject<THREE.Vector2> }) {
-  const groupRef = useRef<THREE.Group>(null);
-  const ringRef = useRef<THREE.Mesh>(null);
-
-  const ringGeometry = useMemo(() => {
-    return new THREE.TorusGeometry(1.8, 0.02, 16, 128);
-  }, []);
-
-  const glowMaterial = useMemo(() => {
-    return new THREE.MeshStandardMaterial({
-      color: new THREE.Color("#2DD4A8"),
-      emissive: new THREE.Color("#2DD4A8"),
-      emissiveIntensity: 0.8,
-      transparent: true,
-      opacity: 0.6,
-      roughness: 0.2,
-      metalness: 0.8,
-    });
-  }, []);
-
-  useFrame((state) => {
-    if (!groupRef.current) return;
-    const t = state.clock.elapsedTime;
-
-    // Mouse-driven rotation
-    const targetRotX = (mouse.current?.y ?? 0) * 0.3;
-    const targetRotY = (mouse.current?.x ?? 0) * 0.3;
-    groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, targetRotX + Math.sin(t * 0.3) * 0.1, 0.02);
-    groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetRotY + t * 0.08, 0.02);
-
-    // Ring pulse
-    if (ringRef.current) {
-      const scale = 1 + Math.sin(t * 1.5) * 0.02;
-      ringRef.current.scale.set(scale, scale, scale);
-    }
-  });
-
-  return (
-    <group ref={groupRef}>
-      {/* Main verification ring */}
-      <mesh ref={ringRef} geometry={ringGeometry} material={glowMaterial} />
-
-      {/* Inner ring */}
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[1.4, 0.008, 16, 128]} />
-        <meshStandardMaterial color="#1E2522" transparent opacity={0.4} roughness={0.5} />
-      </mesh>
-
-      {/* Outer ring */}
-      <mesh rotation={[Math.PI / 2, 0, 0]}>
-        <torusGeometry args={[2.2, 0.008, 16, 128]} />
-        <meshStandardMaterial color="#1E2522" transparent opacity={0.3} roughness={0.5} />
-      </mesh>
-
-      {/* Center checkmark - vertical line */}
-      <mesh position={[0, 0, 0]}>
-        <boxGeometry args={[0.04, 0.35, 0.04]} />
-        <meshStandardMaterial color="#2DD4A8" emissive="#2DD4A8" emissiveIntensity={1.2} roughness={0.1} metalness={0.9} />
-      </mesh>
-      {/* Checkmark - short diagonal */}
-      <mesh position={[-0.12, -0.08, 0]} rotation={[0, 0, 0.6]}>
-        <boxGeometry args={[0.04, 0.2, 0.04]} />
-        <meshStandardMaterial color="#2DD4A8" emissive="#2DD4A8" emissiveIntensity={1.2} roughness={0.1} metalness={0.9} />
-      </mesh>
-
-      {/* Orbital dots */}
-      {[0, 1, 2, 3, 4, 5].map((i) => {
-        const angle = (i / 6) * Math.PI * 2;
-        const r = 2.6;
-        return (
-          <Float key={i} speed={2 + i * 0.3} rotationIntensity={0} floatIntensity={0.3}>
-            <mesh position={[Math.cos(angle) * r, Math.sin(angle) * r, 0]}>
-              <sphereGeometry args={[0.025, 16, 16]} />
-              <meshStandardMaterial
-                color={i % 2 === 0 ? "#2DD4A8" : "#C4985A"}
-                emissive={i % 2 === 0 ? "#2DD4A8" : "#C4985A"}
-                emissiveIntensity={0.5}
-                roughness={0.1}
-                metalness={0.9}
-              />
-            </mesh>
-          </Float>
-        );
-      })}
-    </group>
-  );
-}
-
-/* ─── Floating Data Lines ─── */
-function DataLines({ mouse }: { mouse: React.RefObject<THREE.Vector2> }) {
-  const groupRef = useRef<THREE.Group>(null);
-
-  const lines = useMemo(() => {
-    const result: Array<{ start: THREE.Vector3; end: THREE.Vector3; color: string }> = [];
-    for (let i = 0; i < 12; i++) {
-      const angle = (i / 12) * Math.PI * 2;
-      const r1 = 3.2 + Math.random() * 0.5;
-      const r2 = 4.0 + Math.random() * 1.0;
-      const start = new THREE.Vector3(Math.cos(angle) * r1, Math.sin(angle) * r1, (Math.random() - 0.5) * 2);
-      const end = new THREE.Vector3(Math.cos(angle) * r2, Math.sin(angle) * r2, (Math.random() - 0.5) * 3);
-      result.push({ start, end, color: i % 3 === 0 ? "#2DD4A8" : i % 3 === 1 ? "#C4985A" : "#1E2522" });
-    }
-    return result;
-  }, []);
-
-  useFrame(() => {
-    if (!groupRef.current) return;
-    const targetRotY = (mouse.current?.x ?? 0) * 0.05;
-    groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetRotY, 0.01);
-  });
-
-  return (
-    <group ref={groupRef}>
-      {lines.map((line, i) => {
-        const mid = new THREE.Vector3().lerpVectors(line.start, line.end, 0.5);
-        const dir = new THREE.Vector3().subVectors(line.end, line.start);
-        const len = dir.length();
-        dir.normalize();
-        const quaternion = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0,1,0), dir);
-        return (
-          <mesh key={i} position={[mid.x, mid.y, mid.z]} quaternion={quaternion}>
-            <cylinderGeometry args={[0.003, 0.003, len, 4]} />
-            <meshBasicMaterial color={line.color} transparent opacity={0.15} />
-          </mesh>
-        );
-      })}
-
-      {/* Floating particles at line endpoints */}
-      {lines.slice(0, 6).map((line, i) => (
-        <Float key={`p-${i}`} speed={1.5 + i * 0.2} floatIntensity={0.5}>
-          <mesh position={[line.end.x, line.end.y, line.end.z]}>
-            <sphereGeometry args={[0.015, 8, 8]} />
-            <meshStandardMaterial color={line.color} emissive={line.color} emissiveIntensity={0.8} transparent opacity={0.6} />
-          </mesh>
-        </Float>
-      ))}
-    </group>
-  );
-}
-
-/* ─── Scanning Plane ─── */
-function ScanningPlane({ mouse }: { mouse: React.RefObject<THREE.Vector2> }) {
-  const meshRef = useRef<THREE.Mesh>(null);
-
-  useFrame((state) => {
-    if (!meshRef.current) return;
-    const t = state.clock.elapsedTime;
-    meshRef.current.position.y = Math.sin(t * 0.5) * 0.5;
-    meshRef.current.rotation.x = Math.PI / 2 + (mouse.current?.y ?? 0) * 0.1;
-    const mat = meshRef.current.material as THREE.MeshStandardMaterial;
-    mat.opacity = 0.03 + Math.sin(t * 2) * 0.01;
-  });
-
-  return (
-    <mesh ref={meshRef} rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
-      <planeGeometry args={[6, 6]} />
-      <meshStandardMaterial color="#2DD4A8" transparent opacity={0.03} side={THREE.DoubleSide} />
-    </mesh>
-  );
-}
-
-/* ─── Scene ─── */
-function Scene({ mouse }: { mouse: React.RefObject<THREE.Vector2> }) {
-  return (
-    <>
-      <ambientLight intensity={0.15} />
-      <pointLight position={[5, 5, 5]} intensity={0.8} color="#E8E4DC" />
-      <pointLight position={[-5, -3, 3]} intensity={0.3} color="#2DD4A8" />
-      <pointLight position={[0, 3, -5]} intensity={0.2} color="#C4985A" />
-
-      <VerificationRing mouse={mouse} />
-      <DataLines mouse={mouse} />
-      <ScanningPlane mouse={mouse} />
-
-      <Environment preset="night" />
-    </>
-  );
-}
-
-/* ─── Export ─── */
 export default function HeroScene() {
-  const mouseRef = useRef<THREE.Vector2>(new THREE.Vector2(0, 0));
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [mouse, setMouse] = useState({ x: 0, y: 0 });
 
-  const handlePointerMove = useCallback((e: React.PointerEvent) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    mouseRef.current.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-    mouseRef.current.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const handleMove = (clientX: number, clientY: number) => {
+      const rect = el.getBoundingClientRect();
+      const x = ((clientX - rect.left) / rect.width - 0.5) * 2;
+      const y = ((clientY - rect.top) / rect.height - 0.5) * 2;
+      setMouse({ x, y });
+    };
+    const onMouse = (e: MouseEvent) => handleMove(e.clientX, e.clientY);
+    const onTouch = (e: TouchEvent) => { const t = e.touches[0]; if (t) handleMove(t.clientX, t.clientY); };
+    el.addEventListener("mousemove", onMouse, { passive: true });
+    el.addEventListener("touchmove", onTouch, { passive: true });
+    return () => { el.removeEventListener("mousemove", onMouse); el.removeEventListener("touchmove", onTouch); };
   }, []);
 
+  const rx = mouse.y * -8;
+  const ry = mouse.x * 8;
+
   return (
-    <div
-      className="absolute inset-0 z-0"
-      onPointerMove={handlePointerMove}
-      style={{ touchAction: "none" }}
-    >
-      <Canvas
-        camera={{ position: [0, 0, 6], fov: 45 }}
-        gl={{ antialias: true, alpha: true }}
-        dpr={[1, 1.5]}
-        style={{ background: "transparent" }}
-      >
-        <Scene mouse={mouseRef} />
-      </Canvas>
+    <div ref={containerRef} className="absolute inset-0 z-0 flex items-center justify-center overflow-hidden" style={{ perspective: "1200px" }}>
+      {/* Grid dot background */}
+      <div className="absolute inset-0 grid-dot-bg opacity-30" />
+
+      {/* Rotating scene */}
+      <div className="relative" style={{
+        transform: `rotateX(${rx}deg) rotateY(${ry}deg)`,
+        transition: "transform 0.3s cubic-bezier(0.22, 1, 0.36, 1)",
+        transformStyle: "preserve-3d",
+      }}>
+        {/* Outer ring */}
+        <div className="absolute -inset-32 sm:-inset-48" style={{
+          border: "1px solid rgba(45,212,168,0.12)",
+          borderRadius: "50%",
+          animation: "spin 30s linear infinite",
+          transformStyle: "preserve-3d",
+        }}>
+          {/* Orbital dots on outer ring */}
+          {[0, 60, 120, 180, 240, 300].map((deg, i) => (
+            <div key={i} className="absolute" style={{
+              top: "50%", left: "50%",
+              transform: `rotate(${deg}deg) translateX(${typeof window !== "undefined" && window.innerWidth < 640 ? 120 : 180}px) translateY(-50%)`,
+            }}>
+              <div className="w-2 h-2 rounded-full" style={{
+                background: i % 2 === 0 ? "#2DD4A8" : "#C4985A",
+                boxShadow: `0 0 8px ${i % 2 === 0 ? "rgba(45,212,168,0.5)" : "rgba(196,152,90,0.5)"}`,
+              }} />
+            </div>
+          ))}
+        </div>
+
+        {/* Middle ring */}
+        <div className="absolute -inset-20 sm:-inset-32" style={{
+          border: "1px solid rgba(45,212,168,0.08)",
+          borderRadius: "50%",
+          animation: "spin 20s linear infinite reverse",
+          transformStyle: "preserve-3d",
+        }}>
+          {[0, 90, 180, 270].map((deg, i) => (
+            <div key={i} className="absolute" style={{
+              top: "50%", left: "50%",
+              transform: `rotate(${deg}deg) translateX(${typeof window !== "undefined" && window.innerWidth < 640 ? 78 : 120}px) translateY(-50%)`,
+            }}>
+              <div className="w-1.5 h-1.5 rounded-full" style={{
+                background: "#2DD4A8",
+                boxShadow: "0 0 6px rgba(45,212,168,0.4)",
+              }} />
+            </div>
+          ))}
+        </div>
+
+        {/* Inner ring */}
+        <div className="absolute -inset-10 sm:-inset-16" style={{
+          border: "1px solid rgba(45,212,168,0.06)",
+          borderRadius: "50%",
+          animation: "spin 12s linear infinite",
+        }} />
+
+        {/* Center verification mark */}
+        <div className="relative z-10 w-24 h-24 sm:w-32 sm:h-32 flex items-center justify-center">
+          {/* Glow */}
+          <div className="absolute inset-0 rounded-full" style={{
+            background: "radial-gradient(circle, rgba(45,212,168,0.15) 0%, transparent 70%)",
+            animation: "pulse 3s ease-in-out infinite",
+          }} />
+          {/* Ring */}
+          <div className="absolute inset-2 sm:inset-3 rounded-full" style={{
+            border: "2px solid rgba(45,212,168,0.4)",
+            boxShadow: "0 0 20px rgba(45,212,168,0.1), inset 0 0 20px rgba(45,212,168,0.05)",
+          }} />
+          {/* Checkmark */}
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none" className="relative z-10">
+            <path d="M12 20L18 26L28 14" stroke="#2DD4A8" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
+              style={{
+                filter: "drop-shadow(0 0 6px rgba(45,212,168,0.6))",
+                strokeDasharray: 40,
+                strokeDashoffset: 0,
+                animation: "drawCheck 1.5s ease-out 0.5s forwards",
+              }} />
+          </svg>
+        </div>
+
+        {/* Floating data lines */}
+        {[
+          { x1: -160, y1: -80, x2: -60, y2: -20, color: "#2DD4A8" },
+          { x1: 160, y1: -60, x2: 60, y2: -15, color: "#C4985A" },
+          { x1: -140, y1: 100, x2: -50, y2: 30, color: "#2DD4A8" },
+          { x1: 150, y1: 80, x2: 55, y2: 25, color: "#C4985A" },
+          { x1: -180, y1: 10, x2: -65, y2: 5, color: "#1E2522" },
+          { x1: 180, y1: -10, x2: 65, y2: -5, color: "#1E2522" },
+        ].map((line, i) => (
+          <svg key={i} className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 0.3 }}>
+            <line
+              x1={`calc(50% + ${line.x1}px)`} y1={`calc(50% + ${line.y1}px)`}
+              x2={`calc(50% + ${line.x2}px)`} y2={`calc(50% + ${line.y2}px)`}
+              stroke={line.color} strokeWidth="0.5"
+            />
+          </svg>
+        ))}
+
+        {/* Floating labels */}
+        {[
+          { text: "NLP ENGINE", x: -200, y: -40, delay: "0.5s" },
+          { text: "70+ PATTERNS", x: 160, y: -80, delay: "0.7s" },
+          { text: "SOURCE CHECK", x: -180, y: 60, delay: "0.9s" },
+          { text: "LOGIC ANALYSIS", x: 170, y: 70, delay: "1.1s" },
+        ].map((label, i) => (
+          <div key={i} className="absolute text-[8px] sm:text-[9px] tracking-[0.2em] font-medium whitespace-nowrap hidden sm:block" style={{
+            left: `calc(50% + ${label.x}px)`,
+            top: `calc(50% + ${label.y}px)`,
+            transform: "translate(-50%, -50%)",
+            color: "#7A8280",
+            opacity: 0,
+            animation: `fadeIn 0.8s ease-out ${label.delay} forwards`,
+          }}>
+            <span className="inline-block w-1.5 h-1.5 rounded-full mr-1.5 align-middle" style={{ background: "#2DD4A8", opacity: 0.5 }} />
+            {label.text}
+          </div>
+        ))}
+      </div>
+
+      {/* Scan line effect */}
+      <div className="absolute inset-0 pointer-events-none" style={{
+        background: "repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(45,212,168,0.008) 3px, rgba(45,212,168,0.008) 4px)",
+      }} />
     </div>
   );
 }

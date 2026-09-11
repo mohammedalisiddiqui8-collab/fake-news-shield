@@ -175,6 +175,26 @@
   100% { background-position: -200% 0; }
 }
 
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.05); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translate(-50%, -50%) translateY(8px); }
+  to { opacity: 0.6; transform: translate(-50%, -50%) translateY(0); }
+}
+
+@keyframes drawCheck {
+  from { stroke-dashoffset: 40; }
+  to { stroke-dashoffset: 0; }
+}
+
 /* ─── Scrollbar ─── */
 ::-webkit-scrollbar {
   width: 6px;
