@@ -10,68 +10,131 @@ import { useRef, useState, useEffect, Suspense, lazy, useCallback } from "react"
 
 const HeroScene = lazy(() => import("@/components/HeroScene"));
 
-/* ─── Animated Tagline — visible DOM-based smoke dissolve ─── */
+/* ─── Animated Tagline — letters dissolve into natural smoke ─── */
 const TAGLINES = ["Facts over fiction.", "Verify before you believe.", "Truth over noise.", "Evidence over opinion."];
 
 function AnimatedTagline() {
   const wrapRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
-  const smokeRef = useRef<HTMLDivElement>(null);
-  const puffsRef = useRef<HTMLDivElement[]>([]);
+  const particleBoxRef = useRef<HTMLDivElement>(null);
+  const poolRef = useRef<HTMLDivElement[]>([]);
   const idxRef = useRef(0);
-  const phaseRef = useRef<"idle" | "smoke">("idle");
+  const phaseRef = useRef<"idle" | "dissolving">("idle");
   const phaseT0 = useRef(0);
   const idleClk = useRef(0);
 
-  // Main animation loop
   useEffect(() => {
     let raf = 0;
     let last = performance.now();
     const IDLE = 3400;
-    const TRANSITION = 1800;
-    const PUFF_COUNT = 35;
+    const DISSOLVE = 1400;
+    const POOL = 300;
+    const FONT = "500 ";
 
-    const turb = (ph: number, t: number) =>
-      Math.sin(ph + t * 0.5) * 0.5 + Math.cos(ph * 1.3 + t * 0.7) * 0.3 + Math.sin(ph * 2.1 - t * 0.4) * 0.2;
-
-    const spawn = (cx: number, cy: number, tw: number) => {
-      const box = smokeRef.current;
+    // Create DOM particle pool once
+    const ensurePool = () => {
+      if (poolRef.current.length > 0) return;
+      const box = particleBoxRef.current;
       if (!box) return;
-      // remove old puffs
-      puffsRef.current.forEach((el) => el.remove());
-      puffsRef.current = [];
-
-      for (let i = 0; i < PUFF_COUNT; i++) {
+      for (let i = 0; i < POOL; i++) {
         const el = document.createElement("div");
-        const a = Math.random() * Math.PI * 2;
-        const dist = Math.random() * tw * 0.45;
-        const ox = cx + Math.cos(a) * dist;
-        const oy = cy + Math.sin(a) * dist * 0.5;
-        const r = 18 + Math.random() * 30;
-        const blur = 8 + Math.random() * 14;
-        const maxOp = 0.25 + Math.random() * 0.30;
-        const grey = Math.random() > 0.4;
-        const rgb = grey ? "200,206,198" : "143,165,150";
-
-        el.style.cssText =
-          `position:absolute;border-radius:50%;pointer-events:none;will-change:transform,opacity;top:0;left:0;width:${r * 2}px;height:${r * 2}px;filter:blur(${blur}px);opacity:0;background:radial-gradient(circle,rgba(${rgb},${maxOp}) 0%,rgba(${rgb},0.08) 60%,transparent 100%);`;
-
-        // Store physics data on the element's dataset
-        el.dataset.ox = String(ox);
-        el.dataset.oy = String(oy);
-        el.dataset.tx = String(ox + (Math.random() - 0.5) * tw * 0.8);
-        el.dataset.ty = String(oy - (20 + Math.random() * 50));
-        el.dataset.r = String(r);
-        el.dataset.born = String(performance.now());
-        el.dataset.life = String(1200 + Math.random() * 600);
-        el.dataset.ph = String(Math.random() * 100);
-        el.dataset.sp = String(0.3 + Math.random() * 0.7);
-        el.dataset.mo = String(maxOp);
-
+        el.style.cssText = "position:absolute;border-radius:50%;pointer-events:none;will-change:transform,opacity;top:0;left:0;opacity:0;";
         box.appendChild(el);
-        puffsRef.current.push(el);
+        poolRef.current.push(el);
       }
     };
+
+    // Sample letter pixel positions from canvas
+    const samplePixels = (
+      text: string,
+      cw: number,
+      ch: number,
+      fs: number,
+    ): { points: Array<{x:number;y:number}>; bounds: {x:number;y:number;w:number;h:number} } => {
+      const off = document.createElement("canvas");
+      off.width = cw; off.height = ch;
+      const c = off.getContext("2d");
+      if (!c) return { points: [], bounds: { x: 0, y: 0, w: cw, h: ch } };
+
+      c.font = `${FONT}${fs}px 'DM Serif Display', 'Georgia', serif`;
+      c.textAlign = "center";
+      c.textBaseline = "middle";
+      c.fillStyle = "white";
+      c.fillText(text, cw / 2, ch / 2);
+
+      const img = c.getImageData(0, 0, cw, ch);
+      const d = img.data;
+      const pts: Array<{x:number;y:number}> = [];
+      const step = 2;
+      let minX = cw, minY = ch, maxX = 0, maxY = 0;
+
+      for (let y = 0; y < ch; y += step) {
+        for (let x = 0; x < cw; x += step) {
+          const i = (y * cw + x) * 4;
+          if (d[i + 3] > 128) {
+            pts.push({ x, y });
+            if (x < minX) minX = x;
+            if (x > maxX) maxX = x;
+            if (y < minY) minY = y;
+            if (y > maxY) maxY = y;
+          }
+        }
+      }
+      return { points: pts, bounds: { x: minX, y: minY, w: maxX - minX, h: maxY - minY } };
+    };
+
+    // Spawn particles from actual letter pixels
+    const spawnFromText = (text: string, now: number) => {
+      const wrap = wrapRef.current;
+      if (!wrap) return;
+      const wRect = wrap.getBoundingClientRect();
+      const cw = Math.max(1, Math.round(wRect.width));
+      const ch = Math.max(1, Math.round(wRect.height));
+      const fs = Math.min(cw * 0.065, 36);
+
+      const { points } = samplePixels(text, cw, ch, fs);
+      if (points.length === 0) return;
+
+      ensurePool();
+
+      // Subsample to fill pool
+      const step = Math.max(1, Math.floor(points.length / POOL));
+      for (let i = 0; i < POOL; i++) {
+        const pt = points[Math.min(i * step, points.length - 1)];
+        const el = poolRef.current[i];
+        if (!el) continue;
+
+        const sz = 3 + Math.random() * 4;
+        const blur = 4 + Math.random() * 8;
+        const grey = Math.random() > 0.35;
+        const rgb = grey ? "200,206,198" : "165,180,165";
+        const mo = 0.18 + Math.random() * 0.32;
+
+        el.style.width = sz * 2 + "px";
+        el.style.height = sz * 2 + "px";
+        el.style.filter = `blur(${blur}px)`;
+        el.style.background = `radial-gradient(circle, rgba(${rgb},${mo}) 0%, rgba(${rgb},0.06) 70%, transparent 100%)`;
+
+        // Physics stored on dataset for zero-RGC animation
+        el.dataset.ox = String(pt.x);
+        el.dataset.oy = String(pt.y);
+        el.dataset.x = String(pt.x);
+        el.dataset.y = String(pt.y);
+        el.dataset.sz = String(sz);
+        el.dataset.ph = String(Math.random() * 6.28);
+        el.dataset.sp = String(0.5 + Math.random() * 1.0);
+        el.dataset.born = String(now);
+        el.dataset.life = String(900 + Math.random() * 700);
+        el.dataset.mo = String(mo);
+        el.dataset.opacity = "0";
+      }
+    };
+
+    // Turbulence noise
+    const turb = (ph: number, t: number, s: number) =>
+      Math.sin(ph + t * s * 0.7) * 0.4 +
+      Math.cos(ph * 1.4 + t * s * 0.9) * 0.35 +
+      Math.sin(ph * 2.3 - t * s * 0.5) * 0.25;
 
     const tick = (now: number) => {
       raf = requestAnimationFrame(tick);
@@ -81,80 +144,91 @@ function AnimatedTagline() {
       const textEl = textRef.current;
       if (!textEl) return;
 
-      // IDLE
+      // ── IDLE ──
       if (phaseRef.current === "idle") {
         idleClk.current += dt;
         textEl.textContent = TAGLINES[idxRef.current];
         textEl.style.opacity = "1";
 
         if (idleClk.current >= IDLE) {
-          const wrap = wrapRef.current;
-          if (wrap) {
-            const wr = wrap.getBoundingClientRect();
-            const tr = textEl.getBoundingClientRect();
-            const cx = (tr.left + tr.right) / 2 - wr.left;
-            const cy = (tr.top + tr.bottom) / 2 - wr.top;
-            spawn(cx, cy, tr.width);
-          }
-          phaseRef.current = "smoke";
+          spawnFromText(TAGLINES[idxRef.current], now);
+          phaseRef.current = "dissolving";
           phaseT0.current = now;
           idleClk.current = 0;
         }
         return;
       }
 
-      // SMOKE PHASE
+      // ── DISSOLVING ──
       const elapsed = now - phaseT0.current;
-      const progress = Math.min(elapsed / TRANSITION, 1);
+      const progress = Math.min(elapsed / DISSOLVE, 1);
 
-      // Text cross-fade
-      const oldOp = Math.max(0, 1 - progress * 2.5);
-      const newOp = Math.max(0, Math.min(1, (progress - 0.5) * 3));
+      // Old text fades out: visible → gone over first 55%
+      const oldOp = Math.max(0, 1 - progress * 1.8);
+      textEl.style.opacity = String(oldOp);
 
-      if (progress < 0.5) {
-        textEl.textContent = TAGLINES[idxRef.current];
-        textEl.style.opacity = String(oldOp);
-      } else {
+      // New text fades in: starts 55%, full by 85%
+      const newOp = Math.max(0, Math.min(1, (progress - 0.55) * 2.85));
+      if (progress > 0.55) {
         textEl.textContent = TAGLINES[(idxRef.current + 1) % TAGLINES.length];
         textEl.style.opacity = String(newOp);
       }
 
-      // Animate each puff
-      for (const el of puffsRef.current) {
+      // Animate particles: letters dissolve into smoke
+      for (let i = 0; i < POOL; i++) {
+        const el = poolRef.current[i];
+        if (!el) continue;
         const d = el.dataset;
+        if (!d.born) continue;
+
         const born = Number(d.born);
         const life = Number(d.life);
         const age = now - born;
-        const tNorm = Math.min(age / life, 1);
+        const t = Math.min(age / life, 1);
 
-        // Position: ease-out drift + turbulence
-        const ease = 1 - Math.pow(1 - tNorm, 3);
-        const tx = turb(Number(d.ph), age * 0.001) * 25 * Number(d.sp);
-        const ty = turb(Number(d.ph) + 50, age * 0.0012) * 10 * Number(d.sp);
-        const x = Number(d.ox) + (Number(d.tx) - Number(d.ox)) * ease + tx;
-        const y = Number(d.oy) + (Number(d.ty) - Number(d.oy)) * ease + ty;
+        // ── Dissolve phase (0→60% of life): particles drift away from letter positions
+        // ── Fade phase (60%→100%): particles fade out
+        const dissolveT = Math.min(t / 0.6, 1);
 
-        // Opacity: quick rise, hold, slow fade
-        const rise = Math.min(tNorm / 0.12, 1);
-        const fade = tNorm > 0.3 ? (tNorm - 0.3) / 0.7 : 0;
-        const mo = Number(d.mo) || 0.3;
-        const op = mo * rise * (1 - fade * 0.95);
+        // Position: organic drift from origin
+        const ox = Number(d.ox);
+        const oy = Number(d.oy);
+        const ph = Number(d.ph);
+        const sp = Number(d.sp);
 
-        // Scale: expand over time
-        const scale = 1 + tNorm * 0.5;
-        const curR = Number(d.r) * scale;
+        // Upward bias + sideways turbulence
+        const driftX = turb(ph, age, sp) * 35;
+        const driftY = -dissolveT * (25 + sp * 20) + turb(ph + 50, age, sp) * 12;
 
-        el.style.width = curR * 2 + "px";
-        el.style.height = curR * 2 + "px";
+        const curX = ox + driftX;
+        const curY = oy + driftY;
+
+        // Opacity: visible during dissolve, fades after
+        const rise = Math.min(t / 0.08, 1);
+        const fade = dissolveT > 0.5 ? (dissolveT - 0.5) / 0.5 : 0;
+        const mo = Number(d.mo);
+        const op = mo * rise * (1 - fade);
+
+        // Size: expand slightly as smoke drifts
+        const baseSz = Number(d.sz);
+        const sz = baseSz * (1 + dissolveT * 0.8);
+
         el.style.opacity = String(Math.max(0, op));
-        el.style.transform = `translate(${x - curR}px, ${y - curR}px)`;
+        el.style.transform = `translate(${curX - sz}px, ${curY - sz}px)`;
+        if (Math.abs(sz - baseSz) > 0.5) {
+          el.style.width = sz * 2 + "px";
+          el.style.height = sz * 2 + "px";
+        }
       }
 
-      // Done
+      // ── Done ──
       if (progress >= 1) {
         idxRef.current = (idxRef.current + 1) % TAGLINES.length;
-        puffsRef.current.forEach((el) => el.remove());
-        puffsRef.current = [];
+        // Hide all pool elements
+        for (let i = 0; i < POOL; i++) {
+          const el = poolRef.current[i];
+          if (el) { el.style.opacity = "0"; delete el.dataset.born; }
+        }
         phaseRef.current = "idle";
         phaseT0.current = now;
       }
@@ -166,7 +240,9 @@ function AnimatedTagline() {
 
   return (
     <div ref={wrapRef} className="relative h-[1.4em] overflow-hidden" style={{ fontFamily: "'DM Serif Display', serif" }}>
-      <div ref={smokeRef} className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }} />
+      {/* Particle layer — behind text */}
+      <div ref={particleBoxRef} className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }} />
+      {/* Text layer */}
       <div ref={textRef} className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 1, color: "#C8CEC6", whiteSpace: "nowrap" }} />
     </div>
   );
