@@ -6,41 +6,43 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
-import { useRef, useState, useEffect, Suspense, lazy } from "react";
+import { useRef, useState, useEffect, Suspense, lazy, useCallback } from "react";
 
 const HeroScene = lazy(() => import("@/components/HeroScene"));
 
-/* ─── Animated Tagline ─── */
-const taglines = ["Truth over noise.", "Clarity over chaos.", "Facts over fiction.", "Evidence over opinion.", "Insight over impulse."];
+/* ─── Animated Tagline (fade + vertical slide, fixed height) ─── */
+const taglines = [
+  "Facts over fiction.",
+  "Verify before you believe.",
+  "Truth over noise.",
+  "Evidence over opinion.",
+];
 
 function AnimatedTagline() {
   const [index, setIndex] = useState(0);
-  const [isDeleting, setIsDeleting] = useState(false);
-  const [displayed, setDisplayed] = useState("");
-  const current = taglines[index];
 
   useEffect(() => {
-    if (!isDeleting) {
-      if (displayed.length < current.length) {
-        const t = setTimeout(() => setDisplayed(current.slice(0, displayed.length + 1)), 45);
-        return () => clearTimeout(t);
-      }
-      const t = setTimeout(() => setIsDeleting(true), 2400);
-      return () => clearTimeout(t);
-    }
-    if (displayed.length > 0) {
-      const t = setTimeout(() => setDisplayed(displayed.slice(0, -1)), 25);
-      return () => clearTimeout(t);
-    }
-    setIsDeleting(false);
-    setIndex((p) => (p + 1) % taglines.length);
-  }, [displayed, isDeleting, current, index]);
+    const t = setInterval(() => {
+      setIndex((p) => (p + 1) % taglines.length);
+    }, 3800);
+    return () => clearInterval(t);
+  }, []);
 
   return (
-    <span style={{ fontFamily: "'DM Serif Display', serif" }}>
-      {displayed}
-      <span className="inline-block w-[1.5px] h-[0.85em] ml-0.5 align-middle" style={{ background: "#8FA596", animation: "blink 1s step-end infinite" }} />
-    </span>
+    <div className="relative h-[1.4em] overflow-hidden" style={{ fontFamily: "'DM Serif Display', serif" }}>
+      {taglines.map((line, i) => (
+        <motion.span
+          key={line}
+          initial={{ opacity: 0, y: 18 }}
+          animate={{ opacity: i === index ? 1 : 0, y: i === index ? 0 : -18 }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          className="absolute inset-0 flex items-center"
+          aria-hidden={i !== index}
+        >
+          {line}
+        </motion.span>
+      ))}
+    </div>
   );
 }
 
