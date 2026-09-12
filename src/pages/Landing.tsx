@@ -10,38 +10,346 @@ import { useRef, useState, useEffect, Suspense, lazy, useCallback } from "react"
 
 const HeroScene = lazy(() => import("@/components/HeroScene"));
 
-/* ─── Animated Tagline (fade + vertical slide, fixed height) ─── */
-const taglines = [
+/* ─── Animated Tagline — smoke / dissolve (particles from letter shapes) ─── */
+const TAGLINES = [
   "Facts over fiction.",
   "Verify before you believe.",
   "Truth over noise.",
   "Evidence over opinion.",
 ];
 
-function AnimatedTagline() {
-  const [index, setIndex] = useState(0);
+interface SmokeParticle {
+  x: number; y: number;
+  tx: number; ty: number;          // target (reform destination)
+  vx: number; vy: number;          // current velocity
+  life: number; maxLife: number;
+  size: number;
+  opacity: number;
+  color: string;
+  rotation: number;
+  rotSpeed: number;
+  delay: number;                   // 0-1, relative start within the transition window
+}
 
+function AnimatedTagline() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const indexRef = useRef(0);
+  const particlesRef = useRef<SmokeParticle[]>([]);
+  const phaseRef = useRef<"idle" | "dissolving" | "forming">("idle");
+  const phaseStartRef = useRef(0);
+  const canvasSizeRef = useRef({ w: 0, h: 0 });
+  const prefersReducedMotion = useRef(false);
+
+  // ─── Detect reduced motion ───
   useEffect(() => {
-    const t = setInterval(() => {
-      setIndex((p) => (p + 1) % taglines.length);
-    }, 3800);
-    return () => clearInterval(t);
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    prefersReducedMotion.current = mq.matches;
+    const handler = (e: MediaQueryListEvent) => { prefersReducedMotion.current = e.matches; };
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
   }, []);
 
-  return (
-    <div className="relative h-[1.4em] overflow-hidden" style={{ fontFamily: "'DM Serif Display', serif" }}>
-      {taglines.map((line, i) => (
+  // ─── Setup canvas + sizes ───
+  useEffect(() => {
+    const container = containerRef.current;
+    const canvas = canvasRef.current;
+    if (!container || !canvas) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const rect = container.getBoundingClientRect();
+    const w = rect.width;
+    const h = rect.height;
+    canvasSizeRef.current = { w, h };
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    canvas.style.width = w + "px";
+    canvas.style.height = h + "px";
+    const ctx = canvas.getContext("2d");
+    if (ctx) ctx.scale(dpr, dpr);
+
+    const ro = new ResizeObserver(() => {
+      const r = container.getBoundingClientRect();
+      canvasSizeRef.current = { w: r.width, h: r.height };
+      canvas.width = r.width * dpr;
+      canvas.height = r.height * dpr;
+      canvas.style.width = r.width + "px";
+      canvas.style.height = r.height + "px";
+      const c = canvas.getContext("2d");
+      if (c) c.scale(dpr, dpr);
+    });
+    ro.observe(container);
+    return () => ro.disconnect();
+  }, []);
+
+  // ─── Sample text pixel positions ───
+  const sampleText = useCallback((text: string): Array<{ x: number; y: number }> => {
+    const { w, h } = canvasSizeRef.current;
+    if (w === 0 || h === 0) return [];
+
+    const offscreen = document.createElement("canvas");
+    offscreen.width = w;
+    offscreen.height = h;
+    const octx = offscreen.getContext("2d");
+    if (!octx) return [];
+
+    // Measure and render the text
+    const baseSize = Math.min(w * 0.065, 36);
+    octx.font = `500 ${baseSize}px 'DM Serif Display', 'Georgia', serif`;
+    octx.textAlign = "center";
+    octx.textBaseline = "middle";
+    octx.fillStyle = "white";
+    octx.fillText(text, w / 2, h / 2);
+
+    const imgData = octx.getImageData(0, 0, w, h);
+    const pixels = imgData.data;
+    const points: Array<{ x: number; y: number }> = [];
+    const step = 3;
+
+    for (let y = 0; y < h; y += step) {
+      for (let x = 0; x < w; x += step) {
+        const i = (y * w + x) * 4;
+        if (pixels[i + 3] > 80) {
+          points.push({ x, y });
+        }
+      }
+    }
+    return points;
+  }, []);
+
+  // ─── Create smoke particles from letter shapes ───
+  const createParticles = useCallback((
+    oldText: string,
+    newText: string,
+  ): SmokeParticle[] => {
+    const oldPts = sampleText(oldText);
+    const newPts = sampleText(newText);
+    if (oldPts.length === 0 || newPts.length === 0) return [];
+
+    // Subsample old points to cap particle count
+    const maxParticles = 400;
+    const sampled: Array<{ x: number; y: number }> = [];
+    const step = Math.max(1, Math.floor(oldPts.length / maxParticles));
+    for (let i = 0; i < oldPts.length && sampled.length < maxParticles; i += step) {
+      sampled.push(oldPts[i]);
+    }
+
+    const particles: SmokeParticle[] = sampled.map((pt) => {
+      // Pick a random new-text point as the reform target
+      const target = newPts[Math.floor(Math.random() * newPts.length)];
+      const angle = Math.random() * Math.PI * 2;
+      const drift = 0.6 + Math.random() * 1.2;
+      return {
+        x: pt.x,
+        y: pt.y,
+        tx: target.x,
+        ty: target.y,
+        vx: Math.cos(angle) * drift,
+        vy: Math.sin(angle) * drift - 0.3, // slight upward drift
+        life: 1,
+        maxLife: 1,
+        size: 1.5 + Math.random() * 2.5,
+        opacity: 0.45 + Math.random() * 0.35,
+        color: Math.random() > 0.3 ? "#C8CEC6" : "#8FA596",
+        rotation: Math.random() * Math.PI * 2,
+        rotSpeed: (Math.random() - 0.5) * 0.04,
+        delay: Math.random() * 0.25,
+      };
+    });
+    return particles;
+  }, [sampleText]);
+
+  // ─── Main animation loop ───
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let animId = 0;
+    let lastTick = performance.now();
+    let idleTimer = 0;
+
+    const DISOLVE_DUR = 1300;
+    const FORM_DUR = 900;
+    const TOTAL = DISOLVE_DUR + FORM_DUR;
+    const IDLE = 3200; // pause between transitions
+
+    // turbulence helper
+    const turb = (x: number, y: number, t: number, scale: number) => {
+      const s = scale || 0.008;
+      return (
+        Math.sin(x * s + t * 0.6) * Math.cos(y * s * 1.3 + t * 0.4) * 0.5 +
+        Math.sin((x + y) * s * 0.7 + t * 0.8) * 0.3 +
+        Math.cos(x * s * 1.6 - y * s + t * 0.5) * 0.2
+      );
+    };
+
+    const frame = (now: number) => {
+      animId = requestAnimationFrame(frame);
+      const dt = Math.min(now - lastTick, 50);
+      lastTick = now;
+
+      const { w, h } = canvasSizeRef.current;
+      if (w === 0) return;
+      ctx.clearRect(0, 0, w, h);
+
+      const phase = phaseRef.current;
+      const elapsed = now - phaseStartRef.current;
+      const particles = particlesRef.current;
+
+      // ── IDLE: draw current text ──
+      if (phase === "idle") {
+        idleTimer += dt;
+
+        // draw text
+        const baseSize = Math.min(w * 0.065, 36);
+        ctx.font = `500 ${baseSize}px 'DM Serif Display', 'Georgia', serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "#C8CEC6";
+        ctx.fillText(TAGLINES[indexRef.current], w / 2, h / 2);
+
+        if (idleTimer >= IDLE) {
+          // begin transition
+          const oldIdx = indexRef.current;
+          const newIdx = (oldIdx + 1) % TAGLINES.length;
+          particlesRef.current = createParticles(TAGLINES[oldIdx], TAGLINES[newIdx]);
+          phaseRef.current = "dissolving";
+          phaseStartRef.current = now;
+          idleTimer = 0;
+        }
+        return;
+      }
+
+      // ── DISSOLVE / FORM ──
+      const progress = Math.min(elapsed / TOTAL, 1);
+
+      // Background text: cross-dissolve
+      const oldAlpha = Math.max(0, 1 - progress * 1.8);
+      const newAlpha = Math.max(0, progress * 2 - 0.8);
+
+      const baseSize = Math.min(w * 0.065, 36);
+      ctx.font = `500 ${baseSize}px 'DM Serif Display', 'Georgia', serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+
+      // old text fading out (behind particles)
+      if (oldAlpha > 0.01) {
+        ctx.globalAlpha = oldAlpha * 0.6;
+        ctx.fillStyle = "#C8CEC6";
+        ctx.fillText(TAGLINES[indexRef.current], w / 2, h / 2);
+      }
+
+      // new text fading in (behind particles)
+      if (newAlpha > 0.01) {
+        ctx.globalAlpha = newAlpha * 0.7;
+        ctx.fillStyle = "#C8CEC6";
+        ctx.fillText(TAGLINES[(indexRef.current + 1) % TAGLINES.length], w / 2, h / 2);
+      }
+      ctx.globalAlpha = 1;
+
+      // update + draw particles
+      for (const p of particles) {
+        const relElapsed = elapsed / TOTAL;
+
+        // delayed start per particle
+        if (relElapsed < p.delay) continue;
+
+        const t = (relElapsed - p.delay) / (1 - p.delay);
+        const dtNorm = dt / 1000;
+
+        if (t < 0.55) {
+          // DISSOLVE: drift + turbulence away from origin
+          const phase_t = t / 0.55;
+          const turbX = turb(p.x, p.y, now * 0.001, 0.006) * 0.8;
+          const turbY = turb(p.y, p.x, now * 0.001 + 100, 0.006) * 0.6;
+
+          p.vx += turbX * dtNorm * 8;
+          p.vy += turbY * dtNorm * 8;
+          p.vx *= 0.97;
+          p.vy *= 0.97;
+          p.x += p.vx;
+          p.y += p.vy;
+          p.rotation += p.rotSpeed;
+          p.life = 1 - phase_t * 0.35;
+          p.opacity = (0.45 + Math.random() * 0.1) * p.life * (1 - phase_t * 0.5);
+          p.size = (1.5 + Math.random() * 0.5) * (1 + phase_t * 0.4);
+        } else {
+          // REFORM: lerp toward target + scale down
+          const phase_t = (t - 0.55) / 0.45;
+          const ease = phase_t < 0.5 ? 2 * phase_t * phase_t : 1 - Math.pow(-2 * phase_t + 2, 2) / 2;
+
+          const turbX = turb(p.tx, p.ty, now * 0.001, 0.01) * 0.15;
+          const turbY = turb(p.ty, p.tx, now * 0.001 + 200, 0.01) * 0.15;
+
+          p.x += (p.tx + turbX - p.x) * ease * 0.12;
+          p.y += (p.ty + turbY - p.y) * ease * 0.12;
+          p.vx *= 0.9;
+          p.vy *= 0.9;
+          p.rotation += p.rotSpeed * 0.3;
+          p.life = 0.65 + ease * 0.35;
+          p.opacity = (0.35 + ease * 0.25) * (1 - ease * 0.3);
+          p.size = Math.max(1.5, p.size * 0.998);
+        }
+
+        // draw particle
+        if (p.opacity <= 0.01) continue;
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.rotation);
+        ctx.globalAlpha = p.opacity;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        // slightly irregular shape
+        const s = p.size;
+        ctx.moveTo(-s, -s * 0.3);
+        ctx.quadraticCurveTo(-s * 0.2, -s, s * 0.5, -s * 0.6);
+        ctx.quadraticCurveTo(s, s * 0.1, s * 0.4, s);
+        ctx.quadraticCurveTo(-s * 0.1, s * 0.7, -s, -s * 0.3);
+        ctx.fill();
+        ctx.restore();
+      }
+      ctx.globalAlpha = 1;
+
+      // transition complete
+      if (progress >= 1) {
+        indexRef.current = (indexRef.current + 1) % TAGLINES.length;
+        particlesRef.current = [];
+        phaseRef.current = "idle";
+        phaseStartRef.current = now;
+      }
+    };
+
+    animId = requestAnimationFrame(frame);
+    return () => cancelAnimationFrame(animId);
+  }, [createParticles]);
+
+  // ─── Reduced motion fallback ───
+  if (prefersReducedMotion.current) {
+    const [idx, setIdx] = useState(0);
+    useEffect(() => {
+      const t = setInterval(() => setIdx((p) => (p + 1) % TAGLINES.length), 3800);
+      return () => clearInterval(t);
+    }, []);
+    return (
+      <div className="relative h-[1.4em]" style={{ fontFamily: "'DM Serif Display', serif" }}>
         <motion.span
-          key={line}
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: i === index ? 1 : 0, y: i === index ? 0 : -18 }}
-          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          key={TAGLINES[idx]}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6 }}
           className="absolute inset-0 flex items-center"
-          aria-hidden={i !== index}
         >
-          {line}
+          {TAGLINES[idx]}
         </motion.span>
-      ))}
+      </div>
+    );
+  }
+
+  return (
+    <div ref={containerRef} className="relative h-[1.4em] overflow-hidden" style={{ fontFamily: "'DM Serif Display', serif" }}>
+      <canvas ref={canvasRef} className="absolute inset-0" />
     </div>
   );
 }
