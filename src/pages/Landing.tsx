@@ -10,282 +10,164 @@ import { useRef, useState, useEffect, Suspense, lazy, useCallback } from "react"
 
 const HeroScene = lazy(() => import("@/components/HeroScene"));
 
-/* ─── Animated Tagline — visible wispy smoke dissolve ─── */
-const TAGLINES = [
-  "Facts over fiction.",
-  "Verify before you believe.",
-  "Truth over noise.",
-  "Evidence over opinion.",
-];
-
-// Each "wisp" is a large, soft, semi-transparent smoke blob
-interface SmokeWisp {
-  x: number; y: number;           // current position
-  originX: number; originY: number;
-  targetX: number; targetY: number;
-  vx: number; vy: number;         // velocity
-  radius: number;                  // 12–40px
-  opacity: number;                 // 0.08–0.25 per wisp
-  hue: number;                     // color variety
-  phase: number;                   // for turbulence offset
-  speed: number;                   // drift multiplier
-  blur: number;                    // extra blur (canvas)
-  birthTime: number;               // when this wisp was created
-  lifespan: number;                // ms before fully faded
-  born: number;                    // animation timestamp it appeared
-}
+/* ─── Animated Tagline — visible DOM-based smoke dissolve ─── */
+const TAGLINES = ["Facts over fiction.", "Verify before you believe.", "Truth over noise.", "Evidence over opinion."];
 
 function AnimatedTagline() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const indexRef = useRef(0);
-  const wispsRef = useRef<SmokeWisp[]>([]);
-  const phaseRef = useRef<"idle" | "transitioning">("idle");
-  const phaseStartRef = useRef(0);
-  const sizeRef = useRef({ w: 0, h: 0 });
-  const reducedMotion = useRef(false);
-
-  useEffect(() => {
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    reducedMotion.current = mq.matches;
-    const h = (e: MediaQueryListEvent) => { reducedMotion.current = e.matches; };
-    mq.addEventListener("change", h);
-    return () => mq.removeEventListener("change", h);
-  }, []);
-
-  // Canvas setup
-  useEffect(() => {
-    const cont = containerRef.current;
-    const cvs = canvasRef.current;
-    if (!cont || !cvs) return;
-    const dpr = window.devicePixelRatio || 1;
-
-    const sync = () => {
-      const r = cont.getBoundingClientRect();
-      sizeRef.current = { w: r.width, h: r.height };
-      cvs.width = r.width * dpr;
-      cvs.height = r.height * dpr;
-      cvs.style.width = r.width + "px";
-      cvs.style.height = r.height + "px";
-      const c = cvs.getContext("2d");
-      if (c) c.setTransform(dpr, 0, 0, dpr, 0, 0);
-    };
-    sync();
-    const ro = new ResizeObserver(sync);
-    ro.observe(cont);
-    return () => ro.disconnect();
-  }, []);
-
-  // Measure text width for smoke spread
-  const getTextWidth = useCallback((text: string): { width: number; height: number } => {
-    const { w, h } = sizeRef.current;
-    if (w === 0) return { width: 200, height: 30 };
-    const offscreen = document.createElement("canvas");
-    offscreen.width = w; offscreen.height = h;
-    const c = offscreen.getContext("2d");
-    if (!c) return { width: 200, height: 30 };
-    const sz = Math.min(w * 0.065, 36);
-    c.font = `500 ${sz}px 'DM Serif Display', 'Georgia', serif`;
-    const m = c.measureText(text);
-    return { width: m.width, height: sz };
-  }, []);
-
-  // Spawn a batch of visible smoke wisps
-  const spawnWisps = useCallback((
-    originX: number, originY: number,
-    spreadX: number, spreadY: number,
-    now: number,
-  ): SmokeWisp[] => {
-    const count = 55 + Math.floor(Math.random() * 20);
-    return Array.from({ length: count }, () => {
-      const angle = Math.random() * Math.PI * 2;
-      const dist = Math.random() * spreadX * 0.5;
-      return {
-        x: originX + Math.cos(angle) * dist,
-        y: originY + Math.sin(angle) * dist * 0.6,
-        originX: originX + Math.cos(angle) * dist,
-        originY: originY + Math.sin(angle) * dist * 0.6,
-        targetX: originX + Math.cos(angle) * (dist + spreadX * (0.3 + Math.random() * 0.4)),
-        targetY: originY - spreadY * (0.5 + Math.random() * 1.2),
-        vx: Math.cos(angle) * (0.2 + Math.random() * 0.6),
-        vy: -(0.3 + Math.random() * 0.8),  // upward drift
-        radius: 12 + Math.random() * 28,    // BIG wisps 12-40px
-        opacity: 0.08 + Math.random() * 0.17, // clearly visible cumulative
-        hue: Math.random(),                  // for color variation
-        phase: Math.random() * Math.PI * 2,
-        speed: 0.4 + Math.random() * 0.8,
-        blur: 6 + Math.random() * 12,
-        birthTime: now,
-        lifespan: 1100 + Math.random() * 500,
-        born: now,
-      };
-    });
-  }, []);
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLDivElement>(null);
+  const smokeRef = useRef<HTMLDivElement>(null);
+  const puffsRef = useRef<HTMLDivElement[]>([]);
+  const idxRef = useRef(0);
+  const phaseRef = useRef<"idle" | "smoke">("idle");
+  const phaseT0 = useRef(0);
+  const idleClk = useRef(0);
 
   // Main animation loop
   useEffect(() => {
-    const cvs = canvasRef.current;
-    if (!cvs) return;
-    const ctx = cvs.getContext("2d");
-    if (!ctx) return;
-
     let raf = 0;
-    let lastNow = performance.now();
-    let idleClock = 0;
-    const IDLE_MS = 3400;       // pause between transitions
-    const TRANSITION_MS = 2000; // total dissolve+form
+    let last = performance.now();
+    const IDLE = 3400;
+    const TRANSITION = 1800;
+    const PUFF_COUNT = 35;
 
-    // Simple noise
-    const n = (x: number, t: number) =>
-      Math.sin(x * 0.7 + t * 0.4) * 0.4 +
-      Math.cos(x * 1.1 + t * 0.6) * 0.3 +
-      Math.sin(x * 2.1 - t * 0.3) * 0.2;
+    const turb = (ph: number, t: number) =>
+      Math.sin(ph + t * 0.5) * 0.5 + Math.cos(ph * 1.3 + t * 0.7) * 0.3 + Math.sin(ph * 2.1 - t * 0.4) * 0.2;
+
+    const spawn = (cx: number, cy: number, tw: number) => {
+      const box = smokeRef.current;
+      if (!box) return;
+      // remove old puffs
+      puffsRef.current.forEach((el) => el.remove());
+      puffsRef.current = [];
+
+      for (let i = 0; i < PUFF_COUNT; i++) {
+        const el = document.createElement("div");
+        const a = Math.random() * Math.PI * 2;
+        const dist = Math.random() * tw * 0.45;
+        const ox = cx + Math.cos(a) * dist;
+        const oy = cy + Math.sin(a) * dist * 0.5;
+        const r = 18 + Math.random() * 30;
+        const blur = 8 + Math.random() * 14;
+        const maxOp = 0.25 + Math.random() * 0.30;
+        const grey = Math.random() > 0.4;
+        const rgb = grey ? "200,206,198" : "143,165,150";
+
+        el.style.cssText =
+          `position:absolute;border-radius:50%;pointer-events:none;will-change:transform,opacity;top:0;left:0;width:${r * 2}px;height:${r * 2}px;filter:blur(${blur}px);opacity:0;background:radial-gradient(circle,rgba(${rgb},${maxOp}) 0%,rgba(${rgb},0.08) 60%,transparent 100%);`;
+
+        // Store physics data on the element's dataset
+        el.dataset.ox = String(ox);
+        el.dataset.oy = String(oy);
+        el.dataset.tx = String(ox + (Math.random() - 0.5) * tw * 0.8);
+        el.dataset.ty = String(oy - (20 + Math.random() * 50));
+        el.dataset.r = String(r);
+        el.dataset.born = String(performance.now());
+        el.dataset.life = String(1200 + Math.random() * 600);
+        el.dataset.ph = String(Math.random() * 100);
+        el.dataset.sp = String(0.3 + Math.random() * 0.7);
+        el.dataset.mo = String(maxOp);
+
+        box.appendChild(el);
+        puffsRef.current.push(el);
+      }
+    };
 
     const tick = (now: number) => {
       raf = requestAnimationFrame(tick);
-      const dt = Math.min(now - lastNow, 50);
-      lastNow = now;
+      const dt = Math.min(now - last, 50);
+      last = now;
 
-      const { w, h } = sizeRef.current;
-      if (w === 0) return;
-      ctx.clearRect(0, 0, w, h);
+      const textEl = textRef.current;
+      if (!textEl) return;
 
-      const sz = Math.min(w * 0.065, 36);
-      const cx = w / 2;
-      const cy = h / 2;
-
-      // ── IDLE ──
+      // IDLE
       if (phaseRef.current === "idle") {
-        idleClock += dt;
-        ctx.font = `500 ${sz}px 'DM Serif Display', 'Georgia', serif`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillStyle = "#C8CEC6";
-        ctx.fillText(TAGLINES[indexRef.current], cx, cy);
+        idleClk.current += dt;
+        textEl.textContent = TAGLINES[idxRef.current];
+        textEl.style.opacity = "1";
 
-        if (idleClock >= IDLE_MS) {
-          const oldText = TAGLINES[indexRef.current];
-          const { width } = getTextWidth(oldText);
-          wispsRef.current = spawnWisps(cx, cy, width * 1.6, sz * 2, now);
-          phaseRef.current = "transitioning";
-          phaseStartRef.current = now;
-          idleClock = 0;
+        if (idleClk.current >= IDLE) {
+          const wrap = wrapRef.current;
+          if (wrap) {
+            const wr = wrap.getBoundingClientRect();
+            const tr = textEl.getBoundingClientRect();
+            const cx = (tr.left + tr.right) / 2 - wr.left;
+            const cy = (tr.top + tr.bottom) / 2 - wr.top;
+            spawn(cx, cy, tr.width);
+          }
+          phaseRef.current = "smoke";
+          phaseT0.current = now;
+          idleClk.current = 0;
         }
         return;
       }
 
-      // ── TRANSITION ──
-      const elapsed = now - phaseStartRef.current;
-      const progress = Math.min(elapsed / TRANSITION_MS, 1);
+      // SMOKE PHASE
+      const elapsed = now - phaseT0.current;
+      const progress = Math.min(elapsed / TRANSITION, 1);
 
-      // Old text fades out: visible at start, gone by 45%
-      const oldAlpha = Math.max(0, 1 - progress * 2.2);
-      if (oldAlpha > 0.01) {
-        ctx.globalAlpha = oldAlpha;
-        ctx.font = `500 ${sz}px 'DM Serif Display', 'Georgia', serif`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillStyle = "#C8CEC6";
-        ctx.fillText(TAGLINES[indexRef.current], cx, cy);
+      // Text cross-fade
+      const oldOp = Math.max(0, 1 - progress * 2.5);
+      const newOp = Math.max(0, Math.min(1, (progress - 0.5) * 3));
+
+      if (progress < 0.5) {
+        textEl.textContent = TAGLINES[idxRef.current];
+        textEl.style.opacity = String(oldOp);
+      } else {
+        textEl.textContent = TAGLINES[(idxRef.current + 1) % TAGLINES.length];
+        textEl.style.opacity = String(newOp);
       }
 
-      // Draw smoke wisps — visible cloud layer
-      for (const wisp of wispsRef.current) {
-        const age = now - wisp.born;
-        if (age < 0) continue;
-        const tNorm = Math.min(age / wisp.lifespan, 1); // 0→1 over lifespan
+      // Animate each puff
+      for (const el of puffsRef.current) {
+        const d = el.dataset;
+        const born = Number(d.born);
+        const life = Number(d.life);
+        const age = now - born;
+        const tNorm = Math.min(age / life, 1);
 
-        // Ease-out for position drift (slow start, smooth continuation)
-        const posT = tNorm < 0.3 ? tNorm / 0.3 : 1;
-        const easePos = 1 - Math.pow(1 - posT, 3);
+        // Position: ease-out drift + turbulence
+        const ease = 1 - Math.pow(1 - tNorm, 3);
+        const tx = turb(Number(d.ph), age * 0.001) * 25 * Number(d.sp);
+        const ty = turb(Number(d.ph) + 50, age * 0.0012) * 10 * Number(d.sp);
+        const x = Number(d.ox) + (Number(d.tx) - Number(d.ox)) * ease + tx;
+        const y = Number(d.oy) + (Number(d.ty) - Number(d.oy)) * ease + ty;
 
-        // Turbulence pushes wisps sideways
-        const turbX = n(wisp.phase + age * 0.0008, age * 0.001) * wisp.speed * 18;
-        const turbY = n(wisp.phase + 50 + age * 0.0006, age * 0.0013) * wisp.speed * 8;
+        // Opacity: quick rise, hold, slow fade
+        const rise = Math.min(tNorm / 0.12, 1);
+        const fade = tNorm > 0.3 ? (tNorm - 0.3) / 0.7 : 0;
+        const mo = Number(d.mo) || 0.3;
+        const op = mo * rise * (1 - fade * 0.95);
 
-        wisp.x = wisp.originX + (wisp.targetX - wisp.originX) * easePos + turbX;
-        wisp.y = wisp.originY + (wisp.targetY - wisp.originY) * easePos + turbY;
+        // Scale: expand over time
+        const scale = 1 + tNorm * 0.5;
+        const curR = Number(d.r) * scale;
 
-        // Opacity: rise quickly, hold, then fade
-        const riseT = Math.min(tNorm / 0.15, 1);
-        const fadeT = tNorm > 0.35 ? (tNorm - 0.35) / 0.65 : 0;
-        const alpha = wisp.opacity * riseT * (1 - fadeT * 0.92);
-
-        if (alpha <= 0.005) continue;
-
-        // Draw a large soft radial-gradient circle
-        const r = wisp.radius * (1 + tNorm * 0.6); // smoke expands
-        ctx.save();
-        ctx.globalAlpha = alpha;
-        ctx.filter = `blur(${wisp.blur}px)`;
-
-        // Colour: mix between warm grey (#C8CEC6) and sage (#8FA596)
-        const greyR = 200, greyG = 206, greyB = 198;
-        const sageR = 143, sageG = 165, sageB = 150;
-        const mix = wisp.hue;
-        const cr = Math.round(greyR + (sageR - greyR) * mix);
-        const cg = Math.round(greyG + (sageG - greyG) * mix);
-        const cb = Math.round(greyB + (sageB - greyB) * mix);
-
-        const grad = ctx.createRadialGradient(wisp.x, wisp.y, 0, wisp.x, wisp.y, r);
-        grad.addColorStop(0, `rgba(${cr},${cg},${cb},${alpha * 2.5})`);
-        grad.addColorStop(0.4, `rgba(${cr},${cg},${cb},${alpha * 1.2})`);
-        grad.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
-
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.arc(wisp.x, wisp.y, r, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.restore();
-      }
-
-      ctx.globalAlpha = 1;
-      ctx.filter = "none";
-
-      // New text fades in: starts at 50%, full by 85%
-      const newAlpha = Math.max(0, Math.min(1, (progress - 0.5) * 2.5));
-      if (newAlpha > 0.01) {
-        ctx.globalAlpha = newAlpha;
-        ctx.font = `500 ${sz}px 'DM Serif Display', 'Georgia', serif`;
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillStyle = "#C8CEC6";
-        ctx.fillText(TAGLINES[(indexRef.current + 1) % TAGLINES.length], cx, cy);
-        ctx.globalAlpha = 1;
+        el.style.width = curR * 2 + "px";
+        el.style.height = curR * 2 + "px";
+        el.style.opacity = String(Math.max(0, op));
+        el.style.transform = `translate(${x - curR}px, ${y - curR}px)`;
       }
 
       // Done
       if (progress >= 1) {
-        indexRef.current = (indexRef.current + 1) % TAGLINES.length;
-        wispsRef.current = [];
+        idxRef.current = (idxRef.current + 1) % TAGLINES.length;
+        puffsRef.current.forEach((el) => el.remove());
+        puffsRef.current = [];
         phaseRef.current = "idle";
-        phaseStartRef.current = now;
+        phaseT0.current = now;
       }
     };
 
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [getTextWidth, spawnWisps]);
-
-  // Reduced motion: simple fade
-  if (reducedMotion.current) {
-    const [idx, setIdx] = useState(0);
-    useEffect(() => {
-      const t = setInterval(() => setIdx((p) => (p + 1) % TAGLINES.length), 3800);
-      return () => clearInterval(t);
-    }, []);
-    return (
-      <div className="relative h-[1.4em]" style={{ fontFamily: "'DM Serif Display', serif" }}>
-        <motion.span key={TAGLINES[idx]} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }} className="absolute inset-0 flex items-center">
-          {TAGLINES[idx]}
-        </motion.span>
-      </div>
-    );
-  }
+  }, []);
 
   return (
-    <div ref={containerRef} className="relative h-[1.4em] overflow-hidden" style={{ fontFamily: "'DM Serif Display', serif" }}>
-      <canvas ref={canvasRef} className="absolute inset-0" />
+    <div ref={wrapRef} className="relative h-[1.4em] overflow-hidden" style={{ fontFamily: "'DM Serif Display', serif" }}>
+      <div ref={smokeRef} className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }} />
+      <div ref={textRef} className="absolute inset-0 flex items-center justify-center" style={{ zIndex: 1, color: "#C8CEC6", whiteSpace: "nowrap" }} />
     </div>
   );
 }
@@ -440,11 +322,8 @@ export default function Landing() {
 
         {/* Content */}
         <motion.div style={{ y: heroY, opacity: heroOpacity }} className="relative z-10 mx-auto max-w-7xl px-5 w-full pt-24">
-          {/* Asymmetric grid */}
           <div className="grid grid-cols-12 gap-4">
-            {/* Left column — typography */}
             <div className="col-span-12 lg:col-span-7">
-              {/* Thin line */}
               <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 0.8, delay: 0.2 }}
                 className="h-px mb-6 origin-left" style={{ background: "linear-gradient(90deg, #8FA596 0%, #8FA596 40%, transparent 100%)", maxWidth: 120 }} />
 
@@ -485,14 +364,13 @@ export default function Landing() {
               </motion.div>
             </div>
 
-            {/* Right column — stats sidebar */}
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.6, delay: 0.9 }}
               className="col-span-12 lg:col-span-4 lg:col-start-9 flex lg:flex-col gap-6 lg:gap-8 lg:justify-center">
               {[
                 { label: "Regex patterns across 21 categories", value: 70, suffix: "+" },
                 { label: "Misinformation signal categories", value: 21, suffix: "" },
                 { label: "Detection accuracy on benchmark data", value: 95, suffix: "%+" },
-              ].map((s, i) => (
+              ].map((s) => (
                 <div key={s.label} className="flex-1 lg:flex-none">
                   <div className="text-2xl lg:text-3xl font-bold" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>
                     <CountUp target={s.value} suffix={s.suffix} />
@@ -504,7 +382,6 @@ export default function Landing() {
           </div>
         </motion.div>
 
-        {/* Bottom gradient */}
         <div className="absolute bottom-0 left-0 right-0 h-24 z-10" style={{ background: "linear-gradient(transparent, #0B0D0C)" }} />
       </section>
 
@@ -521,7 +398,6 @@ export default function Landing() {
               <h2 className="mt-2 text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>What You'll Get</h2>
             </div>
           </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {verdictExamples.map((v, i) => (
               <motion.div key={v.label}
@@ -556,7 +432,6 @@ export default function Landing() {
             <span className="text-[9px] tracking-[0.3em] uppercase font-medium" style={{ color: "#8FA596" }}>Our Approach</span>
             <h2 className="mt-2 text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>How Veritas Works</h2>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             {steps.map((s, i) => (
               <motion.div key={s.step}
@@ -589,7 +464,6 @@ export default function Landing() {
               <h2 className="mt-2 text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>Built for Media Literacy</h2>
             </div>
           </div>
-
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {features.map((f, i) => (
               <motion.div key={f.title}
