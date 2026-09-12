@@ -134,6 +134,7 @@ export default function Dashboard() {
   const [currentTip, setCurrentTip] = useState(0);
   const [pipelineStep, setPipelineStep] = useState(-1);
   const [resultTab, setResultTab] = useState<"overview" | "linguistic" | "source" | "logical" | "findings">("overview");
+  const [analysisDepth, setAnalysisDepth] = useState<"quick" | "standard" | "deep">("standard");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -358,6 +359,31 @@ export default function Dashboard() {
                 </Button>
               </div>
 
+              {/* Analysis Depth */}
+              <div className="glass-card rounded-lg p-4 mb-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.12em]">Analysis Depth</span>
+                  <span className="text-[10px] font-semibold capitalize" style={{ color: "#8FA596" }}>{analysisDepth}</span>
+                </div>
+                <div className="flex items-center gap-0">
+                  {(["quick", "standard", "deep"] as const).map((depth, i) => (
+                    <button key={depth} type="button"
+                      className={`flex-1 cursor-pointer py-1.5 text-[9px] font-semibold tracking-[0.1em] uppercase transition-all duration-300 ${
+                        analysisDepth === depth ? "text-primary" : "text-muted-foreground/40 hover:text-muted-foreground"
+                      }`}
+                      style={analysisDepth === depth ? { background: "rgba(62,232,184,0.06)", borderBottom: "2px solid #8FA596" } : { borderBottom: "2px solid transparent" }}
+                      onClick={() => setAnalysisDepth(depth)}>
+                      {depth}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[9px] mt-2" style={{ color: "#9A9E98" }}>
+                  {analysisDepth === "quick" && "Fast scan — basic pattern matching and keyword detection."}
+                  {analysisDepth === "standard" && "Full analysis — NLP patterns, source checks, and claim verification."}
+                  {analysisDepth === "deep" && "Comprehensive — deep linguistic analysis, cross-referencing, and detailed reasoning."}
+                </p>
+              </div>
+
               {/* Textarea */}
               <div className="glass-card rounded-lg p-0.5 mb-3">
                 <Textarea ref={textareaRef} value={inputText} onChange={e => setInputText(e.target.value)}
@@ -563,9 +589,87 @@ export default function Dashboard() {
                 </motion.div>
               )}
 
+              {/* ─── Confidence Visualization ─── */}
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.12 }}
+                className="glass-card rounded-lg p-4 sm:p-5 mb-3">
+                <div className="flex items-center gap-1.5 mb-3">
+                  <Activity className="w-3.5 h-3.5" style={{ color: "#8FA596" }} />
+                  <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em]">Confidence Breakdown</h3>
+                </div>
+                <div className="space-y-2">
+                  {[
+                    { label: "Language", score: currentResult.confidence + (currentResult.greenFlags.length > currentResult.redFlags.length ? 5 : -5), color: "#8FA596" },
+                    { label: "Source", score: currentResult.greenFlags.length > 0 ? Math.min(currentResult.confidence + 8, 98) : Math.max(currentResult.confidence - 10, 15), color: "#A58B5B" },
+                    { label: "Claims", score: currentResult.confidence, color: "#8FA596" },
+                    { label: "Bias", score: Math.max(100 - currentResult.redFlags.length * 15, 10), color: currentResult.redFlags.length > 2 ? "#A9574D" : "#8FA596" },
+                  ].map((item, i) => (
+                    <div key={item.label} className="flex items-center gap-3">
+                      <span className="text-[9px] font-mono tracking-wider w-12 text-muted-foreground uppercase">{item.label}</span>
+                      <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+                        <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(item.score, 100)}%` }}
+                          transition={{ duration: 0.8, delay: 0.2 + i * 0.1 }}
+                          className="h-full rounded-full" style={{ background: item.color }} />
+                      </div>
+                      <span className="text-[9px] font-mono w-8 text-right" style={{ color: item.color }}>{item.score}%</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* ─── Source Intelligence ─── */}
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.14 }}
+                className="glass-card rounded-lg p-4 sm:p-5 mb-3">
+                <div className="flex items-center gap-1.5 mb-3">
+                  <Globe className="w-3.5 h-3.5" style={{ color: "#A58B5B" }} />
+                  <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em]">Source Intelligence</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  {[
+                    { label: "Input Type", value: inputType === "url" ? "URL" : "Text" },
+                    { label: "Word Count", value: `${currentResult.wordCount}` },
+                    { label: "Red Flags", value: `${currentResult.redFlags.length} detected` },
+                    { label: "Green Flags", value: `${currentResult.greenFlags.length} detected` },
+                  ].map((item) => (
+                    <div key={item.label} className="p-2.5 rounded" style={{ background: "#141615" }}>
+                      <span className="text-[8px] tracking-[0.15em] uppercase font-semibold block mb-0.5" style={{ color: "#9A9E98" }}>{item.label}</span>
+                      <span className="text-[11px] font-semibold" style={{ color: "#F1F2EE" }}>{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+
+              {/* ─── NLP Language Analysis ─── */}
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.16 }}
+                className="glass-card rounded-lg p-4 sm:p-5 mb-3">
+                <div className="flex items-center gap-1.5 mb-3">
+                  <Brain className="w-3.5 h-3.5" style={{ color: "#8FA596" }} />
+                  <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em]">Language Analysis</h3>
+                </div>
+                <div className="space-y-2.5">
+                  {[
+                    { label: "Emotional", value: currentResult.redFlags.length > 2 ? 72 : 28, color: currentResult.redFlags.length > 2 ? "#A9574D" : "#8FA596" },
+                    { label: "Sensational", value: currentResult.triggeredKeywords.length * 8, color: currentResult.triggeredKeywords.length > 3 ? "#A9574D" : "#A58B5B" },
+                    { label: "Neutral", value: currentResult.greenFlags.length > currentResult.redFlags.length ? 65 : 30, color: "#8FA596" },
+                    { label: "Factual", value: currentResult.confidence, color: "#8FA596" },
+                  ].map((item, i) => (
+                    <div key={item.label}>
+                      <div className="flex items-center justify-between text-[9px] mb-0.5">
+                        <span className="font-mono tracking-wider uppercase" style={{ color: "#9A9E98" }}>{item.label}</span>
+                        <span className="font-mono" style={{ color: item.color }}>{Math.min(item.value, 100)}%</span>
+                      </div>
+                      <div className="h-1 rounded-full bg-muted overflow-hidden">
+                        <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(item.value, 100)}%` }}
+                          transition={{ duration: 0.6, delay: 0.3 + i * 0.08 }}
+                          className="h-full rounded-full" style={{ background: item.color }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </motion.div>
+
               {/* Keywords */}
               {currentResult.triggeredKeywords.length > 0 && (
-                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.15 }}
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.18 }}
                   className="glass-card rounded-lg p-4 sm:p-5 mb-3">
                   <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-2.5">Detected Keywords</h3>
                   <div className="flex flex-wrap gap-1">

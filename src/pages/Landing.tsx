@@ -352,161 +352,283 @@ export default function Landing() {
       {/* ─── Institution Marquee ─── */}
       <Marquee />
 
-      {/* ─── Verdict Examples ─── */}
-      <Section className="py-20 sm:py-28 px-5">
-        <div className="mx-auto max-w-6xl">
-          <div className="grid grid-cols-12 gap-4 mb-14">
-            <div className="col-span-12 lg:col-span-8">
-              <RevealLine color="#8FA596" />
-              <span className="text-[9px] tracking-[0.3em] uppercase font-medium" style={{ color: "#8FA596" }}>Detection Results</span>
-              <h2 className="mt-2 text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>What You'll Get</h2>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {verdictExamples.map((v, i) => (
-              <motion.div key={v.label}
-                initial={{ opacity: 0, y: 40, rotateX: 8 }}
-                whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
-                viewport={{ once: true, margin: "-40px" }}
-                transition={{ duration: 0.7, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}>
-                <Card3D glowColor={v.color} className="p-5 relative overflow-hidden"
-                  style={{ background: "#0F1110", border: "1px solid #292A27", borderRadius: "2px" }}>
-                  <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: v.color }} />
-                  <div className="flex items-center gap-2 mb-3">
-                    <v.icon className="w-4 h-4" style={{ color: v.color }} />
-                    <span className="text-[11px] font-semibold" style={{ color: v.color, fontFamily: "'DM Serif Display', serif" }}>{v.label}</span>
-                  </div>
-                  <div className="flex items-baseline gap-1.5 mb-3">
-                    <span className="text-3xl font-bold" style={{ color: v.color, fontFamily: "'DM Serif Display', serif" }}>{v.confidence}</span>
-                    <span className="text-[10px] tracking-[0.1em] uppercase" style={{ color: "#9A9E98" }}>% Confidence</span>
-                  </div>
-                  <p className="text-[11px] leading-relaxed" style={{ color: "#9A9E98" }}>{v.sample}</p>
-                </Card3D>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </Section>
-
-      {/* ─── How It Works ─── */}
+      {/* ════════════════════════════════════════════
+       1. HOW VERITAS WORKS — 5-Step Pipeline
+       ════════════════════════════════════════════ */}
       <Section className="py-20 sm:py-28 px-5" id="how-it-works" style={{ borderTop: "1px solid #292A27" }}>
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-5xl">
           <div className="text-center mb-16">
             <div className="h-px mb-4 mx-auto" style={{ background: "linear-gradient(90deg, transparent, #8FA596, transparent)", maxWidth: 60 }} />
             <span className="text-[9px] tracking-[0.3em] uppercase font-medium" style={{ color: "#8FA596" }}>Our Approach</span>
             <h2 className="mt-2 text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>How Veritas Works</h2>
+            <p className="mt-2 text-[11px] max-w-md mx-auto" style={{ color: "#9A9E98" }}>A five-stage verification pipeline that processes content through layered analysis to produce evidence-backed verdicts.</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {steps.map((s, i) => (
-              <motion.div key={s.step}
-                initial={{ opacity: 0, y: 40, rotateX: 8 }}
-                whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
-                viewport={{ once: true, margin: "-40px" }}
-                transition={{ duration: 0.7, delay: i * 0.12, ease: [0.22, 1, 0.36, 1] }}>
-                <Card3D className="p-5"
-                  style={{ background: "#0F1110", border: "1px solid #292A27", borderRadius: "2px" }}>
-                  <div className="w-10 h-10 rounded-sm flex items-center justify-center mb-4" style={{ background: "rgba(62,232,184,0.05)" }}>
+
+          {/* Pipeline — horizontal on desktop, vertical on mobile */}
+          <div className="relative">
+            {/* Vertical connecting line (mobile) */}
+            <div className="absolute left-[19px] top-0 bottom-0 w-px md:hidden" style={{ background: "#292A27" }} />
+            {/* Horizontal connecting line (desktop) */}
+            <div className="hidden md:block absolute top-[39px] left-[10%] right-[10%] h-px" style={{ background: "#292A27" }} />
+
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-6 md:gap-4">
+              {[
+                { num: "01", title: "Input", desc: "Paste article text or URL for analysis.", icon: Search },
+                { num: "02", title: "NLP Analysis", desc: "70+ weighted regex patterns across 21 misinformation categories.", icon: Brain },
+                { num: "03", title: "Source Check", desc: "Evaluates sourcing quality, named attribution and citation patterns.", icon: Globe },
+                { num: "04", title: "Claim Analysis", desc: "Breaks down individual claims for logical consistency and evidence.", icon: FileCheck },
+                { num: "05", title: "Verdict", desc: "Confidence-scored verdict with explainable reasoning and flags.", icon: Shield },
+              ].map((s, i) => (
+                <motion.div key={s.num}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: "-30px" }}
+                  transition={{ duration: 0.6, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
+                  className="relative flex md:flex-col items-start md:items-center gap-4 md:text-center pl-12 md:pl-0">
+
+                  {/* Node circle */}
+                  <div className="absolute left-0 md:relative md:mx-auto w-10 h-10 rounded-sm flex items-center justify-center shrink-0 z-10"
+                    style={{ background: "#0F1110", border: "1px solid #292A27" }}>
                     <s.icon className="w-4 h-4" style={{ color: "#8FA596" }} />
                   </div>
-                  <span className="text-[9px] font-bold tracking-[0.2em]" style={{ color: "#8FA596", opacity: 0.5 }}>STEP {s.step}</span>
-                  <h3 className="mt-1.5 text-base" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>{s.title}</h3>
-                  <p className="mt-1.5 text-[11px] leading-relaxed" style={{ color: "#9A9E98" }}>{s.description}</p>
-                </Card3D>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </Section>
 
-      {/* ─── Features ─── */}
-      <Section className="py-20 sm:py-28 px-5" style={{ borderTop: "1px solid #292A27" }}>
-        <div className="mx-auto max-w-6xl">
-          <div className="grid grid-cols-12 gap-4 mb-14">
-            <div className="col-span-12 lg:col-span-8">
-              <RevealLine color="#A58B5B" />
-              <span className="text-[9px] tracking-[0.3em] uppercase font-medium" style={{ color: "#A58B5B" }}>Capabilities</span>
-              <h2 className="mt-2 text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>Built for Media Literacy</h2>
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {features.map((f, i) => (
-              <motion.div key={f.title}
-                initial={{ opacity: 0, y: 36, rotateX: 6 }}
-                whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
-                viewport={{ once: true, margin: "-30px" }}
-                transition={{ duration: 0.6, delay: i * 0.07, ease: [0.22, 1, 0.36, 1] }}>
-                <Card3D className="p-5"
-                  style={{ background: "#0F1110", border: "1px solid #292A27", borderRadius: "2px" }}>
-                  <div className="w-8 h-8 rounded-sm flex items-center justify-center mb-3" style={{ background: "rgba(62,232,184,0.05)" }}>
-                    <f.icon className="w-3.5 h-3.5" style={{ color: "#8FA596" }} />
-                  </div>
-                  <h3 className="text-[13px] font-semibold mb-1" style={{ color: "#F1F2EE" }}>{f.title}</h3>
-                  <p className="text-[11px] leading-relaxed" style={{ color: "#9A9E98" }}>{f.description}</p>
-                </Card3D>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </Section>
-
-      {/* ─── Academic References ─── */}
-      <Section className="py-20 sm:py-28 px-5" style={{ borderTop: "1px solid #292A27" }}>
-        <div className="mx-auto max-w-5xl">
-          <motion.div initial={{ opacity: 0, y: 32, scale: 0.98 }} whileInView={{ opacity: 1, y: 0, scale: 1 }} viewport={{ once: true }}
-            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-            className="p-8 sm:p-10 text-center relative overflow-hidden"
-            style={{ background: "#0F1110", border: "1px solid #292A27", borderRadius: "2px" }}>
-            <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, #8FA596, transparent)" }} />
-            <div className="w-10 h-10 rounded-sm flex items-center justify-center mx-auto mb-4" style={{ background: "rgba(62,232,184,0.05)" }}>
-              <FileCheck className="w-4 h-4" style={{ color: "#8FA596" }} />
-            </div>
-            <h2 className="text-lg sm:text-xl tracking-tight mb-2" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>Academically Grounded</h2>
-            <p className="text-[12px] max-w-md mx-auto mb-6 leading-relaxed" style={{ color: "#9A9E98" }}>Detection heuristics informed by research from leading institutions.</p>
-            <div className="flex flex-wrap justify-center gap-2">
-              {references.map((ref) => (
-                <motion.span key={ref}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  className="text-[10px] px-3 py-1.5 tracking-wide"
-                  style={{ background: "#141615", color: "#9A9E98", border: "1px solid #292A27", borderRadius: "2px" }}>{ref}</motion.span>
-              ))}
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-8">
-              {[{ icon: Users, label: "Named Sources", desc: "Credibility tracking" }, { icon: TrendingUp, label: "Severity Scoring", desc: "Weighted patterns" }, { icon: Eye, label: "Explainable AI", desc: "Transparent verdicts" }, { icon: BarChart3, label: "Visual Reports", desc: "Charts & breakdowns" }].map((item, i) => (
-                <motion.div key={item.label} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: 0.15 + i * 0.08 }}>
-                  <div className="rounded-sm p-3" style={{ background: "#141615" }}>
-                    <item.icon className="w-3.5 h-3.5 mx-auto mb-1.5" style={{ color: "#8FA596" }} />
-                    <span className="text-[10px] font-semibold block" style={{ color: "#F1F2EE" }}>{item.label}</span>
-                    <span className="text-[8px]" style={{ color: "#9A9E98" }}>{item.desc}</span>
+                  <div className="md:mt-3">
+                    <span className="text-[9px] font-bold tracking-[0.2em]" style={{ color: "#8FA596", opacity: 0.6 }}>{s.num}</span>
+                    <h3 className="mt-0.5 text-sm font-semibold" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>{s.title}</h3>
+                    <p className="mt-1 text-[10px] leading-relaxed" style={{ color: "#9A9E98" }}>{s.desc}</p>
                   </div>
                 </motion.div>
               ))}
+            </div>
+          </div>
+        </div>
+      </Section>
+
+      {/* ════════════════════════════════════════════
+       2. INTELLIGENCE PREVIEW — What Veritas Analyzes
+       ════════════════════════════════════════════ */}
+      <Section className="py-20 sm:py-28 px-5" style={{ borderTop: "1px solid #292A27" }}>
+        <div className="mx-auto max-w-5xl">
+          <div className="grid grid-cols-12 gap-4 mb-12">
+            <div className="col-span-12 lg:col-span-8">
+              <RevealLine color="#8FA596" />
+              <span className="text-[9px] tracking-[0.3em] uppercase font-medium" style={{ color: "#8FA596" }}>Analysis Depth</span>
+              <h2 className="mt-2 text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>What Veritas Sees</h2>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {[
+              { label: "Language Patterns", value: "70+", desc: "Emotional language, sensationalism, imperative commands, superlatives, CAPS abuse.", accent: "#8FA596", bar: 85 },
+              { label: "Source Credibility", value: "21", desc: "Named sources, institutional attribution, citation presence, author transparency.", accent: "#A58B5B", bar: 72 },
+              { label: "Claim Consistency", value: "5", desc: "Cross-referencing internal claims, checking statistical plausibility, logical coherence.", accent: "#8FA596", bar: 68 },
+              { label: "Emotional Bias", value: "4", desc: "Fear appeals, outrage bait, urgency pressure, conspiratorial framing.", accent: "#A9574D", bar: 91 },
+            ].map((item, i) => (
+              <motion.div key={item.label}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-30px" }}
+                transition={{ duration: 0.6, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
+                className="p-5 relative overflow-hidden"
+                style={{ background: "#0F1110", border: "1px solid #292A27", borderRadius: "2px" }}>
+                <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: item.accent, opacity: 0.4 }} />
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <span className="text-[9px] tracking-[0.2em] uppercase font-semibold" style={{ color: item.accent }}>{item.label}</span>
+                    <p className="mt-1.5 text-[10px] leading-relaxed" style={{ color: "#9A9E98" }}>{item.desc}</p>
+                  </div>
+                  <span className="text-xl font-bold shrink-0 ml-4" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>{item.value}</span>
+                </div>
+                {/* Animated bar */}
+                <motion.div
+                  initial={{ width: 0 }}
+                  whileInView={{ width: `${item.bar}%` }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1.2, delay: 0.3 + i * 0.1, ease: [0.22, 1, 0.36, 1] }}
+                  className="h-[2px] rounded-full"
+                  style={{ background: item.accent, opacity: 0.5 }}
+                />
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </Section>
+
+      {/* ════════════════════════════════════════════
+       3. PROJECT STATISTICS
+       ════════════════════════════════════════════ */}
+      <Section className="py-20 sm:py-28 px-5" style={{ borderTop: "1px solid #292A27" }}>
+        <div className="mx-auto max-w-5xl">
+          <div className="grid grid-cols-3 gap-6 sm:gap-10 text-center">
+            {[
+              { value: 70, suffix: "+", label: "Regex Patterns", sub: "Across 21 categories" },
+              { value: 21, suffix: "", label: "Detection Signals", sub: "Misinformation indicators" },
+              { value: 95, suffix: "%+", label: "Model Confidence", sub: "On benchmark data" },
+            ].map((s, i) => (
+              <motion.div key={s.label}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.6, delay: i * 0.12 }}>
+                <div className="text-4xl sm:text-5xl font-bold" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>
+                  <CountUp target={s.value} suffix={s.suffix} />
+                </div>
+                <div className="mt-2 text-[11px] font-semibold tracking-wide" style={{ color: "#8FA596" }}>{s.label}</div>
+                <div className="mt-0.5 text-[9px]" style={{ color: "#9A9E98" }}>{s.sub}</div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </Section>
+
+      {/* ════════════════════════════════════════════
+       4. INVESTIGATION PREVIEW — Interactive Article
+       ════════════════════════════════════════════ */}
+      <Section className="py-20 sm:py-28 px-5" style={{ borderTop: "1px solid #292A27" }}>
+        <div className="mx-auto max-w-4xl">
+          <div className="mb-10">
+            <RevealLine color="#A58B5B" />
+            <span className="text-[9px] tracking-[0.3em] uppercase font-medium" style={{ color: "#A58B5B" }}>Live Preview</span>
+            <h2 className="mt-2 text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>See It In Action</h2>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+            className="relative overflow-hidden"
+            style={{ background: "#0F1110", border: "1px solid #292A27", borderRadius: "2px" }}>
+
+            {/* Article header */}
+            <div className="px-6 pt-6 pb-4" style={{ borderBottom: "1px solid #292A27" }}>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-[8px] tracking-[0.2em] uppercase font-bold px-2 py-0.5" style={{ background: "#A9574D22", color: "#A9574D", borderRadius: "1px" }}>Sample Article</span>
+                <span className="text-[8px]" style={{ color: "#9A9E98" }}>•</span>
+                <span className="text-[8px]" style={{ color: "#9A9E98" }}>Health / Science</span>
+              </div>
+              <h3 className="text-base sm:text-lg" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>
+                Scientists Confirm New Species in the Mariana Trench
+              </h3>
+            </div>
+
+            {/* Article body with highlighted keywords */}
+            <div className="px-6 py-5">
+              <p className="text-[11px] leading-[1.8]" style={{ color: "#9A9E98" }}>
+                In a groundbreaking discovery, a team of marine biologists from <span className="px-1 py-0.5" style={{ background: "#8FA59615", color: "#8FA596", borderRadius: "1px" }}>the University of Oxford</span> has identified a previously unknown deep-sea species in the Mariana Trench. The creature, dubbed 'Abyssalus luminaris,' was found at a depth of 8,200 meters during a three-month expedition funded by <span className="px-1 py-0.5" style={{ background: "#8FA59615", color: "#8FA596", borderRadius: "1px" }}>the National Science Foundation</span>.
+              </p>
+            </div>
+
+            {/* Evidence labels */}
+            <div className="px-6 pb-5 flex flex-wrap gap-2">
+              {[
+                { label: "CLAIM", value: "New species discovered", color: "#8FA596" },
+                { label: "SOURCE", value: "University of Oxford", color: "#A58B5B" },
+                { label: "EVIDENCE", value: "Published in Nature", color: "#8FA596" },
+              ].map((tag) => (
+                <div key={tag.label} className="flex items-center gap-2 px-3 py-1.5" style={{ background: "#141615", border: "1px solid #292A27", borderRadius: "1px" }}>
+                  <span className="text-[8px] font-bold tracking-[0.15em]" style={{ color: tag.color }}>{tag.label}</span>
+                  <span className="text-[10px]" style={{ color: "#F1F2EE" }}>{tag.value}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Result preview */}
+            <div className="px-6 py-4" style={{ borderTop: "1px solid #292A27", background: "#0B0D0C" }}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="w-4 h-4" style={{ color: "#8FA596" }} />
+                  <div>
+                    <span className="text-[10px] font-semibold" style={{ color: "#8FA596" }}>Likely Credible</span>
+                    <span className="text-[10px] ml-2" style={{ color: "#9A9E98" }}>92% confidence</span>
+                  </div>
+                </div>
+                <button type="button" className="cursor-pointer text-[10px] font-semibold tracking-wide flex items-center gap-1.5 transition-colors hover:text-[#8FA596]" style={{ color: "#9A9E98" }} onClick={() => navigate("/dashboard")}>
+                  EXPLORE THE ANALYSIS <ArrowRight className="w-3 h-3" />
+                </button>
+              </div>
             </div>
           </motion.div>
         </div>
       </Section>
 
-      {/* ─── CTA ─── */}
+      {/* ════════════════════════════════════════════
+       5. METHODOLOGY PREVIEW
+       ════════════════════════════════════════════ */}
       <Section className="py-20 sm:py-28 px-5" style={{ borderTop: "1px solid #292A27" }}>
+        <div className="mx-auto max-w-5xl">
+          <div className="grid grid-cols-12 gap-4 mb-12">
+            <div className="col-span-12 lg:col-span-8">
+              <RevealLine color="#8FA596" />
+              <span className="text-[9px] tracking-[0.3em] uppercase font-medium" style={{ color: "#8FA596" }}>Under The Hood</span>
+              <h2 className="mt-2 text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>Methodology</h2>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {[
+              { num: "01", title: "Natural Language Processing", desc: "Tokenization, sentiment analysis, part-of-speech tagging, and named entity recognition extract structural features from raw text.", icon: Brain },
+              { num: "02", title: "Source Analysis", desc: "Identifies named sources, institutional affiliations, publication attribution, and cross-references against known reliable outlets.", icon: Globe },
+              { num: "03", title: "Credibility Scoring", desc: "Weighted scoring across 21 misinformation signal categories — each pattern carries a severity weight calibrated against benchmark datasets.", icon: BarChart3 },
+              { num: "04", title: "Classification", desc: "Aggregate signals produce a confidence-scored verdict: Likely Credible, Uncertain, or Likely Misleading — with explainable reasoning.", icon: Shield },
+            ].map((s, i) => (
+              <motion.div key={s.num}
+                initial={{ opacity: 0, y: 24 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-20px" }}
+                transition={{ duration: 0.5, delay: i * 0.08 }}
+                className="p-5 flex gap-4"
+                style={{ background: "#0F1110", border: "1px solid #292A27", borderRadius: "2px" }}>
+                <div className="shrink-0">
+                  <div className="w-9 h-9 rounded-sm flex items-center justify-center" style={{ background: "#141615", border: "1px solid #292A27" }}>
+                    <s.icon className="w-4 h-4" style={{ color: "#8FA596" }} />
+                  </div>
+                </div>
+                <div>
+                  <span className="text-[8px] font-bold tracking-[0.2em]" style={{ color: "#8FA596", opacity: 0.5 }}>{s.num}</span>
+                  <h3 className="mt-0.5 text-[13px] font-semibold" style={{ color: "#F1F2EE" }}>{s.title}</h3>
+                  <p className="mt-1 text-[10px] leading-relaxed" style={{ color: "#9A9E98" }}>{s.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.4 }}
+            className="mt-6 text-center">
+            <button type="button"
+              className="cursor-pointer text-[10px] font-semibold tracking-[0.1em] inline-flex items-center gap-1.5 transition-colors hover:text-[#8FA596]"
+              style={{ color: "#9A9E98" }}
+              onClick={() => navigate("/dashboard")}>
+              VIEW FULL METHODOLOGY <ArrowRight className="w-3 h-3" />
+            </button>
+          </motion.div>
+        </div>
+      </Section>
+
+      {/* ════════════════════════════════════════════
+       6. FINAL CTA
+       ════════════════════════════════════════════ */}
+      <Section className="py-24 sm:py-32 px-5" style={{ borderTop: "1px solid #292A27" }}>
         <div className="mx-auto max-w-2xl text-center">
-          <motion.div initial={{ opacity: 0, y: 32, scale: 0.98 }} whileInView={{ opacity: 1, y: 0, scale: 1 }} viewport={{ once: true }}
-            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-            className="p-10 sm:p-14 relative overflow-hidden"
-            style={{ background: "#0F1110", border: "1px solid #292A27", borderRadius: "2px" }}>
-            <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: "linear-gradient(90deg, transparent, #8FA596, transparent)" }} />
-            <motion.div
-              animate={{ scale: [1, 1.05, 1] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}>
-              <Shield className="w-7 h-7 mx-auto mb-4" style={{ color: "#8FA596" }} />
-            </motion.div>
-            <h2 className="text-xl sm:text-2xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>Ready to Fact-Check?</h2>
-            <p className="mt-2 text-[12px] max-w-xs mx-auto" style={{ color: "#9A9E98" }}>No sign-up required. Paste any article and get an instant, evidence-backed verdict.</p>
-            <MagneticBtn className="cursor-pointer mt-6 gap-2 px-7 py-3 text-[11px] font-semibold tracking-[0.1em] inline-flex items-center"
+          <motion.div initial={{ opacity: 0, y: 32 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}>
+            <RevealLine color="#8FA596" delay={0.2} />
+            <h2 className="mt-4 text-2xl sm:text-4xl tracking-tight leading-tight"
+              style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>
+              Don't just read it.<br />
+              <span style={{ color: "#8FA596" }}>Verify it.</span>
+            </h2>
+            <p className="mt-4 text-[12px] max-w-sm mx-auto leading-relaxed" style={{ color: "#9A9E98" }}>
+              No sign-up required. Paste any article and get an instant, evidence-backed verdict.
+            </p>
+            <MagneticBtn className="cursor-pointer mt-8 gap-2 px-8 py-3.5 text-[11px] font-semibold tracking-[0.1em] inline-flex items-center"
               style={{ background: "#8FA596", color: "#0B0D0C", borderRadius: "2px" }}
               onClick={() => navigate("/dashboard")}>
-              LAUNCH VERITAS <ArrowRight className="w-3.5 h-3.5" />
+              START ANALYZING <ArrowRight className="w-3.5 h-3.5" />
             </MagneticBtn>
           </motion.div>
         </div>
