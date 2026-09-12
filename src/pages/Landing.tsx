@@ -10,7 +10,7 @@ import { useRef, useState, useEffect, Suspense, lazy, useCallback } from "react"
 
 const HeroScene = lazy(() => import("@/components/HeroScene"));
 
-/* ─── Animated Tagline — smoke / dissolve (particles from letter shapes) ─── */
+/* ─── Animated Tagline — visible wispy smoke dissolve ─── */
 const TAGLINES = [
   "Facts over fiction.",
   "Verify before you believe.",
@@ -18,315 +18,257 @@ const TAGLINES = [
   "Evidence over opinion.",
 ];
 
-interface SmokeParticle {
-  x: number; y: number;
-  tx: number; ty: number;          // target (reform destination)
-  vx: number; vy: number;          // current velocity
-  life: number; maxLife: number;
-  size: number;
-  opacity: number;
-  color: string;
-  rotation: number;
-  rotSpeed: number;
-  delay: number;                   // 0-1, relative start within the transition window
+// Each "wisp" is a large, soft, semi-transparent smoke blob
+interface SmokeWisp {
+  x: number; y: number;           // current position
+  originX: number; originY: number;
+  targetX: number; targetY: number;
+  vx: number; vy: number;         // velocity
+  radius: number;                  // 12–40px
+  opacity: number;                 // 0.08–0.25 per wisp
+  hue: number;                     // color variety
+  phase: number;                   // for turbulence offset
+  speed: number;                   // drift multiplier
+  blur: number;                    // extra blur (canvas)
+  birthTime: number;               // when this wisp was created
+  lifespan: number;                // ms before fully faded
+  born: number;                    // animation timestamp it appeared
 }
 
 function AnimatedTagline() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const indexRef = useRef(0);
-  const particlesRef = useRef<SmokeParticle[]>([]);
-  const phaseRef = useRef<"idle" | "dissolving" | "forming">("idle");
+  const wispsRef = useRef<SmokeWisp[]>([]);
+  const phaseRef = useRef<"idle" | "transitioning">("idle");
   const phaseStartRef = useRef(0);
-  const canvasSizeRef = useRef({ w: 0, h: 0 });
-  const prefersReducedMotion = useRef(false);
+  const sizeRef = useRef({ w: 0, h: 0 });
+  const reducedMotion = useRef(false);
 
-  // ─── Detect reduced motion ───
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    prefersReducedMotion.current = mq.matches;
-    const handler = (e: MediaQueryListEvent) => { prefersReducedMotion.current = e.matches; };
-    mq.addEventListener("change", handler);
-    return () => mq.removeEventListener("change", handler);
+    reducedMotion.current = mq.matches;
+    const h = (e: MediaQueryListEvent) => { reducedMotion.current = e.matches; };
+    mq.addEventListener("change", h);
+    return () => mq.removeEventListener("change", h);
   }, []);
 
-  // ─── Setup canvas + sizes ───
+  // Canvas setup
   useEffect(() => {
-    const container = containerRef.current;
-    const canvas = canvasRef.current;
-    if (!container || !canvas) return;
-
+    const cont = containerRef.current;
+    const cvs = canvasRef.current;
+    if (!cont || !cvs) return;
     const dpr = window.devicePixelRatio || 1;
-    const rect = container.getBoundingClientRect();
-    const w = rect.width;
-    const h = rect.height;
-    canvasSizeRef.current = { w, h };
-    canvas.width = w * dpr;
-    canvas.height = h * dpr;
-    canvas.style.width = w + "px";
-    canvas.style.height = h + "px";
-    const ctx = canvas.getContext("2d");
-    if (ctx) ctx.scale(dpr, dpr);
 
-    const ro = new ResizeObserver(() => {
-      const r = container.getBoundingClientRect();
-      canvasSizeRef.current = { w: r.width, h: r.height };
-      canvas.width = r.width * dpr;
-      canvas.height = r.height * dpr;
-      canvas.style.width = r.width + "px";
-      canvas.style.height = r.height + "px";
-      const c = canvas.getContext("2d");
-      if (c) c.scale(dpr, dpr);
-    });
-    ro.observe(container);
+    const sync = () => {
+      const r = cont.getBoundingClientRect();
+      sizeRef.current = { w: r.width, h: r.height };
+      cvs.width = r.width * dpr;
+      cvs.height = r.height * dpr;
+      cvs.style.width = r.width + "px";
+      cvs.style.height = r.height + "px";
+      const c = cvs.getContext("2d");
+      if (c) c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    sync();
+    const ro = new ResizeObserver(sync);
+    ro.observe(cont);
     return () => ro.disconnect();
   }, []);
 
-  // ─── Sample text pixel positions ───
-  const sampleText = useCallback((text: string): Array<{ x: number; y: number }> => {
-    const { w, h } = canvasSizeRef.current;
-    if (w === 0 || h === 0) return [];
-
+  // Measure text width for smoke spread
+  const getTextWidth = useCallback((text: string): { width: number; height: number } => {
+    const { w, h } = sizeRef.current;
+    if (w === 0) return { width: 200, height: 30 };
     const offscreen = document.createElement("canvas");
-    offscreen.width = w;
-    offscreen.height = h;
-    const octx = offscreen.getContext("2d");
-    if (!octx) return [];
-
-    // Measure and render the text
-    const baseSize = Math.min(w * 0.065, 36);
-    octx.font = `500 ${baseSize}px 'DM Serif Display', 'Georgia', serif`;
-    octx.textAlign = "center";
-    octx.textBaseline = "middle";
-    octx.fillStyle = "white";
-    octx.fillText(text, w / 2, h / 2);
-
-    const imgData = octx.getImageData(0, 0, w, h);
-    const pixels = imgData.data;
-    const points: Array<{ x: number; y: number }> = [];
-    const step = 3;
-
-    for (let y = 0; y < h; y += step) {
-      for (let x = 0; x < w; x += step) {
-        const i = (y * w + x) * 4;
-        if (pixels[i + 3] > 80) {
-          points.push({ x, y });
-        }
-      }
-    }
-    return points;
+    offscreen.width = w; offscreen.height = h;
+    const c = offscreen.getContext("2d");
+    if (!c) return { width: 200, height: 30 };
+    const sz = Math.min(w * 0.065, 36);
+    c.font = `500 ${sz}px 'DM Serif Display', 'Georgia', serif`;
+    const m = c.measureText(text);
+    return { width: m.width, height: sz };
   }, []);
 
-  // ─── Create smoke particles from letter shapes ───
-  const createParticles = useCallback((
-    oldText: string,
-    newText: string,
-  ): SmokeParticle[] => {
-    const oldPts = sampleText(oldText);
-    const newPts = sampleText(newText);
-    if (oldPts.length === 0 || newPts.length === 0) return [];
-
-    // Subsample old points to cap particle count
-    const maxParticles = 400;
-    const sampled: Array<{ x: number; y: number }> = [];
-    const step = Math.max(1, Math.floor(oldPts.length / maxParticles));
-    for (let i = 0; i < oldPts.length && sampled.length < maxParticles; i += step) {
-      sampled.push(oldPts[i]);
-    }
-
-    const particles: SmokeParticle[] = sampled.map((pt) => {
-      // Pick a random new-text point as the reform target
-      const target = newPts[Math.floor(Math.random() * newPts.length)];
+  // Spawn a batch of visible smoke wisps
+  const spawnWisps = useCallback((
+    originX: number, originY: number,
+    spreadX: number, spreadY: number,
+    now: number,
+  ): SmokeWisp[] => {
+    const count = 55 + Math.floor(Math.random() * 20);
+    return Array.from({ length: count }, () => {
       const angle = Math.random() * Math.PI * 2;
-      const drift = 0.6 + Math.random() * 1.2;
+      const dist = Math.random() * spreadX * 0.5;
       return {
-        x: pt.x,
-        y: pt.y,
-        tx: target.x,
-        ty: target.y,
-        vx: Math.cos(angle) * drift,
-        vy: Math.sin(angle) * drift - 0.3, // slight upward drift
-        life: 1,
-        maxLife: 1,
-        size: 1.5 + Math.random() * 2.5,
-        opacity: 0.45 + Math.random() * 0.35,
-        color: Math.random() > 0.3 ? "#C8CEC6" : "#8FA596",
-        rotation: Math.random() * Math.PI * 2,
-        rotSpeed: (Math.random() - 0.5) * 0.04,
-        delay: Math.random() * 0.25,
+        x: originX + Math.cos(angle) * dist,
+        y: originY + Math.sin(angle) * dist * 0.6,
+        originX: originX + Math.cos(angle) * dist,
+        originY: originY + Math.sin(angle) * dist * 0.6,
+        targetX: originX + Math.cos(angle) * (dist + spreadX * (0.3 + Math.random() * 0.4)),
+        targetY: originY - spreadY * (0.5 + Math.random() * 1.2),
+        vx: Math.cos(angle) * (0.2 + Math.random() * 0.6),
+        vy: -(0.3 + Math.random() * 0.8),  // upward drift
+        radius: 12 + Math.random() * 28,    // BIG wisps 12-40px
+        opacity: 0.08 + Math.random() * 0.17, // clearly visible cumulative
+        hue: Math.random(),                  // for color variation
+        phase: Math.random() * Math.PI * 2,
+        speed: 0.4 + Math.random() * 0.8,
+        blur: 6 + Math.random() * 12,
+        birthTime: now,
+        lifespan: 1100 + Math.random() * 500,
+        born: now,
       };
     });
-    return particles;
-  }, [sampleText]);
+  }, []);
 
-  // ─── Main animation loop ───
+  // Main animation loop
   useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
+    const cvs = canvasRef.current;
+    if (!cvs) return;
+    const ctx = cvs.getContext("2d");
     if (!ctx) return;
 
-    let animId = 0;
-    let lastTick = performance.now();
-    let idleTimer = 0;
+    let raf = 0;
+    let lastNow = performance.now();
+    let idleClock = 0;
+    const IDLE_MS = 3400;       // pause between transitions
+    const TRANSITION_MS = 2000; // total dissolve+form
 
-    const DISOLVE_DUR = 1300;
-    const FORM_DUR = 900;
-    const TOTAL = DISOLVE_DUR + FORM_DUR;
-    const IDLE = 3200; // pause between transitions
+    // Simple noise
+    const n = (x: number, t: number) =>
+      Math.sin(x * 0.7 + t * 0.4) * 0.4 +
+      Math.cos(x * 1.1 + t * 0.6) * 0.3 +
+      Math.sin(x * 2.1 - t * 0.3) * 0.2;
 
-    // turbulence helper
-    const turb = (x: number, y: number, t: number, scale: number) => {
-      const s = scale || 0.008;
-      return (
-        Math.sin(x * s + t * 0.6) * Math.cos(y * s * 1.3 + t * 0.4) * 0.5 +
-        Math.sin((x + y) * s * 0.7 + t * 0.8) * 0.3 +
-        Math.cos(x * s * 1.6 - y * s + t * 0.5) * 0.2
-      );
-    };
+    const tick = (now: number) => {
+      raf = requestAnimationFrame(tick);
+      const dt = Math.min(now - lastNow, 50);
+      lastNow = now;
 
-    const frame = (now: number) => {
-      animId = requestAnimationFrame(frame);
-      const dt = Math.min(now - lastTick, 50);
-      lastTick = now;
-
-      const { w, h } = canvasSizeRef.current;
+      const { w, h } = sizeRef.current;
       if (w === 0) return;
       ctx.clearRect(0, 0, w, h);
 
-      const phase = phaseRef.current;
-      const elapsed = now - phaseStartRef.current;
-      const particles = particlesRef.current;
+      const sz = Math.min(w * 0.065, 36);
+      const cx = w / 2;
+      const cy = h / 2;
 
-      // ── IDLE: draw current text ──
-      if (phase === "idle") {
-        idleTimer += dt;
-
-        // draw text
-        const baseSize = Math.min(w * 0.065, 36);
-        ctx.font = `500 ${baseSize}px 'DM Serif Display', 'Georgia', serif`;
+      // ── IDLE ──
+      if (phaseRef.current === "idle") {
+        idleClock += dt;
+        ctx.font = `500 ${sz}px 'DM Serif Display', 'Georgia', serif`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.fillStyle = "#C8CEC6";
-        ctx.fillText(TAGLINES[indexRef.current], w / 2, h / 2);
+        ctx.fillText(TAGLINES[indexRef.current], cx, cy);
 
-        if (idleTimer >= IDLE) {
-          // begin transition
-          const oldIdx = indexRef.current;
-          const newIdx = (oldIdx + 1) % TAGLINES.length;
-          particlesRef.current = createParticles(TAGLINES[oldIdx], TAGLINES[newIdx]);
-          phaseRef.current = "dissolving";
+        if (idleClock >= IDLE_MS) {
+          const oldText = TAGLINES[indexRef.current];
+          const { width } = getTextWidth(oldText);
+          wispsRef.current = spawnWisps(cx, cy, width * 1.6, sz * 2, now);
+          phaseRef.current = "transitioning";
           phaseStartRef.current = now;
-          idleTimer = 0;
+          idleClock = 0;
         }
         return;
       }
 
-      // ── DISSOLVE / FORM ──
-      const progress = Math.min(elapsed / TOTAL, 1);
+      // ── TRANSITION ──
+      const elapsed = now - phaseStartRef.current;
+      const progress = Math.min(elapsed / TRANSITION_MS, 1);
 
-      // Background text: cross-dissolve
-      const oldAlpha = Math.max(0, 1 - progress * 1.8);
-      const newAlpha = Math.max(0, progress * 2 - 0.8);
-
-      const baseSize = Math.min(w * 0.065, 36);
-      ctx.font = `500 ${baseSize}px 'DM Serif Display', 'Georgia', serif`;
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-
-      // old text fading out (behind particles)
+      // Old text fades out: visible at start, gone by 45%
+      const oldAlpha = Math.max(0, 1 - progress * 2.2);
       if (oldAlpha > 0.01) {
-        ctx.globalAlpha = oldAlpha * 0.6;
+        ctx.globalAlpha = oldAlpha;
+        ctx.font = `500 ${sz}px 'DM Serif Display', 'Georgia', serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
         ctx.fillStyle = "#C8CEC6";
-        ctx.fillText(TAGLINES[indexRef.current], w / 2, h / 2);
+        ctx.fillText(TAGLINES[indexRef.current], cx, cy);
       }
 
-      // new text fading in (behind particles)
-      if (newAlpha > 0.01) {
-        ctx.globalAlpha = newAlpha * 0.7;
-        ctx.fillStyle = "#C8CEC6";
-        ctx.fillText(TAGLINES[(indexRef.current + 1) % TAGLINES.length], w / 2, h / 2);
-      }
-      ctx.globalAlpha = 1;
+      // Draw smoke wisps — visible cloud layer
+      for (const wisp of wispsRef.current) {
+        const age = now - wisp.born;
+        if (age < 0) continue;
+        const tNorm = Math.min(age / wisp.lifespan, 1); // 0→1 over lifespan
 
-      // update + draw particles
-      for (const p of particles) {
-        const relElapsed = elapsed / TOTAL;
+        // Ease-out for position drift (slow start, smooth continuation)
+        const posT = tNorm < 0.3 ? tNorm / 0.3 : 1;
+        const easePos = 1 - Math.pow(1 - posT, 3);
 
-        // delayed start per particle
-        if (relElapsed < p.delay) continue;
+        // Turbulence pushes wisps sideways
+        const turbX = n(wisp.phase + age * 0.0008, age * 0.001) * wisp.speed * 18;
+        const turbY = n(wisp.phase + 50 + age * 0.0006, age * 0.0013) * wisp.speed * 8;
 
-        const t = (relElapsed - p.delay) / (1 - p.delay);
-        const dtNorm = dt / 1000;
+        wisp.x = wisp.originX + (wisp.targetX - wisp.originX) * easePos + turbX;
+        wisp.y = wisp.originY + (wisp.targetY - wisp.originY) * easePos + turbY;
 
-        if (t < 0.55) {
-          // DISSOLVE: drift + turbulence away from origin
-          const phase_t = t / 0.55;
-          const turbX = turb(p.x, p.y, now * 0.001, 0.006) * 0.8;
-          const turbY = turb(p.y, p.x, now * 0.001 + 100, 0.006) * 0.6;
+        // Opacity: rise quickly, hold, then fade
+        const riseT = Math.min(tNorm / 0.15, 1);
+        const fadeT = tNorm > 0.35 ? (tNorm - 0.35) / 0.65 : 0;
+        const alpha = wisp.opacity * riseT * (1 - fadeT * 0.92);
 
-          p.vx += turbX * dtNorm * 8;
-          p.vy += turbY * dtNorm * 8;
-          p.vx *= 0.97;
-          p.vy *= 0.97;
-          p.x += p.vx;
-          p.y += p.vy;
-          p.rotation += p.rotSpeed;
-          p.life = 1 - phase_t * 0.35;
-          p.opacity = (0.45 + Math.random() * 0.1) * p.life * (1 - phase_t * 0.5);
-          p.size = (1.5 + Math.random() * 0.5) * (1 + phase_t * 0.4);
-        } else {
-          // REFORM: lerp toward target + scale down
-          const phase_t = (t - 0.55) / 0.45;
-          const ease = phase_t < 0.5 ? 2 * phase_t * phase_t : 1 - Math.pow(-2 * phase_t + 2, 2) / 2;
+        if (alpha <= 0.005) continue;
 
-          const turbX = turb(p.tx, p.ty, now * 0.001, 0.01) * 0.15;
-          const turbY = turb(p.ty, p.tx, now * 0.001 + 200, 0.01) * 0.15;
-
-          p.x += (p.tx + turbX - p.x) * ease * 0.12;
-          p.y += (p.ty + turbY - p.y) * ease * 0.12;
-          p.vx *= 0.9;
-          p.vy *= 0.9;
-          p.rotation += p.rotSpeed * 0.3;
-          p.life = 0.65 + ease * 0.35;
-          p.opacity = (0.35 + ease * 0.25) * (1 - ease * 0.3);
-          p.size = Math.max(1.5, p.size * 0.998);
-        }
-
-        // draw particle
-        if (p.opacity <= 0.01) continue;
+        // Draw a large soft radial-gradient circle
+        const r = wisp.radius * (1 + tNorm * 0.6); // smoke expands
         ctx.save();
-        ctx.translate(p.x, p.y);
-        ctx.rotate(p.rotation);
-        ctx.globalAlpha = p.opacity;
-        ctx.fillStyle = p.color;
+        ctx.globalAlpha = alpha;
+        ctx.filter = `blur(${wisp.blur}px)`;
+
+        // Colour: mix between warm grey (#C8CEC6) and sage (#8FA596)
+        const greyR = 200, greyG = 206, greyB = 198;
+        const sageR = 143, sageG = 165, sageB = 150;
+        const mix = wisp.hue;
+        const cr = Math.round(greyR + (sageR - greyR) * mix);
+        const cg = Math.round(greyG + (sageG - greyG) * mix);
+        const cb = Math.round(greyB + (sageB - greyB) * mix);
+
+        const grad = ctx.createRadialGradient(wisp.x, wisp.y, 0, wisp.x, wisp.y, r);
+        grad.addColorStop(0, `rgba(${cr},${cg},${cb},${alpha * 2.5})`);
+        grad.addColorStop(0.4, `rgba(${cr},${cg},${cb},${alpha * 1.2})`);
+        grad.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
+
+        ctx.fillStyle = grad;
         ctx.beginPath();
-        // slightly irregular shape
-        const s = p.size;
-        ctx.moveTo(-s, -s * 0.3);
-        ctx.quadraticCurveTo(-s * 0.2, -s, s * 0.5, -s * 0.6);
-        ctx.quadraticCurveTo(s, s * 0.1, s * 0.4, s);
-        ctx.quadraticCurveTo(-s * 0.1, s * 0.7, -s, -s * 0.3);
+        ctx.arc(wisp.x, wisp.y, r, 0, Math.PI * 2);
         ctx.fill();
         ctx.restore();
       }
-      ctx.globalAlpha = 1;
 
-      // transition complete
+      ctx.globalAlpha = 1;
+      ctx.filter = "none";
+
+      // New text fades in: starts at 50%, full by 85%
+      const newAlpha = Math.max(0, Math.min(1, (progress - 0.5) * 2.5));
+      if (newAlpha > 0.01) {
+        ctx.globalAlpha = newAlpha;
+        ctx.font = `500 ${sz}px 'DM Serif Display', 'Georgia', serif`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillStyle = "#C8CEC6";
+        ctx.fillText(TAGLINES[(indexRef.current + 1) % TAGLINES.length], cx, cy);
+        ctx.globalAlpha = 1;
+      }
+
+      // Done
       if (progress >= 1) {
         indexRef.current = (indexRef.current + 1) % TAGLINES.length;
-        particlesRef.current = [];
+        wispsRef.current = [];
         phaseRef.current = "idle";
         phaseStartRef.current = now;
       }
     };
 
-    animId = requestAnimationFrame(frame);
-    return () => cancelAnimationFrame(animId);
-  }, [createParticles]);
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [getTextWidth, spawnWisps]);
 
-  // ─── Reduced motion fallback ───
-  if (prefersReducedMotion.current) {
+  // Reduced motion: simple fade
+  if (reducedMotion.current) {
     const [idx, setIdx] = useState(0);
     useEffect(() => {
       const t = setInterval(() => setIdx((p) => (p + 1) % TAGLINES.length), 3800);
@@ -334,13 +276,7 @@ function AnimatedTagline() {
     }, []);
     return (
       <div className="relative h-[1.4em]" style={{ fontFamily: "'DM Serif Display', serif" }}>
-        <motion.span
-          key={TAGLINES[idx]}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6 }}
-          className="absolute inset-0 flex items-center"
-        >
+        <motion.span key={TAGLINES[idx]} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6 }} className="absolute inset-0 flex items-center">
           {TAGLINES[idx]}
         </motion.span>
       </div>
