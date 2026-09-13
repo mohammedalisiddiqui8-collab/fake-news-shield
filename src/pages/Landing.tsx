@@ -334,7 +334,7 @@ export default function Landing() {
               {[
                 { label: "Regex patterns across 21 categories", value: 70, suffix: "+" },
                 { label: "Misinformation signal categories", value: 21, suffix: "" },
-                { label: "Detection accuracy on benchmark data", value: 95, suffix: "%+" },
+                { label: "Weighted scoring across 21 signal categories", value: 21, suffix: "" },
               ].map((s, i) => (
                 <motion.div key={s.label}
                   initial={{ opacity: 0, y: 16 }}
