@@ -332,9 +332,9 @@ export default function Landing() {
               transition={{ duration: 0.7, delay: 1.3, ease: [0.22, 1, 0.36, 1] }}
               className="col-span-12 lg:col-span-4 lg:col-start-9 flex lg:flex-col gap-6 lg:gap-8 lg:justify-center">
               {[
-                { label: "Regex patterns across 21 categories", value: 70, suffix: "+" },
+                { label: "Weighted NLP regex patterns", value: 70, suffix: "+" },
                 { label: "Misinformation signal categories", value: 21, suffix: "" },
-                { label: "Weighted scoring across 21 signal categories", value: 21, suffix: "" },
+                { label: "Verification pipeline stages", value: 5, suffix: "" },
               ].map((s, i) => (
                 <motion.div key={s.label}
                   initial={{ opacity: 0, y: 16 }}
