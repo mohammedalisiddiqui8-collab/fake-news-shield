@@ -10,6 +10,8 @@ import { useRef, useState, useEffect, Suspense, lazy } from "react";
 import { TextReveal } from "@/components/motion/TextReveal";
 import { ScrollTextFade } from "@/components/motion/ScrollTextFade";
 import { TiltCard } from "@/components/TiltCard";
+import { CursorSpotlight } from "@/components/micro/CursorSpotlight";
+import { TextScramble } from "@/components/micro/TextScramble";
 
 const HeroScene = lazy(() => import("@/components/HeroScene"));
 
@@ -66,17 +68,24 @@ function CountUp({ target, suffix = "", duration = 2 }: { target: number; suffix
 }
 
 /* ─── Magnetic Button ─── */
-function MagneticBtn({ children, className = "", style = {}, onClick }: { children: React.ReactNode; className?: string; style?: React.CSSProperties; onClick?: () => void }) {
+function MagneticBtn({ children, className = "", style = {}, onClick, arrow }: { children: React.ReactNode; className?: string; style?: React.CSSProperties; onClick?: () => void; arrow?: boolean }) {
   const ref = useRef<HTMLButtonElement>(null);
+  const arrowRef = useRef<HTMLSpanElement>(null);
   return (
     <button ref={ref}
       onMouseMove={(e) => {
         const el = ref.current;
         if (!el) return;
         const r = el.getBoundingClientRect();
-        el.style.transform = `translate(${(e.clientX - r.left - r.width / 2) * 0.12}px, ${(e.clientY - r.top - r.height / 2) * 0.12}px)`;
+        const dx = (e.clientX - r.left - r.width / 2) * 0.15;
+        const dy = (e.clientY - r.top - r.height / 2) * 0.15;
+        el.style.transform = `translate(${dx}px, ${dy}px)`;
+        if (arrowRef.current) arrowRef.current.style.transform = `translate(${dx * 0.4}px, ${dy * 0.4}px)`;
       }}
-      onMouseLeave={() => { if (ref.current) ref.current.style.transform = "translate(0,0)"; }}
+      onMouseLeave={() => {
+        if (ref.current) ref.current.style.transform = "translate(0,0)";
+        if (arrowRef.current) arrowRef.current.style.transform = "translate(0,0)";
+      }}
       className={className}
       style={{ transition: "transform 0.25s cubic-bezier(0.22, 1, 0.36, 1)", ...style }}
       onClick={onClick}>
@@ -201,6 +210,149 @@ const verdictExamples = [
 
 const references = ["MIT Media Lab", "Stanford Internet Observatory", "Reuters Institute", "LIAR Dataset (Wang, 2017)"];
 
+/* ─── Interactive Claim Highlight Component ─── */
+function InteractiveClaim({ text, type, color, detail }: { text: string; type: string; color: string; detail: { status: string; confidence: number; reasoning: string; source: string } }) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <span className="relative inline-block">
+      <span
+        className="px-1 py-0.5 cursor-pointer transition-all duration-300"
+        style={{
+          background: expanded ? `${color}25` : `${color}12`,
+          color,
+          borderRadius: "1px",
+          borderBottom: `1px solid ${color}40`,
+        }}
+        onClick={() => setExpanded(!expanded)}
+        onMouseEnter={(e) => { e.currentTarget.style.background = `${color}22`; }}
+        onMouseLeave={(e) => { e.currentTarget.style.background = expanded ? `${color}25` : `${color}12`; }}
+      >
+        {text}
+      </span>
+      {/* Morphing evidence panel */}
+      <AnimatePresence>
+        {expanded && (
+          <motion.div
+            initial={{ opacity: 0, height: 0, y: -4 }}
+            animate={{ opacity: 1, height: "auto", y: 0 }}
+            exit={{ opacity: 0, height: 0, y: -4 }}
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            className="absolute left-0 top-full mt-2 z-20 w-64 sm:w-72 overflow-hidden"
+            style={{ background: "#0F1110", border: "1px solid #292A27", borderRadius: "2px" }}
+          >
+            <div className="p-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[8px] font-bold tracking-[0.15em]" style={{ color }}>{type}</span>
+                <span className="text-[8px] font-semibold" style={{ color: detail.status === "SUPPORTED" ? "#8FA596" : detail.status === "MISLEADING" ? "#A9574D" : "#A58B5B" }}>{detail.status}</span>
+              </div>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-[8px] tracking-wide" style={{ color: "#9A9E98" }}>CONFIDENCE</span>
+                <div className="flex-1 h-[2px] rounded-full" style={{ background: "#292A27" }}>
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${detail.confidence}%` }}
+                    transition={{ duration: 0.6, delay: 0.15 }}
+                    className="h-full rounded-full"
+                    style={{ background: color }}
+                  />
+                </div>
+                <span className="text-[9px] font-semibold" style={{ color: "#F1F2EE" }}>{detail.confidence}%</span>
+              </div>
+              <p className="text-[9px] leading-relaxed mb-2" style={{ color: "#9A9E98" }}>{detail.reasoning}</p>
+              <div className="flex items-center gap-1.5 pt-1.5" style={{ borderTop: "1px solid #292A27" }}>
+                <Globe className="w-2.5 h-2.5" style={{ color: "#A58B5B" }} />
+                <span className="text-[8px]" style={{ color: "#A58B5B" }}>{detail.source}</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </span>
+  );
+}
+
+/* ─── Scrutiny Section — Interactive Article Preview ─── */
+function ScrutinySection({ navigate }: { navigate: (path: string) => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.7 }}
+      className="relative overflow-hidden"
+      style={{ background: "#0F1110", border: "1px solid #292A27", borderRadius: "2px" }}>
+
+      {/* Article header with TextScramble status */}
+      <div className="px-6 pt-6 pb-4" style={{ borderBottom: "1px solid #292A27" }}>
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-[8px] tracking-[0.2em] uppercase font-bold px-2 py-0.5" style={{ background: "#A9574D22", color: "#A9574D", borderRadius: "1px" }}>Sample Article</span>
+          <span className="text-[8px]" style={{ color: "#9A9E98" }}>•</span>
+          <TextScramble
+            phrases={["ANALYZING...", "PROCESSING SIGNALS...", "SOURCE CHECK...", "NLP SCANNING...", "VERIFIED"]}
+            interval={2200}
+            className="text-[8px] tracking-wide"
+            style={{ color: "#8FA596", fontVariantNumeric: "tabular-nums" }}
+          />
+        </div>
+        <h3 className="text-base sm:text-lg" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>
+          Scientists Confirm New Species in the Mariana Trench
+        </h3>
+      </div>
+
+      {/* Article body with interactive highlighted claims */}
+      <div className="px-6 py-5">
+        <p className="text-[11px] leading-[1.8]" style={{ color: "#9A9E98" }}>
+          In a groundbreaking discovery, a team of marine biologists from{' '}
+          <InteractiveClaim
+            text="the University of Oxford"
+            type="SOURCE"
+            color="#A58B5B"
+            detail={{ status: "VERIFIED", confidence: 94, reasoning: "Named institutional source with established academic credibility. Cross-referenced against verified university registries.", source: "University of Oxford — Department of Zoology" }}
+          />
+          {' '}has identified a previously unknown deep-sea species in the Mariana Trench. The creature, dubbed 'Abyssalus luminaris,' was found at a depth of 8,200 meters during a three-month expedition funded by{' '}
+          <InteractiveClaim
+            text="the National Science Foundation"
+            type="SOURCE"
+            color="#A58B5B"
+            detail={{ status: "VERIFIED", confidence: 91, reasoning: "Major federal funding agency. Grant attribution is specific and verifiable through NSF award database.", source: "National Science Foundation — Award #2341892" }}
+          />
+          .
+        </p>
+      </div>
+
+      {/* Evidence labels */}
+      <div className="px-6 pb-5 flex flex-wrap gap-2">
+        {[
+          { label: "CLAIM", value: "New species discovered", color: "#8FA596" },
+          { label: "SOURCE", value: "University of Oxford", color: "#A58B5B" },
+          { label: "EVIDENCE", value: "Published in Nature", color: "#8FA596" },
+        ].map((tag) => (
+          <div key={tag.label} className="flex items-center gap-2 px-3 py-1.5" style={{ background: "#141615", border: "1px solid #292A27", borderRadius: "1px" }}>
+            <span className="text-[8px] font-bold tracking-[0.15em]" style={{ color: tag.color }}>{tag.label}</span>
+            <span className="text-[10px]" style={{ color: "#F1F2EE" }}>{tag.value}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Result preview */}
+      <div className="px-6 py-4" style={{ borderTop: "1px solid #292A27", background: "#0B0D0C" }}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <CheckCircle2 className="w-4 h-4" style={{ color: "#8FA596" }} />
+            <div>
+              <span className="text-[10px] font-semibold" style={{ color: "#8FA596" }}>Likely Credible</span>
+              <span className="text-[10px] ml-2" style={{ color: "#9A9E98" }}>92% confidence</span>
+            </div>
+          </div>
+          <button type="button" className="cursor-pointer text-[10px] font-semibold tracking-wide flex items-center gap-1.5 transition-colors hover:text-[#8FA596]" style={{ color: "#9A9E98" }} onClick={() => navigate("/dashboard")}>
+            EXPLORE THE ANALYSIS <ArrowRight className="w-3 h-3" />
+          </button>
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 /* ═══ Landing Page ═══ */
 export default function Landing() {
   const navigate = useNavigate();
@@ -212,6 +364,7 @@ export default function Landing() {
 
   return (
     <div className="min-h-screen bg-background text-foreground overflow-hidden">
+      <CursorSpotlight />
 
       {/* ─── Scroll Progress ─── */}
       <ScrollProgress />
@@ -463,63 +616,7 @@ export default function Landing() {
             <TextReveal as="h2" splitBy="words" delay={0.1} className="text-3xl sm:text-4xl lg:text-5xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>SCRUTINY</TextReveal>
           </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7 }}
-            className="relative overflow-hidden"
-            style={{ background: "#0F1110", border: "1px solid #292A27", borderRadius: "2px" }}>
-
-            {/* Article header */}
-            <div className="px-6 pt-6 pb-4" style={{ borderBottom: "1px solid #292A27" }}>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-[8px] tracking-[0.2em] uppercase font-bold px-2 py-0.5" style={{ background: "#A9574D22", color: "#A9574D", borderRadius: "1px" }}>Sample Article</span>
-                <span className="text-[8px]" style={{ color: "#9A9E98" }}>•</span>
-                <span className="text-[8px]" style={{ color: "#9A9E98" }}>Health / Science</span>
-              </div>
-              <h3 className="text-base sm:text-lg" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>
-                Scientists Confirm New Species in the Mariana Trench
-              </h3>
-            </div>
-
-            {/* Article body with highlighted keywords */}
-            <div className="px-6 py-5">
-              <p className="text-[11px] leading-[1.8]" style={{ color: "#9A9E98" }}>
-                In a groundbreaking discovery, a team of marine biologists from <span className="px-1 py-0.5" style={{ background: "#8FA59615", color: "#8FA596", borderRadius: "1px" }}>the University of Oxford</span> has identified a previously unknown deep-sea species in the Mariana Trench. The creature, dubbed 'Abyssalus luminaris,' was found at a depth of 8,200 meters during a three-month expedition funded by <span className="px-1 py-0.5" style={{ background: "#8FA59615", color: "#8FA596", borderRadius: "1px" }}>the National Science Foundation</span>.
-              </p>
-            </div>
-
-            {/* Evidence labels */}
-            <div className="px-6 pb-5 flex flex-wrap gap-2">
-              {[
-                { label: "CLAIM", value: "New species discovered", color: "#8FA596" },
-                { label: "SOURCE", value: "University of Oxford", color: "#A58B5B" },
-                { label: "EVIDENCE", value: "Published in Nature", color: "#8FA596" },
-              ].map((tag) => (
-                <div key={tag.label} className="flex items-center gap-2 px-3 py-1.5" style={{ background: "#141615", border: "1px solid #292A27", borderRadius: "1px" }}>
-                  <span className="text-[8px] font-bold tracking-[0.15em]" style={{ color: tag.color }}>{tag.label}</span>
-                  <span className="text-[10px]" style={{ color: "#F1F2EE" }}>{tag.value}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Result preview */}
-            <div className="px-6 py-4" style={{ borderTop: "1px solid #292A27", background: "#0B0D0C" }}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <CheckCircle2 className="w-4 h-4" style={{ color: "#8FA596" }} />
-                  <div>
-                    <span className="text-[10px] font-semibold" style={{ color: "#8FA596" }}>Likely Credible</span>
-                    <span className="text-[10px] ml-2" style={{ color: "#9A9E98" }}>92% confidence</span>
-                  </div>
-                </div>
-                <button type="button" className="cursor-pointer text-[10px] font-semibold tracking-wide flex items-center gap-1.5 transition-colors hover:text-[#8FA596]" style={{ color: "#9A9E98" }} onClick={() => navigate("/dashboard")}>
-                  EXPLORE THE ANALYSIS <ArrowRight className="w-3 h-3" />
-                </button>
-              </div>
-            </div>
-          </motion.div>
+          <ScrutinySection navigate={navigate} />
         </div>
       </Section>
 
