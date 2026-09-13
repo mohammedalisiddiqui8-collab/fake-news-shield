@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 interface TiltCardProps {
   children: React.ReactNode;
   className?: string;
+  style?: React.CSSProperties;
   glareColor?: string;
   intensity?: number;
 }
@@ -11,8 +12,9 @@ interface TiltCardProps {
 export function TiltCard({
   children,
   className = "",
-  glareColor = "oklch(0.72 0.16 195)",
+  glareColor = "#8FA596",
   intensity = 10,
+  style,
 }: TiltCardProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [tilt, setTilt] = useState({ x: 0, y: 0 });
@@ -46,15 +48,16 @@ export function TiltCard({
         rotateY: tilt.y,
       }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      style={{ perspective: 800, transformStyle: "preserve-3d" }}
+
       className={`relative ${className}`}
+      style={{ perspective: 800, transformStyle: "preserve-3d", ...style }}
     >
       {children}
       {/* Glare overlay */}
       <div
         className="absolute inset-0 rounded-[inherit] pointer-events-none transition-opacity duration-300"
         style={{
-          background: `radial-gradient(circle at ${glare.x}% ${glare.y}%, ${glareColor} / ${glare.opacity}) 0%, transparent 60%)`,
+          background: `radial-gradient(circle at ${glare.x}% ${glare.y}%, ${glareColor}${Math.round(glare.opacity * 255).toString(16).padStart(2, '0')} 0%, transparent 60%)`,
         }}
       />
     </motion.div>

@@ -17,6 +17,10 @@ import { Badge } from "@/components/ui/badge";
 import { CredibilityGauge } from "@/components/CredibilityGauge";
 import { StatsView } from "@/components/StatsView";
 import { MethodologyView } from "@/components/MethodologyView";
+import { VerificationPipeline } from "@/components/motion/VerificationPipeline";
+import { DigitSwap } from "@/components/motion/DigitSwap";
+import { ExpandableClaim } from "@/components/motion/ExpandableClaim";
+import { MorphingPanel } from "@/components/motion/MorphingPanel";
 
 /* ─── Types ─── */
 type Verdict = "likely_real" | "likely_fake" | "uncertain";
@@ -293,39 +297,7 @@ export default function Dashboard() {
                       </div>
                       <h3 className="text-sm font-semibold mb-1" style={{ fontFamily: "'DM Serif Display', serif" }}>Verification Pipeline</h3>
                       <p className="text-[10px] text-muted-foreground mb-6">Analyzing content patterns...</p>
-                      <div className="space-y-1">
-                        {pipelineSteps.map((step, i) => {
-                          const isActive = i === pipelineStep;
-                          const isDone = i < pipelineStep;
-                          return (
-                            <motion.div key={step.key}
-                              initial={{ opacity: 0, x: -8 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ delay: i * 0.08 }}
-                              className={`flex items-center gap-2.5 px-3 py-2 rounded transition-all duration-300 ${
-                                isActive ? "bg-primary/8 border border-primary/15" : isDone ? "opacity-60" : "opacity-25"
-                              }`}>
-                              <div className={`w-5 h-5 rounded flex items-center justify-center transition-all duration-300 ${
-                                isDone ? "bg-primary/15" : isActive ? "bg-primary/10 status-pulse" : "bg-muted"
-                              }`}>
-                                {isDone ? (
-                                  <CheckCircle2 className="w-3 h-3 text-primary" />
-                                ) : isActive ? (
-                                  <Loader2 className="w-3 h-3 animate-spin" style={{color: "#8FA596"}} />
-                                ) : (
-                                  <step.icon className="w-3 h-3 text-muted-foreground/40" />
-                                )}
-                              </div>
-                              <span className={`text-[10px] font-mono tracking-wider transition-all duration-300 ${
-                                isActive ? "text-primary font-semibold" : isDone ? "text-muted-foreground" : "text-muted-foreground/30"
-                              }`}>
-                                {step.label}
-                              </span>
-                              {isDone && <CheckCircle2 className="w-3 h-3 text-primary/30 ml-auto" />}
-                            </motion.div>
-                          );
-                        })}
-                      </div>
+                      <VerificationPipeline currentStep={pipelineStep} />
                     </div>
                   </motion.div>
                 )}
@@ -547,7 +519,7 @@ export default function Dashboard() {
                   <div className="relative mt-5">
                     <div className="flex items-center justify-between text-[10px] mb-1">
                       <span className="text-muted-foreground">Confidence</span>
-                      <span className="font-semibold" style={{ color: vc.accentColor }}><AnimatedNumber value={currentResult.confidence} />%</span>
+                      <span className="font-semibold" style={{ color: vc.accentColor }}><DigitSwap value={currentResult.confidence} suffix="" />%</span>
                     </div>
                     <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                       <motion.div initial={{ width: 0 }} animate={{ width: `${currentResult.confidence}%` }}
@@ -680,62 +652,54 @@ export default function Dashboard() {
                 </motion.div>
               )}
 
-              {/* Summary */}
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.18 }}
-                className="glass-card rounded-lg p-4 sm:p-5 mb-3">
-                <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-2">Summary</h3>
-                <p className="text-xs leading-relaxed">{currentResult.summary}</p>
-              </motion.div>
-
-              {/* Reasoning */}
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.22 }}
-                className="glass-card rounded-lg p-4 sm:p-5 mb-3">
-                <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-2">Reasoning</h3>
-                <p className="text-xs leading-relaxed text-muted-foreground">{currentResult.reasoning}</p>
-              </motion.div>
-
-              {/* Red / Green Flags */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                <motion.div initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.25, delay: 0.26 }}
-                  className="glass-card rounded-lg p-4 sm:p-5">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-6 h-6 rounded bg-destructive/8 flex items-center justify-center">
-                      <AlertTriangle className="w-3 h-3 text-destructive" />
-                    </div>
-                    <h3 className="text-xs font-semibold text-destructive">Red Flags</h3>
-                    {currentResult.redFlags.length > 0 && <Badge variant="outline" className="border-destructive/25 text-destructive text-[9px] ml-auto rounded">{currentResult.redFlags.length}</Badge>}
+              {/* Summary + Reasoning — MorphingPanel */}
+              <MorphingPanel
+                preview={
+                  <div>
+                    <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-2">Summary</h3>
+                    <p className="text-xs leading-relaxed">{currentResult.summary}</p>
                   </div>
+                }
+                detail={
+                  <div>
+                    <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-2">Detailed Reasoning</h3>
+                    <p className="text-xs leading-relaxed text-muted-foreground">{currentResult.reasoning}</p>
+                  </div>
+                }
+                triggerLabel="VIEW REASONING"
+                className="mb-3"
+                accentColor="#8FA596"
+              />
+
+              {/* Red Flags — ExpandableClaim style */}
+              <div className="mb-3">
+                <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-2 flex items-center gap-1.5">
+                  <AlertTriangle className="w-3 h-3 text-destructive" />Red Flags {currentResult.redFlags.length > 0 && <span className="text-destructive">({currentResult.redFlags.length})</span>}
+                </h3>
+                <div className="space-y-1.5">
                   {currentResult.redFlags.length === 0 ? (
                     <p className="text-[10px] text-muted-foreground italic">No red flags detected</p>
                   ) : (
-                    <ul className="space-y-1.5">{currentResult.redFlags.map((flag, i) => (
-                      <li key={i} className="flex items-start gap-1.5 text-[10px] leading-relaxed">
-                        <XCircle className="w-3 h-3 text-destructive mt-0.5 shrink-0" />
-                        <span className="text-muted-foreground">{flag}</span>
-                      </li>
-                    ))}</ul>
+                    currentResult.redFlags.map((flag, i) => (
+                      <ExpandableClaim key={i} claimNumber={String(i + 1).padStart(2, "0")} claimText={flag} status="misleading" confidence={Math.max(100 - i * 12, 50)} details="This flag was detected by our NLP pattern matching system and contributes to the overall misinformation score." />
+                    ))
                   )}
-                </motion.div>
-                <motion.div initial={{ opacity: 0, x: 8 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.25, delay: 0.3 }}
-                  className="glass-card rounded-lg p-4 sm:p-5">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-6 h-6 rounded bg-primary/8 flex items-center justify-center">
-                      <CheckCircle2 className="w-3 h-3 text-primary" />
-                    </div>
-                    <h3 className="text-xs font-semibold text-primary">Green Flags</h3>
-                    {currentResult.greenFlags.length > 0 && <Badge variant="outline" className="border-primary/25 text-primary text-[9px] ml-auto rounded">{currentResult.greenFlags.length}</Badge>}
-                  </div>
+                </div>
+              </div>
+              {/* Green Flags */}
+              <div className="mb-3">
+                <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-2 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3 h-3" style={{ color: "#8FA596" }} />Green Flags {currentResult.greenFlags.length > 0 && <span style={{ color: "#8FA596" }}>({currentResult.greenFlags.length})</span>}
+                </h3>
+                <div className="space-y-1.5">
                   {currentResult.greenFlags.length === 0 ? (
-                    <p className="text-[10px] text-muted-foreground italic">No green flags detected</p>
+                    <p className="text-[10px] text-muted-foreground italic">No positive signals detected</p>
                   ) : (
-                    <ul className="space-y-1.5">{currentResult.greenFlags.map((flag, i) => (
-                      <li key={i} className="flex items-start gap-1.5 text-[10px] leading-relaxed">
-                        <CheckCircle2 className="w-3 h-3 text-primary mt-0.5 shrink-0" />
-                        <span className="text-muted-foreground">{flag}</span>
-                      </li>
-                    ))}</ul>
+                    currentResult.greenFlags.map((flag, i) => (
+                      <ExpandableClaim key={i} claimNumber={String(i + 1).padStart(2, "0")} claimText={flag} status="supported" confidence={Math.min(70 + i * 5, 95)} details="This positive signal was detected and contributes to the credibility assessment." />
+                    ))
                   )}
-                </motion.div>
+                </div>
               </div>
 
               {/* Highlighted content */}

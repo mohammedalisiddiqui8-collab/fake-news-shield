@@ -7,6 +7,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router";
 import { useRef, useState, useEffect, Suspense, lazy } from "react";
+import { TextReveal } from "@/components/motion/TextReveal";
+import { ScrollTextFade } from "@/components/motion/ScrollTextFade";
+import { TiltCard } from "@/components/TiltCard";
 
 const HeroScene = lazy(() => import("@/components/HeroScene"));
 
@@ -293,14 +296,16 @@ export default function Landing() {
                 <AnimatedTagline />
               </motion.div>
 
-              <motion.p
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 1.1 }}
-                className="text-sm max-w-lg leading-relaxed mb-10 text-balance"
-                style={{ color: "#9A9E98" }}>
-                An intelligent misinformation detection system that analyzes language, source credibility and logical consistency.
-              </motion.p>
+              <ScrollTextFade parallaxY={12} className="mb-10">
+                <motion.p
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 1.1 }}
+                  className="text-sm max-w-lg leading-relaxed text-balance"
+                  style={{ color: "#9A9E98" }}>
+                  An intelligent misinformation detection system that analyzes language, source credibility and logical consistency.
+                </motion.p>
+              </ScrollTextFade>
 
               <motion.div
                 initial={{ opacity: 0, y: 12 }}
@@ -360,7 +365,7 @@ export default function Landing() {
           <div className="text-center mb-16">
             <div className="h-px mb-4 mx-auto" style={{ background: "linear-gradient(90deg, transparent, #8FA596, transparent)", maxWidth: 60 }} />
             <span className="text-[9px] tracking-[0.3em] uppercase font-medium" style={{ color: "#8FA596" }}>Our Approach</span>
-            <h2 className="mt-2 text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>How Veritas Works</h2>
+            <TextReveal as="h2" splitBy="words" delay={0.1} className="mt-2 text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>How Veritas Works</TextReveal>
             <p className="mt-2 text-[11px] max-w-md mx-auto" style={{ color: "#9A9E98" }}>A five-stage verification pipeline that processes content through layered analysis to produce evidence-backed verdicts.</p>
           </div>
 
@@ -413,7 +418,7 @@ export default function Landing() {
             <div className="col-span-12 lg:col-span-8">
               <RevealLine color="#8FA596" />
               <span className="text-[9px] tracking-[0.3em] uppercase font-medium" style={{ color: "#8FA596" }}>Analysis Depth</span>
-              <h2 className="mt-2 text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>What Veritas Sees</h2>
+              <TextReveal as="h2" splitBy="words" delay={0.1} className="mt-2 text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>What Veritas Sees</TextReveal>
             </div>
           </div>
 
@@ -424,13 +429,14 @@ export default function Landing() {
               { label: "Claim Consistency", value: "5", desc: "Cross-referencing internal claims, checking statistical plausibility, logical coherence.", accent: "#8FA596", bar: 68 },
               { label: "Emotional Bias", value: "4", desc: "Fear appeals, outrage bait, urgency pressure, conspiratorial framing.", accent: "#A9574D", bar: 91 },
             ].map((item, i) => (
-              <motion.div key={item.label}
+              <TiltCard key={item.label} className="p-5 relative overflow-hidden" style={{ background: "#0F1110", border: "1px solid #292A27", borderRadius: "2px" }} glareColor={item.accent} intensity={6}>
+              <motion.div
                 initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-30px" }}
                 transition={{ duration: 0.6, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
-                className="p-5 relative overflow-hidden"
-                style={{ background: "#0F1110", border: "1px solid #292A27", borderRadius: "2px" }}>
+                className=""
+                style={{}}>
                 <div className="absolute top-0 left-0 right-0 h-[2px]" style={{ background: item.accent, opacity: 0.4 }} />
                 <div className="flex items-start justify-between mb-3">
                   <div>
@@ -449,6 +455,7 @@ export default function Landing() {
                   style={{ background: item.accent, opacity: 0.5 }}
                 />
               </motion.div>
+              </TiltCard>
             ))}
           </div>
         </div>
@@ -462,7 +469,7 @@ export default function Landing() {
           <div className="mb-10">
             <RevealLine color="#A58B5B" />
             <span className="text-[9px] tracking-[0.3em] uppercase font-medium" style={{ color: "#A58B5B" }}>Live Preview</span>
-            <h2 className="mt-2 text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>See It In Action</h2>
+            <TextReveal as="h2" splitBy="words" delay={0.1} className="mt-2 text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>See It In Action</TextReveal>
           </div>
 
           <motion.div
@@ -534,7 +541,7 @@ export default function Landing() {
             <div className="col-span-12 lg:col-span-8">
               <RevealLine color="#8FA596" />
               <span className="text-[9px] tracking-[0.3em] uppercase font-medium" style={{ color: "#8FA596" }}>Under The Hood</span>
-              <h2 className="mt-2 text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>Methodology</h2>
+              <TextReveal as="h2" splitBy="words" delay={0.1} className="mt-2 text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>Methodology</TextReveal>
             </div>
           </div>
 
@@ -545,7 +552,8 @@ export default function Landing() {
               { num: "03", title: "Credibility Scoring", desc: "Weighted scoring across 21 misinformation signal categories — each pattern carries a severity weight calibrated against benchmark datasets.", icon: BarChart3 },
               { num: "04", title: "Classification", desc: "Aggregate signals produce a confidence-scored verdict: Likely Credible, Uncertain, or Likely Misleading — with explainable reasoning.", icon: Shield },
             ].map((s, i) => (
-              <motion.div key={s.num}
+              <TiltCard key={s.num} className="p-5 flex gap-4" style={{ background: "#0F1110", border: "1px solid #292A27", borderRadius: "2px" }} intensity={4}>
+              <motion.div
                 initial={{ opacity: 0, y: 24 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-20px" }}
@@ -563,6 +571,7 @@ export default function Landing() {
                   <p className="mt-1 text-[10px] leading-relaxed" style={{ color: "#9A9E98" }}>{s.desc}</p>
                 </div>
               </motion.div>
+              </TiltCard>
             ))}
           </div>
 
