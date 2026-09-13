@@ -455,34 +455,7 @@ export default function Landing() {
       </Section>
 
       {/* ════════════════════════════════════════════
-       3. PROJECT STATISTICS
-       ════════════════════════════════════════════ */}
-      <Section className="py-20 sm:py-28 px-5" style={{ borderTop: "1px solid #292A27" }}>
-        <div className="mx-auto max-w-5xl">
-          <div className="grid grid-cols-3 gap-6 sm:gap-10 text-center">
-            {[
-              { value: 70, suffix: "+", label: "Regex Patterns", sub: "Across 21 categories" },
-              { value: 21, suffix: "", label: "Detection Signals", sub: "Misinformation indicators" },
-              { value: 95, suffix: "%+", label: "Model Confidence", sub: "On benchmark data" },
-            ].map((s, i) => (
-              <motion.div key={s.label}
-                initial={{ opacity: 0, y: 24 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: i * 0.12 }}>
-                <div className="text-4xl sm:text-5xl font-bold" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>
-                  <CountUp target={s.value} suffix={s.suffix} />
-                </div>
-                <div className="mt-2 text-[11px] font-semibold tracking-wide" style={{ color: "#8FA596" }}>{s.label}</div>
-                <div className="mt-0.5 text-[9px]" style={{ color: "#9A9E98" }}>{s.sub}</div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </Section>
-
-      {/* ════════════════════════════════════════════
-       4. INVESTIGATION PREVIEW — Interactive Article
+       3. INVESTIGATION PREVIEW — Interactive Article
        ════════════════════════════════════════════ */}
       <Section className="py-20 sm:py-28 px-5" style={{ borderTop: "1px solid #292A27" }}>
         <div className="mx-auto max-w-4xl">
