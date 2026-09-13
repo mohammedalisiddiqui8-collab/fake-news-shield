@@ -363,10 +363,7 @@ export default function Landing() {
       <Section className="py-20 sm:py-28 px-5" id="how-it-works" style={{ borderTop: "1px solid #292A27" }}>
         <div className="mx-auto max-w-5xl">
           <div className="text-center mb-16">
-            <div className="h-px mb-4 mx-auto" style={{ background: "linear-gradient(90deg, transparent, #8FA596, transparent)", maxWidth: 60 }} />
-            <span className="text-[9px] tracking-[0.3em] uppercase font-medium" style={{ color: "#8FA596" }}>Our Approach</span>
-            <TextReveal as="h2" splitBy="words" delay={0.1} className="mt-2 text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>How Veritas Works</TextReveal>
-            <p className="mt-2 text-[11px] max-w-md mx-auto" style={{ color: "#9A9E98" }}>A five-stage verification pipeline that processes content through layered analysis to produce evidence-backed verdicts.</p>
+            <TextReveal as="h2" splitBy="words" delay={0.1} className="text-3xl sm:text-4xl lg:text-5xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>TRACE</TextReveal>
           </div>
 
           {/* Pipeline — horizontal on desktop, vertical on mobile */}
@@ -414,12 +411,8 @@ export default function Landing() {
        ════════════════════════════════════════════ */}
       <Section className="py-20 sm:py-28 px-5" style={{ borderTop: "1px solid #292A27" }}>
         <div className="mx-auto max-w-5xl">
-          <div className="grid grid-cols-12 gap-4 mb-12">
-            <div className="col-span-12 lg:col-span-8">
-              <RevealLine color="#8FA596" />
-              <span className="text-[9px] tracking-[0.3em] uppercase font-medium" style={{ color: "#8FA596" }}>Analysis Depth</span>
-              <TextReveal as="h2" splitBy="words" delay={0.1} className="mt-2 text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>What Veritas Sees</TextReveal>
-            </div>
+          <div className="mb-12">
+            <TextReveal as="h2" splitBy="words" delay={0.1} className="text-3xl sm:text-4xl lg:text-5xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>PATTERNS</TextReveal>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -467,9 +460,7 @@ export default function Landing() {
       <Section className="py-20 sm:py-28 px-5" style={{ borderTop: "1px solid #292A27" }}>
         <div className="mx-auto max-w-4xl">
           <div className="mb-10">
-            <RevealLine color="#A58B5B" />
-            <span className="text-[9px] tracking-[0.3em] uppercase font-medium" style={{ color: "#A58B5B" }}>Live Preview</span>
-            <TextReveal as="h2" splitBy="words" delay={0.1} className="mt-2 text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>See It In Action</TextReveal>
+            <TextReveal as="h2" splitBy="words" delay={0.1} className="text-3xl sm:text-4xl lg:text-5xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>SCRUTINY</TextReveal>
           </div>
 
           <motion.div
@@ -537,12 +528,8 @@ export default function Landing() {
        ════════════════════════════════════════════ */}
       <Section className="py-20 sm:py-28 px-5" style={{ borderTop: "1px solid #292A27" }}>
         <div className="mx-auto max-w-5xl">
-          <div className="grid grid-cols-12 gap-4 mb-12">
-            <div className="col-span-12 lg:col-span-8">
-              <RevealLine color="#8FA596" />
-              <span className="text-[9px] tracking-[0.3em] uppercase font-medium" style={{ color: "#8FA596" }}>Under The Hood</span>
-              <TextReveal as="h2" splitBy="words" delay={0.1} className="mt-2 text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>Methodology</TextReveal>
-            </div>
+          <div className="mb-12">
+            <TextReveal as="h2" splitBy="words" delay={0.1} className="text-3xl sm:text-4xl lg:text-5xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>FRAMEWORK</TextReveal>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -558,8 +545,7 @@ export default function Landing() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-20px" }}
                 transition={{ duration: 0.5, delay: i * 0.08 }}
-                className="p-5 flex gap-4"
-                style={{ background: "#0F1110", border: "1px solid #292A27", borderRadius: "2px" }}>
+                className="flex gap-4">
                 <div className="shrink-0">
                   <div className="w-9 h-9 rounded-sm flex items-center justify-center" style={{ background: "#141615", border: "1px solid #292A27" }}>
                     <s.icon className="w-4 h-4" style={{ color: "#8FA596" }} />
