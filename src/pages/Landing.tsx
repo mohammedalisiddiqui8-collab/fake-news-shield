@@ -362,7 +362,7 @@ export default function Landing() {
        ════════════════════════════════════════════ */}
       <Section className="py-20 sm:py-28 px-5" id="how-it-works" style={{ borderTop: "1px solid #292A27" }}>
         <div className="mx-auto max-w-5xl">
-          <div className="text-center mb-16">
+          <div className="mb-16">
             <TextReveal as="h2" splitBy="words" delay={0.1} className="text-3xl sm:text-4xl lg:text-5xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>TRACE</TextReveal>
           </div>
 
