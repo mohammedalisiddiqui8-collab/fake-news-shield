@@ -21,6 +21,7 @@ import { VerificationPipeline } from "@/components/motion/VerificationPipeline";
 import { DigitSwap } from "@/components/motion/DigitSwap";
 import { ExpandableClaim } from "@/components/motion/ExpandableClaim";
 import { MorphingPanel } from "@/components/motion/MorphingPanel";
+import { getLiveNews, FALLBACK_SAMPLES, getCategoryIcon, type LiveArticle } from "@/lib/news";
 
 /* ─── Types ─── */
 type Verdict = "likely_real" | "likely_fake" | "uncertain";
@@ -68,14 +69,19 @@ const verdictConfig: Record<Verdict, {
 };
 
 /* ─── Sample Texts ─── */
-const sampleTexts = [
-  { label: "Scientists Discover New Species", text: "In a groundbreaking discovery, a team of marine biologists from the University of Oxford has identified a previously unknown deep-sea species in the Mariana Trench. The creature, dubbed 'Abyssalus luminaris,' was found at a depth of 8,200 meters during a three-month expedition funded by the National Science Foundation. Lead researcher Dr. Sarah Chen published the findings in the journal Nature on March 15, 2025, noting the species' bioluminescent properties were unlike anything documented before. The discovery was independently verified by teams from MIT and the Woods Hole Oceanographic Institution.", type: "real" as const, category: "Science" },
-  { label: "Miracle Cure Hidden by Big Pharma", text: "EXPOSED!!! A secret natural cure for ALL diseases has been kept hidden by the corrupt pharmaceutical industry for DECADES!!! An anonymous insider known only as 'Dr. Truth' revealed in a viral Telegram post that a simple mixture of turmeric, apple cider vinegar, and lemon juice can cure cancer, diabetes, AND heart disease!!! The government doesn't want you to know this because they make BILLIONS from keeping you sick!!! Studies PROVE this works but the mainstream media won't report it because they're all PAID OFF!!! Share this before they delete it!!!", type: "fake" as const, category: "Health" },
-  { label: "Market Rate Report", text: "The Federal Reserve held interest rates steady at 5.25-5.50% during its January 2025 meeting, as widely anticipated by economists. Fed Chair Jerome Powell stated in the post-meeting press conference that while inflation has decreased from its 2022 peak of 9.1% to approximately 2.9%, the committee needs 'more confidence' that inflation is sustainably moving toward the 2% target before considering cuts. Markets reacted modestly, with the S&P 500 closing 0.3% lower. Analysts at Goldman Sachs and JPMorgan continue to project the first rate cut in June.", type: "real" as const, category: "Finance" },
-  { label: "Political Conspiracy Post", text: "WAKE UP SHEEPLE!!! The deep state doesn't want you to know that the 2024 election was completely STOLEN by globalist elites!!! Anonymous sources confirm that George Soros paid millions to rig the voting machines!!! The mainstream media is covering it all up because they're controlled by the new world order!!! Do your own research before they censor this!!! Share before they delete it!!! The truth is OUT THERE but the corrupt politicians don't want you to see it!!!", type: "fake" as const, category: "Politics" },
-  { label: "Climate Change Report", text: "A comprehensive study published in the journal Science on February 12, 2025, has found that global sea levels rose by 4.5 millimeters in 2024, the fastest annual increase ever recorded. The research, conducted by scientists at NASA's Goddard Institute for Space Studies and the University of Copenhagen, analyzed satellite data from 2015 to 2024. Lead author Dr. Michael Torres stated that the findings 'confirm the accelerating trend predicted by climate models.' The study notes that while some skeptics question the methodology, the results have been independently verified.", type: "real" as const, category: "Environment" },
-  { label: "Celebrity Health Rumor", text: "SHOCKING!!! Famous Hollywood star secretly DEAD but government hiding it from public!!! Sources say the celebrity was assassinated because they knew too much about big pharma's secret experiments!!! Friends are being threatened to stay silent!!! The deep state doesn't want you to know the truth!!! Wake up people!!! This is bigger than any conspiracy you've ever seen!!! The mainstream media won't report it because they're all controlled by the elite!!! Share this before they delete it!!!", type: "fake" as const, category: "Entertainment" },
-];
+/* ─── Static sample fallback ─── */
+const sampleTexts = FALLBACK_SAMPLES;
+
+/* ─── Unified sample item type ─── */
+interface SampleItem {
+  label: string;
+  text: string;
+  type: "real" | "fake";
+  category: string;
+  source?: string;
+  publishedAt?: string;
+  sourceUrl?: string;
+}
 
 /* ─── Tips ─── */
 const mediaLiteracyTips = [
@@ -139,7 +145,46 @@ export default function Dashboard() {
   const [pipelineStep, setPipelineStep] = useState(-1);
   const [resultTab, setResultTab] = useState<"overview" | "linguistic" | "source" | "logical" | "findings">("overview");
   const [analysisDepth, setAnalysisDepth] = useState<"quick" | "standard" | "deep">("standard");
+  const [liveNews, setLiveNews] = useState<LiveArticle[]>([]);
+  const [newsLoading, setNewsLoading] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  /* ─── Fetch live news on mount ─── */
+  useEffect(() => {
+    let cancelled = false;
+    getLiveNews()
+      .then((articles) => { if (!cancelled) setLiveNews(articles); })
+      .catch(() => { /* fallback will be used */ })
+      .finally(() => { if (!cancelled) setNewsLoading(false); });
+    return () => { cancelled = true; };
+  }, []);
+
+  /* ─── Build display items: live articles first, then static fallback to fill up to 6 ─── */
+  const displayItems: SampleItem[] = (() => {
+    const liveItems: SampleItem[] = liveNews.slice(0, 6).map((article) => ({
+      label: article.title,
+      text: article.fullText,
+      type: "real" as const,
+      category: article.category,
+      source: article.sourceName,
+      publishedAt: article.publishedAt,
+      sourceUrl: article.sourceUrl,
+    }));
+    // If we have fewer than 6 live items, pad with static fallback
+    if (liveItems.length < 6) {
+      const needed = 6 - liveItems.length;
+      const filler = sampleTexts.slice(0, needed);
+      liveItems.push(
+        ...filler.map((s) => ({
+          label: s.label,
+          text: s.text,
+          type: s.type as "real" | "fake",
+          category: s.category,
+        }))
+      );
+    }
+    return liveItems;
+  })();
 
   useEffect(() => {
     const interval = setInterval(() => setCurrentTip(t => (t + 1) % mediaLiteracyTips.length), 7000);
@@ -377,27 +422,70 @@ export default function Dashboard() {
               </div>
 
               {/* Samples */}
+              {/* ── Try a Sample / Live News ── */}
               <div className="mb-5">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-2.5">Try a sample</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                  {sampleTexts.map(sample => (
-                    <button key={sample.label} type="button"
-                      className="glass-card rounded-lg p-3.5 text-left hover:shadow-sm cursor-pointer group transition-all duration-200 border border-border"
-                      onClick={() => { setInputText(sample.text); setInputType("text"); }}>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-[11px] font-semibold text-primary truncate">{sample.label}</span>
-                        <ChevronRight className="w-3 h-3 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-2.5">
+                  {newsLoading ? "Loading headlines…" : liveNews.length > 0 ? "Today's Headlines" : "Try a sample"}
+                </p>
+
+                {/* Loading skeleton */}
+                {newsLoading && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <div key={i} className="glass-card rounded-lg p-3.5 animate-pulse">
+                        <div className="h-3 bg-muted rounded w-3/4 mb-2" />
+                        <div className="h-2 bg-muted rounded w-full mb-1" />
+                        <div className="h-2 bg-muted rounded w-2/3 mb-2" />
+                        <div className="flex gap-1.5">
+                          <div className="h-4 bg-muted rounded w-10" />
+                          <div className="h-4 bg-muted rounded w-14" />
+                        </div>
                       </div>
-                      <p className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed">{sample.text.slice(0, 70)}...</p>
-                      <div className="flex items-center gap-1.5 mt-1.5">
-                        <Badge variant="outline" className={`text-[9px] px-1.5 py-0 ${sample.type === "real" ? "border-primary/25 text-primary" : "border-destructive/25 text-destructive"}`}>
-                          {sample.type === "real" ? "Real" : "Fake"}
-                        </Badge>
-                        <Badge variant="outline" className="text-[9px] px-1.5 py-0 text-muted-foreground">{sample.category}</Badge>
-                      </div>
-                    </button>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Sample cards (live or fallback) */}
+                {!newsLoading && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+                    {displayItems.map((item) => (
+                      <button key={item.label} type="button"
+                        className="glass-card rounded-lg p-3.5 text-left hover:shadow-sm cursor-pointer group transition-all duration-200 border border-border"
+                        onClick={() => { setInputText(item.text); setInputType("text"); }}>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[11px] font-semibold text-primary truncate pr-2">
+                            {item.label}
+                          </span>
+                          <ChevronRight className="w-3 h-3 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+                        </div>
+                        <p className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed">
+                          {item.text.slice(0, 70)}…
+                        </p>
+                        <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                          <Badge variant="outline" className={`text-[9px] px-1.5 py-0 ${item.type === "real" ? "border-primary/25 text-primary" : "border-destructive/25 text-destructive"}`}>
+                            {item.type === "real" ? "Real" : "Fake"}
+                          </Badge>
+                          <Badge variant="outline" className="text-[9px] px-1.5 py-0 text-muted-foreground">
+                            {getCategoryIcon(item.category)} {item.category}
+                          </Badge>
+                          {item.source && (
+                            <span className="text-[8px] text-muted-foreground/60 ml-auto truncate max-w-[100px]">
+                              {item.source}
+                            </span>
+                          )}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Subtle live indicator */}
+                {liveNews.length > 0 && !newsLoading && (
+                  <div className="flex items-center gap-1.5 mt-2">
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#8FA596", opacity: 0.6 }} />
+                    <span className="text-[8px] text-muted-foreground/50">Live news · updates every 30 min</span>
+                  </div>
+                )}
               </div>
 
               {/* Analyze button */}
