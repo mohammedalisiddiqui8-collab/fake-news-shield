@@ -401,10 +401,12 @@ export default function Dashboard() {
               </div>
 
               {/* Analyze button */}
-              <Button size="lg" className="cursor-pointer w-full bg-primary hover:bg-primary/90 text-primary-foreground gap-2 h-11 text-sm rounded"
+              <button type="button"
+                className="cursor-pointer w-full flex items-center justify-center gap-2 h-11 text-sm font-medium rounded transition-all duration-200 ease-out hover:-translate-y-[1px] hover:shadow-[0_2px_8px_rgba(143,165,150,0.15)] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none disabled:hover:translate-y-0 disabled:hover:shadow-none"
+                style={{ background: "#8FA596", color: "#0B0D0C" }}
                 onClick={handleAnalyze} disabled={isAnalyzing || !inputText.trim()}>
-                Analyze Content <ArrowRight className="w-4 h-4" />
-              </Button>
+                Analyze Content <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+              </button>
 
               {/* ── Feature cards ── */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mt-6">

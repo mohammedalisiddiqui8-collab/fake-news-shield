@@ -129,13 +129,21 @@ export function VerificationPipeline({
                     animate={{ width: "60px" }}
                     exit={{ width: 0 }}
                     transition={{ duration: 0.6 }}
-                    className="h-[1px] mt-1.5"
+                    className="h-[1px] mt-1.5 overflow-hidden"
                     style={{
                       background: "linear-gradient(90deg, #8FA596, transparent)",
                     }}
                   />
                 )}
               </AnimatePresence>
+
+              {/* Active step pulse indicator */}
+              {isActive && (
+                <div className="flex items-center gap-1.5 mt-1">
+                  <span className="w-1 h-1 rounded-full" style={{ background: "#8FA596", animation: "blink 1s step-end infinite" }} />
+                  <span className="text-[8px] tracking-wider" style={{ color: "#8FA596", opacity: 0.7 }}>Processing...</span>
+                </div>
+              )}
             </motion.div>
           </div>
         );
