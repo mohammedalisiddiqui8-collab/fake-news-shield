@@ -623,7 +623,7 @@ export default function Landing() {
       {/* ════════════════════════════════════════════
        5. METHODOLOGY PREVIEW
        ════════════════════════════════════════════ */}
-      <Section className="py-20 sm:py-28 px-5" style={{ borderTop: "1px solid #292A27" }}>
+      <Section className="py-16 sm:py-20 px-5" style={{ borderTop: "1px solid #292A27" }}>
         <div className="mx-auto max-w-5xl">
           <div className="mb-12">
             <TextReveal as="h2" splitBy="words" delay={0.1} className="text-3xl sm:text-4xl lg:text-5xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>FRAMEWORK</TextReveal>
@@ -677,7 +677,7 @@ export default function Landing() {
       {/* ════════════════════════════════════════════
        6. FINAL CTA
        ════════════════════════════════════════════ */}
-      <Section className="py-24 sm:py-32 px-5" style={{ borderTop: "1px solid #292A27" }}>
+      <Section className="py-16 sm:py-24 px-5" style={{ borderTop: "1px solid #292A27" }}>
         <div className="mx-auto max-w-2xl text-center">
           <motion.div initial={{ opacity: 0, y: 32 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
             transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}>

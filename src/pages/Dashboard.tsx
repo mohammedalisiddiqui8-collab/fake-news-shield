@@ -280,7 +280,7 @@ export default function Dashboard() {
         </div>
       </nav>
 
-      <main className="mx-auto max-w-4xl px-4 sm:px-6 py-5 sm:py-7">
+      <main className="mx-auto max-w-4xl px-4 sm:px-6 pt-16 sm:pt-14 pb-5 sm:pb-7">
         <AnimatePresence mode="wait">
           {/* ═══ ANALYZE ═══ */}
           {activeView === "analyze" && (
@@ -407,16 +407,18 @@ export default function Dashboard() {
               </Button>
 
               {/* ── Feature cards ── */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
-                {[{ icon: Brain, title: "AI-Powered Analysis", desc: "Advanced NLP & ML models" }, { icon: Search, title: "Multiple Checks", desc: "Source, logic, language & more" }, { icon: BarChart3, title: "Detailed Reports", desc: "Clear, simple, actionable" }].map((f, i) => (
-                  <motion.div key={f.title} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.08 }}
-                    className="glass-card rounded-lg p-3.5 flex items-center gap-3">
-                    <div className="w-8 h-8 rounded bg-primary/8 flex items-center justify-center shrink-0">
-                      <f.icon className="w-4 h-4 text-primary" />
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mt-6">
+                {[{ icon: Brain, title: "AI-Powered Analysis", desc: "Advanced NLP & ML models", accent: "#8FA596" }, { icon: Search, title: "Multiple Checks", desc: "Source, logic, language & more", accent: "#A58B5B" }, { icon: BarChart3, title: "Detailed Reports", desc: "Clear, simple, actionable", accent: "#8FA596" }].map((f, i) => (
+                  <motion.div key={f.title} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.08, duration: 0.4 }}
+                    className="relative overflow-hidden flex items-center gap-3 px-4 py-3.5"
+                    style={{ background: "#0F1110", border: "1px solid #292A27", borderRadius: "2px" }}>
+                    <div className="absolute top-0 left-0 right-0 h-[1px]" style={{ background: f.accent, opacity: 0.3 }} />
+                    <div className="w-7 h-7 rounded-sm flex items-center justify-center shrink-0" style={{ background: `${f.accent}0d`, border: `1px solid ${f.accent}18` }}>
+                      <f.icon className="w-3.5 h-3.5" style={{ color: f.accent }} />
                     </div>
                     <div>
-                      <span className="text-[11px] font-semibold block">{f.title}</span>
-                      <span className="text-[9px] text-muted-foreground">{f.desc}</span>
+                      <span className="text-[10px] font-semibold block leading-tight" style={{ color: "#F1F2EE" }}>{f.title}</span>
+                      <span className="text-[9px] leading-relaxed" style={{ color: "#9A9E98" }}>{f.desc}</span>
                     </div>
                   </motion.div>
                 ))}
