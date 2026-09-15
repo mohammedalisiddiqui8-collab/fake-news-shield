@@ -21,7 +21,7 @@ import { VerificationPipeline } from "@/components/motion/VerificationPipeline";
 import { DigitSwap } from "@/components/motion/DigitSwap";
 import { ExpandableClaim } from "@/components/motion/ExpandableClaim";
 import { MorphingPanel } from "@/components/motion/MorphingPanel";
-import { getLiveNews, FALLBACK_SAMPLES, getCategoryIcon, type LiveArticle } from "@/lib/news";
+import { getLiveNews, FALLBACK_SAMPLES, getCategoryIcon, relativeTime, type LiveArticle } from "@/lib/news";
 
 /* ─── Types ─── */
 type Verdict = "likely_real" | "likely_fake" | "uncertain";
@@ -80,7 +80,9 @@ interface SampleItem {
   category: string;
   source?: string;
   publishedAt?: string;
+  publishedAgo?: string;
   sourceUrl?: string;
+  isSnippet?: boolean;
 }
 
 /* ─── Tips ─── */
@@ -168,7 +170,9 @@ export default function Dashboard() {
       category: article.category,
       source: article.sourceName,
       publishedAt: article.publishedAt,
+      publishedAgo: article.publishedAgo,
       sourceUrl: article.sourceUrl,
+      isSnippet: article.isSnippet,
     }));
     // If we have fewer than 6 live items, pad with static fallback
     if (liveItems.length < 6) {
@@ -452,15 +456,39 @@ export default function Dashboard() {
                       <button key={item.label} type="button"
                         className="glass-card rounded-lg p-3.5 text-left hover:shadow-sm cursor-pointer group transition-all duration-200 border border-border"
                         onClick={() => { setInputText(item.text); setInputType("text"); }}>
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-[11px] font-semibold text-primary truncate pr-2">
+                        {/* Title + chevron */}
+                        <div className="flex items-start justify-between gap-2 mb-1">
+                          <span className="text-[11px] font-semibold text-primary leading-snug line-clamp-2">
                             {item.label}
                           </span>
-                          <ChevronRight className="w-3 h-3 text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+                          <ChevronRight className="w-3 h-3 text-muted-foreground group-hover:text-primary transition-colors shrink-0 mt-0.5" />
                         </div>
+
+                        {/* Description snippet */}
                         <p className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed">
-                          {item.text.slice(0, 70)}…
+                          {item.text.slice(0, 80)}…
                         </p>
+
+                        {/* Source + time row */}
+                        {(item.source || item.publishedAgo) && (
+                          <div className="flex items-center gap-1.5 mt-1.5">
+                            {item.source && (
+                              <span className="text-[8px] font-medium" style={{ color: "#A58B5B" }}>
+                                {item.source}
+                              </span>
+                            )}
+                            {item.source && item.publishedAgo && (
+                              <span className="text-[8px]" style={{ color: "#9A9E9850" }}>·</span>
+                            )}
+                            {item.publishedAgo && (
+                              <span className="text-[8px]" style={{ color: "#9A9E98" }}>
+                                {item.publishedAgo}
+                              </span>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Badges row */}
                         <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
                           <Badge variant="outline" className={`text-[9px] px-1.5 py-0 ${item.type === "real" ? "border-primary/25 text-primary" : "border-destructive/25 text-destructive"}`}>
                             {item.type === "real" ? "Real" : "Fake"}
@@ -468,10 +496,10 @@ export default function Dashboard() {
                           <Badge variant="outline" className="text-[9px] px-1.5 py-0 text-muted-foreground">
                             {getCategoryIcon(item.category)} {item.category}
                           </Badge>
-                          {item.source && (
-                            <span className="text-[8px] text-muted-foreground/60 ml-auto truncate max-w-[100px]">
-                              {item.source}
-                            </span>
+                          {item.isSnippet && (
+                            <Badge variant="outline" className="text-[8px] px-1 py-0 text-muted-foreground/60 border-muted-foreground/15">
+                              snippet
+                            </Badge>
                           )}
                         </div>
                       </button>
