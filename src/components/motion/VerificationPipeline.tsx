@@ -43,15 +43,15 @@ export function VerificationPipeline({
                 initial={false}
                 animate={{
                   background: isDone
-                    ? "#7F927815"
+                    ? "#C8B49015"
                     : isActive
-                      ? "#7F927810"
+                      ? "#C8B49010"
                       : "#141615",
                   borderColor: isDone
-                    ? "#7F927830"
+                    ? "#C8B49030"
                     : isActive
-                      ? "#7F927825"
-                      : "#292A27",
+                      ? "#C8B49025"
+                      : "#1E1E1E",
                 }}
                 transition={{ duration: 0.4 }}
                 className="w-7 h-7 rounded-sm flex items-center justify-center shrink-0 z-10"
@@ -63,15 +63,15 @@ export function VerificationPipeline({
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", stiffness: 400, damping: 20 }}
                   >
-                    <CheckCircle2 className="w-3.5 h-3.5" style={{ color: "#7F9278" }} />
+                    <CheckCircle2 className="w-3.5 h-3.5" style={{ color: "#C8B490" }} />
                   </motion.div>
                 ) : isActive ? (
                   <Loader2
                     className="w-3.5 h-3.5 animate-spin"
-                    style={{ color: "#7F9278" }}
+                    style={{ color: "#C8B490" }}
                   />
                 ) : (
-                  <step.icon className="w-3.5 h-3.5" style={{ color: "#9A9E9840" }} />
+                  <step.icon className="w-3.5 h-3.5" style={{ color: "#A8A09840" }} />
                 )}
               </motion.div>
 
@@ -80,7 +80,7 @@ export function VerificationPipeline({
                 <div className="relative w-px flex-1 min-h-[24px]">
                   <div
                     className="absolute inset-0"
-                    style={{ background: "#292A27" }}
+                    style={{ background: "#1E1E1E" }}
                   />
                   <motion.div
                     initial={{ height: 0 }}
@@ -89,7 +89,7 @@ export function VerificationPipeline({
                     }}
                     transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
                     className="absolute top-0 left-0 w-full"
-                    style={{ background: "#7F927850" }}
+                    style={{ background: "#C8B49050" }}
                   />
                 </div>
               )}
@@ -109,14 +109,14 @@ export function VerificationPipeline({
                 className="text-[9px] font-bold tracking-[0.15em] block"
                 style={{
                   fontFamily: "'JetBrains Mono', monospace",
-                  color: isActive ? "#7F9278" : isDone ? "#9A9E98" : "#9A9E98",
+                  color: isActive ? "#C8B490" : isDone ? "#A8A098" : "#A8A098",
                 }}
               >
                 {step.label}
               </span>
               <span
                 className="text-[9px] block mt-0.5"
-                style={{ color: "#9A9E98" }}
+                style={{ color: "#A8A098" }}
               >
                 {step.sublabel}
               </span>
@@ -131,7 +131,7 @@ export function VerificationPipeline({
                     transition={{ duration: 0.6 }}
                     className="h-[1px] mt-1.5 overflow-hidden"
                     style={{
-                      background: "linear-gradient(90deg, #7F9278, transparent)",
+                      background: "linear-gradient(90deg, #C8B490, transparent)",
                     }}
                   />
                 )}
@@ -140,8 +140,8 @@ export function VerificationPipeline({
               {/* Active step pulse indicator */}
               {isActive && (
                 <div className="flex items-center gap-1.5 mt-1">
-                  <span className="w-1 h-1 rounded-full" style={{ background: "#7F9278", animation: "blink 1s step-end infinite" }} />
-                  <span className="text-[8px] tracking-wider" style={{ color: "#7F9278", opacity: 0.7 }}>Processing...</span>
+                  <span className="w-1 h-1 rounded-full" style={{ background: "#C8B490", animation: "blink 1s step-end infinite" }} />
+                  <span className="text-[8px] tracking-wider" style={{ color: "#C8B490", opacity: 0.7 }}>Processing...</span>
                 </div>
               )}
             </motion.div>

@@ -53,7 +53,7 @@ const verdictConfig: Record<Verdict, {
 }> = {
   likely_real: {
     label: "Likely Credible", icon: CheckCircle2, color: "text-primary",
-    bg: "bg-primary/8", border: "border-primary/20", accentColor: "#7F9278",
+    bg: "bg-primary/8", border: "border-primary/20", accentColor: "#C8B490",
     description: "This content appears to be based on credible sourcing and journalistic standards.",
   },
   uncertain: {
@@ -309,14 +309,14 @@ export default function Dashboard() {
       <nav className="sticky top-0 z-50"                style={{ background: "rgba(45,212,168,0.06)" }}>
         <div className="mx-auto max-w-6xl px-4 sm:px-6 h-12 flex items-center justify-between">
           <button type="button" className="cursor-pointer flex items-center gap-2" onClick={() => navigate("/")}>
-            <Shield className="w-5 h-5" style={{ color: "#EDE6D9" }} />
+            <Shield className="w-5 h-5" style={{ color: "#F5F0E8" }} />
             <span className="font-bold tracking-[0.15em] uppercase text-sm" style={{ fontFamily: "'DM Serif Display', serif", color: "#E8E4DC" }}>Veritas</span>
           </button>
           <div className="flex items-center gap-0.5">
             {navItems.map(item => (
               <Button key={item.key} variant="ghost" size="sm"
                 className={`cursor-pointer gap-1 text-[10px] sm:text-xs px-2 sm:px-2.5 h-7 rounded ${activeView === item.key ? "" : ""}`}
-                style={activeView === item.key ? { background: "rgba(45,212,168,0.1)", color: "#7F9278" } : { color: "#7A8280" }}
+                style={activeView === item.key ? { background: "rgba(45,212,168,0.1)", color: "#C8B490" } : { color: "#7A8280" }}
                 disabled={item.disabled} onClick={() => setActiveView(item.key)}>
                 <item.icon className="w-3 h-3" /><span className="hidden md:inline">{item.label}</span>
               </Button>
@@ -384,7 +384,7 @@ export default function Dashboard() {
               <div className="glass-card rounded-lg p-4 mb-3">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.12em]">Analysis Depth</span>
-                  <span className="text-[10px] font-semibold capitalize" style={{ color: "#7F9278" }}>{analysisDepth}</span>
+                  <span className="text-[10px] font-semibold capitalize" style={{ color: "#C8B490" }}>{analysisDepth}</span>
                 </div>
                 <div className="flex items-center gap-0">
                   {(["quick", "standard", "deep"] as const).map((depth, i) => (
@@ -392,7 +392,7 @@ export default function Dashboard() {
                       className={`flex-1 cursor-pointer py-1.5 text-[9px] font-semibold tracking-[0.1em] uppercase transition-all duration-300 ${
                         analysisDepth === depth ? "text-primary" : "text-muted-foreground/40 hover:text-muted-foreground"
                       }`}
-                      style={analysisDepth === depth ? { background: "rgba(62,232,184,0.06)", borderBottom: "2px solid #8FA596" } : { borderBottom: "2px solid transparent" }}
+                      style={analysisDepth === depth ? { background: "rgba(62,232,184,0.06)", borderBottom: "2px solid #D4C4A8" } : { borderBottom: "2px solid transparent" }}
                       onClick={() => setAnalysisDepth(depth)}>
                       {depth}
                     </button>
@@ -473,12 +473,12 @@ export default function Dashboard() {
                         {(item.source || item.publishedAgo) && (
                           <div className="flex items-center gap-1.5 mt-1.5">
                             {item.source && (
-                              <span className="text-[8px] font-medium" style={{ color: "#8A6A45" }}>
+                              <span className="text-[8px] font-medium" style={{ color: "#C8B490" }}>
                                 {item.source}
                               </span>
                             )}
                             {item.source && item.publishedAgo && (
-                              <span className="text-[8px]" style={{ color: "#9A9E9850" }}>·</span>
+                              <span className="text-[8px]" style={{ color: "#A8A09850" }}>·</span>
                             )}
                             {item.publishedAgo && (
                               <span className="text-[8px]" style={{ color: "#B39977" }}>
@@ -510,7 +510,7 @@ export default function Dashboard() {
                 {/* Subtle live indicator */}
                 {liveNews.length > 0 && !newsLoading && (
                   <div className="flex items-center gap-1.5 mt-2">
-                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#7F9278", opacity: 0.6 }} />
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#C8B490", opacity: 0.6 }} />
                     <span className="text-[8px] text-muted-foreground/50">Live news · updates every 30 min</span>
                   </div>
                 )}
@@ -519,23 +519,23 @@ export default function Dashboard() {
               {/* Analyze button */}
               <button type="button"
                 className="cursor-pointer w-full flex items-center justify-center gap-2 h-11 text-sm font-medium rounded transition-all duration-200 ease-out hover:-translate-y-[1px] hover:shadow-[0_2px_8px_rgba(180,155,119,0.15)] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none disabled:hover:translate-y-0 disabled:hover:shadow-none"
-                style={{ background: "#7F9278", color: "#17130F" }}
+                style={{ background: "#C8B490", color: "#17130F" }}
                 onClick={handleAnalyze} disabled={isAnalyzing || !inputText.trim()}>
                 Analyze Content <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
               </button>
 
               {/* ── Feature cards ── */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mt-6">
-                {[{ icon: Brain, title: "AI-Powered Analysis", desc: "Advanced NLP & ML models", accent: "#7F9278" }, { icon: Search, title: "Multiple Checks", desc: "Source, logic, language & more", accent: "#8A6A45" }, { icon: BarChart3, title: "Detailed Reports", desc: "Clear, simple, actionable", accent: "#7F9278" }].map((f, i) => (
+                {[{ icon: Brain, title: "AI-Powered Analysis", desc: "Advanced NLP & ML models", accent: "#C8B490" }, { icon: Search, title: "Multiple Checks", desc: "Source, logic, language & more", accent: "#C8B490" }, { icon: BarChart3, title: "Detailed Reports", desc: "Clear, simple, actionable", accent: "#C8B490" }].map((f, i) => (
                   <motion.div key={f.title} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.08, duration: 0.4 }}
                     className="relative overflow-hidden flex items-center gap-3 px-4 py-3.5"
-                    style={{ background: "#241C15", border: "1px solid #292A27", borderRadius: "2px" }}>
+                    style={{ background: "#241C15", border: "1px solid #1E1E1E", borderRadius: "2px" }}>
                     <div className="absolute top-0 left-0 right-0 h-[1px]" style={{ background: f.accent, opacity: 0.3 }} />
                     <div className="w-7 h-7 rounded-sm flex items-center justify-center shrink-0" style={{ background: `${f.accent}0d`, border: `1px solid ${f.accent}18` }}>
                       <f.icon className="w-3.5 h-3.5" style={{ color: f.accent }} />
                     </div>
                     <div>
-                      <span className="text-[10px] font-semibold block leading-tight" style={{ color: "#EDE6D9" }}>{f.title}</span>
+                      <span className="text-[10px] font-semibold block leading-tight" style={{ color: "#F5F0E8" }}>{f.title}</span>
                       <span className="text-[9px] leading-relaxed" style={{ color: "#B39977" }}>{f.desc}</span>
                     </div>
                   </motion.div>
@@ -672,7 +672,7 @@ export default function Dashboard() {
                             <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }}
                               transition={{ duration: 0.5, delay: 0.15 + i * 0.04 }}
                               className="h-full rounded-full"
-                              style={{ background: cat.type === "red" ? "#A85C4D" : "#8A6A45" }} />
+                              style={{ background: cat.type === "red" ? "#A85A50" : "#C8B490" }} />
                           </div>
                         </motion.div>
                       );
@@ -685,15 +685,15 @@ export default function Dashboard() {
               <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.12 }}
                 className="glass-card rounded-lg p-4 sm:p-5 mb-3">
                 <div className="flex items-center gap-1.5 mb-3">
-                  <Activity className="w-3.5 h-3.5" style={{ color: "#7F9278" }} />
+                  <Activity className="w-3.5 h-3.5" style={{ color: "#C8B490" }} />
                   <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em]">Confidence Breakdown</h3>
                 </div>
                 <div className="space-y-2">
                   {[
-                    { label: "Language", score: currentResult.confidence + (currentResult.greenFlags.length > currentResult.redFlags.length ? 5 : -5), color: "#7F9278" },
-                    { label: "Source", score: currentResult.greenFlags.length > 0 ? Math.min(currentResult.confidence + 8, 98) : Math.max(currentResult.confidence - 10, 15), color: "#8A6A45" },
-                    { label: "Claims", score: currentResult.confidence, color: "#7F9278" },
-                    { label: "Bias", score: Math.max(100 - currentResult.redFlags.length * 15, 10), color: currentResult.redFlags.length > 2 ? "#A85C4D" : "#7F9278" },
+                    { label: "Language", score: currentResult.confidence + (currentResult.greenFlags.length > currentResult.redFlags.length ? 5 : -5), color: "#C8B490" },
+                    { label: "Source", score: currentResult.greenFlags.length > 0 ? Math.min(currentResult.confidence + 8, 98) : Math.max(currentResult.confidence - 10, 15), color: "#C8B490" },
+                    { label: "Claims", score: currentResult.confidence, color: "#C8B490" },
+                    { label: "Bias", score: Math.max(100 - currentResult.redFlags.length * 15, 10), color: currentResult.redFlags.length > 2 ? "#A85A50" : "#C8B490" },
                   ].map((item, i) => (
                     <div key={item.label} className="flex items-center gap-3">
                       <span className="text-[9px] font-mono tracking-wider w-12 text-muted-foreground uppercase">{item.label}</span>
@@ -712,7 +712,7 @@ export default function Dashboard() {
               <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.14 }}
                 className="glass-card rounded-lg p-4 sm:p-5 mb-3">
                 <div className="flex items-center gap-1.5 mb-3">
-                  <Globe className="w-3.5 h-3.5" style={{ color: "#8A6A45" }} />
+                  <Globe className="w-3.5 h-3.5" style={{ color: "#C8B490" }} />
                   <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em]">Source Intelligence</h3>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -722,9 +722,9 @@ export default function Dashboard() {
                     { label: "Red Flags", value: `${currentResult.redFlags.length} detected` },
                     { label: "Green Flags", value: `${currentResult.greenFlags.length} detected` },
                   ].map((item) => (
-                    <div key={item.label} className="p-2.5 rounded" style={{ background: "#141615" }}>
+                    <div key={item.label} className="p-2.5 rounded" style={{ background: "#111111" }}>
                       <span className="text-[8px] tracking-[0.15em] uppercase font-semibold block mb-0.5" style={{ color: "#B39977" }}>{item.label}</span>
-                      <span className="text-[11px] font-semibold" style={{ color: "#EDE6D9" }}>{item.value}</span>
+                      <span className="text-[11px] font-semibold" style={{ color: "#F5F0E8" }}>{item.value}</span>
                     </div>
                   ))}
                 </div>
@@ -734,15 +734,15 @@ export default function Dashboard() {
               <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.16 }}
                 className="glass-card rounded-lg p-4 sm:p-5 mb-3">
                 <div className="flex items-center gap-1.5 mb-3">
-                  <Brain className="w-3.5 h-3.5" style={{ color: "#7F9278" }} />
+                  <Brain className="w-3.5 h-3.5" style={{ color: "#C8B490" }} />
                   <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em]">Language Analysis</h3>
                 </div>
                 <div className="space-y-2.5">
                   {[
-                    { label: "Emotional", value: currentResult.redFlags.length > 2 ? 72 : 28, color: currentResult.redFlags.length > 2 ? "#A85C4D" : "#7F9278" },
-                    { label: "Sensational", value: currentResult.triggeredKeywords.length * 8, color: currentResult.triggeredKeywords.length > 3 ? "#A85C4D" : "#8A6A45" },
-                    { label: "Neutral", value: currentResult.greenFlags.length > currentResult.redFlags.length ? 65 : 30, color: "#7F9278" },
-                    { label: "Factual", value: currentResult.confidence, color: "#7F9278" },
+                    { label: "Emotional", value: currentResult.redFlags.length > 2 ? 72 : 28, color: currentResult.redFlags.length > 2 ? "#A85A50" : "#C8B490" },
+                    { label: "Sensational", value: currentResult.triggeredKeywords.length * 8, color: currentResult.triggeredKeywords.length > 3 ? "#A85A50" : "#C8B490" },
+                    { label: "Neutral", value: currentResult.greenFlags.length > currentResult.redFlags.length ? 65 : 30, color: "#C8B490" },
+                    { label: "Factual", value: currentResult.confidence, color: "#C8B490" },
                   ].map((item, i) => (
                     <div key={item.label}>
                       <div className="flex items-center justify-between text-[9px] mb-0.5">
@@ -788,7 +788,7 @@ export default function Dashboard() {
                 }
                 triggerLabel="VIEW REASONING"
                 className="mb-3"
-                accentColor="#7F9278"
+                accentColor="#C8B490"
               />
 
               {/* Red Flags — ExpandableClaim style */}
@@ -809,7 +809,7 @@ export default function Dashboard() {
               {/* Green Flags */}
               <div className="mb-3">
                 <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-2 flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3 h-3" style={{ color: "#7F9278" }} />Green Flags {currentResult.greenFlags.length > 0 && <span style={{ color: "#7F9278" }}>({currentResult.greenFlags.length})</span>}
+                  <CheckCircle2 className="w-3 h-3" style={{ color: "#C8B490" }} />Green Flags {currentResult.greenFlags.length > 0 && <span style={{ color: "#C8B490" }}>({currentResult.greenFlags.length})</span>}
                 </h3>
                 <div className="space-y-1.5">
                   {currentResult.greenFlags.length === 0 ? (

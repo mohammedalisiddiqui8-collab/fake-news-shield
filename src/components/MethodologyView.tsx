@@ -38,8 +38,8 @@ export function MethodologyView() {
         className="text-center mb-2"
       >
         <span className="text-[10px] font-semibold uppercase tracking-[0.3em]" style={{ color: "#607568" }}>Our Approach</span>
-        <h2 className="mt-2 text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#0B0D0C" }}>How Veritas Works</h2>
-        <p className="mt-2 text-xs max-w-md mx-auto" style={{ color: "#9A9E98" }}>We combine advanced AI with proven fact-checking methodologies to give you reliable results.</p>
+        <h2 className="mt-2 text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#0A0A0A" }}>How Veritas Works</h2>
+        <p className="mt-2 text-xs max-w-md mx-auto" style={{ color: "#A8A098" }}>We combine advanced AI with proven fact-checking methodologies to give you reliable results.</p>
       </motion.div>
 
       {/* Steps */}
@@ -51,14 +51,14 @@ export function MethodologyView() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: i * 0.1 }}
             className="flex items-start gap-4 rounded border p-4"
-            style={{ background: "#F1F2EE", borderColor: "#292A27" }}
+            style={{ background: "#F1F2EE", borderColor: "#1E1E1E" }}
           >
             <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ background: "#607568", color: "#F1F2EE" }}>
               <span className="text-sm font-bold">{step.num}</span>
             </div>
             <div>
-              <h3 className="text-sm font-semibold mb-0.5" style={{ fontFamily: "'DM Serif Display', serif", color: "#0B0D0C" }}>{step.title}</h3>
-              <p className="text-xs leading-relaxed" style={{ color: "#9A9E98" }}>{step.description}</p>
+              <h3 className="text-sm font-semibold mb-0.5" style={{ fontFamily: "'DM Serif Display', serif", color: "#0A0A0A" }}>{step.title}</h3>
+              <p className="text-xs leading-relaxed" style={{ color: "#A8A098" }}>{step.description}</p>
             </div>
           </motion.div>
         ))}
@@ -70,9 +70,9 @@ export function MethodologyView() {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.5 }}
         className="rounded border p-4 text-center"
-        style={{ background: "#F1F2EE", borderColor: "#292A27" }}
+        style={{ background: "#F1F2EE", borderColor: "#1E1E1E" }}
       >
-        <p className="text-xs italic" style={{ fontFamily: "'DM Serif Display', serif", color: "#9A9E98" }}>
+        <p className="text-xs italic" style={{ fontFamily: "'DM Serif Display', serif", color: "#A8A098" }}>
           &ldquo;Better information leads to better decisions.&rdquo;
         </p>
       </motion.div>
