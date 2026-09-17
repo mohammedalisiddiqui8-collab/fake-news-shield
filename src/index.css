@@ -43,40 +43,40 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/* ─── LOCKED PALETTE — Vintage Newspaper ─── */
+/* ─── LOCKED PALETTE — Graphite + Soft White + Sage ─── */
 :root {
   --radius: 0.25rem;
-  --background: #17130F;
-  --foreground: #EDE6D9;
-  --card: #241C15;
-  --card-foreground: #EDE6D9;
-  --popover: #241C15;
-  --popover-foreground: #EDE6D9;
-  --primary: #8A6A45;
-  --primary-foreground: #EDE6D9;
-  --secondary: #1E1610;
-  --secondary-foreground: #B39977;
-  --muted: #1E1A14;
-  --muted-foreground: #B39977;
-  --accent: #8A6A45;
-  --accent-foreground: #17130F;
-  --destructive: #A85C4D;
-  --border: #46382A;
-  --input: #46382A;
-  --ring: #8A6A45;
-  --chart-1: #7F9278;
-  --chart-2: #8A6A45;
-  --chart-3: #A85C4D;
-  --chart-4: #8A6A45;
-  --chart-5: #B39977;
-  --sidebar: #1A1510;
-  --sidebar-foreground: #EDE6D9;
-  --sidebar-primary: #8A6A45;
-  --sidebar-primary-foreground: #EDE6D9;
-  --sidebar-accent: #1E1610;
-  --sidebar-accent-foreground: #EDE6D9;
-  --sidebar-border: #46382A;
-  --sidebar-ring: #8A6A45;
+  --background: #0B0D0C;
+  --foreground: #F1F2EE;
+  --card: #0F1110;
+  --card-foreground: #F1F2EE;
+  --popover: #0F1110;
+  --popover-foreground: #F1F2EE;
+  --primary: #607568;
+  --primary-foreground: #F1F2EE;
+  --secondary: #141816;
+  --secondary-foreground: #9A9E98;
+  --muted: #121614;
+  --muted-foreground: #9A9E98;
+  --accent: #607568;
+  --accent-foreground: #0B0D0C;
+  --destructive: #A9574D;
+  --border: #292A27;
+  --input: #292A27;
+  --ring: #607568;
+  --chart-1: #8FA596;
+  --chart-2: #607568;
+  --chart-3: #A9574D;
+  --chart-4: #A58B5B;
+  --chart-5: #9A9E98;
+  --sidebar: #0E100F;
+  --sidebar-foreground: #F1F2EE;
+  --sidebar-primary: #607568;
+  --sidebar-primary-foreground: #F1F2EE;
+  --sidebar-accent: #141816;
+  --sidebar-accent-foreground: #F1F2EE;
+  --sidebar-border: #292A27;
+  --sidebar-ring: #607568;
 }
 
 @layer base {
@@ -95,15 +95,15 @@
 
 @layer utilities {
   .glass-card {
-    background: #241C15;
-    border: 1px solid #46382A;
+    background: #0F1110;
+    border: 1px solid #292A27;
     border-radius: 0.25rem;
     box-shadow: 0 1px 2px rgba(0,0,0,0.4);
   }
 
   .editorial-rule {
     height: 1px;
-    background: #46382A;
+    background: #292A27;
   }
 
   .text-balance { text-wrap: balance; }
@@ -148,17 +148,17 @@
 
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #46382A; border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: #8A6A45; }
+::-webkit-scrollbar-thumb { background: #292A27; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #607568; }
 
-::selection { background: rgba(138, 106, 69, 0.2); color: #EDE6D9; }
+::selection { background: rgba(96, 117, 104, 0.2); color: #F1F2EE; }
 
 html { scroll-behavior: smooth; }
 
 .tiptap { outline: none; }
 .tiptap p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
-  float: left; color: #B39977;
+  float: left;  color: #9A9E98;
   pointer-events: none; height: 0;
 }
 
