@@ -43,40 +43,40 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/* ─── LOCKED PALETTE ─── */
+/* ─── LOCKED PALETTE — Vintage Newspaper ─── */
 :root {
   --radius: 0.25rem;
-  --background: #0B0D0C;
-  --foreground: #F1F2EE;
-  --card: #0F1110;
-  --card-foreground: #F1F2EE;
-  --popover: #0F1110;
-  --popover-foreground: #F1F2EE;
-  --primary: #607568;
-  --primary-foreground: #F1F2EE;
-  --secondary: #141615;
-  --secondary-foreground: #9A9E98;
-  --muted: #1A1C1B;
-  --muted-foreground: #9A9E98;
-  --accent: #A58B5B;
-  --accent-foreground: #0B0D0C;
-  --destructive: #A9574D;
-  --border: #292A27;
-  --input: #292A27;
-  --ring: #607568;
-  --chart-1: #8FA596;
-  --chart-2: #A58B5B;
-  --chart-3: #A9574D;
-  --chart-4: #607568;
-  --chart-5: #9A9E98;
-  --sidebar: #0D0F0E;
-  --sidebar-foreground: #F1F2EE;
-  --sidebar-primary: #607568;
-  --sidebar-primary-foreground: #F1F2EE;
-  --sidebar-accent: #141615;
-  --sidebar-accent-foreground: #F1F2EE;
-  --sidebar-border: #292A27;
-  --sidebar-ring: #607568;
+  --background: #17130F;
+  --foreground: #EDE6D9;
+  --card: #241C15;
+  --card-foreground: #EDE6D9;
+  --popover: #241C15;
+  --popover-foreground: #EDE6D9;
+  --primary: #8A6A45;
+  --primary-foreground: #EDE6D9;
+  --secondary: #1E1610;
+  --secondary-foreground: #B39977;
+  --muted: #1E1A14;
+  --muted-foreground: #B39977;
+  --accent: #8A6A45;
+  --accent-foreground: #17130F;
+  --destructive: #A85C4D;
+  --border: #46382A;
+  --input: #46382A;
+  --ring: #8A6A45;
+  --chart-1: #7F9278;
+  --chart-2: #8A6A45;
+  --chart-3: #A85C4D;
+  --chart-4: #8A6A45;
+  --chart-5: #B39977;
+  --sidebar: #1A1510;
+  --sidebar-foreground: #EDE6D9;
+  --sidebar-primary: #8A6A45;
+  --sidebar-primary-foreground: #EDE6D9;
+  --sidebar-accent: #1E1610;
+  --sidebar-accent-foreground: #EDE6D9;
+  --sidebar-border: #46382A;
+  --sidebar-ring: #8A6A45;
 }
 
 @layer base {
@@ -95,15 +95,15 @@
 
 @layer utilities {
   .glass-card {
-    background: #0F1110;
-    border: 1px solid #292A27;
+    background: #241C15;
+    border: 1px solid #46382A;
     border-radius: 0.25rem;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.4);
   }
 
   .editorial-rule {
     height: 1px;
-    background: #292A27;
+    background: #46382A;
   }
 
   .text-balance { text-wrap: balance; }
@@ -148,16 +148,28 @@
 
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #292A27; border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: #607568; }
+::-webkit-scrollbar-thumb { background: #46382A; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #8A6A45; }
 
-::selection { background: rgba(96, 117, 104, 0.2); color: #F1F2EE; }
+::selection { background: rgba(138, 106, 69, 0.2); color: #EDE6D9; }
 
 html { scroll-behavior: smooth; }
 
 .tiptap { outline: none; }
 .tiptap p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
-  float: left; color: #9A9E98;
+  float: left; color: #B39977;
   pointer-events: none; height: 0;
+}
+
+/* ─── Subtle paper grain texture ─── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  pointer-events: none;
+  opacity: 0.025;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px;
 }

@@ -4,15 +4,7 @@ import * as THREE from "three";
 
 /* ─── LOCKED PALETTE ─── */
 const P = {
-  bg: "#0B0D0C",
-  text: "#F1F2EE",
-  secondary: "#9A9E98",
-  sage: "#607568",
-  verified: "#8FA596",
-  warning: "#A9574D",
-  gold: "#A58B5B",
-  border: "#292A27",
-  surface: "#0F1110",
+  bg: "#0B0D0C",text:"#EDE6D9",secondary:"#B39977",sage:"#8A6A45",verified:"#7F9278",warning:"#A85C4D",gold:"#8A6A45",border:"#46382A",surface:"#241C15",
 };
 
 /* ─── Panel Data ─── */

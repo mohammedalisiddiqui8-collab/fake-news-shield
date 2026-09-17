@@ -44,7 +44,7 @@ function AnimatedTagline() {
   return (
     <span style={{ fontFamily: "'DM Serif Display', serif" }}>
       {displayed}
-      <span className="inline-block w-[1.5px] h-[0.85em] ml-0.5 align-middle" style={{ background: "#8FA596", animation: "blink 1s step-end infinite" }} />
+      <span className="inline-block w-[1.5px] h-[0.85em] ml-0.5 align-middle" style={{ background: "#7F9278", animation: "blink 1s step-end infinite" }} />
     </span>
   );
 }
@@ -95,7 +95,7 @@ function MagneticBtn({ children, className = "", style = {}, onClick, arrow }: {
 }
 
 /* ─── Card3D with hover glow ─── */
-function Card3D({ children, className = "", style = {}, glowColor = "#8FA596" }: { children: React.ReactNode; className?: string; style?: React.CSSProperties; glowColor?: string }) {
+function Card3D({ children, className = "", style = {}, glowColor = "#7F9278" }: { children: React.ReactNode; className?: string; style?: React.CSSProperties; glowColor?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const [hovered, setHovered] = useState(false);
   return (
@@ -158,7 +158,7 @@ function Section({ children, className = "", id, style }: { children: React.Reac
 }
 
 /* ─── Animated Reveal line ─── */
-function RevealLine({ color = "#8FA596", delay = 0 }: { color?: string; delay?: number }) {
+function RevealLine({ color = "#7F9278", delay = 0 }: { color?: string; delay?: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true });
   return (
@@ -203,9 +203,9 @@ const features = [
 ];
 
 const verdictExamples = [
-  { label: "Likely Credible", icon: CheckCircle2, color: "#8FA596", confidence: 92, sample: "Named officials, cited statistics, balanced perspectives from multiple sources." },
-  { label: "Uncertain", icon: AlertTriangle, color: "#A58B5B", confidence: 54, sample: "Mixes verified facts with unverified claims from unnamed sources." },
-  { label: "Likely Misleading", icon: XCircle, color: "#A9574D", confidence: 87, sample: "Sensational headline, anonymous 'experts', unverifiable statistics." },
+  { label: "Likely Credible", icon: CheckCircle2, color: "#7F9278", confidence: 92, sample: "Named officials, cited statistics, balanced perspectives from multiple sources." },
+  { label: "Uncertain", icon: AlertTriangle, color: "#8A6A45", confidence: 54, sample: "Mixes verified facts with unverified claims from unnamed sources." },
+  { label: "Likely Misleading", icon: XCircle, color: "#A85C4D", confidence: 87, sample: "Sensational headline, anonymous 'experts', unverifiable statistics." },
 ];
 
 const references = ["MIT Media Lab", "Stanford Internet Observatory", "Reuters Institute", "LIAR Dataset (Wang, 2017)"];
@@ -243,11 +243,11 @@ function InteractiveClaim({ text, type, color, detail }: { text: string; type: s
             <div className="p-3">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[8px] font-bold tracking-[0.15em]" style={{ color }}>{type}</span>
-                <span className="text-[8px] font-semibold" style={{ color: detail.status === "SUPPORTED" ? "#8FA596" : detail.status === "MISLEADING" ? "#A9574D" : "#A58B5B" }}>{detail.status}</span>
+                <span className="text-[8px] font-semibold" style={{ color: detail.status === "SUPPORTED" ? "#7F9278" : detail.status === "MISLEADING" ? "#A85C4D" : "#8A6A45" }}>{detail.status}</span>
               </div>
               <div className="flex items-center gap-2 mb-2">
                 <span className="text-[8px] tracking-wide" style={{ color: "#9A9E98" }}>CONFIDENCE</span>
-                <div className="flex-1 h-[2px] rounded-full" style={{ background: "#292A27" }}>
+                <div className="flex-1 h-[2px] rounded-full" style={{ background: "#46382A" }}>
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${detail.confidence}%` }}
@@ -256,12 +256,12 @@ function InteractiveClaim({ text, type, color, detail }: { text: string; type: s
                     style={{ background: color }}
                   />
                 </div>
-                <span className="text-[9px] font-semibold" style={{ color: "#F1F2EE" }}>{detail.confidence}%</span>
+                <span className="text-[9px] font-semibold" style={{ color: "#EDE6D9" }}>{detail.confidence}%</span>
               </div>
               <p className="text-[9px] leading-relaxed mb-2" style={{ color: "#9A9E98" }}>{detail.reasoning}</p>
               <div className="flex items-center gap-1.5 pt-1.5" style={{ borderTop: "1px solid #292A27" }}>
-                <Globe className="w-2.5 h-2.5" style={{ color: "#A58B5B" }} />
-                <span className="text-[8px]" style={{ color: "#A58B5B" }}>{detail.source}</span>
+                <Globe className="w-2.5 h-2.5" style={{ color: "#8A6A45" }} />
+                <span className="text-[8px]" style={{ color: "#8A6A45" }}>{detail.source}</span>
               </div>
             </div>
           </motion.div>
@@ -285,16 +285,16 @@ function ScrutinySection({ navigate }: { navigate: (path: string) => void }) {
       {/* Article header with TextScramble status */}
       <div className="px-6 pt-6 pb-4" style={{ borderBottom: "1px solid #292A27" }}>
         <div className="flex items-center gap-2 mb-3">
-          <span className="text-[8px] tracking-[0.2em] uppercase font-bold px-2 py-0.5" style={{ background: "#A9574D22", color: "#A9574D", borderRadius: "1px" }}>Sample Article</span>
+          <span className="text-[8px] tracking-[0.2em] uppercase font-bold px-2 py-0.5" style={{ background: "#A9574D22", color: "#A85C4D", borderRadius: "1px" }}>Sample Article</span>
           <span className="text-[8px]" style={{ color: "#9A9E98" }}>•</span>
           <TextScramble
             phrases={["ANALYZING...", "PROCESSING SIGNALS...", "SOURCE CHECK...", "NLP SCANNING...", "VERIFIED"]}
             interval={2200}
             className="text-[8px] tracking-wide"
-            style={{ color: "#8FA596", fontVariantNumeric: "tabular-nums" }}
+            style={{ color: "#7F9278", fontVariantNumeric: "tabular-nums" }}
           />
         </div>
-        <h3 className="text-base sm:text-lg" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>
+        <h3 className="text-base sm:text-lg" style={{ fontFamily: "'DM Serif Display', serif", color: "#EDE6D9" }}>
           Scientists Confirm New Species in the Mariana Trench
         </h3>
       </div>
@@ -306,14 +306,14 @@ function ScrutinySection({ navigate }: { navigate: (path: string) => void }) {
           <InteractiveClaim
             text="the University of Oxford"
             type="SOURCE"
-            color="#A58B5B"
+            color="#8A6A45"
             detail={{ status: "VERIFIED", confidence: 94, reasoning: "Named institutional source with established academic credibility. Cross-referenced against verified university registries.", source: "University of Oxford — Department of Zoology" }}
           />
           {' '}has identified a previously unknown deep-sea species in the Mariana Trench. The creature, dubbed 'Abyssalus luminaris,' was found at a depth of 8,200 meters during a three-month expedition funded by{' '}
           <InteractiveClaim
             text="the National Science Foundation"
             type="SOURCE"
-            color="#A58B5B"
+            color="#8A6A45"
             detail={{ status: "VERIFIED", confidence: 91, reasoning: "Major federal funding agency. Grant attribution is specific and verifiable through NSF award database.", source: "National Science Foundation — Award #2341892" }}
           />
           .
@@ -323,13 +323,13 @@ function ScrutinySection({ navigate }: { navigate: (path: string) => void }) {
       {/* Evidence labels */}
       <div className="px-6 pb-5 flex flex-wrap gap-2">
         {[
-          { label: "CLAIM", value: "New species discovered", color: "#8FA596" },
-          { label: "SOURCE", value: "University of Oxford", color: "#A58B5B" },
-          { label: "EVIDENCE", value: "Published in Nature", color: "#8FA596" },
+          { label: "CLAIM", value: "New species discovered", color: "#7F9278" },
+          { label: "SOURCE", value: "University of Oxford", color: "#8A6A45" },
+          { label: "EVIDENCE", value: "Published in Nature", color: "#7F9278" },
         ].map((tag) => (
           <div key={tag.label} className="flex items-center gap-2 px-3 py-1.5" style={{ background: "#141615", border: "1px solid #292A27", borderRadius: "1px" }}>
             <span className="text-[8px] font-bold tracking-[0.15em]" style={{ color: tag.color }}>{tag.label}</span>
-            <span className="text-[10px]" style={{ color: "#F1F2EE" }}>{tag.value}</span>
+            <span className="text-[10px]" style={{ color: "#EDE6D9" }}>{tag.value}</span>
           </div>
         ))}
       </div>
@@ -338,9 +338,9 @@ function ScrutinySection({ navigate }: { navigate: (path: string) => void }) {
       <div className="px-6 py-4" style={{ borderTop: "1px solid #292A27", background: "#0B0D0C" }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <CheckCircle2 className="w-4 h-4" style={{ color: "#8FA596" }} />
+            <CheckCircle2 className="w-4 h-4" style={{ color: "#7F9278" }} />
             <div>
-              <span className="text-[10px] font-semibold" style={{ color: "#8FA596" }}>Likely Credible</span>
+              <span className="text-[10px] font-semibold" style={{ color: "#7F9278" }}>Likely Credible</span>
               <span className="text-[10px] ml-2" style={{ color: "#9A9E98" }}>92% confidence</span>
             </div>
           </div>
@@ -378,8 +378,8 @@ export default function Landing() {
         style={{ background: "rgba(8,10,9,0.92)", backdropFilter: "blur(16px)", borderBottom: "1px solid #292A27" }}>
         <div className="mx-auto max-w-7xl px-5 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <Shield className="w-4 h-4" style={{ color: "#8FA596" }} />
-            <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>Veritas</span>
+            <Shield className="w-4 h-4" style={{ color: "#7F9278" }} />
+            <span className="text-xs font-bold tracking-[0.2em] uppercase" style={{ fontFamily: "'DM Serif Display', serif", color: "#EDE6D9" }}>Veritas</span>
           </div>
           <div className="hidden md:flex items-center gap-1">
             {["Analyze", "History", "Statistics", "Methodology"].map((label, i) => (
@@ -395,7 +395,7 @@ export default function Landing() {
           </div>
           <MagneticBtn
             className="cursor-pointer text-[10px] font-semibold h-8 px-5 tracking-[0.12em]"
-            style={{ background: "#8FA596", color: "#0B0D0C", borderRadius: "2px" }}
+            style={{ background: "#7F9278", color: "#0B0D0C", borderRadius: "2px" }}
             onClick={() => navigate("/dashboard")}>
             START ANALYZING
           </MagneticBtn>
@@ -419,13 +419,13 @@ export default function Landing() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
                 className="text-[9px] tracking-[0.35em] uppercase mb-4 font-medium"
-                style={{ color: "#8FA596" }}>
+                style={{ color: "#7F9278" }}>
                 Intelligent Misinformation Detection
               </motion.p>
 
               {/* Hero title — letter stagger reveal */}
               <h1 className="text-6xl sm:text-7xl lg:text-[5.5rem] xl:text-[6.5rem] leading-[0.92] tracking-tight mb-2"
-                style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>
+                style={{ fontFamily: "'DM Serif Display', serif", color: "#EDE6D9" }}>
                 {"VERITAS".split("").map((char, i) => (
                   <motion.span
                     key={i}
@@ -466,12 +466,12 @@ export default function Landing() {
                 transition={{ duration: 0.4, delay: 1.2 }}
                 className="flex flex-col sm:flex-row items-start gap-3">
                 <MagneticBtn className="cursor-pointer gap-2 px-7 py-3 text-[11px] font-semibold tracking-[0.1em] flex items-center"
-                  style={{ background: "#8FA596", color: "#0B0D0C", borderRadius: "2px" }}
+                  style={{ background: "#7F9278", color: "#0B0D0C", borderRadius: "2px" }}
                   onClick={() => navigate("/dashboard")}>
                   START ANALYZING <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
                 </MagneticBtn>
                 <Button size="lg" variant="outline" className="cursor-pointer text-[11px] px-7 py-3 tracking-wide transition-colors hover:border-[#8FA596]/40 hover:text-[#8FA596]"
-                  style={{ borderColor: "#292A27", color: "#9A9E98", borderRadius: "2px" }}
+                  style={{ borderColor: "#46382A", color: "#9A9E98", borderRadius: "2px" }}
                   onClick={() => document.getElementById("how-it-works")?.scrollIntoView({ behavior: "smooth" })}>
                   EXPLORE VERITAS
                 </Button>
@@ -494,7 +494,7 @@ export default function Landing() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 1.5 + i * 0.1 }}
                   className="flex-1 lg:flex-none">
-                  <div className="text-2xl lg:text-3xl font-bold" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>
+                  <div className="text-2xl lg:text-3xl font-bold" style={{ fontFamily: "'DM Serif Display', serif", color: "#EDE6D9" }}>
                     <CountUp target={s.value} suffix={s.suffix} />
                   </div>
                   <div className="text-[9px] tracking-wide mt-1 font-medium" style={{ color: "#9A9E98" }}>{s.label}</div>
@@ -516,15 +516,15 @@ export default function Landing() {
       <Section className="py-20 sm:py-28 px-5" id="how-it-works" style={{ borderTop: "1px solid #292A27" }}>
         <div className="mx-auto max-w-5xl">
           <div className="mb-16">
-            <TextReveal as="h2" splitBy="words" delay={0.1} className="text-3xl sm:text-4xl lg:text-5xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>TRACE</TextReveal>
+            <TextReveal as="h2" splitBy="words" delay={0.1} className="text-3xl sm:text-4xl lg:text-5xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#EDE6D9" }}>TRACE</TextReveal>
           </div>
 
           {/* Pipeline — horizontal on desktop, vertical on mobile */}
           <div className="relative">
             {/* Vertical connecting line (mobile) */}
-            <div className="absolute left-[19px] top-0 bottom-0 w-px md:hidden" style={{ background: "#292A27" }} />
+            <div className="absolute left-[19px] top-0 bottom-0 w-px md:hidden" style={{ background: "#46382A" }} />
             {/* Horizontal connecting line (desktop) */}
-            <div className="hidden md:block absolute top-[39px] left-[10%] right-[10%] h-px" style={{ background: "#292A27" }} />
+            <div className="hidden md:block absolute top-[39px] left-[10%] right-[10%] h-px" style={{ background: "#46382A" }} />
 
             <div className="grid grid-cols-1 md:grid-cols-5 gap-6 md:gap-4">
               {[
@@ -544,12 +544,12 @@ export default function Landing() {
                   {/* Node circle */}
                   <div className="absolute left-0 md:relative md:mx-auto w-10 h-10 rounded-sm flex items-center justify-center shrink-0 z-10"
                     style={{ background: "#0F1110", border: "1px solid #292A27" }}>
-                    <s.icon className="w-4 h-4" style={{ color: "#8FA596" }} />
+                    <s.icon className="w-4 h-4" style={{ color: "#7F9278" }} />
                   </div>
 
                   <div className="md:mt-3">
-                    <span className="text-[9px] font-bold tracking-[0.2em]" style={{ color: "#8FA596", opacity: 0.6 }}>{s.num}</span>
-                    <h3 className="mt-0.5 text-sm font-semibold" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>{s.title}</h3>
+                    <span className="text-[9px] font-bold tracking-[0.2em]" style={{ color: "#7F9278", opacity: 0.6 }}>{s.num}</span>
+                    <h3 className="mt-0.5 text-sm font-semibold" style={{ fontFamily: "'DM Serif Display', serif", color: "#EDE6D9" }}>{s.title}</h3>
                     <p className="mt-1 text-[10px] leading-relaxed" style={{ color: "#9A9E98" }}>{s.desc}</p>
                   </div>
                 </motion.div>
@@ -565,15 +565,15 @@ export default function Landing() {
       <Section className="py-20 sm:py-28 px-5" style={{ borderTop: "1px solid #292A27" }}>
         <div className="mx-auto max-w-5xl">
           <div className="mb-12">
-            <TextReveal as="h2" splitBy="words" delay={0.1} className="text-3xl sm:text-4xl lg:text-5xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>PATTERNS</TextReveal>
+            <TextReveal as="h2" splitBy="words" delay={0.1} className="text-3xl sm:text-4xl lg:text-5xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#EDE6D9" }}>PATTERNS</TextReveal>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {[
-              { label: "Language Patterns", value: "70+", desc: "Emotional language, sensationalism, imperative commands, superlatives, CAPS abuse.", accent: "#8FA596", bar: 85 },
-              { label: "Source Credibility", value: "21", desc: "Named sources, institutional attribution, citation presence, author transparency.", accent: "#A58B5B", bar: 72 },
-              { label: "Claim Consistency", value: "5", desc: "Cross-referencing internal claims, checking statistical plausibility, logical coherence.", accent: "#8FA596", bar: 68 },
-              { label: "Emotional Bias", value: "4", desc: "Fear appeals, outrage bait, urgency pressure, conspiratorial framing.", accent: "#A9574D", bar: 91 },
+              { label: "Language Patterns", value: "70+", desc: "Emotional language, sensationalism, imperative commands, superlatives, CAPS abuse.", accent: "#7F9278", bar: 85 },
+              { label: "Source Credibility", value: "21", desc: "Named sources, institutional attribution, citation presence, author transparency.", accent: "#8A6A45", bar: 72 },
+              { label: "Claim Consistency", value: "5", desc: "Cross-referencing internal claims, checking statistical plausibility, logical coherence.", accent: "#7F9278", bar: 68 },
+              { label: "Emotional Bias", value: "4", desc: "Fear appeals, outrage bait, urgency pressure, conspiratorial framing.", accent: "#A85C4D", bar: 91 },
             ].map((item, i) => (
               <TiltCard key={item.label} className="p-5 relative overflow-hidden" style={{ background: "#0F1110", border: "1px solid #292A27", borderRadius: "2px" }} glareColor={item.accent} intensity={6}>
               <motion.div
@@ -589,7 +589,7 @@ export default function Landing() {
                     <span className="text-[9px] tracking-[0.2em] uppercase font-semibold" style={{ color: item.accent }}>{item.label}</span>
                     <p className="mt-1.5 text-[10px] leading-relaxed" style={{ color: "#9A9E98" }}>{item.desc}</p>
                   </div>
-                  <span className="text-xl font-bold shrink-0 ml-4" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>{item.value}</span>
+                  <span className="text-xl font-bold shrink-0 ml-4" style={{ fontFamily: "'DM Serif Display', serif", color: "#EDE6D9" }}>{item.value}</span>
                 </div>
                 {/* Animated bar */}
                 <motion.div
@@ -613,7 +613,7 @@ export default function Landing() {
       <Section className="py-20 sm:py-28 px-5" style={{ borderTop: "1px solid #292A27" }}>
         <div className="mx-auto max-w-4xl">
           <div className="mb-10">
-            <TextReveal as="h2" splitBy="words" delay={0.1} className="text-3xl sm:text-4xl lg:text-5xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>SCRUTINY</TextReveal>
+            <TextReveal as="h2" splitBy="words" delay={0.1} className="text-3xl sm:text-4xl lg:text-5xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#EDE6D9" }}>SCRUTINY</TextReveal>
           </div>
 
           <ScrutinySection navigate={navigate} />
@@ -626,7 +626,7 @@ export default function Landing() {
       <Section className="py-16 sm:py-20 px-5" style={{ borderTop: "1px solid #292A27" }}>
         <div className="mx-auto max-w-5xl">
           <div className="mb-12">
-            <TextReveal as="h2" splitBy="words" delay={0.1} className="text-3xl sm:text-4xl lg:text-5xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>FRAMEWORK</TextReveal>
+            <TextReveal as="h2" splitBy="words" delay={0.1} className="text-3xl sm:text-4xl lg:text-5xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#EDE6D9" }}>FRAMEWORK</TextReveal>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -645,12 +645,12 @@ export default function Landing() {
                 className="flex gap-4">
                 <div className="shrink-0">
                   <div className="w-9 h-9 rounded-sm flex items-center justify-center" style={{ background: "#141615", border: "1px solid #292A27" }}>
-                    <s.icon className="w-4 h-4" style={{ color: "#8FA596" }} />
+                    <s.icon className="w-4 h-4" style={{ color: "#7F9278" }} />
                   </div>
                 </div>
                 <div>
-                  <span className="text-[8px] font-bold tracking-[0.2em]" style={{ color: "#8FA596", opacity: 0.5 }}>{s.num}</span>
-                  <h3 className="mt-0.5 text-[13px] font-semibold" style={{ color: "#F1F2EE" }}>{s.title}</h3>
+                  <span className="text-[8px] font-bold tracking-[0.2em]" style={{ color: "#7F9278", opacity: 0.5 }}>{s.num}</span>
+                  <h3 className="mt-0.5 text-[13px] font-semibold" style={{ color: "#EDE6D9" }}>{s.title}</h3>
                   <p className="mt-1 text-[10px] leading-relaxed" style={{ color: "#9A9E98" }}>{s.desc}</p>
                 </div>
               </motion.div>
@@ -681,17 +681,17 @@ export default function Landing() {
         <div className="mx-auto max-w-2xl text-center">
           <motion.div initial={{ opacity: 0, y: 32 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
             transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}>
-            <RevealLine color="#8FA596" delay={0.2} />
+            <RevealLine color="#7F9278" delay={0.2} />
             <h2 className="mt-4 text-2xl sm:text-4xl tracking-tight leading-tight"
-              style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>
+              style={{ fontFamily: "'DM Serif Display', serif", color: "#EDE6D9" }}>
               Don't just read it.<br />
-              <span style={{ color: "#8FA596" }}>Verify it.</span>
+              <span style={{ color: "#7F9278" }}>Verify it.</span>
             </h2>
             <p className="mt-4 text-[12px] max-w-sm mx-auto leading-relaxed" style={{ color: "#9A9E98" }}>
               No sign-up required. Paste any article and get an instant, evidence-backed verdict.
             </p>
             <MagneticBtn className="cursor-pointer mt-8 gap-2 px-8 py-3.5 text-[11px] font-semibold tracking-[0.1em] inline-flex items-center"
-              style={{ background: "#8FA596", color: "#0B0D0C", borderRadius: "2px" }}
+              style={{ background: "#7F9278", color: "#0B0D0C", borderRadius: "2px" }}
               onClick={() => navigate("/dashboard")}>
               START ANALYZING <ArrowRight className="w-3.5 h-3.5" />
             </MagneticBtn>
@@ -708,8 +708,8 @@ export default function Landing() {
         className="py-6 px-5" style={{ borderTop: "1px solid #292A27" }}>
         <div className="mx-auto max-w-6xl flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <Shield className="w-3.5 h-3.5" style={{ color: "#8FA596" }} />
-            <span className="text-[10px] font-bold tracking-[0.2em] uppercase" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F2EE" }}>Veritas</span>
+            <Shield className="w-3.5 h-3.5" style={{ color: "#7F9278" }} />
+            <span className="text-[10px] font-bold tracking-[0.2em] uppercase" style={{ fontFamily: "'DM Serif Display', serif", color: "#EDE6D9" }}>Veritas</span>
           </div>
           <p className="text-[9px] tracking-wide" style={{ color: "#9A9E98" }}>BSc Data Science — NLP-Based Misinformation Detection</p>
         </div>

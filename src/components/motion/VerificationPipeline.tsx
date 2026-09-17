@@ -43,14 +43,14 @@ export function VerificationPipeline({
                 initial={false}
                 animate={{
                   background: isDone
-                    ? "#8FA59615"
+                    ? "#7F927815"
                     : isActive
-                      ? "#8FA59610"
+                      ? "#7F927810"
                       : "#141615",
                   borderColor: isDone
-                    ? "#8FA59630"
+                    ? "#7F927830"
                     : isActive
-                      ? "#8FA59625"
+                      ? "#7F927825"
                       : "#292A27",
                 }}
                 transition={{ duration: 0.4 }}
@@ -63,12 +63,12 @@ export function VerificationPipeline({
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", stiffness: 400, damping: 20 }}
                   >
-                    <CheckCircle2 className="w-3.5 h-3.5" style={{ color: "#8FA596" }} />
+                    <CheckCircle2 className="w-3.5 h-3.5" style={{ color: "#7F9278" }} />
                   </motion.div>
                 ) : isActive ? (
                   <Loader2
                     className="w-3.5 h-3.5 animate-spin"
-                    style={{ color: "#8FA596" }}
+                    style={{ color: "#7F9278" }}
                   />
                 ) : (
                   <step.icon className="w-3.5 h-3.5" style={{ color: "#9A9E9840" }} />
@@ -89,7 +89,7 @@ export function VerificationPipeline({
                     }}
                     transition={{ duration: 0.5, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
                     className="absolute top-0 left-0 w-full"
-                    style={{ background: "#8FA59650" }}
+                    style={{ background: "#7F927850" }}
                   />
                 </div>
               )}
@@ -109,7 +109,7 @@ export function VerificationPipeline({
                 className="text-[9px] font-bold tracking-[0.15em] block"
                 style={{
                   fontFamily: "'JetBrains Mono', monospace",
-                  color: isActive ? "#8FA596" : isDone ? "#9A9E98" : "#9A9E98",
+                  color: isActive ? "#7F9278" : isDone ? "#9A9E98" : "#9A9E98",
                 }}
               >
                 {step.label}
@@ -131,7 +131,7 @@ export function VerificationPipeline({
                     transition={{ duration: 0.6 }}
                     className="h-[1px] mt-1.5 overflow-hidden"
                     style={{
-                      background: "linear-gradient(90deg, #8FA596, transparent)",
+                      background: "linear-gradient(90deg, #7F9278, transparent)",
                     }}
                   />
                 )}
@@ -140,8 +140,8 @@ export function VerificationPipeline({
               {/* Active step pulse indicator */}
               {isActive && (
                 <div className="flex items-center gap-1.5 mt-1">
-                  <span className="w-1 h-1 rounded-full" style={{ background: "#8FA596", animation: "blink 1s step-end infinite" }} />
-                  <span className="text-[8px] tracking-wider" style={{ color: "#8FA596", opacity: 0.7 }}>Processing...</span>
+                  <span className="w-1 h-1 rounded-full" style={{ background: "#7F9278", animation: "blink 1s step-end infinite" }} />
+                  <span className="text-[8px] tracking-wider" style={{ color: "#7F9278", opacity: 0.7 }}>Processing...</span>
                 </div>
               )}
             </motion.div>

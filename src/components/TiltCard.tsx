@@ -12,7 +12,7 @@ interface TiltCardProps {
 export function TiltCard({
   children,
   className = "",
-  glareColor = "#8FA596",
+  glareColor = "#7F9278",
   intensity = 10,
   style,
 }: TiltCardProps) {

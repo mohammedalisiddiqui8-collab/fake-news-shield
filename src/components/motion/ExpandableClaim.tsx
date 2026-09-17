@@ -12,9 +12,9 @@ interface ExpandableClaimProps {
 }
 
 const statusConfig = {
-  supported: { icon: CheckCircle2, color: "#8FA596", label: "SUPPORTED" },
-  unverified: { icon: AlertTriangle, color: "#A58B5B", label: "UNVERIFIED" },
-  misleading: { icon: XCircle, color: "#A9574D", label: "MISLEADING" },
+  supported: { icon: CheckCircle2, color: "#7F9278", label: "SUPPORTED" },
+  unverified: { icon: AlertTriangle, color: "#8A6A45", label: "UNVERIFIED" },
+  misleading: { icon: XCircle, color: "#A85C4D", label: "MISLEADING" },
 };
 
 /**
@@ -46,8 +46,8 @@ export function ExpandableClaim({
     <div
       className={`overflow-hidden transition-all duration-300 ${className}`}
       style={{
-        background: "#0F1110",
-        border: "1px solid #292A27",
+        background: "#241C15",
+        border: "1px solid #46382A",
         borderRadius: "2px",
         borderColor: expanded ? `${config.color}33` : undefined,
       }}
@@ -63,7 +63,7 @@ export function ExpandableClaim({
           <div className="flex items-center gap-2 mb-1">
             <span
               className="text-[8px] font-bold tracking-[0.2em]"
-              style={{ fontFamily: "'JetBrains Mono', monospace", color: "#607568" }}
+              style={{ fontFamily: "'JetBrains Mono', monospace", color: "#8A6A45" }}
             >
               CLAIM {claimNumber}
             </span>
@@ -81,14 +81,14 @@ export function ExpandableClaim({
           </div>
           <p
             className="text-[11px] leading-relaxed italic"
-            style={{ color: "#F1F2EE" }}
+            style={{ color: "#EDE6D9" }}
           >
             "{claimText}"
           </p>
           <div className="flex items-center gap-2 mt-1.5">
             <span
               className="text-[9px] font-mono"
-              style={{ color: "#9A9E98" }}
+              style={{ color: "#B39977" }}
             >
               CONFIDENCE
             </span>
@@ -118,7 +118,7 @@ export function ExpandableClaim({
           transition={{ duration: 0.2 }}
           className="shrink-0 mt-1"
         >
-          <ChevronDown className="w-3.5 h-3.5" style={{ color: "#9A9E98" }} />
+          <ChevronDown className="w-3.5 h-3.5" style={{ color: "#B39977" }} />
         </motion.div>
       </button>
 
@@ -134,9 +134,9 @@ export function ExpandableClaim({
           >
             <div
               className="px-4 pb-4 pt-1"
-              style={{ borderTop: "1px solid #292A27" }}
+              style={{ borderTop: "1px solid #46382A" }}
             >
-              <p className="text-[10px] leading-[1.7]" style={{ color: "#9A9E98" }}>
+              <p className="text-[10px] leading-[1.7]" style={{ color: "#B39977" }}>
                 {details}
               </p>
             </div>

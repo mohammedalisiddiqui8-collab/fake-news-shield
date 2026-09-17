@@ -29,7 +29,7 @@ export function MorphingPanel({
   detail,
   triggerLabel = "VIEW DETAILS",
   className = "",
-  accentColor = "#8FA596",
+  accentColor = "#7F9278",
 }: MorphingPanelProps) {
   const [expanded, setExpanded] = useState(false);
 
@@ -37,10 +37,10 @@ export function MorphingPanel({
     <div
       className={`overflow-hidden transition-all duration-300 ${className}`}
       style={{
-        background: "#0F1110",
-        border: "1px solid #292A27",
+        background: "#241C15",
+        border: "1px solid #46382A",
         borderRadius: "2px",
-        borderColor: expanded ? `${accentColor}25` : "#292A27",
+        borderColor: expanded ? `${accentColor}25` : "#46382A",
       }}
     >
       {/* Preview — always shown */}
@@ -52,7 +52,7 @@ export function MorphingPanel({
         onClick={() => setExpanded(!expanded)}
         className="w-full cursor-pointer px-4 py-2 flex items-center gap-1.5 transition-colors"
         style={{
-          borderTop: "1px solid #292A27",
+          borderTop: "1px solid #46382A",
           color: accentColor,
           background: "transparent",
         }}
@@ -83,7 +83,7 @@ export function MorphingPanel({
               animate={{ y: 0 }}
               transition={{ duration: 0.3, delay: 0.1 }}
               className="px-4 pb-4 pt-2"
-              style={{ borderTop: "1px solid #292A27" }}
+              style={{ borderTop: "1px solid #46382A" }}
             >
               {detail}
             </motion.div>
