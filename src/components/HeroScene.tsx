@@ -4,7 +4,7 @@ import * as THREE from "three";
 
 /* ─── LOCKED PALETTE ─── */
 const P = {
-  bg: "#0B0D0C",text:"#F1F2EE",secondary:"#9A9E98",sage:"#607568",verified:"#8FA596",warning:"#A9574D",gold:"#A58B5B",border:"#292A27",surface:"#0F1110",
+  bg: "#0A0A0A",text:"#F5F0E8",secondary:"#A8A098",sage:"#C8B490",verified:"#D4C4A8",warning:"#A85A50",gold:"#C8B490",border:"#1E1E1E",surface:"#111111",
 };
 
 /* ─── Panel Data ─── */
@@ -220,7 +220,7 @@ export default function HeroScene() {
     const h = container.clientHeight;
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x0B0D0C, 0.05);
+    scene.fog = new THREE.FogExp2(0x0A0A0A, 0.05);
 
     const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
     camera.position.set(0, 0, 7);
