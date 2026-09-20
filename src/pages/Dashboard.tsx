@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import {
   Shield, Search, Clock, Home, Loader2, CheckCircle2, AlertTriangle,
   XCircle, FileText, Link, Trash2, ChevronRight, Brain, BarChart3,
-  ArrowLeft, ClipboardPaste, BookOpen, TrendingUp,
+  ArrowLeft, ClipboardPaste, BookOpen, TrendingUp, ArrowLeftRight,
   Sun, Moon, Download, Share2, Lightbulb, Target, Activity, ArrowRight, Globe,
   Landmark, FlaskConical, Thermometer, Newspaper,
 } from "lucide-react";
@@ -23,6 +23,11 @@ import { DigitSwap } from "@/components/motion/DigitSwap";
 import { ExpandableClaim } from "@/components/motion/ExpandableClaim";
 import { MorphingPanel } from "@/components/motion/MorphingPanel";
 import { EvidenceChain } from "@/components/motion/EvidenceChain";
+import { ClaimAnalysis, type Claim } from "@/components/motion/ClaimAnalysis";
+import { EvidenceTimeline, type TimelineEvent } from "@/components/motion/EvidenceTimeline";
+import { SourceProfile, type SourceProfileData } from "@/components/motion/SourceProfile";
+import { CompareArticles, type ComparisonResult } from "@/components/motion/CompareArticles";
+import { CaseFiles, type CaseFile } from "@/components/motion/CaseFiles";
 import { getLiveNews, FALLBACK_SAMPLES, getCategoryIconComponent, relativeTime, type LiveArticle } from "@/lib/news";
 
 /* ─── Types ─── */
@@ -46,6 +51,9 @@ interface AnalysisResult {
   triggeredKeywords: string[];
   categoryBreakdown: CategoryBreakdown[];
   wordCount: number;
+  claims?: Claim[];
+  sourceProfile?: SourceProfileData;
+  evidenceTimeline?: TimelineEvent[];
 }
 
 /* ─── Verdict Config (editorial palette) ─── */
@@ -147,7 +155,8 @@ export default function Dashboard() {
   const [activeView, setActiveView] = useState<ViewType>("analyze");
   const [currentTip, setCurrentTip] = useState(0);
   const [pipelineStep, setPipelineStep] = useState(-1);
-  const [resultTab, setResultTab] = useState<"overview" | "linguistic" | "source" | "logical" | "findings">("overview");
+  const [resultTab, setResultTab] = useState<"overview" | "linguistic" | "source" | "logical" | "findings" | "claims" | "evidence" | "sourceprofile">("overview");
+  const [compareView, setCompareView] = useState(false);
   const [analysisDepth, setAnalysisDepth] = useState<"quick" | "standard" | "deep">("standard");
   const [liveNews, setLiveNews] = useState<LiveArticle[]>([]);
   const [newsLoading, setNewsLoading] = useState(true);
@@ -576,6 +585,9 @@ export default function Dashboard() {
                       { key: "source" as const, label: "Source Analysis", icon: Globe },
                       { key: "logical" as const, label: "Logical Consistency", icon: Brain },
                       { key: "findings" as const, label: "Key Findings", icon: AlertTriangle },
+                      ...(currentResult.claims && currentResult.claims.length > 0 ? [{ key: "claims" as const, label: "Claim Analysis", icon: FileText }] : []),
+                      ...(currentResult.evidenceTimeline && currentResult.evidenceTimeline.length > 0 ? [{ key: "evidence" as const, label: "Evidence Timeline", icon: Clock }] : []),
+                      { key: "sourceprofile" as const, label: "Source Profile", icon: Globe },
                     ]).map(item => (
                       <button key={item.key} type="button"
                         className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-[11px] transition-colors cursor-pointer text-left ${
@@ -853,8 +865,59 @@ export default function Dashboard() {
                 />
               </motion.div>
 
+              {/* ─── Claim Analysis ─── */}
+              {currentResult.claims && currentResult.claims.length > 0 && (
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.32 }}
+                  className="rounded-lg mb-3 overflow-hidden" style={{ background: "#111111", border: "1px solid #1E1E1E" }}>
+                  <div className="px-4 sm:px-5 pt-4 pb-2">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <FileText className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
+                      <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "#F5F0E8" }}>Claim Analysis</h3>
+                    </div>
+                    <p className="text-[9px]" style={{ color: "#A8A098" }}>{currentResult.claims.length} claims extracted — click to explore evidence</p>
+                  </div>
+                  <div className="px-4 sm:px-5 pb-3">
+                    <ClaimAnalysis claims={currentResult.claims} />
+                  </div>
+                </motion.div>
+              )}
+
+              {/* ─── Evidence Timeline ─── */}
+              {currentResult.evidenceTimeline && currentResult.evidenceTimeline.length > 0 && (
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.34 }}
+                  className="rounded-lg mb-3 overflow-hidden" style={{ background: "#111111", border: "1px solid #1E1E1E" }}>
+                  <div className="px-4 sm:px-5 pt-4 pb-2">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <Clock className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
+                      <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "#F5F0E8" }}>Evidence Timeline</h3>
+                    </div>
+                    <p className="text-[9px]" style={{ color: "#A8A098" }}>Chronological verification trail</p>
+                  </div>
+                  <div className="px-4 sm:px-5 pb-3">
+                    <EvidenceTimeline events={currentResult.evidenceTimeline} />
+                  </div>
+                </motion.div>
+              )}
+
+              {/* ─── Source Profile ─── */}
+              {currentResult.sourceProfile && (
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.36 }}
+                  className="rounded-lg mb-3 overflow-hidden" style={{ background: "#111111", border: "1px solid #1E1E1E" }}>
+                  <div className="px-4 sm:px-5 pt-4 pb-2">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <Globe className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
+                      <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "#F5F0E8" }}>Source Profile</h3>
+                    </div>
+                    <p className="text-[9px]" style={{ color: "#A8A098" }}>Source credibility assessment</p>
+                  </div>
+                  <div className="px-4 sm:px-5 pb-4">
+                    <SourceProfile profile={currentResult.sourceProfile} />
+                  </div>
+                </motion.div>
+              )}
+
               {/* Highlighted content */}
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.34 }}
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.38 }}
                 className="glass-card rounded-lg p-4 sm:p-5">
                 <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-2">
                   Analyzed Content {currentResult.triggeredKeywords.length > 0 && <span className="text-destructive normal-case">(highlighted)</span>}
@@ -872,6 +935,82 @@ export default function Dashboard() {
               </motion.div>
 
               </div>{/* end grid */}
+
+              {/* ─── Compare Articles ─── */}
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.4 }}
+                className="rounded-lg mb-3 overflow-hidden mt-3" style={{ background: "#111111", border: "1px solid #1E1E1E" }}>
+                <div className="px-4 sm:px-5 pt-4 pb-2">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <ArrowLeftRight className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
+                    <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "#F5F0E8" }}>Compare Articles</h3>
+                  </div>
+                  <p className="text-[9px]" style={{ color: "#A8A098" }}>Compare this article with another to find shared claims, contradictions, and differences</p>
+                </div>
+                <div className="px-4 sm:px-5 pb-4">
+                  <CompareArticles
+                    onCompare={async (textA, textB) => {
+                      // Run both analyses
+                      const [resultA, resultB] = await Promise.all([
+                        runAnalysis({ text: textA, inputType: "text" }),
+                        runAnalysis({ text: textB, inputType: "text" }),
+                      ]);
+
+                      // Simple comparison based on analysis results
+                      const sharedClaims: ComparisonResult["sharedClaims"] = [];
+                      const contradictoryClaims: ComparisonResult["contradictoryClaims"] = [];
+                      const differentFraming: ComparisonResult["differentFraming"] = [];
+                      const missingInformation: ComparisonResult["missingInformation"] = [];
+                      const sourceDifferences: ComparisonResult["sourceDifferences"] = [];
+
+                      // Compare keywords
+                      const sharedKw = resultA.triggeredKeywords.filter(k => resultB.triggeredKeywords.includes(k));
+                      if (sharedKw.length > 0) {
+                        sharedClaims.push({ claim: `Both articles reference: ${sharedKw.slice(0, 3).join(", ")}`, relationship: "agree" });
+                      }
+
+                      // Compare verdicts
+                      if (resultA.verdict === resultB.verdict) {
+                        sharedClaims.push({ claim: `Both articles reached the same verdict: ${resultA.verdict.replace("_", " ")}`, relationship: "agree" });
+                      } else {
+                        contradictoryClaims.push({
+                          claimA: `Article A verdict: ${resultA.verdict.replace("_", " ")} (${resultA.confidence}%)`,
+                          claimB: `Article B verdict: ${resultB.verdict.replace("_", " ")} (${resultB.confidence}%)`,
+                          explanation: "The two articles reached different credibility assessments.",
+                        });
+                      }
+
+                      // Compare red flags
+                      const sharedRed = resultA.redFlags.filter(f => resultB.redFlags.some(f2 => f2.toLowerCase().includes(f.toLowerCase().slice(0, 20))));
+                      if (sharedRed.length > 0) {
+                        sharedClaims.push({ claim: `Shared concerns: ${sharedRed.slice(0, 2).join("; ")}`, relationship: "agree" });
+                      }
+
+                      // Different framing
+                      if (resultA.greenFlags.length !== resultB.greenFlags.length) {
+                        differentFraming.push({
+                          topic: "Source quality assessment",
+                          framingA: `${resultA.greenFlags.length} positive signals detected`,
+                          framingB: `${resultB.greenFlags.length} positive signals detected`,
+                        });
+                      }
+
+                      // Missing information
+                      if (resultA.triggeredKeywords.length > 0 && resultB.triggeredKeywords.length === 0) {
+                        missingInformation.push({ present: "A", information: "Sensational language patterns detected in Article A" });
+                      } else if (resultB.triggeredKeywords.length > 0 && resultA.triggeredKeywords.length === 0) {
+                        missingInformation.push({ present: "B", information: "Sensational language patterns detected in Article B" });
+                      }
+
+                      // Source differences
+                      if (resultA.wordCount !== resultB.wordCount) {
+                        sourceDifferences.push({ source: "Content length", inArticle: resultA.wordCount > resultB.wordCount ? "A" : "B", detail: `Article ${resultA.wordCount > resultB.wordCount ? "A" : "B"} is longer (${Math.max(resultA.wordCount, resultB.wordCount)} words)` });
+                      }
+
+                      return { sharedClaims, contradictoryClaims, differentFraming, missingInformation, sourceDifferences };
+                    }}
+                  />
+                </div>
+              </motion.div>
             </motion.div>
           )}
 
