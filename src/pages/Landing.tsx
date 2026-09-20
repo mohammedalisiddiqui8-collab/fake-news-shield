@@ -408,8 +408,8 @@ export default function Landing() {
           <HeroScene />
         </Suspense>
 
-        <motion.div style={{ y: heroY, opacity: heroOpacity, scale: heroScale }} className="relative z-10 mx-auto max-w-7xl px-5 w-full pt-24">
-          <div className="grid grid-cols-12 gap-4">
+        <motion.div style={{ y: heroY, opacity: heroOpacity, scale: heroScale }} className="relative z-10 mx-auto max-w-7xl px-5 sm:px-8 lg:px-12 w-full pt-28 sm:pt-32 lg:pt-0 pb-16 sm:pb-0">
+          <div className="grid grid-cols-12 gap-4 lg:gap-8 items-center">
             <div className="col-span-12 lg:col-span-7">
               {/* Animated reveal line */}
               <RevealLine delay={0.3} />
@@ -418,13 +418,13 @@ export default function Landing() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
-                className="text-[9px] tracking-[0.35em] uppercase mb-4 font-medium"
-                style={{ color: "#C8B490" }}>
+                className="text-[9px] sm:text-[10px] tracking-[0.35em] uppercase mb-3 sm:mb-4 font-medium"
+                style={{ color: "#A8906E" }}>
                 Intelligent Misinformation Detection
               </motion.p>
 
               {/* Hero title — letter stagger reveal */}
-              <h1 className="text-6xl sm:text-7xl lg:text-[5.5rem] xl:text-[6.5rem] leading-[0.92] tracking-tight mb-2"
+              <h1 className="text-6xl sm:text-7xl lg:text-[5.5rem] xl:text-[6.5rem] leading-[0.92] tracking-tight mb-1 sm:mb-2"
                 style={{ fontFamily: "'DM Serif Display', serif", color: "#F5F0E8" }}>
                 {"VERITAS".split("").map((char, i) => (
                   <motion.span
@@ -444,12 +444,12 @@ export default function Landing() {
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 1.0 }}
-                className="text-xl sm:text-2xl lg:text-3xl leading-tight mb-8 min-h-[1.2em]"
+                className="text-lg sm:text-xl lg:text-2xl xl:text-3xl leading-tight mb-6 sm:mb-6 lg:mb-8 min-h-[1.2em]"
                 style={{ color: "#D4C8B8" }}>
                 <AnimatedTagline />
               </motion.div>
 
-              <ScrollTextFade parallaxY={12} className="mb-10">
+              <ScrollTextFade parallaxY={12} className="mb-8 sm:mb-8 lg:mb-10">
                 <motion.p
                   initial={{ opacity: 0, y: 12 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -464,7 +464,7 @@ export default function Landing() {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 1.2 }}
-                className="flex flex-col sm:flex-row items-start gap-3">
+                className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4">
                 <MagneticBtn className="cursor-pointer gap-2 px-7 py-3 text-[11px] font-semibold tracking-[0.1em] flex items-center"
                   style={{ background: "#A8906E", color: "#0A0A0A", borderRadius: "2px" }}
                   onClick={() => navigate("/dashboard")}>
@@ -483,7 +483,7 @@ export default function Landing() {
               initial={{ opacity: 0, x: 24 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.7, delay: 1.3, ease: [0.22, 1, 0.36, 1] }}
-              className="col-span-12 lg:col-span-4 lg:col-start-9 flex lg:flex-col gap-6 lg:gap-8 lg:justify-center">
+              className="col-span-12 lg:col-span-4 lg:col-start-9 flex lg:flex-col gap-5 sm:gap-6 lg:gap-8 lg:justify-center lg:pl-4">
               {[
                 { label: "Weighted NLP regex patterns", value: 70, suffix: "+" },
                 { label: "Misinformation signal categories", value: 21, suffix: "" },
@@ -494,11 +494,11 @@ export default function Landing() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 1.5 + i * 0.1 }}
                   className="flex-1 lg:flex-none">
-                  <div className="text-2xl lg:text-3xl font-bold" style={{ fontFamily: "'DM Serif Display', serif", color: "#F5F0E8", fontVariantNumeric: "tabular-nums" }}>
+                  <div className="text-2xl sm:text-2xl lg:text-3xl font-bold" style={{ fontFamily: "'DM Serif Display', serif", color: "#F5F0E8", fontVariantNumeric: "tabular-nums" }}>
                     <CountUp target={s.value} suffix={s.suffix} />
                   </div>
 
-                  <div className="text-[9px] tracking-wide mt-1 font-medium" style={{ color: "#D4C8B8" }}>{s.label}</div>
+                  <div className="text-[8px] sm:text-[9px] tracking-wide mt-1 font-medium" style={{ color: "#D4C8B8" }}>{s.label}</div>
                 </motion.div>
               ))}
             </motion.div>

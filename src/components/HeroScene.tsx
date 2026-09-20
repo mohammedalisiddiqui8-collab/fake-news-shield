@@ -252,7 +252,7 @@ export default function HeroScene() {
       const tex = createPanelTexture(p);
       const geo = new THREE.PlaneGeometry(p.w, p.h);
       const mat = new THREE.MeshStandardMaterial({
-        map: tex, transparent: true, opacity: 0.92,
+        map: tex, transparent: true, opacity: 0.96,
         side: THREE.DoubleSide, roughness: 0.9, metalness: 0.05,
       });
       const mesh = new THREE.Mesh(geo, mat);
@@ -270,7 +270,7 @@ export default function HeroScene() {
     const sealMesh = new THREE.Mesh(
       new THREE.PlaneGeometry(1.0, 1.0),
       new THREE.MeshStandardMaterial({
-        map: sealTex, transparent: true, opacity: 0.7,
+        map: sealTex, transparent: true, opacity: 0.8,
         side: THREE.DoubleSide, roughness: 0.4, metalness: 0.5,
       })
     );
@@ -299,7 +299,7 @@ export default function HeroScene() {
       );
       const geo = new THREE.BufferGeometry().setFromPoints(curve.getPoints(32));
       const mat = new THREE.LineBasicMaterial({
-        color: new THREE.Color(l.color), transparent: true, opacity: 0.08,
+        color: new THREE.Color(l.color), transparent: true, opacity: 0.14,
       });
       scene.add(new THREE.Line(geo, mat));
     });
