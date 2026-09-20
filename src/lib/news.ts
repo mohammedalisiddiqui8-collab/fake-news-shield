@@ -104,13 +104,17 @@ const CATEGORY_FEEDS: Record<string, { url: string; name: string }[]> = {
 };
 
 const CATEGORY_ICONS: Record<string, string> = {
-  World: "🌍",
-  Conflicts: "⚔️",
-  Politics: "🏛️",
-  Economy: "💰",
-  "Science & Tech": "🔬",
-  Environment: "🌡️",
+  World: "Globe",
+  Conflicts: "AlertTriangle",
+  Politics: "Landmark",
+  Economy: "TrendingUp",
+  "Science & Tech": "FlaskConical",
+  Environment: "Thermometer",
 };
+
+export function getCategoryIconComponent(category: string): string {
+  return CATEGORY_ICONS[category] || "Newspaper";
+}
 
 const CACHE_KEY = "veritas_live_news";
 const CACHE_TTL_MS = 30 * 60 * 1000; // 30 minutes
@@ -415,5 +419,5 @@ export async function getLiveNews(): Promise<LiveArticle[]> {
 
 /* ─── Category icon helper (exported for card UI) ─── */
 export function getCategoryIcon(category: string): string {
-  return CATEGORY_ICONS[category] || "📰";
+  return category;
 }

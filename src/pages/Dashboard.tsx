@@ -10,6 +10,7 @@ import {
   XCircle, FileText, Link, Trash2, ChevronRight, Brain, BarChart3,
   ArrowLeft, ClipboardPaste, BookOpen, TrendingUp,
   Sun, Moon, Download, Share2, Lightbulb, Target, Activity, ArrowRight, Globe,
+  Landmark, FlaskConical, Thermometer, Newspaper,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -22,7 +23,7 @@ import { DigitSwap } from "@/components/motion/DigitSwap";
 import { ExpandableClaim } from "@/components/motion/ExpandableClaim";
 import { MorphingPanel } from "@/components/motion/MorphingPanel";
 import { EvidenceChain } from "@/components/motion/EvidenceChain";
-import { getLiveNews, FALLBACK_SAMPLES, getCategoryIcon, relativeTime, type LiveArticle } from "@/lib/news";
+import { getLiveNews, FALLBACK_SAMPLES, getCategoryIconComponent, relativeTime, type LiveArticle } from "@/lib/news";
 
 /* ─── Types ─── */
 type Verdict = "likely_real" | "likely_fake" | "uncertain";
@@ -310,16 +311,16 @@ export default function Dashboard() {
       <nav className="sticky top-0 z-50"                style={{ background: "rgba(10,10,10,0.92)" }}>
         <div className="mx-auto max-w-6xl px-4 sm:px-6 h-12 flex items-center justify-between">
           <button type="button" className="cursor-pointer flex items-center gap-2" onClick={() => navigate("/")}>
-            <Shield className="w-5 h-5" style={{ color: "#F5F0E8" }} />
-            <span className="font-bold tracking-[0.15em] uppercase text-sm" style={{ fontFamily: "'DM Serif Display', serif", color: "#F5F0E8" }}>Veritas</span>
+            <Shield className="w-4 h-4" style={{ color: "#F5F0E8" }} />
+            <span className="font-bold tracking-[0.15em] uppercase text-xs" style={{ fontFamily: "'DM Serif Display', serif", color: "#F5F0E8" }}>Veritas</span>
           </button>
-          <div className="flex items-center gap-0.5">
+          <div className="flex items-center">
             {navItems.map(item => (
               <Button key={item.key} variant="ghost" size="sm"
-                className={`cursor-pointer gap-1 text-[10px] sm:text-xs px-2 sm:px-2.5 h-7 rounded ${activeView === item.key ? "" : ""}`}
-                style={activeView === item.key ? { background: "rgba(168,144,110,0.1)", color: "#F5F0E8" } : { color: "#A8A098" }}
+                className="cursor-pointer gap-1 text-[10px] px-1.5 sm:px-2 h-7 rounded"
+                style={activeView === item.key ? { background: "rgba(168,144,110,0.08)", color: "#F5F0E8" } : { color: "#A8A098" }}
                 disabled={item.disabled} onClick={() => setActiveView(item.key)}>
-                <item.icon className="w-3 h-3" /><span className="hidden md:inline">{item.label}</span>
+                <item.icon className="w-3 h-3" /><span className="hidden sm:inline">{item.label}</span>
               </Button>
             ))}
             <div className="w-px h-4 mx-1" style={{ background: "rgba(245,240,232,0.12)" }} />
@@ -453,58 +454,67 @@ export default function Dashboard() {
                 {/* Sample cards (live or fallback) */}
                 {!newsLoading && (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                    {displayItems.map((item) => (
+                    {displayItems.map((item) => {
+                      const CategoryIcon = (() => {
+                        const name = getCategoryIconComponent(item.category);
+                        const icons: Record<string, typeof Globe> = { Globe, AlertTriangle, Landmark, TrendingUp, FlaskConical, Thermometer, Newspaper };
+                        return icons[name] || Newspaper;
+                      })();
+                      return (
                       <button key={item.label} type="button"
-                        className="glass-card rounded-lg p-3.5 text-left hover:shadow-sm cursor-pointer group transition-all duration-200 border border-border"
+                        className="rounded-lg p-3.5 text-left cursor-pointer group transition-all duration-200 border hover:-translate-y-[2px] hover:border-[#A8906E]/20 active:scale-[0.98]"
+                        style={{ background: "#111111", borderColor: "#1E1E1E" }}
                         onClick={() => { setInputText(item.text); setInputType("text"); }}>
-                        {/* Title + chevron */}
-                        <div className="flex items-start justify-between gap-2 mb-1">
-                          <span className="text-[11px] font-semibold text-primary leading-snug line-clamp-2">
-                            {item.label}
-                          </span>
-                          <ChevronRight className="w-3 h-3 text-muted-foreground group-hover:text-primary transition-colors shrink-0 mt-0.5" />
-                        </div>
-
-                        {/* Description snippet */}
-                        <p className="text-[10px] text-muted-foreground line-clamp-2 leading-relaxed">
-                          {item.text.slice(0, 80)}…
-                        </p>
-
-                        {/* Source + time row */}
+                        {/* Source + time — metadata first */}
                         {(item.source || item.publishedAgo) && (
-                          <div className="flex items-center gap-1.5 mt-1.5">
+                          <div className="flex items-center gap-1.5 mb-1.5">
                             {item.source && (
-                              <span className="text-[8px] font-medium" style={{ color: "#A8906E" }}>
+                              <span className="text-[8px] font-medium uppercase tracking-[0.1em]" style={{ color: "#A8906E" }}>
                                 {item.source}
                               </span>
                             )}
                             {item.source && item.publishedAgo && (
-                              <span className="text-[8px]" style={{ color: "#A8A09850" }}>·</span>
+                              <span className="text-[8px]" style={{ color: "#A8A09840" }}>·</span>
                             )}
                             {item.publishedAgo && (
-                              <span className="text-[8px]" style={{ color: "#A8A098" }}>
+                              <span className="text-[8px]" style={{ color: "#A8A098", opacity: 0.6 }}>
                                 {item.publishedAgo}
                               </span>
                             )}
                           </div>
                         )}
 
-                        {/* Badges row */}
-                        <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
-                          <Badge variant="outline" className={`text-[9px] px-1.5 py-0 ${item.type === "real" ? "border-primary/25 text-primary" : "border-destructive/25 text-destructive"}`}>
+                        {/* Headline — strongest element */}
+                        <div className="flex items-start justify-between gap-2">
+                          <span className="text-[11px] font-semibold leading-snug line-clamp-2" style={{ color: "#F5F0E8" }}>
+                            {item.label}
+                          </span>
+                          <ChevronRight className="w-3 h-3 shrink-0 mt-0.5 transition-transform duration-200 group-hover:translate-x-0.5" style={{ color: "#A8A098" }} />
+                        </div>
+
+                        {/* Snippet — secondary */}
+                        <p className="text-[9px] line-clamp-2 leading-relaxed mt-1" style={{ color: "#A8A098" }}>
+                          {item.text.slice(0, 80)}…
+                        </p>
+
+                        {/* Category + Status — compact metadata */}
+                        <div className="flex items-center gap-1.5 mt-2">
+                          <Badge variant="outline" className={`text-[8px] px-1.5 py-0 ${item.type === "real" ? "border-primary/25 text-primary" : "border-destructive/25 text-destructive"}`}>
                             {item.type === "real" ? "Real" : "Fake"}
                           </Badge>
-                          <Badge variant="outline" className="text-[9px] px-1.5 py-0 text-muted-foreground">
-                            {getCategoryIcon(item.category)} {item.category}
-                          </Badge>
+                          <div className="flex items-center gap-1">
+                            <CategoryIcon className="w-2.5 h-2.5" style={{ color: "#A8A098", opacity: 0.5 }} />
+                            <span className="text-[8px]" style={{ color: "#A8A098", opacity: 0.6 }}>{item.category}</span>
+                          </div>
                           {item.isSnippet && (
-                            <Badge variant="outline" className="text-[8px] px-1 py-0 text-muted-foreground/60 border-muted-foreground/15">
+                            <span className="text-[7px] px-1 py-0 rounded" style={{ color: "#A8A098", opacity: 0.4, border: "1px solid #1E1E1E" }}>
                               snippet
-                            </Badge>
+                            </span>
                           )}
                         </div>
                       </button>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
 
@@ -526,18 +536,18 @@ export default function Dashboard() {
               </button>
 
               {/* ── Feature cards ── */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mt-6">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-6">
                 {[{ icon: Brain, title: "AI-Powered Analysis", desc: "Advanced NLP & ML models", accent: "#A8906E" }, { icon: Search, title: "Multiple Checks", desc: "Source, logic, language & more", accent: "#A8906E" }, { icon: BarChart3, title: "Detailed Reports", desc: "Clear, simple, actionable", accent: "#A8906E" }].map((f, i) => (
-                  <motion.div key={f.title} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.08, duration: 0.4 }}
-                    className="relative overflow-hidden flex items-center gap-3 px-4 py-3.5"
-                    style={{ background: "#111111", border: "1px solid #1E1E1E", borderRadius: "2px" }}>
-                    <div className="absolute top-0 left-0 right-0 h-[1px]" style={{ background: f.accent, opacity: 0.3 }} />
-                    <div className="w-7 h-7 rounded-sm flex items-center justify-center shrink-0" style={{ background: `${f.accent}0d`, border: `1px solid ${f.accent}18` }}>
-                      <f.icon className="w-3.5 h-3.5" style={{ color: f.accent }} />
+                  <motion.div key={f.title} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.06, duration: 0.35 }}
+                    className="relative overflow-hidden flex items-center gap-3 px-4 py-3 transition-all duration-200 hover:border-[#A8906E]/15"
+                    style={{ background: "#0D0D0D", border: "1px solid #1E1E1E", borderRadius: "2px" }}>
+                    <div className="absolute top-0 left-0 w-8 h-[1px]" style={{ background: f.accent, opacity: 0.25 }} />
+                    <div className="w-6 h-6 rounded-sm flex items-center justify-center shrink-0" style={{ background: `rgba(168,144,110,0.06)`, border: `1px solid rgba(168,144,110,0.1)` }}>
+                      <f.icon className="w-3 h-3" style={{ color: f.accent, opacity: 0.8 }} />
                     </div>
                     <div>
-                      <span className="text-[10px] font-semibold block leading-tight" style={{ color: "#F5F0E8" }}>{f.title}</span>
-                      <span className="text-[9px] leading-relaxed" style={{ color: "#A8A098" }}>{f.desc}</span>
+                      <span className="text-[9px] font-semibold block leading-tight tracking-wide" style={{ color: "#F5F0E8" }}>{f.title}</span>
+                      <span className="text-[8px] leading-relaxed" style={{ color: "#A8A098", opacity: 0.7 }}>{f.desc}</span>
                     </div>
                   </motion.div>
                 ))}

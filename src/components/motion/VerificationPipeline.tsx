@@ -121,38 +121,36 @@ export function VerificationPipeline({
                 {step.sublabel}
               </span>
 
-              {/* Active step shimmer */}
+              {/* Active step scanning line */}
               <AnimatePresence>
                 {isActive && (
                   <motion.div
-                    initial={{ width: 0 }}
-                    animate={{ width: "80px" }}
-                    exit={{ width: 0 }}
-                    transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                    className="h-[1px] mt-1.5 overflow-hidden"
-                    style={{
-                      background: "linear-gradient(90deg, #A8906E, rgba(168,144,110,0.25), transparent)",
-                    }}
-                  />
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="mt-1.5 overflow-hidden"
+                    style={{ width: "100%", maxWidth: 120 }}
+                  >
+                    <div className="relative h-[1px]" style={{ background: "#1E1E1E" }}>
+                      <motion.div
+                        animate={{ x: ["-100%", "200%"] }}
+                        transition={{ duration: 1.8, repeat: Infinity, ease: "linear" }}
+                        className="absolute inset-0"
+                        style={{ background: "linear-gradient(90deg, transparent, #A8906E, transparent)" }}
+                      />
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <motion.span
+                        animate={{ opacity: [0.3, 0.8, 0.3] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                        className="w-[3px] h-[3px] rounded-full"
+                        style={{ background: "#A8906E" }}
+                      />
+                      <span className="text-[8px] tracking-wider" style={{ color: "#A8906E", opacity: 0.7 }}>Processing</span>
+                    </div>
+                  </motion.div>
                 )}
               </AnimatePresence>
-
-              {/* Active step pulse indicator */}
-              {isActive && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex items-center gap-1.5 mt-1"
-                >
-                  <motion.span
-                    animate={{ opacity: [0.4, 1, 0.4] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
-                    className="w-1 h-1 rounded-full"
-                    style={{ background: "#A8906E" }}
-                  />
-                  <span className="text-[8px] tracking-wider" style={{ color: "#A8906E", opacity: 0.8 }}>Processing...</span>
-                </motion.div>
-              )}
             </motion.div>
           </div>
         );
