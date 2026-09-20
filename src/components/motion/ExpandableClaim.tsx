@@ -12,9 +12,9 @@ interface ExpandableClaimProps {
 }
 
 const statusConfig = {
-  supported: { icon: CheckCircle2, color: "#7F9278", label: "SUPPORTED" },
+  supported: { icon: CheckCircle2, color: "#A8906E", label: "SUPPORTED" },
   unverified: { icon: AlertTriangle, color: "#8A6A45", label: "UNVERIFIED" },
-  misleading: { icon: XCircle, color: "#A85C4D", label: "MISLEADING" },
+  misleading: { icon: XCircle, color: "#A85A50", label: "MISLEADING" },
 };
 
 /**
@@ -46,8 +46,8 @@ export function ExpandableClaim({
     <div
       className={`overflow-hidden transition-all duration-300 ${className}`}
       style={{
-        background: "#241C15",
-        border: "1px solid #46382A",
+        background: "#111111",
+        border: "1px solid #1E1E1E",
         borderRadius: "2px",
         borderColor: expanded ? `${config.color}33` : undefined,
       }}
@@ -81,20 +81,20 @@ export function ExpandableClaim({
           </div>
           <p
             className="text-[11px] leading-relaxed italic"
-            style={{ color: "#EDE6D9" }}
+            style={{ color: "#F5F0E8" }}
           >
             "{claimText}"
           </p>
           <div className="flex items-center gap-2 mt-1.5">
             <span
               className="text-[9px] font-mono"
-              style={{ color: "#B39977" }}
+              style={{ color: "#A8A098" }}
             >
               CONFIDENCE
             </span>
             <div
               className="h-[2px] flex-1 max-w-[80px] rounded-full overflow-hidden"
-              style={{ background: "#292A27" }}
+              style={{ background: "#1E1E1E" }}
             >
               <motion.div
                 initial={{ width: 0 }}
@@ -118,7 +118,7 @@ export function ExpandableClaim({
           transition={{ duration: 0.2 }}
           className="shrink-0 mt-1"
         >
-          <ChevronDown className="w-3.5 h-3.5" style={{ color: "#B39977" }} />
+          <ChevronDown className="w-3.5 h-3.5" style={{ color: "#A8A098" }} />
         </motion.div>
       </button>
 
@@ -134,9 +134,9 @@ export function ExpandableClaim({
           >
             <div
               className="px-4 pb-4 pt-1"
-              style={{ borderTop: "1px solid #46382A" }}
+              style={{ borderTop: "1px solid #1E1E1E" }}
             >
-              <p className="text-[10px] leading-[1.7]" style={{ color: "#B39977" }}>
+              <p className="text-[10px] leading-[1.7]" style={{ color: "#A8A098" }}>
                 {details}
               </p>
             </div>

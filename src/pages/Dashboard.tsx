@@ -21,6 +21,7 @@ import { VerificationPipeline } from "@/components/motion/VerificationPipeline";
 import { DigitSwap } from "@/components/motion/DigitSwap";
 import { ExpandableClaim } from "@/components/motion/ExpandableClaim";
 import { MorphingPanel } from "@/components/motion/MorphingPanel";
+import { EvidenceChain } from "@/components/motion/EvidenceChain";
 import { getLiveNews, FALLBACK_SAMPLES, getCategoryIcon, relativeTime, type LiveArticle } from "@/lib/news";
 
 /* ─── Types ─── */
@@ -821,6 +822,26 @@ export default function Dashboard() {
                   )}
                 </div>
               </div>
+
+              {/* ─── Evidence Chain ─── */}
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.3 }}
+                className="rounded-lg mb-3 overflow-hidden" style={{ background: "#111111", border: "1px solid #1E1E1E" }}>
+                <div className="px-4 sm:px-5 pt-4 pb-2">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Link className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
+                    <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "#F5F0E8" }}>Evidence Chain</h3>
+                  </div>
+                  <p className="text-[9px]" style={{ color: "#A8A098" }}>How Veritas reached this verdict — click each stage to explore</p>
+                </div>
+                <EvidenceChain
+                  verdict={currentResult.verdict}
+                  confidence={currentResult.confidence}
+                  redFlags={currentResult.redFlags}
+                  greenFlags={currentResult.greenFlags}
+                  triggeredKeywords={currentResult.triggeredKeywords}
+                  categoryBreakdown={currentResult.categoryBreakdown}
+                />
+              </motion.div>
 
               {/* Highlighted content */}
               <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.34 }}
