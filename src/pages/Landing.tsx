@@ -394,9 +394,9 @@ export default function Landing() {
             ))}
           </div>
           <MagneticBtn
-            className="cursor-pointer text-[10px] font-semibold h-8 px-5 tracking-[0.12em]"
-            style={{ background: "#C8B490", color: "#0A0A0A", borderRadius: "2px" }}
+            className="cursor-pointer text-[10px] font-semibold h-8 px-5 tracking-[0.12em]"style={{ background: "#A8906E", color: "#0A0A0A", borderRadius: "2px" }}
             onClick={() => navigate("/dashboard")}>
+
             START ANALYZING
           </MagneticBtn>
         </div>
@@ -445,7 +445,7 @@ export default function Landing() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 1.0 }}
                 className="text-xl sm:text-2xl lg:text-3xl leading-tight mb-8 min-h-[1.2em]"
-                style={{ color: "#A8A098" }}>
+                style={{ color: "#D4C8B8" }}>
                 <AnimatedTagline />
               </motion.div>
 
@@ -466,7 +466,7 @@ export default function Landing() {
                 transition={{ duration: 0.4, delay: 1.2 }}
                 className="flex flex-col sm:flex-row items-start gap-3">
                 <MagneticBtn className="cursor-pointer gap-2 px-7 py-3 text-[11px] font-semibold tracking-[0.1em] flex items-center"
-                  style={{ background: "#C8B490", color: "#0A0A0A", borderRadius: "2px" }}
+                  style={{ background: "#A8906E", color: "#0A0A0A", borderRadius: "2px" }}
                   onClick={() => navigate("/dashboard")}>
                   START ANALYZING <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" />
                 </MagneticBtn>
@@ -494,10 +494,11 @@ export default function Landing() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 1.5 + i * 0.1 }}
                   className="flex-1 lg:flex-none">
-                  <div className="text-2xl lg:text-3xl font-bold" style={{ fontFamily: "'DM Serif Display', serif", color: "#F5F0E8" }}>
+                  <div className="text-2xl lg:text-3xl font-bold" style={{ fontFamily: "'DM Serif Display', serif", color: "#F5F0E8", fontVariantNumeric: "tabular-nums" }}>
                     <CountUp target={s.value} suffix={s.suffix} />
                   </div>
-                  <div className="text-[9px] tracking-wide mt-1 font-medium" style={{ color: "#A8A098" }}>{s.label}</div>
+
+                  <div className="text-[9px] tracking-wide mt-1 font-medium" style={{ color: "#D4C8B8" }}>{s.label}</div>
                 </motion.div>
               ))}
             </motion.div>
@@ -691,7 +692,7 @@ export default function Landing() {
               No sign-up required. Paste any article and get an instant, evidence-backed verdict.
             </p>
             <MagneticBtn className="cursor-pointer mt-8 gap-2 px-8 py-3.5 text-[11px] font-semibold tracking-[0.1em] inline-flex items-center"
-              style={{ background: "#C8B490", color: "#0A0A0A", borderRadius: "2px" }}
+              style={{ background: "#A8906E", color: "#0A0A0A", borderRadius: "2px" }}
               onClick={() => navigate("/dashboard")}>
               START ANALYZING <ArrowRight className="w-3.5 h-3.5" />
             </MagneticBtn>
