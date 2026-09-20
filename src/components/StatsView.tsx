@@ -32,7 +32,7 @@ interface StatsViewProps {
 
 const COLORS = {
   likely_real: "#A8906E",
-  uncertain: "#C8B490",
+  uncertain: "#A8906E",
   likely_fake: "#A85A50",
 };
 
@@ -86,7 +86,7 @@ export function StatsView({ analyses }: StatsViewProps) {
     { label: "Total Articles Analyzed", value: totalAnalyses, icon: BarChart3, color: "#A8906E", trend: "+12%", trendUp: true },
     { label: "Likely Credible", value: verdictCounts.likely_real, pct: `${crediblePct}%`, icon: CheckCircle2, color: "#A8906E", trend: `${crediblePct}%`, trendUp: true },
     { label: "Likely Misleading", value: verdictCounts.likely_fake, pct: `${misleadingPct}%`, icon: AlertTriangle, color: "#A85A50", trend: `${misleadingPct}%`, trendUp: false },
-    { label: "Uncertain", value: verdictCounts.uncertain, pct: `${uncertainPct}%`, icon: TrendingUp, color: "#C8B490", trend: `${uncertainPct}%`, trendUp: false },
+    { label: "Uncertain", value: verdictCounts.uncertain, pct: `${uncertainPct}%`, icon: TrendingUp, color: "#A8906E", trend: `${uncertainPct}%`, trendUp: false },
   ];
 
   return (

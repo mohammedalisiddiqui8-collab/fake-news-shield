@@ -54,7 +54,7 @@ const verdictConfig: Record<Verdict, {
 }> = {
   likely_real: {
     label: "Likely Credible", icon: CheckCircle2, color: "text-primary",
-    bg: "bg-primary/8", border: "border-primary/20", accentColor: "#C8B490",
+    bg: "bg-primary/8", border: "border-primary/20", accentColor: "#A8906E",
     description: "This content appears to be based on credible sourcing and journalistic standards.",
   },
   uncertain: {
@@ -385,7 +385,7 @@ export default function Dashboard() {
               <div className="glass-card rounded-lg p-4 mb-3">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.12em]">Analysis Depth</span>
-                  <span className="text-[10px] font-semibold capitalize" style={{ color: "#C8B490" }}>{analysisDepth}</span>
+                  <span className="text-[10px] font-semibold capitalize" style={{ color: "#A8906E" }}>{analysisDepth}</span>
                 </div>
                 <div className="flex items-center gap-0">
                   {(["quick", "standard", "deep"] as const).map((depth, i) => (
@@ -474,7 +474,7 @@ export default function Dashboard() {
                         {(item.source || item.publishedAgo) && (
                           <div className="flex items-center gap-1.5 mt-1.5">
                             {item.source && (
-                              <span className="text-[8px] font-medium" style={{ color: "#C8B490" }}>
+                              <span className="text-[8px] font-medium" style={{ color: "#A8906E" }}>
                                 {item.source}
                               </span>
                             )}
@@ -511,7 +511,7 @@ export default function Dashboard() {
                 {/* Subtle live indicator */}
                 {liveNews.length > 0 && !newsLoading && (
                   <div className="flex items-center gap-1.5 mt-2">
-                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#C8B490", opacity: 0.6 }} />
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#A8906E", opacity: 0.6 }} />
                     <span className="text-[8px] text-muted-foreground/50">Live news · updates every 30 min</span>
                   </div>
                 )}
@@ -520,14 +520,14 @@ export default function Dashboard() {
               {/* Analyze button */}
               <button type="button"
                 className="cursor-pointer w-full flex items-center justify-center gap-2 h-11 text-sm font-medium rounded transition-all duration-200 ease-out hover:-translate-y-[1px] hover:shadow-[0_2px_8px_rgba(168,144,110,0.15)] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none disabled:hover:translate-y-0 disabled:hover:shadow-none"
-                style={{ background: "#C8B490", color: "#17130F" }}
+                style={{ background: "#A8906E", color: "#0A0A0A" }}
                 onClick={handleAnalyze} disabled={isAnalyzing || !inputText.trim()}>
                 Analyze Content <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
               </button>
 
               {/* ── Feature cards ── */}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 mt-6">
-                {[{ icon: Brain, title: "AI-Powered Analysis", desc: "Advanced NLP & ML models", accent: "#C8B490" }, { icon: Search, title: "Multiple Checks", desc: "Source, logic, language & more", accent: "#C8B490" }, { icon: BarChart3, title: "Detailed Reports", desc: "Clear, simple, actionable", accent: "#C8B490" }].map((f, i) => (
+                {[{ icon: Brain, title: "AI-Powered Analysis", desc: "Advanced NLP & ML models", accent: "#A8906E" }, { icon: Search, title: "Multiple Checks", desc: "Source, logic, language & more", accent: "#A8906E" }, { icon: BarChart3, title: "Detailed Reports", desc: "Clear, simple, actionable", accent: "#A8906E" }].map((f, i) => (
                   <motion.div key={f.title} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.08, duration: 0.4 }}
                     className="relative overflow-hidden flex items-center gap-3 px-4 py-3.5"
                     style={{ background: "#111111", border: "1px solid #1E1E1E", borderRadius: "2px" }}>
@@ -673,7 +673,7 @@ export default function Dashboard() {
                             <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }}
                               transition={{ duration: 0.5, delay: 0.15 + i * 0.04 }}
                               className="h-full rounded-full"
-                              style={{ background: cat.type === "red" ? "#A85A50" : "#C8B490" }} />
+                              style={{ background: cat.type === "red" ? "#A85A50" : "#A8906E" }} />
                           </div>
                         </motion.div>
                       );
@@ -686,15 +686,15 @@ export default function Dashboard() {
               <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.12 }}
                 className="glass-card rounded-lg p-4 sm:p-5 mb-3">
                 <div className="flex items-center gap-1.5 mb-3">
-                  <Activity className="w-3.5 h-3.5" style={{ color: "#C8B490" }} />
+                  <Activity className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
                   <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em]">Confidence Breakdown</h3>
                 </div>
                 <div className="space-y-2">
                   {[
-                    { label: "Language", score: currentResult.confidence + (currentResult.greenFlags.length > currentResult.redFlags.length ? 5 : -5), color: "#C8B490" },
-                    { label: "Source", score: currentResult.greenFlags.length > 0 ? Math.min(currentResult.confidence + 8, 98) : Math.max(currentResult.confidence - 10, 15), color: "#C8B490" },
-                    { label: "Claims", score: currentResult.confidence, color: "#C8B490" },
-                    { label: "Bias", score: Math.max(100 - currentResult.redFlags.length * 15, 10), color: currentResult.redFlags.length > 2 ? "#A85A50" : "#C8B490" },
+                    { label: "Language", score: currentResult.confidence + (currentResult.greenFlags.length > currentResult.redFlags.length ? 5 : -5), color: "#A8906E" },
+                    { label: "Source", score: currentResult.greenFlags.length > 0 ? Math.min(currentResult.confidence + 8, 98) : Math.max(currentResult.confidence - 10, 15), color: "#A8906E" },
+                    { label: "Claims", score: currentResult.confidence, color: "#A8906E" },
+                    { label: "Bias", score: Math.max(100 - currentResult.redFlags.length * 15, 10), color: currentResult.redFlags.length > 2 ? "#A85A50" : "#A8906E" },
                   ].map((item, i) => (
                     <div key={item.label} className="flex items-center gap-3">
                       <span className="text-[9px] font-mono tracking-wider w-12 text-muted-foreground uppercase">{item.label}</span>
@@ -713,7 +713,7 @@ export default function Dashboard() {
               <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.14 }}
                 className="glass-card rounded-lg p-4 sm:p-5 mb-3">
                 <div className="flex items-center gap-1.5 mb-3">
-                  <Globe className="w-3.5 h-3.5" style={{ color: "#C8B490" }} />
+                  <Globe className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
                   <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em]">Source Intelligence</h3>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -735,15 +735,15 @@ export default function Dashboard() {
               <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.16 }}
                 className="glass-card rounded-lg p-4 sm:p-5 mb-3">
                 <div className="flex items-center gap-1.5 mb-3">
-                  <Brain className="w-3.5 h-3.5" style={{ color: "#C8B490" }} />
+                  <Brain className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
                   <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em]">Language Analysis</h3>
                 </div>
                 <div className="space-y-2.5">
                   {[
-                    { label: "Emotional", value: currentResult.redFlags.length > 2 ? 72 : 28, color: currentResult.redFlags.length > 2 ? "#A85A50" : "#C8B490" },
-                    { label: "Sensational", value: currentResult.triggeredKeywords.length * 8, color: currentResult.triggeredKeywords.length > 3 ? "#A85A50" : "#C8B490" },
-                    { label: "Neutral", value: currentResult.greenFlags.length > currentResult.redFlags.length ? 65 : 30, color: "#C8B490" },
-                    { label: "Factual", value: currentResult.confidence, color: "#C8B490" },
+                    { label: "Emotional", value: currentResult.redFlags.length > 2 ? 72 : 28, color: currentResult.redFlags.length > 2 ? "#A85A50" : "#A8906E" },
+                    { label: "Sensational", value: currentResult.triggeredKeywords.length * 8, color: currentResult.triggeredKeywords.length > 3 ? "#A85A50" : "#A8906E" },
+                    { label: "Neutral", value: currentResult.greenFlags.length > currentResult.redFlags.length ? 65 : 30, color: "#A8906E" },
+                    { label: "Factual", value: currentResult.confidence, color: "#A8906E" },
                   ].map((item, i) => (
                     <div key={item.label}>
                       <div className="flex items-center justify-between text-[9px] mb-0.5">
@@ -789,7 +789,7 @@ export default function Dashboard() {
                 }
                 triggerLabel="VIEW REASONING"
                 className="mb-3"
-                accentColor="#C8B490"
+                accentColor="#A8906E"
               />
 
               {/* Red Flags — ExpandableClaim style */}
@@ -810,7 +810,7 @@ export default function Dashboard() {
               {/* Green Flags */}
               <div className="mb-3">
                 <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-2 flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3 h-3" style={{ color: "#C8B490" }} />Green Flags {currentResult.greenFlags.length > 0 && <span style={{ color: "#C8B490" }}>({currentResult.greenFlags.length})</span>}
+                  <CheckCircle2 className="w-3 h-3" style={{ color: "#A8906E" }} />Green Flags {currentResult.greenFlags.length > 0 && <span style={{ color: "#A8906E" }}>({currentResult.greenFlags.length})</span>}
                 </h3>
                 <div className="space-y-1.5">
                   {currentResult.greenFlags.length === 0 ? (
