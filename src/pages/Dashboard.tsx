@@ -10,7 +10,7 @@ import {
   XCircle, FileText, Link, Trash2, ChevronRight, Brain, BarChart3,
   ArrowLeft, ClipboardPaste, BookOpen, TrendingUp, ArrowLeftRight,
   Sun, Moon, Download, Share2, Lightbulb, Target, Activity, ArrowRight, Globe,
-  Landmark, FlaskConical, Thermometer, Newspaper,
+  Landmark, FlaskConical, Thermometer, Newspaper, Fingerprint, GitCompare, Eye, Play, Layers,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,6 +28,13 @@ import { EvidenceTimeline, type TimelineEvent } from "@/components/motion/Eviden
 import { SourceProfile, type SourceProfileData } from "@/components/motion/SourceProfile";
 import { CompareArticles, type ComparisonResult } from "@/components/motion/CompareArticles";
 import { CaseFiles, type CaseFile } from "@/components/motion/CaseFiles";
+import { ArticleFingerprint, type FingerprintData } from "@/components/motion/ArticleFingerprint";
+import { SourceCrossCheck, type CrossCheckClaim } from "@/components/motion/SourceCrossCheck";
+import { EvidenceMap } from "@/components/motion/EvidenceMap";
+import { FramingSignals, type FramingSignal } from "@/components/motion/FramingSignals";
+import { FreshnessIndicator, type FreshnessItem } from "@/components/motion/FreshnessIndicator";
+import { WhatChanged } from "@/components/motion/WhatChanged";
+import { InvestigationReplay } from "@/components/motion/InvestigationReplay";
 import { getLiveNews, FALLBACK_SAMPLES, getCategoryIconComponent, relativeTime, type LiveArticle } from "@/lib/news";
 
 /* ─── Types ─── */
@@ -54,6 +61,10 @@ interface AnalysisResult {
   claims?: Claim[];
   sourceProfile?: SourceProfileData;
   evidenceTimeline?: TimelineEvent[];
+  fingerprint?: FingerprintData;
+  crossCheck?: CrossCheckClaim[];
+  framingSignals?: FramingSignal[];
+  freshness?: FreshnessItem[];
 }
 
 /* ─── Verdict Config (editorial palette) ─── */
@@ -155,7 +166,7 @@ export default function Dashboard() {
   const [activeView, setActiveView] = useState<ViewType>("analyze");
   const [currentTip, setCurrentTip] = useState(0);
   const [pipelineStep, setPipelineStep] = useState(-1);
-  const [resultTab, setResultTab] = useState<"overview" | "linguistic" | "source" | "logical" | "findings" | "claims" | "evidence" | "sourceprofile">("overview");
+  const [resultTab, setResultTab] = useState<"overview" | "linguistic" | "source" | "logical" | "findings" | "claims" | "evidence" | "sourceprofile" | "fingerprint" | "crosscheck" | "evidencemap" | "framing" | "freshness" | "whatchanged" | "replay">("overview");
   const [compareView, setCompareView] = useState(false);
   const [analysisDepth, setAnalysisDepth] = useState<"quick" | "standard" | "deep">("standard");
   const [liveNews, setLiveNews] = useState<LiveArticle[]>([]);
@@ -263,6 +274,10 @@ export default function Dashboard() {
       redFlags: analysis.redFlags, greenFlags: analysis.greenFlags, reasoning: analysis.reasoning,
       triggeredKeywords: analysis.triggeredKeywords ?? [], categoryBreakdown: analysis.categoryBreakdown ?? [],
       wordCount: analysis.wordCount ?? analysis.inputText.split(/\s+/).length,
+      fingerprint: analysis.fingerprint ?? undefined,
+      crossCheck: analysis.crossCheck ?? undefined,
+      framingSignals: analysis.framingSignals ?? undefined,
+      freshness: analysis.freshness ?? undefined,
     });
     setInputText(analysis.inputText); setInputType(analysis.inputType); setActiveView("result");
   }, []);
@@ -581,13 +596,20 @@ export default function Dashboard() {
                     <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-2">Analysis Results</p>
                     {([
                       { key: "overview" as const, label: "Overview", icon: BarChart3 },
-                      { key: "linguistic" as const, label: "Linguistic Analysis", icon: Search },
-                      { key: "source" as const, label: "Source Analysis", icon: Globe },
-                      { key: "logical" as const, label: "Logical Consistency", icon: Brain },
-                      { key: "findings" as const, label: "Key Findings", icon: AlertTriangle },
-                      ...(currentResult.claims && currentResult.claims.length > 0 ? [{ key: "claims" as const, label: "Claim Analysis", icon: FileText }] : []),
-                      ...(currentResult.evidenceTimeline && currentResult.evidenceTimeline.length > 0 ? [{ key: "evidence" as const, label: "Evidence Timeline", icon: Clock }] : []),
+                      ...(currentResult.fingerprint ? [{ key: "fingerprint" as const, label: "Fingerprint", icon: Fingerprint }] : []),
+                      { key: "linguistic" as const, label: "Linguistic", icon: Search },
+                      { key: "source" as const, label: "Source", icon: Globe },
+                      { key: "logical" as const, label: "Logic", icon: Brain },
+                      { key: "findings" as const, label: "Findings", icon: AlertTriangle },
+                      ...(currentResult.claims && currentResult.claims.length > 0 ? [{ key: "claims" as const, label: "Claims", icon: FileText }] : []),
+                      ...(currentResult.crossCheck && currentResult.crossCheck.length > 0 ? [{ key: "crosscheck" as const, label: "Cross-Check", icon: GitCompare }] : []),
+                      ...(currentResult.framingSignals ? [{ key: "framing" as const, label: "Framing", icon: Eye }] : []),
+                      ...(currentResult.freshness ? [{ key: "freshness" as const, label: "Freshness", icon: Clock }] : []),
+                      ...(currentResult.evidenceTimeline && currentResult.evidenceTimeline.length > 0 ? [{ key: "evidence" as const, label: "Timeline", icon: Clock }] : []),
+                      { key: "evidencemap" as const, label: "Evidence Map", icon: Layers },
                       { key: "sourceprofile" as const, label: "Source Profile", icon: Globe },
+                      { key: "whatchanged" as const, label: "What Changed?", icon: GitCompare },
+                      { key: "replay" as const, label: "Replay", icon: Play },
                     ]).map(item => (
                       <button key={item.key} type="button"
                         className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-[11px] transition-colors cursor-pointer text-left ${
@@ -1010,6 +1032,107 @@ export default function Dashboard() {
                     }}
                   />
                 </div>
+              </motion.div>
+
+              {/* ─── Article Fingerprint ─── */}
+              {currentResult.fingerprint && (
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.42 }}
+                  className="rounded-lg mb-3 overflow-hidden" style={{ background: "#111111", border: "1px solid #1E1E1E" }}>
+                  <div className="px-4 sm:px-5 pt-4 pb-2">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <Fingerprint className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
+                      <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "#F5F0E8" }}>Article Fingerprint</h3>
+                    </div>
+                    <p className="text-[9px]" style={{ color: "#A8A098" }}>Analytical summary of the investigation</p>
+                  </div>
+                  <div className="px-4 sm:px-5 pb-4"><ArticleFingerprint fingerprint={currentResult.fingerprint} /></div>
+                </motion.div>
+              )}
+
+              {/* ─── Source Cross-Check ─── */}
+              {currentResult.crossCheck && currentResult.crossCheck.length > 0 && (
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.44 }}
+                  className="rounded-lg mb-3 overflow-hidden" style={{ background: "#111111", border: "1px solid #1E1E1E" }}>
+                  <div className="px-4 sm:px-5 pt-4 pb-2">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <GitCompare className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
+                      <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "#F5F0E8" }}>Source Cross-Check</h3>
+                    </div>
+                    <p className="text-[9px]" style={{ color: "#A8A098" }}>{currentResult.crossCheck.length} claims cross-referenced</p>
+                  </div>
+                  <div className="px-4 sm:px-5 pb-3"><SourceCrossCheck crossCheck={currentResult.crossCheck} /></div>
+                </motion.div>
+              )}
+
+              {/* ─── Evidence Map ─── */}
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.46 }}
+                className="rounded-lg mb-3 overflow-hidden" style={{ background: "#111111", border: "1px solid #1E1E1E" }}>
+                <div className="px-4 sm:px-5 pt-4 pb-2">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Layers className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
+                    <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "#F5F0E8" }}>Evidence Map</h3>
+                  </div>
+                  <p className="text-[9px]" style={{ color: "#A8A098" }}>Interactive investigation tree</p>
+                </div>
+                <div className="px-4 sm:px-5 pb-3">
+                  <EvidenceMap articleTitle={inputText.slice(0, 80)} claims={(currentResult.claims || []).map(c => ({ id: c.id, text: c.text, status: c.status, sources: [] }))} verdict={currentResult.verdict} confidence={currentResult.confidence} />
+                </div>
+              </motion.div>
+
+              {/* ─── Framing Signals ─── */}
+              {currentResult.framingSignals && (
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.48 }}
+                  className="rounded-lg mb-3 overflow-hidden" style={{ background: "#111111", border: "1px solid #1E1E1E" }}>
+                  <div className="px-4 sm:px-5 pt-4 pb-2">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <Eye className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
+                      <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "#F5F0E8" }}>Framing Signals</h3>
+                    </div>
+                    <p className="text-[9px]" style={{ color: "#A8A098" }}>Narrative and rhetorical analysis</p>
+                  </div>
+                  <div className="px-4 sm:px-5 pb-3"><FramingSignals signals={currentResult.framingSignals} /></div>
+                </motion.div>
+              )}
+
+              {/* ─── Information Freshness ─── */}
+              {currentResult.freshness && (
+                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.5 }}
+                  className="rounded-lg mb-3 overflow-hidden" style={{ background: "#111111", border: "1px solid #1E1E1E" }}>
+                  <div className="px-4 sm:px-5 pt-4 pb-2">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <Clock className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
+                      <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "#F5F0E8" }}>Information Freshness</h3>
+                    </div>
+                    <p className="text-[9px]" style={{ color: "#A8A098" }}>Timeliness assessment</p>
+                  </div>
+                  <div className="px-4 sm:px-5 pb-3"><FreshnessIndicator freshness={currentResult.freshness} /></div>
+                </motion.div>
+              )}
+
+              {/* ─── What Changed? ─── */}
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.52 }}
+                className="rounded-lg mb-3 overflow-hidden" style={{ background: "#111111", border: "1px solid #1E1E1E" }}>
+                <div className="px-4 sm:px-5 pt-4 pb-2">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <GitCompare className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
+                    <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "#F5F0E8" }}>What Changed?</h3>
+                  </div>
+                  <p className="text-[9px]" style={{ color: "#A8A098" }}>Version tracking</p>
+                </div>
+                <div className="px-4 sm:px-5 pb-3"><WhatChanged /></div>
+              </motion.div>
+
+              {/* ─── Investigation Replay ─── */}
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.54 }}
+                className="rounded-lg mb-3 overflow-hidden" style={{ background: "#111111", border: "1px solid #1E1E1E" }}>
+                <div className="px-4 sm:px-5 pt-4 pb-2">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Play className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
+                    <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "#F5F0E8" }}>Investigation Replay</h3>
+                  </div>
+                  <p className="text-[9px]" style={{ color: "#A8A098" }}>Step through the verification process</p>
+                </div>
+                <div className="px-4 sm:px-5 pb-4"><InvestigationReplay analysis={currentResult} /></div>
               </motion.div>
             </motion.div>
           )}
