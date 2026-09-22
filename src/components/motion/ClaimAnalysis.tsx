@@ -15,7 +15,7 @@ import {
 export interface Claim {
   id: number;
   text: string;
-  status: "verified" | "uncertain" | "contradicted" | "needs_verification";
+  status: "supported" | "uncertain" | "contradicted" | "needs_verification";
   confidence: number;
   evidence: string;
   sources: string[];
@@ -32,10 +32,10 @@ const statusConfig: Record<
   Claim["status"],
   { icon: typeof CheckCircle2; color: string; label: string }
 > = {
-  verified: {
+  supported: {
     icon: CheckCircle2,
     color: "#A8906E",
-    label: "VERIFIED",
+    label: "SUPPORTED",
   },
   uncertain: {
     icon: HelpCircle,

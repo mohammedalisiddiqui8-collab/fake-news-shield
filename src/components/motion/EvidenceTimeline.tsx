@@ -13,7 +13,7 @@ import {
 /* ─── Types ─── */
 export interface TimelineEvent {
   id: number;
-  type: "claim_identified" | "source_found" | "corroboration" | "contradiction" | "assessment";
+  type: "claim_identified" | "source_found" | "source_searched" | "corroboration" | "contradiction" | "assessment";
   title: string;
   detail: string;
   source?: string;
@@ -38,6 +38,11 @@ const eventConfig: Record<
     icon: Search,
     color: "#A8906E",
     label: "SOURCE FOUND",
+  },
+  source_searched: {
+    icon: Search,
+    color: "#A8906E",
+    label: "SOURCE SEARCH",
   },
   corroboration: {
     icon: CheckCircle2,

@@ -4,8 +4,10 @@ import { action } from "./_generated/server";
 import { v } from "convex/values";
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// Veritas NLP-Based Fake News Detection Engine v4
-// Now returns category-level breakdowns, fingerprint, cross-check, framing, freshness.
+// Veritas Fake News Detection Engine v5
+// NLP-based linguistic pattern analysis.
+// Honest about its limitations: analyzes writing patterns, not external facts.
+// No fabricated sources, no fake evidence, no inflated confidence.
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const SENSATIONALIST: Array<[RegExp, number]> = [
@@ -91,8 +93,6 @@ function findTriggeredKeywords(text: string): string[] {
   return keywords.slice(0, 15);
 }
 
-// ─── WEIGHTED MATCHING ──────────────────────────────────────────────────────
-
 function weightedMatches(text: string, patterns: Array<[RegExp, number]>) {
   let total = 0, score = 0;
   const matches: string[] = [];
@@ -108,18 +108,20 @@ function weightedMatches(text: string, patterns: Array<[RegExp, number]>) {
 }
 
 // ─── CLAIM EXTRACTION ──────────────────────────────────────────────────────
+// Extracts factual claims from text using sentence-level analysis.
+// Each claim status reflects linguistic evidence, not external verification.
 
 function extractClaims(
   text: string,
   redFlags: string[],
   greenFlags: string[],
-  confidence: number,
+  _confidence: number,
   _keywords: string[],
 ) {
   const sentences = text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 15);
   const claims: Array<{
     id: number; text: string;
-    status: "verified" | "uncertain" | "contradicted" | "needs_verification";
+    status: "supported" | "uncertain" | "contradicted" | "needs_verification";
     confidence: number; evidence: string;
     sources: string[]; contradictingSources: string[];
     explanation: string;
@@ -145,32 +147,44 @@ function extractClaims(
     const hasSensational = /[A-Z]{3,}!|shocking|unbelievable|secret|hidden|exposed/i.test(sentence);
     const hasAnonymous = /experts? (say|claim|warn)|sources? (say|claim)|insiders?/i.test(sentence);
 
-    let status: "verified" | "uncertain" | "contradicted" | "needs_verification";
+    let status: "supported" | "uncertain" | "contradicted" | "needs_verification";
     let claimConf: number;
     let evidence: string;
     let explanation: string;
 
     if (hasSource && hasNumbers && !hasSensational) {
-      status = "verified";
-      claimConf = Math.min(92, confidence + 5);
-      evidence = "Source attribution and specific data points detected in this claim.";
-      explanation = "This claim references specific sources and provides verifiable data, which increases its credibility.";
+      status = "supported";
+      claimConf = 65;
+      evidence = "Claim contains named source attribution AND specific numerical data — the strongest linguistic signal available without external verification.";
+      explanation = "This claim references specific sources and provides verifiable data points. However, Veritas has not independently verified these references.";
     } else if (hasAnonymous || hasSensational) {
       status = "contradicted";
-      claimConf = Math.max(20, confidence - 20);
-      evidence = "Claim relies on anonymous sourcing or sensationalist language patterns.";
-      explanation = "The language used in this claim shows patterns commonly associated with unreliable reporting.";
+      claimConf = 30;
+      evidence = "Claim relies on anonymous sourcing or sensationalist language patterns, which are commonly associated with unreliable reporting.";
+      explanation = "The language patterns in this claim are inconsistent with standard journalistic practices. This is a linguistic signal, not a factual determination.";
     } else if (hasNumbers) {
       status = "uncertain";
-      claimConf = Math.max(30, confidence - 5);
-      evidence = "Contains numerical claims but source attribution could not be fully verified.";
-      explanation = "While specific numbers are cited, the reliability of the underlying source could not be independently confirmed.";
+      claimConf = 45;
+      evidence = "Contains numerical claims but no named source attribution. Numbers alone cannot be verified through linguistic analysis.";
+      explanation = "Specific numbers are cited, but the underlying source cannot be confirmed through pattern analysis alone.";
     } else {
       status = "needs_verification";
-      claimConf = Math.max(25, confidence - 10);
-      evidence = "Insufficient supporting evidence found for this specific claim.";
-      explanation = "This claim requires additional verification through independent sources.";
+      claimConf = 35;
+      evidence = "Insufficient linguistic signals to assess this claim. External verification is required.";
+      explanation = "This claim requires independent fact-checking beyond what linguistic pattern analysis can provide.";
     }
+
+    // Adjust confidence based on overall article signals
+    if (redFlags.length > 3) claimConf = Math.max(15, claimConf - 10);
+    if (greenFlags.length > 3) claimConf = Math.min(70, claimConf + 5);
+
+    const sources: string[] = [];
+    if (hasSource) sources.push("Named source detected in text");
+    if (hasNumbers) sources.push("Numerical data present");
+
+    const contradictingSources: string[] = [];
+    if (hasAnonymous) contradictingSources.push("Anonymous/unverifiable sourcing pattern");
+    if (hasSensational) contradictingSources.push("Sensationalist language pattern");
 
     claims.push({
       id: claimId++,
@@ -178,8 +192,8 @@ function extractClaims(
       status,
       confidence: claimConf,
       evidence,
-      sources: hasSource ? ["Article source attribution"] : [],
-      contradictingSources: hasAnonymous && redFlags.length > 2 ? ["Anonymous or unverifiable sourcing"] : [],
+      sources,
+      contradictingSources,
       explanation,
     });
   }
@@ -188,6 +202,8 @@ function extractClaims(
 }
 
 // ─── SOURCE PROFILE EXTRACTION ──────────────────────────────────────────────
+// Extracts metadata mentioned IN the article text.
+// Does NOT retrieve external information about the source.
 
 function extractSourceProfile(
   text: string,
@@ -199,7 +215,7 @@ function extractSourceProfile(
   const source = sourceMatch ? sourceMatch[1].trim() : "NOT AVAILABLE";
 
   const domainMatch = text.match(/(www\.)?([a-zA-Z0-9-]+\.[a-z]{2,})/i);
-  const domain = domainMatch ? domainMatch[2] : source !== "NOT AVAILABLE" ? source.toLowerCase().replace(/\s+/g, "") + ".com" : "NOT AVAILABLE";
+  const domain = domainMatch ? domainMatch[2] : "NOT AVAILABLE";
 
   const authorMatch = text.match(/(?:by|author:?|written by|reporter:?)\s+([A-Z][a-z]+\s+[A-Z][a-z]+)/i)
     || text.match(/Dr\.\s+[A-Z][a-z]+\s+[A-Z][a-z]+/i)
@@ -216,19 +232,19 @@ function extractSourceProfile(
   const sourceType = isResearch ? "Research" : isGov ? "Government" : isNews ? "News" : "Other";
 
   const evidence: string[] = [];
-  if (source !== "NOT AVAILABLE") evidence.push("Source identified: " + source);
-  if (author !== "NOT AVAILABLE") evidence.push("Author identified: " + author);
-  if (publishedDate !== "NOT AVAILABLE") evidence.push("Publication date available: " + publishedDate);
-  if (greenFlags.length > 0) evidence.push("Multiple credibility indicators detected");
-  if (redFlags.length > 0) evidence.push(redFlags.length + " warning signals identified in source attribution");
-  if (evidence.length === 0) evidence.push("Limited source information could be extracted from the text");
+  if (source !== "NOT AVAILABLE") evidence.push("Source name detected in text: " + source);
+  if (author !== "NOT AVAILABLE") evidence.push("Author name detected in text: " + author);
+  if (publishedDate !== "NOT AVAILABLE") evidence.push("Date detected in text: " + publishedDate);
+  if (greenFlags.length > 0) evidence.push(greenFlags.length + " linguistic credibility signals detected");
+  if (redFlags.length > 0) evidence.push(redFlags.length + " warning signals detected");
+  if (evidence.length === 0) evidence.push("Limited source metadata could be extracted from text");
 
   const signals = [
-    { label: "Author identified", available: author !== "NOT AVAILABLE" },
-    { label: "Publication date available", available: publishedDate !== "NOT AVAILABLE" },
-    { label: "Original source available", available: source !== "NOT AVAILABLE" },
-    { label: "Primary source referenced", available: /according to|published|official statement/i.test(text) },
-    { label: "Named institution cited", available: /university|institute|organization/i.test(text) },
+    { label: "Author name in text", available: author !== "NOT AVAILABLE" },
+    { label: "Publication date in text", available: publishedDate !== "NOT AVAILABLE" },
+    { label: "Source name in text", available: source !== "NOT AVAILABLE" },
+    { label: "Attribution language detected", available: /according to|published|official statement/i.test(text) },
+    { label: "Institution mentioned", available: /university|institute|organization/i.test(text) },
     { label: "Anonymous sourcing absent", available: !/anonymous|insiders? (reveal|say)|sources? (say|claim)/i.test(text) },
   ];
 
@@ -236,6 +252,7 @@ function extractSourceProfile(
 }
 
 // ─── EVIDENCE TIMELINE EXTRACTION ───────────────────────────────────────────
+// Timeline reflects ACTUAL analysis steps performed, not fabricated events.
 
 function extractTimeline(
   text: string,
@@ -244,49 +261,76 @@ function extractTimeline(
   _keywords: string[],
   verdict: string,
   confidence: number,
+  claims: Array<{ status: string }>,
+  sourceProfile: { source: string },
 ) {
   const events: Array<{
     id: number;
-    type: "claim_identified" | "source_found" | "corroboration" | "contradiction" | "assessment";
-    title: string; detail: string; source?: string; timestamp?: string;
+    type: "claim_identified" | "source_searched" | "corroboration" | "contradiction" | "assessment";
+    title: string; detail: string; source?: string;
   }> = [];
 
   let eventId = 1;
 
-  const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 15);
-  const mainClaim = sentences[0]?.trim().slice(0, 100) || "Article content analyzed";
-  events.push({ id: eventId++, type: "claim_identified", title: "Primary claim identified", detail: mainClaim + (mainClaim.length >= 100 ? "..." : "") });
-
-  const hasSource = greenFlags.some(f => f.toLowerCase().includes("source") || f.toLowerCase().includes("sourcing") || f.toLowerCase().includes("institution"));
+  // Event 1: Text received and processed
   events.push({
-    id: eventId++, type: "source_found",
-    title: hasSource ? "Source attribution detected" : "Limited source attribution",
-    detail: hasSource ? "Named sources and institutional references were identified in the content." : "The content lacks strong source attribution or relies on anonymous sources.",
-    source: hasSource ? "Article source analysis" : undefined,
+    id: eventId++, type: "claim_identified",
+    title: "Text received and processed",
+    detail: text.split(/\s+/).length + " words analyzed through linguistic pattern matching.",
   });
 
-  if (greenFlags.length > 0) {
+  // Event 2: Claims extracted
+  events.push({
+    id: eventId++, type: "claim_identified",
+    title: claims.length + " claims extracted",
+    detail: "Factual claims identified using sentence-level NLP pattern detection.",
+  });
+
+  // Event 3: Source search
+  if (sourceProfile.source !== "NOT AVAILABLE") {
+    events.push({
+      id: eventId++, type: "source_searched",
+      title: "Source attribution detected",
+      detail: "The text mentions a named source: " + sourceProfile.source + ". This is text detection, not independent verification.",
+    });
+  } else {
+    events.push({
+      id: eventId++, type: "source_searched",
+      title: "No named source detected",
+      detail: "No specific source, author, or institution was identified in the text.",
+    });
+  }
+
+  // Event 4: Linguistic signals
+  const signalCount = greenFlags.length + redFlags.length;
+  if (greenFlags.length > 0 && redFlags.length > 0) {
     events.push({
       id: eventId++, type: "corroboration",
-      title: "Supporting signals found",
-      detail: greenFlags.length + " credibility indicators were detected, including: " + greenFlags.slice(0, 3).join("; ") + ".",
+      title: "Mixed linguistic signals",
+      detail: greenFlags.length + " positive and " + redFlags.length + " negative linguistic patterns detected.",
     });
-  }
-
-  if (redFlags.length > 0) {
+  } else if (greenFlags.length > 0) {
+    events.push({
+      id: eventId++, type: "corroboration",
+      title: "Positive linguistic signals",
+      detail: greenFlags.length + " indicators consistent with credible reporting: " + greenFlags.slice(0, 2).join("; ") + ".",
+    });
+  } else if (redFlags.length > 0) {
     events.push({
       id: eventId++, type: "contradiction",
-      title: "Warning signals detected",
-      detail: redFlags.length + " concerns were identified: " + redFlags.slice(0, 3).join("; ") + ".",
+      title: "Negative linguistic signals",
+      detail: redFlags.length + " indicators of potential unreliability: " + redFlags.slice(0, 2).join("; ") + ".",
     });
   }
 
-  const assessDetail = verdict === "likely_fake"
-    ? "Based on linguistic pattern analysis, source verification, and structural evaluation, this content shows significant indicators of unreliability."
-    : verdict === "likely_real"
-    ? "Based on linguistic pattern analysis, source verification, and structural evaluation, this content aligns with credible journalism standards."
-    : "The analysis yielded mixed results. Independent verification through additional sources is recommended.";
-  events.push({ id: eventId++, type: "assessment", title: "Final assessment: " + confidence + "% confidence", detail: assessDetail });
+  // Event 5: Assessment
+  const supported = claims.filter(c => c.status === "supported").length;
+  const contradicted = claims.filter(c => c.status === "contradicted").length;
+  events.push({
+    id: eventId++, type: "assessment",
+    title: "Linguistic pattern assessment complete",
+    detail: "Confidence: " + confidence + "%. " + supported + " claims linguistically supported, " + contradicted + " contradicted. NOTE: This is pattern-based analysis, not external fact-checking.",
+  });
 
   return events;
 }
@@ -329,10 +373,10 @@ function analyzeText(text: string) {
   // ── GREEN FLAGS ──
   const cred = weightedMatches(text, CREDIBLE_INDICATORS);
   let credScore = 0;
-  if (cred.score >= 25) { credScore = 25; greenFlags.push("Strong sourcing (" + cred.total + ")"); }
-  else if (cred.score >= 12) { credScore = 16; greenFlags.push("Good sourcing (" + cred.total + ")"); }
+  if (cred.score >= 25) { credScore = 25; greenFlags.push("Strong attribution language (" + cred.total + " signals)"); }
+  else if (cred.score >= 12) { credScore = 16; greenFlags.push("Moderate attribution language (" + cred.total + " signals)"); }
   greenFlagScore += credScore;
-  categoryBreakdown.push({ category: "Source Quality", type: "green", score: credScore, maxScore: 25, findings: cred.score >= 12 ? [cred.total + " indicators"] : [] });
+  categoryBreakdown.push({ category: "Attribution Language", type: "green", score: credScore, maxScore: 25, findings: cred.score >= 12 ? [cred.total + " indicators"] : [] });
 
   let statsScore = 0;
   if (/\d+%|\$[\d,]+|\d+ million|\d+ billion/i.test(text)) { statsScore = 16; greenFlags.push("Specific statistics cited"); }
@@ -341,28 +385,29 @@ function analyzeText(text: string) {
 
   const credCount = CREDIBLE_SOURCES.filter(p => p.test(text)).length;
   let instScore = 0;
-  if (credCount >= 2) { instScore = 22; greenFlags.push("Credible institutions (" + credCount + ")"); }
+  if (credCount >= 2) { instScore = 22; greenFlags.push("Known institutions mentioned (" + credCount + ")"); }
+  else if (credCount >= 1) { instScore = 11; greenFlags.push("Known institution mentioned"); }
   greenFlagScore += instScore;
-  categoryBreakdown.push({ category: "Institutional References", type: "green", score: instScore, maxScore: 22, findings: credCount ? [credCount + " sources"] : [] });
+  categoryBreakdown.push({ category: "Institutional References", type: "green", score: instScore, maxScore: 22, findings: credCount ? [credCount + " mentioned"] : [] });
 
   let dateScore = 0;
-  if (/on (monday|tuesday|wednesday|thursday|friday)/i.test(text)) { dateScore = 14; greenFlags.push("Specific dates provided"); }
+  if (/\d{4}|\d{1,2}\s+(January|February|March|April|May|June|July|August|September|October|November|December)/i.test(text)) { dateScore = 14; greenFlags.push("Specific dates present"); }
   greenFlagScore += dateScore;
   categoryBreakdown.push({ category: "Temporal Specificity", type: "green", score: dateScore, maxScore: 14, findings: dateScore ? ["Dates present"] : [] });
 
   let balanceScore = 0;
-  if (/however|on the other hand|critics (say|argue)/i.test(text)) { balanceScore = 18; greenFlags.push("Balanced reporting"); }
+  if (/however|on the other hand|critics (say|argue)|despite/i.test(text)) { balanceScore = 18; greenFlags.push("Balanced reporting language"); }
   greenFlagScore += balanceScore;
-  categoryBreakdown.push({ category: "Balanced Reporting", type: "green", score: balanceScore, maxScore: 18, findings: balanceScore ? ["Multiple perspectives"] : [] });
+  categoryBreakdown.push({ category: "Balanced Language", type: "green", score: balanceScore, maxScore: 18, findings: balanceScore ? ["Multiple perspectives present"] : [] });
 
   let structScore = 0;
   const struct = ["who", "what", "where", "when", "why"].filter(w => new RegExp("\\b" + w + "\\b", "i").test(text)).length;
-  if (struct >= 4) { structScore = 16; greenFlags.push("Journalistic structure"); }
+  if (struct >= 4) { structScore = 16; greenFlags.push("Journalistic structure (" + struct + "/5 Ws)"); }
   greenFlagScore += structScore;
   categoryBreakdown.push({ category: "Journalistic Structure", type: "green", score: structScore, maxScore: 16, findings: structScore ? [struct + "/5 elements"] : [] });
 
   let lenScore = 0;
-  if (wordCount >= 80 && wordCount <= 800) { lenScore = 6; greenFlags.push("Appropriate length"); }
+  if (wordCount >= 80 && wordCount <= 800) { lenScore = 6; greenFlags.push("Appropriate article length"); }
   greenFlagScore += lenScore;
 
   // ── VERDICT ──
@@ -371,25 +416,38 @@ function analyzeText(text: string) {
   let verdict: "likely_real" | "likely_fake" | "uncertain";
   let confidence: number;
 
-  if (redRatio >= 0.65) { verdict = "likely_fake"; confidence = Math.min(95, Math.round(55 + redRatio * 40)); }
-  else if (greenRatio >= 0.65) { verdict = "likely_real"; confidence = Math.min(95, Math.round(55 + greenRatio * 40)); }
-  else if (redRatio > greenRatio + 0.1) { verdict = "likely_fake"; confidence = Math.min(78, Math.round(42 + (redRatio - greenRatio) * 35)); }
-  else if (greenRatio > redRatio + 0.1) { verdict = "likely_real"; confidence = Math.min(78, Math.round(42 + (greenRatio - redRatio) * 35)); }
-  else { verdict = "uncertain"; confidence = Math.round(35 + Math.abs(redRatio - greenRatio) * 15); }
-  confidence = Math.max(35, Math.min(95, confidence));
+  if (redRatio >= 0.65) { verdict = "likely_fake"; confidence = Math.min(72, Math.round(45 + redRatio * 30)); }
+  else if (greenRatio >= 0.65) { verdict = "likely_real"; confidence = Math.min(72, Math.round(45 + greenRatio * 30)); }
+  else if (redRatio > greenRatio + 0.1) { verdict = "likely_fake"; confidence = Math.min(65, Math.round(38 + (redRatio - greenRatio) * 28)); }
+  else if (greenRatio > redRatio + 0.1) { verdict = "likely_real"; confidence = Math.min(65, Math.round(38 + (greenRatio - redRatio) * 28)); }
+  else { verdict = "uncertain"; confidence = Math.round(30 + Math.abs(redRatio - greenRatio) * 12); }
+  confidence = Math.max(25, Math.min(72, confidence));
+
+  // ── ADJUSTED CONFIDENCE ──
+  // Reduce confidence when evidence is thin
+  const hasSource = /according to|published|researchers|officials|university/i.test(text);
+  const hasCredibleInstitution = credCount >= 2;
+  if (!hasSource && !hasCredibleInstitution) {
+    confidence = Math.max(25, confidence - 15);
+  }
+  if (redFlags.length === 0 && greenFlags.length === 0) {
+    confidence = Math.max(25, confidence - 10);
+  }
 
   const triggeredKeywords = findTriggeredKeywords(text);
 
+  // ── HONEST SUMMARY ──
+  const signalLabel = "linguistic pattern analysis";
   const summary = verdict === "likely_fake"
-    ? "This content shows " + redFlags.length + " red flags suggesting it may be unreliable. " + (redFlags[0] || "Language patterns raise concerns.") + " Exercise caution."
+    ? "Based on " + signalLabel + ", this content shows " + redFlags.length + " warning signals. " + (redFlags[0] || "Language patterns suggest caution.") + " NOTE: This analysis examines writing patterns, not factual accuracy. Independent verification is recommended."
     : verdict === "likely_real"
-    ? "This content shows " + greenFlags.length + " indicators consistent with credible journalism. " + (greenFlags[0] || "Sourcing appears legitimate.") + ""
-    : "Mixed profile: " + redFlags.length + " concerns, " + greenFlags.length + " positives. Verify through independent sources.";
+    ? "Based on " + signalLabel + ", this content shows " + greenFlags.length + " indicators consistent with credible reporting. " + (greenFlags[0] || "Attribution patterns appear standard.") + " NOTE: This analysis examines writing patterns, not factual accuracy. Independent verification is recommended."
+    : "Mixed linguistic signals: " + redFlags.length + " concerns, " + greenFlags.length + " positives. The analysis cannot determine reliability from patterns alone. Independent verification is strongly recommended.";
 
   const parts: string[] = [];
   if (redFlags.length) parts.push("Concerns: " + redFlags.slice(0, 3).join("; ") + ".");
   if (greenFlags.length) parts.push("Positives: " + greenFlags.slice(0, 3).join("; ") + ".");
-  parts.push("Confidence: " + confidence + "% based on linguistic pattern analysis, source verification, and structural evaluation.");
+  parts.push("Confidence: " + confidence + "% — based on " + signalLabel + " only. Veritas cannot independently verify factual claims without access to external sources.");
 
   // ── CLAIM EXTRACTION ──
   const claims = extractClaims(text, redFlags, greenFlags, confidence, triggeredKeywords);
@@ -398,70 +456,79 @@ function analyzeText(text: string) {
   const sourceProfile = extractSourceProfile(text, greenFlags, redFlags);
 
   // ── EVIDENCE TIMELINE ──
-  const evidenceTimeline = extractTimeline(text, redFlags, greenFlags, triggeredKeywords, verdict, confidence);
+  const evidenceTimeline = extractTimeline(text, redFlags, greenFlags, triggeredKeywords, verdict, confidence, claims, sourceProfile);
 
   // ── ARTICLE FINGERPRINT ──
-  const verifiedCount = claims.filter(c => c.status === "verified").length;
+  // All derived from the same base analysis — single source of truth
+  const supportedCount = claims.filter(c => c.status === "supported").length;
   const uncertainCount = claims.filter(c => c.status === "uncertain").length;
   const contradictedCount = claims.filter(c => c.status === "contradicted").length;
   const unverifiedCount = claims.filter(c => c.status === "needs_verification").length;
-  const sourcesFound = new Set(claims.flatMap(c => c.sources).filter(s => s && s !== "Article source attribution")).size;
-  const sourceCoverage = claims.length > 0 ? Math.round((Math.max(verifiedCount, 1) / claims.length) * 100) : 0;
-  const evidenceFound = claims.reduce((sum, c) => sum + c.sources.length + c.evidence.length, 0);
+
+  // "Sources" = unique named institutions/sources mentioned in text (NOT external sources retrieved)
+  const sourcesMentioned = new Set<string>();
+  if (sourceProfile.source !== "NOT AVAILABLE") sourcesMentioned.add(sourceProfile.source);
+  CREDIBLE_SOURCES.forEach(p => { if (p.test(text)) { const m = text.match(p); if (m) sourcesMentioned.add(m[0]); } });
+
+  // Evidence count = total signal detections across claims
+  const evidenceFound = claims.reduce((sum, c) => sum + c.sources.length + c.contradictingSources.length, 0) + redFlags.length + greenFlags.length;
+
   const fingerprint = {
     claims: claims.length,
-    sources: sourcesFound || (sourceProfile.source !== "NOT AVAILABLE" ? 1 : 0),
-    verified: verifiedCount,
+    sources: sourcesMentioned.size,
+    verified: supportedCount,
     uncertain: uncertainCount,
     contradicted: contradictedCount,
     unverified: unverifiedCount,
-    sourceCoverage: Math.min(sourceCoverage, 100),
+    sourceCoverage: claims.length > 0 ? Math.round((supportedCount / claims.length) * 100) : 0,
     evidenceFound,
   };
 
   // ── SOURCE CROSS-CHECK ──
+  // Honest: only shows what was actually detected in the text.
+  // Does NOT fabricate independent external sources.
   const crossCheck = claims.slice(0, 5).map((claim) => {
-    const baseSources: Array<{ name: string; headline: string; date: string; excerpt: string; relationship: "supports" | "contradicts" | "partial" | "insufficient" }> = [
-      { name: "Article Source", headline: "Original publication", date: sourceProfile.publishedDate, excerpt: "Referenced in original article.", relationship: "supports" },
-    ];
-    const credibleMentioned = CREDIBLE_SOURCES.filter(p => p.test(text));
-    credibleMentioned.slice(0, 2).forEach((src) => {
-      const srcStr = String(src).replace(/\\/g, "").replace(/\^/g, "").replace(/\$/g, "").replace(/\//g, "").replace(/\bb\b/g, "").trim();
-      const srcName = srcStr.length > 3 ? srcStr : "Institutional Source";
-      baseSources.push({
-        name: srcName,
-        headline: "Reference found in text",
-        date: "Not independently dated",
-        excerpt: "The article references a known credible source.",
-        relationship: claim.status === "verified" ? "supports" : claim.status === "contradicted" ? "contradicts" : "insufficient",
-      });
-    });
-    if (claim.status === "contradicted" && baseSources.length > 0) {
-      baseSources.push({
-        name: "Pattern Analysis",
-        headline: "Language patterns suggest unreliability",
+    const sources: Array<{ name: string; headline: string; date: string; excerpt: string; relationship: "supports" | "contradicts" | "partial" | "insufficient" }> = [];
+
+    // Show what the text itself contains about this claim
+    if (claim.sources.length > 0) {
+      sources.push({
+        name: "Text analysis",
+        headline: "Linguistic signal detected",
         date: "Current analysis",
         excerpt: claim.evidence,
+        relationship: "supports",
+      });
+    }
+    if (claim.contradictingSources.length > 0) {
+      sources.push({
+        name: "Pattern analysis",
+        headline: "Conflicting signal detected",
+        date: "Current analysis",
+        excerpt: claim.contradictingSources.join("; "),
         relationship: "contradicts",
       });
     }
-    if (baseSources.length === 1 && claim.status === "needs_verification") {
-      baseSources.push({
-        name: "No Independent Source",
-        headline: "Unable to locate independent corroboration",
+
+    // If we have no signals at all
+    if (sources.length === 0) {
+      sources.push({
+        name: "No signal",
+        headline: "Insufficient linguistic evidence",
         date: "N/A",
-        excerpt: "NO INDEPENDENT CORROBORATION FOUND",
+        excerpt: "No strong linguistic signals were detected for this claim. Independent verification is required.",
         relationship: "insufficient",
       });
     }
-    return { claimId: claim.id, claimText: claim.text, sources: baseSources.slice(0, 4) };
+
+    return { claimId: claim.id, claimText: claim.text, sources };
   });
 
   // ── FRAMING SIGNALS ──
   const framingSignals: Array<{ type: string; description: string; severity: "low" | "medium" | "high" }> = [];
   const capsMatch = text.match(/[A-Z]{4,}[!]{1,}/g);
   if (capsMatch && capsMatch.length > 0) {
-    framingSignals.push({ type: "EXCESSIVE CAPS", description: "The article uses ALL CAPS phrases and exclamation marks, uncommon in professional journalism.", severity: "high" });
+    framingSignals.push({ type: "EXCESSIVE CAPS", description: "Contains " + capsMatch.length + " ALL CAPS phrases/exclamations — uncommon in professional journalism.", severity: "high" });
   }
   const emotionalWords = text.match(/\b(shocking|outrage|terrifying|heartbreaking|unbelievable|miraculous|disgusting|horrible|amazing|incredible)\b/gi);
   if (emotionalWords && emotionalWords.length >= 2) {
@@ -474,21 +541,21 @@ function analyzeText(text: string) {
   }
   const certaintyWords = text.match(/\b(definitely|certainly|absolutely|undoubtedly|proves|confirms|without a doubt)\b/gi);
   if (certaintyWords && certaintyWords.length >= 3) {
-    framingSignals.push({ type: "EXCESSIVE CERTAINTY", description: "The article uses language suggesting absolute certainty, unusual for factual reporting.", severity: "medium" });
+    framingSignals.push({ type: "EXCESSIVE CERTAINTY", description: "Uses language suggesting absolute certainty (" + certaintyWords.length + " instances), unusual for factual reporting.", severity: "medium" });
   }
   const vaguePhrases = text.match(/\b(everyone knows|it is well known|studies show|experts say)\b/gi);
   if (vaguePhrases && vaguePhrases.length >= 2) {
-    framingSignals.push({ type: "MISSING CONTEXT", description: "The article references vague claims without specific context, sources, or evidence.", severity: "medium" });
+    framingSignals.push({ type: "MISSING CONTEXT", description: "References vague claims (" + vaguePhrases.length + " instances) without specific context or sources.", severity: "medium" });
   }
   const superlatives = text.match(/\b(biggest|largest|most|best|worst|first ever|never before)\b/gi);
   if (superlatives && superlatives.length >= 2 && greenFlags.length < 2) {
-    framingSignals.push({ type: "UNSUPPORTED SUPERLATIVES", description: "The article uses superlative claims without supporting evidence or specific data.", severity: "high" });
+    framingSignals.push({ type: "UNSUPPORTED SUPERLATIVES", description: "Uses superlative claims (" + superlatives.length + " instances) without evident supporting data.", severity: "high" });
   }
   if (/\b(breaking|urgent|just in|developing|alert|emergency)\b/i.test(text)) {
-    framingSignals.push({ type: "DRAMATIC WORDING", description: "The article uses urgency-creating language such as breaking, urgent or alert.", severity: "low" });
+    framingSignals.push({ type: "DRAMATIC WORDING", description: "Uses urgency-creating language (breaking, urgent, alert).", severity: "low" });
   }
   if (framingSignals.length === 0) {
-    framingSignals.push({ type: "NO SIGNIFICANT FRAMING", description: "The article does not show significant framing bias based on the available analysis.", severity: "low" });
+    framingSignals.push({ type: "NO SIGNIFICANT FRAMING", description: "No significant framing bias detected through linguistic analysis.", severity: "low" });
   }
 
   // ── INFORMATION FRESHNESS ──
@@ -532,11 +599,11 @@ export const analyzeNews = action({
   handler: async (_ctx, args) => {
     if (args.text.trim().length < 10) {
       return {
-        verdict: "uncertain" as const, confidence: 30,
-        summary: "Text too short for meaningful analysis.",
-        redFlags: ["Too short"], greenFlags: [],
-        reasoning: "Minimum content required.", triggeredKeywords: [],
-        categoryBreakdown: [], wordCount: args.text.trim().split(/\s+/).length,
+        verdict: "uncertain" as const, confidence: 25,
+        summary: "Text too short for meaningful analysis. At least 10 characters are required.",
+        redFlags: ["Insufficient text"], greenFlags: [],
+        reasoning: "Minimum content required for linguistic pattern analysis.",
+        triggeredKeywords: [], categoryBreakdown: [], wordCount: args.text.trim().split(/\s+/).length,
         claims: [],
         sourceProfile: { source: "NOT AVAILABLE", domain: "NOT AVAILABLE", author: "NOT AVAILABLE", publishedDate: "NOT AVAILABLE", updatedDate: "NOT AVAILABLE", sourceType: "Other", availableEvidence: ["Insufficient text for source extraction"], signals: [] },
         evidenceTimeline: [],
