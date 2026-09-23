@@ -6,7 +6,8 @@ interface ExpandableClaimProps {
   claimNumber: string;
   claimText: string;
   status: "supported" | "unverified" | "misleading";
-  confidence: number;
+  /** Optional real confidence — omitted when no verified value exists. */
+  confidence?: number;
   details?: string;
   className?: string;
 }
@@ -85,6 +86,7 @@ export function ExpandableClaim({
           >
             "{claimText}"
           </p>
+          {confidence != null && (
           <div className="flex items-center gap-2 mt-1.5">
             <span
               className="text-[9px] font-mono"
@@ -111,6 +113,7 @@ export function ExpandableClaim({
               {confidence}%
             </span>
           </div>
+          )}
         </div>
 
         <motion.div

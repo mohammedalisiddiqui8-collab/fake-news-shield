@@ -1,10 +1,10 @@
 import { motion } from "framer-motion";
-import { Clock, CheckCircle2, AlertTriangle, History } from "lucide-react";
+import { Clock, CheckCircle2, AlertTriangle, History, HelpCircle } from "lucide-react";
 
 export interface FreshnessItem {
   claimId: number;
   claimText: string;
-  status: "current" | "recent" | "outdated" | "historical";
+  status: "current" | "recent" | "outdated" | "historical" | "unknown";
   sourceDate: string;
   ageDays: number;
   newerAvailable: boolean;
@@ -15,6 +15,7 @@ const statusConfig: Record<string, { label: string; icon: typeof Clock; color: s
   recent: { label: "RECENT", icon: Clock, color: "#A8A098", bg: "rgba(168,160,152,0.06)" },
   outdated: { label: "OUTDATED", icon: AlertTriangle, color: "#A85A50", bg: "rgba(168,90,80,0.06)" },
   historical: { label: "HISTORICAL", icon: History, color: "#A8A098", bg: "rgba(168,160,152,0.04)" },
+  unknown: { label: "DATE NOT FOUND", icon: HelpCircle, color: "#A8A098", bg: "rgba(168,160,152,0.04)" },
 };
 
 export function FreshnessIndicator({ freshness }: { freshness: FreshnessItem[] }) {

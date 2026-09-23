@@ -4,11 +4,20 @@ import { action } from "./_generated/server";
 import { v } from "convex/values";
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// Veritas Fake News Detection Engine v5
-// NLP-based linguistic pattern analysis.
-// Honest about its limitations: analyzes writing patterns, not external facts.
-// No fabricated sources, no fake evidence, no inflated confidence.
+// Veritas Fake News Detection Engine v6
+// Single source of truth for one investigation:
+//   text → claims → LIVE external source cross-check → evidence → verdict
+// Linguistic pattern analysis is a SUPPLEMENTARY signal only.
+// The verdict and confidence are gated by retrieved external evidence.
+// No fabricated sources, no fake evidence, no unsupported high confidence.
 // ═══════════════════════════════════════════════════════════════════════════════
+
+type Depth = "quick" | "standard" | "deep";
+
+/** How many claims get a live external cross-check, per depth. */
+const CROSSCHECK_LIMIT: Record<Depth, number> = { quick: 3, standard: 5, deep: 8 };
+/** Max claims extracted, per depth. */
+const CLAIM_LIMIT: Record<Depth, number> = { quick: 5, standard: 8, deep: 8 };
 
 const SENSATIONALIST: Array<[RegExp, number]> = [
   [/[A-Z]{3,}!{2,}/g, 8], [/shocking|unbelievable|mind[- ]?blowing/gi, 6],
@@ -24,8 +33,7 @@ const SENSATIONALIST: Array<[RegExp, number]> = [
 
 const CLICKBAIT: Array<[RegExp, number]> = [
   [/you won'?t believe/i, 6], [/doctors? (don'?t|hate|are shocked)/i, 7],
-  [/(one|a) (trick|simple|weird|secret)/i, 5],
-  [/number \d+ will (shock|amaze|surprise)/i, 7],
+  [/(one|a) (trick|simple|weird|secret)/i, 5], [/number \d+ will (shock|amaze|surprise)/i, 7],
   [/\d+%\s*of\s*(people|doctors)\s*(don'?t|won'?t)/i, 7],
   [/(before it'?s|while you still can)/i, 5],
   [/(click here|act now|limited time)/i, 6],
@@ -107,25 +115,238 @@ function weightedMatches(text: string, patterns: Array<[RegExp, number]>) {
   return { total, score, matches: [...new Set(matches)].slice(0, 3) };
 }
 
-// ─── CLAIM EXTRACTION ──────────────────────────────────────────────────────
-// Extracts factual claims from text using sentence-level analysis.
-// Each claim status reflects linguistic evidence, not external verification.
+const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n));
 
-function extractClaims(
-  text: string,
-  redFlags: string[],
-  greenFlags: string[],
-  _confidence: number,
-  _keywords: string[],
-) {
+// ═══════════════════════════════════════════════════════════════════════════════
+// LIVE EXTERNAL SOURCE CROSS-CHECK
+// Retrieves real, independent news coverage for a claim via Google News RSS
+// (server-side fetch, no API key). NOTHING here is fabricated: every returned
+// source is an actual retrieved result with its real headline, publisher,
+// date and URL. If the search fails or returns nothing useful, that is
+// reported explicitly.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+type Relationship = "supports" | "contradicts" | "partial" | "insufficient";
+
+interface RetrievedSource {
+  name: string;        // real publisher
+  headline: string;    // real headline
+  date: string;        // real pubDate (or "N/A")
+  excerpt: string;     // real description/snippet from the result
+  url: string;         // real URL ("" for sentinel notices)
+  relationship: Relationship;
+}
+
+interface ClaimSearch {
+  ok: boolean;
+  error?: string;
+  sources: RetrievedSource[];
+}
+
+const STOP_WORDS = new Set([
+  "the", "and", "for", "are", "but", "not", "you", "all", "any", "can", "had",
+  "has", "his", "her", "was", "one", "our", "out", "day", "get", "has", "have",
+  "him", "its", "new", "now", "old", "see", "two", "way", "who", "did", "does",
+  "did", "that", "this", "these", "those", "with", "from", "they", "been",
+  "were", "said", "each", "which", "their", "will", "other", "about", "many",
+  "then", "them", "would", "could", "into", "than", "also", "after", "before",
+  "during", "between", "more", "some", "such", "only", "over", "under", "when",
+  "what", "where", "how", "why", "who", "has", "have", "had", "being", "does",
+  "did", "done", "may", "might", "must", "should", "shall", "very", "just",
+  "because", "while", "although", "however", "both", "same", "own", "too",
+]);
+
+/** Content-bearing tokens for a claim, used for overlap scoring. */
+function claimTokens(text: string): string[] {
+  return [...new Set(
+    text.toLowerCase()
+      .replace(/[^a-z0-9%$.\s-]/g, " ")
+      .split(/\s+/)
+      .filter(w => w.length >= 4 && !STOP_WORDS.has(w.replace(/[^a-z]/g, ""))),
+  )];
+}
+
+/** Normalized numeric values mentioned in the claim ("12", "5.25", "8200"). */
+function claimNumbers(text: string): string[] {
+  const matches = text.match(/\d+(?:[.,]\d+)*/g) || [];
+  return [...new Set(matches.map(m => m.replace(/,/g, "")))];
+}
+
+/** Headline-level signals that a source disputes the claim. Conservative. */
+const DEBUNK_PATTERN =
+  /\b(false|misleading|debunk(ed|ing)?|fact[- ]?check(ed|ing)?|hoax|misinformation|disinformation|untrue|not true|no evidence|false claim|wrong|baseless|conspiracy (claim|theory|theories))\b/i;
+
+function evaluateRelationship(
+  claimText: string,
+  headline: string,
+  description: string,
+): { relationship: Relationship; overlap: number } {
+  const tokens = claimTokens(claimText);
+  const haystack = (headline + " " + description).toLowerCase();
+  const matched = tokens.filter(t => haystack.includes(t)).length;
+  const overlap = tokens.length > 0 ? matched / tokens.length : 0;
+
+  const nums = claimNumbers(claimText);
+  const numsMatched = nums.filter(n =>
+    new RegExp(`(^|[^0-9])${n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^0-9]|$)`).test(haystack),
+  ).length;
+  const numsOk = nums.length === 0 || numsMatched >= nums.length;
+
+  // A fact-check style headline about the same claim → contradiction signal.
+  if (overlap >= 0.34 && DEBUNK_PATTERN.test(headline)) {
+    return { relationship: "contradicts", overlap };
+  }
+  // Strong token overlap + matching figures → corroborating coverage.
+  if (overlap >= 0.5 && numsOk) {
+    return { relationship: "supports", overlap };
+  }
+  // Partial topical overlap → partial.
+  if (overlap >= 0.3 || (nums.length > 0 && numsMatched > 0 && overlap >= 0.2)) {
+    return { relationship: "partial", overlap };
+  }
+  return { relationship: "insufficient", overlap };
+}
+
+function parseRssItems(xml: string): Array<{ title: string; link: string; pubDate: string; description: string; publisher: string }> {
+  const items: Array<{ title: string; link: string; pubDate: string; description: string; publisher: string }> = [];
+  const itemRegex = /<item[^>]*>([\s\S]*?)<\/item>/gi;
+  let match: RegExpExecArray | null;
+  while ((match = itemRegex.exec(xml)) !== null) {
+    const itemXml = match[1];
+    const get = (tag: string): string => {
+      const re = new RegExp(
+        `<${tag}[^>]*><!\\[CDATA\\[([\\s\\S]*?)\\]\\]><\\/${tag}>|<${tag}[^>]*>([\\s\\S]*?)<\\/${tag}>`,
+        "i",
+      );
+      const m = re.exec(itemXml);
+      return m ? (m[1] || m[2] || "").trim() : "";
+    };
+    const title = get("title");
+    if (!title) continue;
+    items.push({
+      title,
+      link: get("link"),
+      pubDate: get("pubDate"),
+      description: get("description").replace(/<[^>]*>/g, ""),
+      publisher: get("source"),
+    });
+    if (items.length >= 10) break;
+  }
+  return items;
+}
+
+function publisherFromItem(item: { publisher: string; link: string }): string {
+  if (item.publisher) return item.publisher;
+  try {
+    return new URL(item.link).hostname.replace(/^www\./, "");
+  } catch {
+    return "Unknown publisher";
+  }
+}
+
+function formatDate(pubDate: string): string {
+  if (!pubDate) return "N/A";
+  const d = new Date(pubDate);
+  if (isNaN(d.getTime())) return "N/A";
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+/**
+ * Live search for independent coverage of a claim.
+ * Returns real retrieved sources only. On failure, `ok` is false.
+ */
+async function searchClaim(claimText: string): Promise<ClaimSearch> {
+  const query = claimText.replace(/["“”]/g, " ").replace(/\s+/g, " ").trim().slice(0, 160);
+  if (query.length < 8) {
+    return { ok: true, sources: [], error: "Claim too short to search." };
+  }
+  const url =
+    "https://news.google.com/rss/search?q=" + encodeURIComponent(query) +
+    "&hl=en-US&gl=US&ceid=US:en";
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 7000);
+  try {
+    const res = await fetch(url, {
+      signal: controller.signal,
+      redirect: "follow",
+      headers: { "user-agent": "Mozilla/5.0 (compatible; Veritas/1.0)" },
+    });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const xml = await res.text();
+    const items = parseRssItems(xml);
+
+    const evaluated = items.map(item => {
+      const { relationship, overlap } = evaluateRelationship(claimText, item.title, item.description);
+      return {
+        name: publisherFromItem(item),
+        headline: item.title,
+        date: formatDate(item.pubDate),
+        excerpt: item.description.slice(0, 240) || "No snippet available.",
+        url: item.link,
+        relationship,
+        overlap,
+      };
+    });
+
+    evaluated.sort((a, b) => b.overlap - a.overlap);
+    const top = evaluated.slice(0, 3).map(({ overlap: _overlap, ...src }) => src);
+
+    const anySupport = top.some(s => s.relationship === "supports" || s.relationship === "partial");
+    if (top.length > 0 && !anySupport) {
+      // Honest notice in addition to the (non-corroborating) real results.
+      top.push({
+        name: "NO INDEPENDENT CORROBORATION FOUND",
+        headline: "No independent corroboration found",
+        date: "N/A",
+        excerpt: "A live search was performed, but no retrieved source addressed this claim closely enough to corroborate it. Absence of corroboration is not proof of falsity.",
+        url: "",
+        relationship: "insufficient",
+      });
+    }
+    if (top.length === 0) {
+      top.push({
+        name: "NO INDEPENDENT CORROBORATION FOUND",
+        headline: "No results returned",
+        date: "N/A",
+        excerpt: "A live search was performed but returned no results for this claim. Insufficient evidence available.",
+        url: "",
+        relationship: "insufficient",
+      });
+    }
+    return { ok: true, sources: top };
+  } catch (e) {
+    return {
+      ok: false,
+      error: e instanceof Error ? e.message : "search failed",
+      sources: [{
+        name: "SOURCE SEARCH UNAVAILABLE",
+        headline: "External source search could not be completed",
+        date: "N/A",
+        excerpt: "The live external source search was unavailable. Insufficient evidence available for this claim.",
+        url: "",
+        relationship: "insufficient",
+      }],
+    };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// ─── CLAIM EXTRACTION (text only — status comes from real evidence) ───────
+
+interface RawClaim {
+  id: number;
+  text: string;
+  hasNumbers: boolean;
+  hasSource: boolean;
+  hasAnonymous: boolean;
+  hasSensational: boolean;
+}
+
+function extractRawClaims(text: string, maxClaims: number): RawClaim[] {
   const sentences = text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 15);
-  const claims: Array<{
-    id: number; text: string;
-    status: "supported" | "uncertain" | "contradicted" | "needs_verification";
-    confidence: number; evidence: string;
-    sources: string[]; contradictingSources: string[];
-    explanation: string;
-  }> = [];
+  const claims: RawClaim[] = [];
 
   const factualPatterns = [
     /\d+%/, /\$[\d,]+/, /\d+ (million|billion|thousand)/i,
@@ -137,68 +358,33 @@ function extractClaims(
 
   let claimId = 1;
   for (const sentence of sentences) {
-    if (claimId > 8) break;
+    if (claimId > maxClaims) break;
     const isFactual = factualPatterns.some(p => p.test(sentence));
     if (!isFactual && claims.length >= 3) continue;
     if (!isFactual && claims.length < 3 && sentence.split(/\s+/).length < 8) continue;
 
-    const hasNumbers = /\d+%|\$[\d,]+|\d+ (million|billion)/i.test(sentence);
-    const hasSource = /according to|published|researchers|officials|university/i.test(sentence);
-    const hasSensational = /[A-Z]{3,}!|shocking|unbelievable|secret|hidden|exposed/i.test(sentence);
-    const hasAnonymous = /experts? (say|claim|warn)|sources? (say|claim)|insiders?/i.test(sentence);
-
-    let status: "supported" | "uncertain" | "contradicted" | "needs_verification";
-    let claimConf: number;
-    let evidence: string;
-    let explanation: string;
-
-    if (hasSource && hasNumbers && !hasSensational) {
-      status = "supported";
-      claimConf = 65;
-      evidence = "Claim contains named source attribution AND specific numerical data — the strongest linguistic signal available without external verification.";
-      explanation = "This claim references specific sources and provides verifiable data points. However, Veritas has not independently verified these references.";
-    } else if (hasAnonymous || hasSensational) {
-      status = "contradicted";
-      claimConf = 30;
-      evidence = "Claim relies on anonymous sourcing or sensationalist language patterns, which are commonly associated with unreliable reporting.";
-      explanation = "The language patterns in this claim are inconsistent with standard journalistic practices. This is a linguistic signal, not a factual determination.";
-    } else if (hasNumbers) {
-      status = "uncertain";
-      claimConf = 45;
-      evidence = "Contains numerical claims but no named source attribution. Numbers alone cannot be verified through linguistic analysis.";
-      explanation = "Specific numbers are cited, but the underlying source cannot be confirmed through pattern analysis alone.";
-    } else {
-      status = "needs_verification";
-      claimConf = 35;
-      evidence = "Insufficient linguistic signals to assess this claim. External verification is required.";
-      explanation = "This claim requires independent fact-checking beyond what linguistic pattern analysis can provide.";
-    }
-
-    // Adjust confidence based on overall article signals
-    if (redFlags.length > 3) claimConf = Math.max(15, claimConf - 10);
-    if (greenFlags.length > 3) claimConf = Math.min(70, claimConf + 5);
-
-    const sources: string[] = [];
-    if (hasSource) sources.push("Named source detected in text");
-    if (hasNumbers) sources.push("Numerical data present");
-
-    const contradictingSources: string[] = [];
-    if (hasAnonymous) contradictingSources.push("Anonymous/unverifiable sourcing pattern");
-    if (hasSensational) contradictingSources.push("Sensationalist language pattern");
-
     claims.push({
       id: claimId++,
-      text: sentence.length > 120 ? sentence.slice(0, 120) + "..." : sentence,
-      status,
-      confidence: claimConf,
-      evidence,
-      sources,
-      contradictingSources,
-      explanation,
+      text: sentence.length > 160 ? sentence.slice(0, 160) + "..." : sentence,
+      hasNumbers: /\d+%|\$[\d,]+|\d+ (million|billion)/i.test(sentence),
+      hasSource: /according to|published|researchers|officials|university/i.test(sentence),
+      hasAnonymous: /experts? (say|claim|warn)|sources? (say|claim)|insiders?/i.test(sentence),
+      hasSensational: /[A-Z]{3,}!|shocking|unbelievable|secret|hidden|exposed/i.test(sentence),
     });
   }
-
   return claims;
+}
+
+/** Supplementary linguistic context for a claim (never a verification status). */
+function linguisticNote(claim: RawClaim): string {
+  const notes: string[] = [];
+  if (claim.hasSource) notes.push("named-source attribution detected in text");
+  if (claim.hasNumbers) notes.push("numerical data present");
+  if (claim.hasAnonymous) notes.push("anonymous sourcing pattern detected");
+  if (claim.hasSensational) notes.push("sensationalist language detected");
+  return notes.length
+    ? "Linguistic context: " + notes.join("; ") + "."
+    : "No notable linguistic markers in this claim.";
 }
 
 // ─── SOURCE PROFILE EXTRACTION ──────────────────────────────────────────────
@@ -251,93 +437,241 @@ function extractSourceProfile(
   return { source, domain, author, publishedDate, updatedDate: "NOT AVAILABLE", sourceType, availableEvidence: evidence, signals };
 }
 
-// ─── EVIDENCE TIMELINE EXTRACTION ───────────────────────────────────────────
-// Timeline reflects ACTUAL analysis steps performed, not fabricated events.
+type SourceProfile = ReturnType<typeof extractSourceProfile>;
 
-function extractTimeline(
-  text: string,
-  redFlags: string[],
-  greenFlags: string[],
-  _keywords: string[],
-  verdict: string,
-  confidence: number,
-  claims: Array<{ status: string }>,
-  sourceProfile: { source: string },
-) {
-  const events: Array<{
-    id: number;
-    type: "claim_identified" | "source_searched" | "corroboration" | "contradiction" | "assessment";
-    title: string; detail: string; source?: string;
-  }> = [];
+// ─── SHARED TYPES (mirrored by the frontend) ───────────────────────────────
 
+interface ClaimResult {
+  id: number;
+  text: string;
+  status: "supported" | "uncertain" | "contradicted" | "needs_verification";
+  confidence: number;
+  evidence: string;
+  sources: string[];
+  contradictingSources: string[];
+  explanation: string;
+}
+
+interface CrossCheckClaimResult {
+  claimId: number;
+  claimText: string;
+  sources: Array<{
+    name: string; headline: string; date: string; excerpt: string;
+    relationship: Relationship; url?: string;
+  }>;
+}
+
+interface TimelineEventResult {
+  id: number;
+  type: "claim_identified" | "source_found" | "source_searched" | "corroboration" | "contradiction" | "assessment";
+  title: string;
+  detail: string;
+  source?: string;
+  timestamp?: string;
+}
+
+interface FreshnessResult {
+  claimId: number;
+  claimText: string;
+  status: "current" | "recent" | "outdated" | "historical" | "unknown";
+  sourceDate: string;
+  ageDays: number;
+  newerAvailable: boolean;
+}
+
+interface FingerprintResult {
+  claims: number;
+  sources: number;
+  verified: number;
+  uncertain: number;
+  contradicted: number;
+  unverified: number;
+  sourceCoverage: number;
+  evidenceFound: number;
+}
+
+// ─── EVIDENCE TIMELINE (reflects ACTUAL analysis events) ───────────────────
+
+function buildTimeline(args: {
+  text: string;
+  claims: ClaimResult[];
+  sourceProfile: SourceProfile;
+  greenFlags: string[];
+  redFlags: string[];
+  crossCheck: CrossCheckClaimResult[];
+  checkedCount: number;
+  searchFailures: number;
+  totalRetrieved: number;
+  verdict: string;
+  confidence: number;
+}): TimelineEventResult[] {
+  const events: TimelineEventResult[] = [];
   let eventId = 1;
 
-  // Event 1: Text received and processed
   events.push({
     id: eventId++, type: "claim_identified",
     title: "Text received and processed",
-    detail: text.split(/\s+/).length + " words analyzed through linguistic pattern matching.",
+    detail: args.text.split(/\s+/).length + " words analyzed.",
   });
 
-  // Event 2: Claims extracted
   events.push({
     id: eventId++, type: "claim_identified",
-    title: claims.length + " claims extracted",
-    detail: "Factual claims identified using sentence-level NLP pattern detection.",
+    title: args.claims.length + " claims extracted",
+    detail: "Factual claims identified using sentence-level pattern detection.",
   });
 
-  // Event 3: Source search
-  if (sourceProfile.source !== "NOT AVAILABLE") {
+  if (args.sourceProfile.source !== "NOT AVAILABLE") {
     events.push({
-      id: eventId++, type: "source_searched",
-      title: "Source attribution detected",
-      detail: "The text mentions a named source: " + sourceProfile.source + ". This is text detection, not independent verification.",
+      id: eventId++, type: "source_found",
+      title: "Source attribution detected in text",
+      detail: "The text mentions a named source: " + args.sourceProfile.source + ". This is text detection, not independent verification.",
+      source: args.sourceProfile.source,
     });
   } else {
     events.push({
       id: eventId++, type: "source_searched",
-      title: "No named source detected",
+      title: "No named source detected in text",
       detail: "No specific source, author, or institution was identified in the text.",
     });
   }
 
-  // Event 4: Linguistic signals
-  const signalCount = greenFlags.length + redFlags.length;
-  if (greenFlags.length > 0 && redFlags.length > 0) {
+  // Real external source search event
+  if (args.checkedCount === 0) {
     events.push({
-      id: eventId++, type: "corroboration",
-      title: "Mixed linguistic signals",
-      detail: greenFlags.length + " positive and " + redFlags.length + " negative linguistic patterns detected.",
+      id: eventId++, type: "source_searched",
+      title: "External source search not performed",
+      detail: "No claims were available to cross-check against external sources.",
     });
-  } else if (greenFlags.length > 0) {
+  } else if (args.searchFailures >= args.checkedCount) {
     events.push({
-      id: eventId++, type: "corroboration",
-      title: "Positive linguistic signals",
-      detail: greenFlags.length + " indicators consistent with credible reporting: " + greenFlags.slice(0, 2).join("; ") + ".",
+      id: eventId++, type: "source_searched",
+      title: "SOURCE SEARCH UNAVAILABLE",
+      detail: "The live external source search could not be completed. Insufficient evidence available.",
     });
-  } else if (redFlags.length > 0) {
+  } else if (args.totalRetrieved === 0) {
     events.push({
-      id: eventId++, type: "contradiction",
-      title: "Negative linguistic signals",
-      detail: redFlags.length + " indicators of potential unreliability: " + redFlags.slice(0, 2).join("; ") + ".",
+      id: eventId++, type: "source_searched",
+      title: "NO INDEPENDENT CORROBORATION FOUND",
+      detail: "A live search across " + args.checkedCount + " claim(s) returned no usable results.",
+    });
+  } else {
+    events.push({
+      id: eventId++, type: "source_searched",
+      title: "Live source search completed",
+      detail: args.totalRetrieved + " independent source result(s) retrieved across " + args.checkedCount + " cross-checked claim(s).",
     });
   }
 
-  // Event 5: Assessment
-  const supported = claims.filter(c => c.status === "supported").length;
-  const contradicted = claims.filter(c => c.status === "contradicted").length;
+  // Real corroboration events
+  const supportedClaims = args.claims.filter(c => c.status === "supported");
+  for (const claim of supportedClaims.slice(0, 2)) {
+    const first = claim.sources[0];
+    events.push({
+      id: eventId++, type: "corroboration",
+      title: "Claim " + String(claim.id).padStart(2, "0") + " corroborated by retrieved coverage",
+      detail: claim.evidence,
+      source: first ? first.split(" — ")[0] : undefined,
+    });
+  }
+
+  // Real contradiction events
+  const contradictedClaims = args.claims.filter(c => c.status === "contradicted");
+  for (const claim of contradictedClaims.slice(0, 2)) {
+    events.push({
+      id: eventId++, type: "contradiction",
+      title: "Claim " + String(claim.id).padStart(2, "0") + " contradicted by retrieved coverage",
+      detail: claim.evidence,
+      source: claim.contradictingSources[0] ? claim.contradictingSources[0].split(" — ")[0] : undefined,
+    });
+  }
+
+  if (supportedClaims.length === 0 && contradictedClaims.length === 0 && args.checkedCount > 0 && args.searchFailures < args.checkedCount) {
+    events.push({
+      id: eventId++, type: "corroboration",
+      title: "NO INDEPENDENT CORROBORATION FOUND",
+      detail: "No retrieved source corroborated or contradicted the extracted claims. Insufficient evidence available.",
+    });
+  }
+
+  // Linguistic signals (supplementary)
+  if (args.greenFlags.length > 0 && args.redFlags.length > 0) {
+    events.push({
+      id: eventId++, type: "corroboration",
+      title: "Mixed linguistic signals",
+      detail: args.greenFlags.length + " positive and " + args.redFlags.length + " negative linguistic patterns detected (supplementary signals only).",
+    });
+  } else if (args.greenFlags.length > 0) {
+    events.push({
+      id: eventId++, type: "corroboration",
+      title: "Positive linguistic signals",
+      detail: args.greenFlags.length + " indicators consistent with credible reporting: " + args.greenFlags.slice(0, 2).join("; ") + ".",
+    });
+  } else if (args.redFlags.length > 0) {
+    events.push({
+      id: eventId++, type: "contradiction",
+      title: "Negative linguistic signals",
+      detail: args.redFlags.length + " indicators of potential unreliability: " + args.redFlags.slice(0, 2).join("; ") + ".",
+    });
+  }
+
+  const supported = args.claims.filter(c => c.status === "supported").length;
+  const contradicted = args.claims.filter(c => c.status === "contradicted").length;
   events.push({
     id: eventId++, type: "assessment",
-    title: "Linguistic pattern assessment complete",
-    detail: "Confidence: " + confidence + "%. " + supported + " claims linguistically supported, " + contradicted + " contradicted. NOTE: This is pattern-based analysis, not external fact-checking.",
+    title: "Evidence-based assessment generated",
+    detail:
+      "Confidence: " + args.confidence + "%. " +
+      supported + " claim(s) corroborated, " + contradicted + " contradicted by retrieved sources. " +
+      "Verdict derived from retrieved claims and evidence; linguistic analysis is supplementary.",
   });
 
   return events;
 }
 
-// ─── ANALYSIS ───────────────────────────────────────────────────────────────
+// ─── FRESHNESS (derived from real dates only) ──────────────────────────────
 
-function analyzeText(text: string) {
+function buildFreshness(claims: RawClaim[], sourceProfile: SourceProfile): FreshnessResult[] {
+  return claims.slice(0, 5).map((claim) => {
+    const dateStr =
+      (claim.text.match(/(\d{1,2}\s+)?(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{4}/i) ||
+       claim.text.match(/(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},?\s+\d{4}/i) ||
+       claim.text.match(/\b(19|20)\d{2}\b/))?.[0] || "";
+
+    const hasTemporal = /\b(currently|today|this week|this month|this year|recently|yesterday|last week|last month)\b/i.test(claim.text);
+    const hasHistorical = /\b(history|historical|ancient|centuries ago|in the past|traditionally)\b/i.test(claim.text);
+
+    let status: FreshnessResult["status"] = "unknown";
+    let ageDays = 0;
+
+    const parsed = dateStr ? new Date(dateStr) : null;
+    if (parsed && !isNaN(parsed.getTime())) {
+      ageDays = Math.max(0, Math.round((Date.now() - parsed.getTime()) / 86_400_000));
+      if (hasHistorical || ageDays > 365 * 3) status = "historical";
+      else if (ageDays > 180) status = "outdated";
+      else if (ageDays <= 7) status = "current";
+      else status = "recent";
+    } else if (hasHistorical) {
+      status = "historical";
+    } else if (hasTemporal) {
+      status = "current";
+    } else {
+      status = "unknown";
+    }
+
+    return {
+      claimId: claim.id,
+      claimText: claim.text.slice(0, 80),
+      status,
+      sourceDate: sourceProfile.publishedDate,
+      ageDays,
+      newerAvailable: false, // we do not check for newer versions — never claim we do
+    };
+  });
+}
+
+// ─── ARTICLE WORD/CATEGORY ANALYSIS (supplementary linguistic layer) ───────
+
+async function analyzeText(text: string, depth: Depth) {
   const wordCount = text.split(/\s+/).length;
   let redFlagScore = 0, greenFlagScore = 0;
   const redFlags: string[] = [], greenFlags: string[] = [];
@@ -410,118 +744,227 @@ function analyzeText(text: string) {
   if (wordCount >= 80 && wordCount <= 800) { lenScore = 6; greenFlags.push("Appropriate article length"); }
   greenFlagScore += lenScore;
 
-  // ── VERDICT ──
+  // ── BASE LINGUISTIC SIGNAL (supplementary only — final verdict is gated by evidence below) ──
   const total = Math.max(redFlagScore + greenFlagScore, 1);
   const redRatio = redFlagScore / total, greenRatio = greenFlagScore / total;
-  let verdict: "likely_real" | "likely_fake" | "uncertain";
-  let confidence: number;
+  let baseVerdict: "likely_real" | "likely_fake" | "uncertain";
+  let baseConfidence: number;
 
-  if (redRatio >= 0.65) { verdict = "likely_fake"; confidence = Math.min(72, Math.round(45 + redRatio * 30)); }
-  else if (greenRatio >= 0.65) { verdict = "likely_real"; confidence = Math.min(72, Math.round(45 + greenRatio * 30)); }
-  else if (redRatio > greenRatio + 0.1) { verdict = "likely_fake"; confidence = Math.min(65, Math.round(38 + (redRatio - greenRatio) * 28)); }
-  else if (greenRatio > redRatio + 0.1) { verdict = "likely_real"; confidence = Math.min(65, Math.round(38 + (greenRatio - redRatio) * 28)); }
-  else { verdict = "uncertain"; confidence = Math.round(30 + Math.abs(redRatio - greenRatio) * 12); }
-  confidence = Math.max(25, Math.min(72, confidence));
+  if (redRatio >= 0.65) { baseVerdict = "likely_fake"; baseConfidence = Math.min(72, Math.round(45 + redRatio * 30)); }
+  else if (greenRatio >= 0.65) { baseVerdict = "likely_real"; baseConfidence = Math.min(72, Math.round(45 + greenRatio * 30)); }
+  else if (redRatio > greenRatio + 0.1) { baseVerdict = "likely_fake"; baseConfidence = Math.min(65, Math.round(38 + (redRatio - greenRatio) * 28)); }
+  else if (greenRatio > redRatio + 0.1) { baseVerdict = "likely_real"; baseConfidence = Math.min(65, Math.round(38 + (greenRatio - redRatio) * 28)); }
+  else { baseVerdict = "uncertain"; baseConfidence = Math.round(30 + Math.abs(redRatio - greenRatio) * 12); }
+  baseConfidence = Math.max(25, Math.min(72, baseConfidence));
 
-  // ── ADJUSTED CONFIDENCE ──
-  // Reduce confidence when evidence is thin
   const hasSource = /according to|published|researchers|officials|university/i.test(text);
-  const hasCredibleInstitution = credCount >= 2;
-  if (!hasSource && !hasCredibleInstitution) {
-    confidence = Math.max(25, confidence - 15);
-  }
-  if (redFlags.length === 0 && greenFlags.length === 0) {
-    confidence = Math.max(25, confidence - 10);
-  }
+  if (!hasSource && credCount < 2) baseConfidence = Math.max(25, baseConfidence - 15);
+  if (redFlags.length === 0 && greenFlags.length === 0) baseConfidence = Math.max(25, baseConfidence - 10);
 
   const triggeredKeywords = findTriggeredKeywords(text);
 
-  // ── HONEST SUMMARY ──
-  const signalLabel = "linguistic pattern analysis";
-  const summary = verdict === "likely_fake"
-    ? "Based on " + signalLabel + ", this content shows " + redFlags.length + " warning signals. " + (redFlags[0] || "Language patterns suggest caution.") + " NOTE: This analysis examines writing patterns, not factual accuracy. Independent verification is recommended."
-    : verdict === "likely_real"
-    ? "Based on " + signalLabel + ", this content shows " + greenFlags.length + " indicators consistent with credible reporting. " + (greenFlags[0] || "Attribution patterns appear standard.") + " NOTE: This analysis examines writing patterns, not factual accuracy. Independent verification is recommended."
-    : "Mixed linguistic signals: " + redFlags.length + " concerns, " + greenFlags.length + " positives. The analysis cannot determine reliability from patterns alone. Independent verification is strongly recommended.";
+  // ── CLAIM EXTRACTION ──
+  const rawClaims = extractRawClaims(text, CLAIM_LIMIT[depth]);
+  const sourceProfile = extractSourceProfile(text, greenFlags, redFlags);
 
+  // ── LIVE EXTERNAL CROSS-CHECK ──
+  const checked = rawClaims.slice(0, CROSSCHECK_LIMIT[depth]);
+  const searchResults = await Promise.all(checked.map(c => searchClaim(c.text)));
+  const searchFailures = searchResults.filter(r => !r.ok).length;
+
+  const claims: ClaimResult[] = rawClaims.map((raw) => {
+    const idx = checked.findIndex(c => c.id === raw.id);
+    const note = linguisticNote(raw);
+
+    if (idx === -1) {
+      return {
+        id: raw.id, text: raw.text,
+        status: "needs_verification", confidence: 30,
+        evidence: "Not cross-checked at this depth — insufficient evidence available.",
+        sources: [], contradictingSources: [],
+        explanation: "This claim was not cross-checked against external sources in this analysis pass. Insufficient evidence available. " + note,
+      };
+    }
+
+    const result = searchResults[idx];
+    const sources = result.sources.filter(s => s.url); // real retrieved results only
+    const supports = sources.filter(s => s.relationship === "supports");
+    const partials = sources.filter(s => s.relationship === "partial");
+    const contradicts = sources.filter(s => s.relationship === "contradicts");
+
+    if (!result.ok) {
+      return {
+        id: raw.id, text: raw.text,
+        status: "needs_verification", confidence: 30,
+        evidence: "External source search unavailable" + (result.error ? " (" + result.error + ")" : "") + " — insufficient evidence available.",
+        sources: [], contradictingSources: [],
+        explanation: "The live external source search could not be completed for this claim, so no verification was possible. Insufficient evidence available. " + note,
+      };
+    }
+
+    if (contradicts.length > 0 && supports.length === 0) {
+      const c = contradicts[0];
+      return {
+        id: raw.id, text: raw.text,
+        status: "contradicted", confidence: 65,
+        evidence: "Contradicted by retrieved independent coverage: \"" + c.headline + "\" — " + c.name + (c.date !== "N/A" ? " (" + c.date + ")" : "") + ".",
+        sources: [],
+        contradictingSources: contradicts.map(s => s.name + " — \"" + s.headline + "\""),
+        explanation: "Retrieved independent coverage disputes this claim. The source was found through a live search for this claim. " + note,
+      };
+    }
+
+    if (supports.length > 0) {
+      const s = supports[0];
+      return {
+        id: raw.id, text: raw.text,
+        status: "supported", confidence: 75,
+        evidence: "Corroborated by " + supports.length + " independent retrieved source(s): \"" + s.headline + "\" — " + s.name + (s.date !== "N/A" ? " (" + s.date + ")" : "") + ".",
+        sources: supports.map(x => x.name + " — \"" + x.headline + "\""),
+        contradictingSources: contradicts.map(s => s.name + " — \"" + s.headline + "\""),
+        explanation: "Independent retrieved coverage matches the specific details of this claim. This is corroboration of coverage, not absolute proof. " + note,
+      };
+    }
+
+    if (partials.length > 0) {
+      const p = partials[0];
+      return {
+        id: raw.id, text: raw.text,
+        status: "uncertain", confidence: 45,
+        evidence: "Partially addressed by retrieved coverage: \"" + p.headline + "\" — " + p.name + ". Insufficient independent corroboration found.",
+        sources: [],
+        contradictingSources: contradicts.map(s => s.name + " — \"" + s.headline + "\""),
+        explanation: "Retrieved coverage only partially addresses this claim — independent corroboration remains incomplete. " + note,
+      };
+    }
+
+    const nonCorroborating = sources.filter(s => s.name !== "NO INDEPENDENT CORROBORATION FOUND" && s.name !== "SOURCE SEARCH UNAVAILABLE");
+    return {
+      id: raw.id, text: raw.text,
+      status: "needs_verification", confidence: 30,
+      evidence: nonCorroborating.length > 0
+        ? "NO INDEPENDENT CORROBORATION FOUND — a live search returned " + nonCorroborating.length + " result(s), but none addressed this claim closely enough. Insufficient evidence available."
+        : "NO INDEPENDENT CORROBORATION FOUND — insufficient evidence available.",
+      sources: [], contradictingSources: [],
+      explanation: "No independent source corroborates or contradicts this claim. Absence of corroboration is not proof of falsity — the claim remains unverified. " + note,
+    };
+  });
+
+  // ── CROSS-CHECK OUTPUT (real retrieved sources only) ──
+  const crossCheck: CrossCheckClaimResult[] = checked.map((raw, i) => ({
+    claimId: raw.id,
+    claimText: raw.text,
+    sources: searchResults[i].sources.map(s => ({ ...s })),
+  }));
+
+  const realSourcesAll = crossCheck.flatMap(c => c.sources).filter(s => s.url);
+  const uniqueUrls = new Set(realSourcesAll.map(s => s.url));
+  const totalRetrieved = uniqueUrls.size;
+
+  // ── EVIDENCE-BASED VERDICT ──
+  const supportedCount = claims.filter(c => c.status === "supported").length;
+  const contradictedCount = claims.filter(c => c.status === "contradicted").length;
+  const partialCount = claims.filter(c => c.status === "uncertain").length;
+  const evidenceRatio = claims.length > 0 ? (supportedCount + 0.5 * partialCount) / claims.length : 0;
+
+  const firstSupport = realSourcesAll.find(s => s.relationship === "supports");
+  const firstContradiction = realSourcesAll.find(s => s.relationship === "contradicts");
+
+  let verdict: "likely_real" | "likely_fake" | "uncertain";
+  let confidence: number;
+  let summary: string;
+
+  if (claims.length === 0) {
+    verdict = "uncertain";
+    confidence = Math.min(baseConfidence, 32);
+    summary = "UNABLE TO VERIFY — no distinct factual claims could be extracted from this content, so no claim-level verification was possible."
+      + (redFlags.length > 0 ? " " + redFlags.length + " linguistic warning signal(s) were detected." : "");
+  } else if (contradictedCount > 0 && supportedCount === 0) {
+    verdict = "likely_fake";
+    confidence = clamp(55 + contradictedCount * 8 + Math.round(redRatio * 10), 55, 80);
+    summary = "LIKELY MISLEADING — " + contradictedCount + " cross-checked claim(s) are contradicted by retrieved independent coverage."
+      + (firstContradiction ? " Example: \"" + firstContradiction.headline + "\" — " + firstContradiction.name + "." : "")
+      + (redFlags.length ? " " + redFlags.length + " linguistic warning signal(s) also detected." : "");
+  } else if (supportedCount >= 2 && contradictedCount === 0) {
+    verdict = "likely_real";
+    confidence = clamp(Math.round(55 + 20 * evidenceRatio + 8 * greenRatio), 55, redRatio >= 0.6 ? 72 : 85);
+    summary = "LIKELY CREDIBLE — " + supportedCount + " cross-checked claim(s) are corroborated by independent retrieved sources"
+      + (firstSupport ? " (e.g. \"" + firstSupport.headline + "\" — " + firstSupport.name + ")" : "")
+      + ". Linguistic signals: " + greenFlags.length + " positive, " + redFlags.length + " warning.";
+  } else if (supportedCount === 1 && contradictedCount === 0) {
+    if (redRatio < 0.5) {
+      verdict = "likely_real";
+      confidence = clamp(Math.round(55 + 10 * greenRatio + 5), 55, 70);
+      summary = "LIKELY CREDIBLE — 1 cross-checked claim is corroborated by independent retrieved coverage"
+        + (firstSupport ? " (\"" + firstSupport.headline + "\" — " + firstSupport.name + ")" : "")
+        + ". Remaining claims are not yet corroborated; " + (claims.length - supportedCount) + " claim(s) still need verification.";
+    } else {
+      verdict = "uncertain";
+      confidence = clamp(48 + Math.round((greenRatio - redRatio) * 5), 42, 55);
+      summary = "MIXED EVIDENCE — 1 cross-checked claim is corroborated, but the writing style shows " + redFlags.length + " strong warning signal(s). Treat with caution and verify further.";
+    }
+  } else if (contradictedCount > 0) {
+    verdict = "uncertain";
+    confidence = clamp(45 + contradictedCount * 3, 45, 55);
+    summary = "MIXED EVIDENCE — retrieved independent coverage both corroborates (" + supportedCount + ") and contradicts (" + contradictedCount + ") the extracted claims. Conflicting evidence — verify against primary sources.";
+  } else {
+    // No decisive external evidence for any claim.
+    const allFailed = searchFailures >= checked.length && checked.length > 0;
+    if (allFailed) {
+      verdict = "uncertain";
+      confidence = Math.min(baseConfidence, 35);
+      summary = "UNABLE TO VERIFY — the external source search was unavailable, so this assessment is limited to linguistic pattern analysis. Insufficient evidence available.";
+    } else if (baseVerdict === "likely_fake" && redRatio >= 0.55) {
+      verdict = "likely_fake";
+      confidence = Math.min(baseConfidence, 48);
+      summary = "LIKELY MISLEADING (pattern-based) — NO INDEPENDENT CORROBORATION FOUND across " + checked.length + " cross-checked claim(s). "
+        + "The assessment rests on " + redFlags.length + " linguistic warning signal(s). "
+        + "NOTE: absence of corroboration is not proof of falsity; independent verification is recommended.";
+    } else {
+      verdict = "uncertain";
+      confidence = Math.min(baseConfidence, 40);
+      summary = "INSUFFICIENT EVIDENCE — NO INDEPENDENT CORROBORATION FOUND across " + checked.length + " cross-checked claim(s) ("
+        + totalRetrieved + " source result(s) retrieved, none corroborating). Unable to verify. Confidence is limited accordingly.";
+    }
+  }
+
+  confidence = clamp(confidence, 25, 85);
+
+  // ── HONEST SUMMARY + REASONING ──
   const parts: string[] = [];
   if (redFlags.length) parts.push("Concerns: " + redFlags.slice(0, 3).join("; ") + ".");
   if (greenFlags.length) parts.push("Positives: " + greenFlags.slice(0, 3).join("; ") + ".");
-  parts.push("Confidence: " + confidence + "% — based on " + signalLabel + " only. Veritas cannot independently verify factual claims without access to external sources.");
+  if (checked.length === 0) {
+    parts.push("Evidence basis: no claims were available for external cross-checking — assessment limited to linguistic patterns.");
+  } else if (searchFailures >= checked.length) {
+    parts.push("Evidence basis: external source search unavailable — assessment limited to linguistic pattern analysis only.");
+  } else {
+    parts.push(
+      "Evidence basis: " + supportedCount + " corroborated, " + contradictedCount + " contradicted, " +
+      partialCount + " partially addressed, " + (claims.length - checked.length) + " not cross-checked — " +
+      "derived from " + totalRetrieved + " independent source result(s) retrieved in a live search" +
+      (searchFailures > 0 ? " (" + searchFailures + " claim search(es) unavailable)" : "") + ".",
+    );
+  }
+  parts.push("Confidence: " + confidence + "%. Verdict is driven by retrieved claims and external evidence; linguistic pattern analysis is supplementary. Independent verification is always recommended.");
 
-  // ── CLAIM EXTRACTION ──
-  const claims = extractClaims(text, redFlags, greenFlags, confidence, triggeredKeywords);
-
-  // ── SOURCE PROFILE ──
-  const sourceProfile = extractSourceProfile(text, greenFlags, redFlags);
-
-  // ── EVIDENCE TIMELINE ──
-  const evidenceTimeline = extractTimeline(text, redFlags, greenFlags, triggeredKeywords, verdict, confidence, claims, sourceProfile);
-
-  // ── ARTICLE FINGERPRINT ──
-  // All derived from the same base analysis — single source of truth
-  const supportedCount = claims.filter(c => c.status === "supported").length;
-  const uncertainCount = claims.filter(c => c.status === "uncertain").length;
-  const contradictedCount = claims.filter(c => c.status === "contradicted").length;
-  const unverifiedCount = claims.filter(c => c.status === "needs_verification").length;
-
-  // "Sources" = unique named institutions/sources mentioned in text (NOT external sources retrieved)
-  const sourcesMentioned = new Set<string>();
-  if (sourceProfile.source !== "NOT AVAILABLE") sourcesMentioned.add(sourceProfile.source);
-  CREDIBLE_SOURCES.forEach(p => { if (p.test(text)) { const m = text.match(p); if (m) sourcesMentioned.add(m[0]); } });
-
-  // Evidence count = total signal detections across claims
-  const evidenceFound = claims.reduce((sum, c) => sum + c.sources.length + c.contradictingSources.length, 0) + redFlags.length + greenFlags.length;
-
-  const fingerprint = {
+  // ── ARTICLE FINGERPRINT (derived from the same investigation) ──
+  const fingerprint: FingerprintResult = {
     claims: claims.length,
-    sources: sourcesMentioned.size,
+    sources: uniqueUrls.size,
     verified: supportedCount,
-    uncertain: uncertainCount,
+    uncertain: partialCount,
     contradicted: contradictedCount,
-    unverified: unverifiedCount,
+    unverified: claims.length - supportedCount - partialCount - contradictedCount,
     sourceCoverage: claims.length > 0 ? Math.round((supportedCount / claims.length) * 100) : 0,
-    evidenceFound,
+    evidenceFound: uniqueUrls.size + redFlags.length + greenFlags.length,
   };
 
-  // ── SOURCE CROSS-CHECK ──
-  // Honest: only shows what was actually detected in the text.
-  // Does NOT fabricate independent external sources.
-  const crossCheck = claims.slice(0, 5).map((claim) => {
-    const sources: Array<{ name: string; headline: string; date: string; excerpt: string; relationship: "supports" | "contradicts" | "partial" | "insufficient" }> = [];
-
-    // Show what the text itself contains about this claim
-    if (claim.sources.length > 0) {
-      sources.push({
-        name: "Text analysis",
-        headline: "Linguistic signal detected",
-        date: "Current analysis",
-        excerpt: claim.evidence,
-        relationship: "supports",
-      });
-    }
-    if (claim.contradictingSources.length > 0) {
-      sources.push({
-        name: "Pattern analysis",
-        headline: "Conflicting signal detected",
-        date: "Current analysis",
-        excerpt: claim.contradictingSources.join("; "),
-        relationship: "contradicts",
-      });
-    }
-
-    // If we have no signals at all
-    if (sources.length === 0) {
-      sources.push({
-        name: "No signal",
-        headline: "Insufficient linguistic evidence",
-        date: "N/A",
-        excerpt: "No strong linguistic signals were detected for this claim. Independent verification is required.",
-        relationship: "insufficient",
-      });
-    }
-
-    return { claimId: claim.id, claimText: claim.text, sources };
+  // ── EVIDENCE TIMELINE (actual events) ──
+  const evidenceTimeline = buildTimeline({
+    text, claims, sourceProfile, greenFlags, redFlags,
+    crossCheck, checkedCount: checked.length, searchFailures,
+    totalRetrieved, verdict, confidence,
   });
 
   // ── FRAMING SIGNALS ──
@@ -532,9 +975,8 @@ function analyzeText(text: string) {
   }
   const emotionalWords = text.match(/\b(shocking|outrage|terrifying|heartbreaking|unbelievable|miraculous|disgusting|horrible|amazing|incredible)\b/gi);
   if (emotionalWords && emotionalWords.length >= 2) {
-    const wordList = [...new Set(emotionalWords)].slice(0, 3).join(", ");
-    const count = emotionalWords.length;
-    framingSignals.push({ type: "EMOTIONALLY LOADED WORDING", description: "Contains " + count + " emotionally charged words: " + wordList + ".", severity: "medium" });
+    const wordList = [...new Set(emotionalWords.map(w => w.toLowerCase()))].slice(0, 3).join(", ");
+    framingSignals.push({ type: "EMOTIONALLY LOADED WORDING", description: "Contains " + emotionalWords.length + " emotionally charged words: " + wordList + ".", severity: "medium" });
   }
   if (/\b(but|however|although|despite)\b/i.test(text) === false && greenFlags.length > 2) {
     framingSignals.push({ type: "SELECTIVE CONTEXT", description: "The article presents a single perspective without acknowledging counterarguments.", severity: "low" });
@@ -558,26 +1000,6 @@ function analyzeText(text: string) {
     framingSignals.push({ type: "NO SIGNIFICANT FRAMING", description: "No significant framing bias detected through linguistic analysis.", severity: "low" });
   }
 
-  // ── INFORMATION FRESHNESS ──
-  const freshness = claims.slice(0, 5).map((claim) => {
-    const hasTemporal = /\b(currently|today|this week|this month|this year|recently|yesterday|last week|last month)\b/i.test(claim.text);
-    const hasHistorical = /\b(history|historical|ancient|centuries ago|in the past|traditionally)\b/i.test(claim.text);
-    const hasDate = /\d{4}|\d{1,2}\s+(January|February|March|April|May|June|July|August|September|October|November|December)/i.test(claim.text);
-    let status: "current" | "recent" | "outdated" | "historical";
-    if (hasHistorical) status = "historical";
-    else if (hasTemporal) status = "current";
-    else if (hasDate) status = "recent";
-    else status = "recent";
-    return {
-      claimId: claim.id,
-      claimText: claim.text.slice(0, 80),
-      status,
-      sourceDate: sourceProfile.publishedDate,
-      ageDays: hasDate ? -1 : 30,
-      newerAvailable: false,
-    };
-  });
-
   return {
     verdict, confidence, summary, redFlags, greenFlags,
     reasoning: parts.join(" "),
@@ -590,29 +1012,111 @@ function analyzeText(text: string) {
     fingerprint,
     crossCheck,
     framingSignals,
-    freshness,
+    freshness: buildFreshness(rawClaims, sourceProfile),
+    extractedText: text,
+  };
+}
+
+// ─── URL RETRIEVAL ──────────────────────────────────────────────────────────
+
+async function fetchArticleText(url: string): Promise<{ ok: true; text: string } | { ok: false; error: string }> {
+  let parsed: URL;
+  try {
+    parsed = new URL(url);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return { ok: false, error: "only http/https URLs are supported" };
+    }
+  } catch {
+    return { ok: false, error: "invalid URL" };
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
+  try {
+    const res = await fetch(parsed.toString(), {
+      signal: controller.signal,
+      redirect: "follow",
+      headers: { "user-agent": "Mozilla/5.0 (compatible; Veritas/1.0)" },
+    });
+    if (!res.ok) return { ok: false, error: "server responded with HTTP " + res.status };
+    const html = await res.text();
+    const text = html
+      .replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<style[\s\S]*?<\/style>/gi, " ")
+      .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
+      .replace(/<!--[\s\S]*?-->/g, " ")
+      .replace(/<[^>]+>/g, " ")
+      .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">").replace(/&quot;/g, "\"").replace(/&#39;/g, "'")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (text.length < 100) return { ok: false, error: "no readable article text found on the page" };
+    return { ok: true, text: text.slice(0, 12000) };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : "fetch failed" };
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// ─── EMPTY / UNAVAILABLE RESULT (honest, consistent shape) ─────────────────
+
+function emptyResult(summary: string, rawInput: string, analyzedText: string) {
+  return {
+    verdict: "uncertain" as const,
+    confidence: 25,
+    summary,
+    redFlags: [] as string[],
+    greenFlags: [] as string[],
+    reasoning: summary + " No claim verification or external source search was performed, so no confidence beyond the minimum is claimed.",
+    triggeredKeywords: [] as string[],
+    categoryBreakdown: [] as Array<{ category: string; type: "red" | "green"; score: number; maxScore: number; findings: string[] }>,
+    wordCount: analyzedText ? analyzedText.split(/\s+/).length : rawInput.trim().split(/\s+/).length,
+    claims: [] as ClaimResult[],
+    sourceProfile: {
+      source: "NOT AVAILABLE", domain: "NOT AVAILABLE", author: "NOT AVAILABLE",
+      publishedDate: "NOT AVAILABLE", updatedDate: "NOT AVAILABLE", sourceType: "Other",
+      availableEvidence: ["Insufficient input for source extraction"],
+      signals: [] as Array<{ label: string; available: boolean }>,
+    },
+    evidenceTimeline: [] as TimelineEventResult[],
+    fingerprint: { claims: 0, sources: 0, verified: 0, uncertain: 0, contradicted: 0, unverified: 0, sourceCoverage: 0, evidenceFound: 0 } as FingerprintResult,
+    crossCheck: [] as CrossCheckClaimResult[],
+    framingSignals: [] as Array<{ type: string; description: string; severity: "low" | "medium" | "high" }>,
+    freshness: [] as FreshnessResult[],
+    extractedText: analyzedText,
   };
 }
 
 export const analyzeNews = action({
-  args: { text: v.string(), inputType: v.union(v.literal("text"), v.literal("url")) },
+  args: {
+    text: v.string(),
+    inputType: v.union(v.literal("text"), v.literal("url")),
+    depth: v.optional(v.union(v.literal("quick"), v.literal("standard"), v.literal("deep"))),
+  },
   handler: async (_ctx, args) => {
-    if (args.text.trim().length < 10) {
-      return {
-        verdict: "uncertain" as const, confidence: 25,
-        summary: "Text too short for meaningful analysis. At least 10 characters are required.",
-        redFlags: ["Insufficient text"], greenFlags: [],
-        reasoning: "Minimum content required for linguistic pattern analysis.",
-        triggeredKeywords: [], categoryBreakdown: [], wordCount: args.text.trim().split(/\s+/).length,
-        claims: [],
-        sourceProfile: { source: "NOT AVAILABLE", domain: "NOT AVAILABLE", author: "NOT AVAILABLE", publishedDate: "NOT AVAILABLE", updatedDate: "NOT AVAILABLE", sourceType: "Other", availableEvidence: ["Insufficient text for source extraction"], signals: [] },
-        evidenceTimeline: [],
-        fingerprint: { claims: 0, sources: 0, verified: 0, uncertain: 0, contradicted: 0, unverified: 0, sourceCoverage: 0, evidenceFound: 0 },
-        crossCheck: [],
-        framingSignals: [],
-        freshness: [],
-      };
+    const depth: Depth = args.depth ?? "standard";
+    const rawInput = args.text.trim();
+    let analyzedText = rawInput;
+
+    if (args.inputType === "url") {
+      const fetched = await fetchArticleText(rawInput);
+      if (!fetched.ok) {
+        return emptyResult(
+          "UNABLE TO RETRIEVE — could not fetch article text from the provided URL (" + fetched.error + "). No analysis was performed. Paste the article text directly instead.",
+          rawInput, "",
+        );
+      }
+      analyzedText = fetched.text;
     }
-    return analyzeText(args.text.trim());
+
+    if (analyzedText.length < 10) {
+      return emptyResult(
+        "Text too short for meaningful analysis. At least 10 characters of article content are required.",
+        rawInput, analyzedText,
+      );
+    }
+
+    return await analyzeText(analyzedText, depth);
   },
 });

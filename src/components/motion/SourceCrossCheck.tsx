@@ -8,6 +8,7 @@ export interface CrossCheckSource {
   date: string;
   excerpt: string;
   relationship: "supports" | "contradicts" | "partial" | "insufficient";
+  url?: string;
 }
 
 export interface CrossCheckClaim {
@@ -77,6 +78,12 @@ export function SourceCrossCheck({ crossCheck }: { crossCheck: CrossCheckClaim[]
                               <span className="text-[8px]" style={{ color: "#A8A098" }}>{src.name}</span>
                             </div>
                             <p className="text-[9px] leading-relaxed" style={{ color: "#A8A098" }}>{src.excerpt}</p>
+                            {src.url ? (
+                              <a href={src.url} target="_blank" rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 mt-1 text-[8px] hover:underline" style={{ color: "#A8906E" }}>
+                                <ExternalLink className="w-2.5 h-2.5" />Open retrieved source
+                              </a>
+                            ) : null}
                             {src.date !== "N/A" && <span className="text-[8px] mt-0.5 block" style={{ color: "#A8A098", opacity: 0.6 }}>{src.date}</span>}
                           </div>
                         </div>

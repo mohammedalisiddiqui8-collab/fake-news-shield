@@ -42,11 +42,13 @@ export function EvidenceMap({ articleTitle, claims, verdict, confidence }: Evide
       id: "article", label: articleTitle.slice(0, 60) + (articleTitle.length > 60 ? "..." : ""), type: "article",
       children: claims.slice(0, 5).map(c => ({
         id: "claim-" + c.id, label: "CLAIM " + String(c.id).padStart(2, "0"), type: "claim" as const,
-        status: c.status === "verified" ? "supported" as const : c.status === "contradicted" ? "contradicted" as const : "uncertain" as const,
-        children: c.sources.map((s, i) => ({
-          id: "src-" + c.id + "-" + i, label: s.name, type: "source" as const,
-          status: s.relationship === "supports" ? "supported" as const : s.relationship === "contradicts" ? "contradicted" as const : "uncertain" as const,
-        })),
+        status: c.status === "supported" || c.status === "verified" ? "supported" as const : c.status === "contradicted" ? "contradicted" as const : "uncertain" as const,
+        children: c.sources.length > 0
+          ? c.sources.map((s, i) => ({
+              id: "src-" + c.id + "-" + i, label: s.name, type: "source" as const,
+              status: s.relationship === "supports" ? "supported" as const : s.relationship === "contradicts" ? "contradicted" as const : "uncertain" as const,
+            }))
+          : [{ id: "noev-" + c.id, label: "NO EVIDENCE FOUND", type: "evidence" as const, status: "uncertain" as const }],
       })),
     },
     { id: "assessment", label: verdict.replace("_", " ").toUpperCase() + " " + confidence + "%", type: "assessment", status: verdict === "likely_real" ? "supported" : verdict === "likely_fake" ? "contradicted" : "uncertain" },

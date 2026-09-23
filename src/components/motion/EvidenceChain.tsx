@@ -24,6 +24,21 @@ interface EvidenceChainProps {
     maxScore: number;
     findings: string[];
   }>;
+  /* Real investigation data — every item optional so the component stays honest
+     when data is unavailable (history loads, failed searches). */
+  wordCount?: number;
+  claimsCount?: number;
+  sourceName?: string;
+  /** Real independent source results retrieved in the live cross-check. */
+  externalSources?: number;
+  supportingSources?: number;
+  contradictingSources?: number;
+  corroboratedClaims?: number;
+  contradictedClaims?: number;
+  uncertainClaims?: number;
+  unverifiedClaims?: number;
+  crossCheckedClaims?: number;
+  searchFailed?: boolean;
 }
 
 const chainSteps = [
@@ -37,86 +52,98 @@ const chainSteps = [
 
 function getStepDetail(
   step: string,
-  props: EvidenceChainProps
+  p: EvidenceChainProps
 ): { title: string; items: string[] } {
+  const external = p.externalSources ?? 0;
+  const supporting = p.supportingSources ?? 0;
+  const contradicting = p.contradictingSources ?? 0;
+  const checked = p.crossCheckedClaims ?? 0;
+  const searchFailed = p.searchFailed ?? false;
+  const hasClaims = (p.claimsCount ?? 0) > 0;
+
+  const searchStatement = searchFailed
+    ? "External source search unavailable — insufficient evidence available"
+    : external > 0
+      ? external + " independent source result(s) retrieved via live search"
+      : "NO INDEPENDENT CORROBORATION FOUND";
+
   switch (step) {
     case "claim":
       return {
         title: "Claim Analysis",
         items: [
-          `Content length: ${props.triggeredKeywords.length > 0 ? "Sufficient" : "Minimal"}`,
-          props.triggeredKeywords.length > 0
-            ? `${props.triggeredKeywords.length} keywords flagged for review`
-            : "Insufficient keyword density detected",
-          props.categoryBreakdown.length > 0
-            ? `${props.categoryBreakdown.length} signal categories evaluated`
-            : "Insufficient evidence available",
+          p.wordCount != null ? p.wordCount + " words analyzed" : "Content length unavailable",
+          hasClaims
+            ? (p.claimsCount + " factual claim(s) extracted from the submitted content")
+            : "No factual claims extracted — insufficient evidence available",
+          p.categoryBreakdown.length > 0
+            ? p.categoryBreakdown.length + " signal categories evaluated"
+            : "No signal categories available",
         ],
       };
     case "source":
       return {
         title: "Source Verification",
         items: [
-          props.redFlags.length === 0
-            ? "Source attribution detected"
-            : `${props.redFlags.length} source-related concerns identified`,
-          props.greenFlags.length > 0
-            ? "Named sources present in content"
-            : "No verifiable source attribution found",
-          "Cross-referencing against known outlets",
+          p.sourceName && p.sourceName !== "NOT AVAILABLE"
+            ? "Named source detected in text: " + p.sourceName
+            : "No named source detected in text",
+          searchStatement,
+          supporting > 0
+            ? supporting + " retrieved result(s) support extracted claims"
+            : "No retrieved source supports the extracted claims",
         ],
       };
     case "language":
       return {
         title: "Language Analysis",
         items: [
-          props.triggeredKeywords.length > 3
-            ? "Sensational language patterns detected"
-            : "Neutral tone maintained",
-          props.redFlags.length > 2
-            ? "Emotional manipulation signals present"
-            : "Limited emotional appeals found",
-          "Syntax and grammar patterns evaluated",
+          p.redFlags.length + " warning and " + p.greenFlags.length + " positive linguistic patterns detected",
+          p.triggeredKeywords.length > 0
+            ? p.triggeredKeywords.length + " warning keyword(s) flagged for review"
+            : "No warning keywords flagged",
+          "Linguistic analysis is supplementary to external evidence — it does not verify facts",
         ],
       };
     case "consistency":
       return {
-        title: "Logical Consistency",
-        items: [
-          props.confidence > 70
-            ? "Claims internally consistent"
-            : "Inconsistencies detected in narrative",
-          props.greenFlags.length > props.redFlags.length
-            ? "Supporting evidence outweighs concerns"
-            : "Multiple logical gaps identified",
-          "Statistical claims cross-checked",
-        ],
+        title: "Claim Consistency",
+        items: hasClaims
+          ? [
+              (p.corroboratedClaims ?? 0) + " corroborated · " + (p.contradictedClaims ?? 0) + " contradicted · " + (p.uncertainClaims ?? 0) + " uncertain · " + (p.unverifiedClaims ?? 0) + " unverified",
+              checked > 0
+                ? checked + " claim(s) cross-checked against live external sources"
+                : "No claims were cross-checked — insufficient evidence available",
+              "Absence of corroboration is not proof of falsity",
+            ]
+          : ["No claims to assess — insufficient evidence available"],
       };
     case "crosscheck":
       return {
         title: "Cross-Reference",
         items: [
-          props.confidence > 80
-            ? "Content aligns with verified reporting"
-            : "Partial alignment with known sources",
-          props.redFlags.length === 0
-            ? "No contradictions with established facts"
-            : `${props.redFlags.length} contradictions found`,
-          "Pattern matching against known misinformation",
+          contradicting > 0
+            ? contradicting + " retrieved source(s) contradict extracted claims"
+            : "No retrieved source contradicts the extracted claims",
+          supporting > 0
+            ? supporting + " retrieved source(s) support extracted claims"
+            : "NO INDEPENDENT CORROBORATION FOUND",
+          checked > 0
+            ? searchFailed
+              ? "Source search unavailable for at least one claim"
+              : checked + " claim(s) searched against live news coverage"
+            : "No cross-check performed for this analysis",
         ],
       };
     case "verdict":
       return {
         title: "Final Assessment",
         items: [
-          `Confidence: ${props.confidence}%`,
-          `Positive signals: ${props.greenFlags.length}`,
-          `Warning signals: ${props.redFlags.length}`,
-          props.confidence > 70
-            ? "Overall assessment: Credible content"
-            : props.confidence > 40
-              ? "Assessment: Mixed reliability"
-              : "Assessment: Significant concerns",
+          `Confidence: ${p.confidence}%`,
+          `Positive signals: ${p.greenFlags.length} · Warning signals: ${p.redFlags.length}`,
+          supporting + contradicting > 0
+            ? "Verdict derived from retrieved claims and external evidence"
+            : "Insufficient external evidence — verdict limited to linguistic pattern analysis",
         ],
       };
     default:
@@ -218,6 +245,12 @@ export function EvidenceChain(props: EvidenceChainProps) {
                             style={{
                               background:
                                 item.includes("Insufficient") ||
+                                item.includes("unavailable") ||
+                                item.includes("NO INDEPENDENT") ||
+                                item.includes("No retrieved") ||
+                                item.includes("No named source") ||
+                                item.includes("No factual claims") ||
+                                item.includes("No claims") ||
                                 item.includes("concerns") ||
                                 item.includes("gaps") ||
                                 item.includes("No verifiable")

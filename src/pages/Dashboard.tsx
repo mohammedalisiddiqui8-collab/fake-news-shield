@@ -65,6 +65,7 @@ interface AnalysisResult {
   crossCheck?: CrossCheckClaim[];
   framingSignals?: FramingSignal[];
   freshness?: FreshnessItem[];
+  extractedText?: string;
 }
 
 /* ─── Verdict Config (editorial palette) ─── */
@@ -243,8 +244,8 @@ export default function Dashboard() {
     setIsAnalyzing(true);
     setCurrentResult(null);
     try {
-      const result = await runAnalysis({ text: inputText.trim(), inputType });
-      setCurrentResult(result);
+      const result = await runAnalysis({ text: inputText.trim(), inputType, depth: analysisDepth });
+      setCurrentResult(result as AnalysisResult);
       setActiveView("result");
       try {
         await createAnalysis({
@@ -320,6 +321,7 @@ export default function Dashboard() {
   }, [currentResult]);
 
   const vc = currentResult ? verdictConfig[currentResult.verdict] : null;
+
 
   const navItems = [
     { key: "analyze" as ViewType, icon: Search, label: "Analyze" },
