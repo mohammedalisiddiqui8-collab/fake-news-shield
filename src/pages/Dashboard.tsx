@@ -170,6 +170,7 @@ export default function Dashboard() {
   const [resultTab, setResultTab] = useState<"overview" | "linguistic" | "source" | "logical" | "findings" | "claims" | "evidence" | "sourceprofile" | "fingerprint" | "crosscheck" | "evidencemap" | "framing" | "freshness" | "whatchanged" | "replay">("overview");
   const [compareView, setCompareView] = useState(false);
   const [analysisDepth, setAnalysisDepth] = useState<"quick" | "standard" | "deep">("standard");
+  const [credFactor, setCredFactor] = useState<string | null>(null);
   const [liveNews, setLiveNews] = useState<LiveArticle[]>([]);
   const [newsLoading, setNewsLoading] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -252,6 +253,18 @@ export default function Dashboard() {
           inputText: inputText.trim().slice(0, 5000), inputType,
           verdict: result.verdict, confidence: result.confidence, summary: result.summary,
           redFlags: result.redFlags, greenFlags: result.greenFlags, reasoning: result.reasoning,
+          // Persist the SAME investigation result so history replays the real analysis.
+          triggeredKeywords: result.triggeredKeywords,
+          categoryBreakdown: result.categoryBreakdown,
+          wordCount: result.wordCount,
+          extractedText: result.extractedText,
+          claims: result.claims,
+          sourceProfile: result.sourceProfile,
+          evidenceTimeline: result.evidenceTimeline,
+          fingerprint: result.fingerprint,
+          crossCheck: result.crossCheck,
+          framingSignals: result.framingSignals,
+          freshness: result.freshness,
         });
       } catch { /* best-effort */ }
       toast.success("Analysis complete.");
@@ -275,11 +288,16 @@ export default function Dashboard() {
       redFlags: analysis.redFlags, greenFlags: analysis.greenFlags, reasoning: analysis.reasoning,
       triggeredKeywords: analysis.triggeredKeywords ?? [], categoryBreakdown: analysis.categoryBreakdown ?? [],
       wordCount: analysis.wordCount ?? analysis.inputText.split(/\s+/).length,
+      extractedText: analysis.extractedText ?? undefined,
+      claims: analysis.claims ?? undefined,
+      sourceProfile: analysis.sourceProfile ?? undefined,
+      evidenceTimeline: analysis.evidenceTimeline ?? undefined,
       fingerprint: analysis.fingerprint ?? undefined,
       crossCheck: analysis.crossCheck ?? undefined,
       framingSignals: analysis.framingSignals ?? undefined,
       freshness: analysis.freshness ?? undefined,
     });
+    setCredFactor(null);
     setInputText(analysis.inputText); setInputType(analysis.inputType); setActiveView("result");
   }, []);
 
@@ -321,6 +339,92 @@ export default function Dashboard() {
   }, [currentResult]);
 
   const vc = currentResult ? verdictConfig[currentResult.verdict] : null;
+
+  /* ─── Real evidence stats — derived ONCE from the single investigation result ─── */
+  const evidenceStats = (() => {
+    if (!currentResult) return null;
+    const claims = currentResult.claims ?? [];
+    const crossCheck = currentResult.crossCheck ?? [];
+    const retrieved = crossCheck.flatMap(c => c.sources).filter(s => s.url);
+    const uniqueUrls = new Set(retrieved.map(s => s.url as string));
+    const supported = claims.filter(c => c.status === "supported").length;
+    const contradicted = claims.filter(c => c.status === "contradicted").length;
+    const uncertain = claims.filter(c => c.status === "uncertain").length;
+    const unverified = claims.length - supported - contradicted - uncertain;
+    const supporting = retrieved.filter(s => s.relationship === "supports").length;
+    const contradicting = retrieved.filter(s => s.relationship === "contradicts").length;
+    const partial = retrieved.filter(s => s.relationship === "partial").length;
+    const addressed = crossCheck.filter(c => c.sources.some(s => !!s.url)).length;
+    const searchFailed = crossCheck.length > 0 &&
+      crossCheck.every(c => c.sources.length === 0 ||
+        c.sources.every(s => !s.url && s.name === "SOURCE SEARCH UNAVAILABLE"));
+    const signals = currentResult.sourceProfile?.signals ?? [];
+    const signalsAvailable = signals.filter(s => s.available).length;
+    const redScore = currentResult.categoryBreakdown.filter(c => c.type === "red").reduce((a, c) => a + c.score, 0);
+    const greenScore = currentResult.categoryBreakdown.filter(c => c.type === "green").reduce((a, c) => a + c.score, 0);
+    return {
+      claims, crossCheck, crossChecked: crossCheck.length, uniqueRetrieved: uniqueUrls.size,
+      supported, contradicted, uncertain, unverified, supporting, contradicting, partial,
+      addressed, searchFailed, signals, signalsAvailable, redScore, greenScore,
+    };
+  })();
+
+  /* ─── Credibility factors — every score derives from real analysis data ─── */
+  const credibilityFactors = (() => {
+    if (!evidenceStats) return [] as Array<{ key: string; label: string; score: number | null; reasoning: string }>;
+    const s = evidenceStats;
+    const hasSignals = s.signals.length > 0;
+    const langTotal = s.redScore + s.greenScore;
+    const foundSignals = s.signals.filter(x => x.available).map(x => x.label);
+    return [
+      {
+        key: "source", label: "Source Reliability",
+        score: hasSignals ? Math.round((s.signalsAvailable / s.signals.length) * 100) : null,
+        reasoning: hasSignals
+          ? `${s.signalsAvailable} of ${s.signals.length} source metadata signals were detected in the submitted text (${foundSignals.slice(0, 3).join(", ")}${foundSignals.length > 3 ? ", …" : ""}). This is detection inside the text only — it is not independent verification.`
+          : "Insufficient evidence available — no source metadata could be extracted from the submitted text.",
+      },
+      {
+        key: "claims", label: "Claim Consistency",
+        score: s.claims.length > 0 ? Math.round(((s.supported + 0.5 * s.uncertain) / s.claims.length) * 100) : null,
+        reasoning: s.claims.length > 0
+          ? `${s.supported} of ${s.claims.length} extracted claim(s) corroborated by retrieved independent coverage · ${s.contradicted} contradicted · ${s.uncertain} uncertain · ${s.unverified} unverified. Absence of corroboration is not proof of falsity.`
+          : "Insufficient evidence available — no factual claims could be extracted for cross-checking.",
+      },
+      {
+        key: "language", label: "Language Signal",
+        score: langTotal > 0 ? Math.round((s.greenScore / langTotal) * 100) : null,
+        reasoning: langTotal > 0
+          ? `Linguistic pattern analysis of the submitted text: ${s.greenScore} positive vs ${s.redScore} warning signal weight. Supplementary only — this measures writing style, not whether the content is true.`
+          : "Insufficient evidence available — no linguistic signal categories were produced for this analysis.",
+      },
+      {
+        key: "evidence", label: "Evidence Strength",
+        score: s.crossChecked > 0 ? Math.round((s.addressed / s.crossChecked) * 100) : null,
+        reasoning: s.crossChecked > 0
+          ? (s.searchFailed
+            ? "External source search unavailable — insufficient evidence available."
+            : `${s.addressed} of ${s.crossChecked} cross-checked claim(s) had at least one independent source retrieved (${s.uniqueRetrieved} unique source result(s): ${s.supporting} supporting, ${s.partial} partial, ${s.contradicting} contradicting).${s.uniqueRetrieved === 0 ? " NO INDEPENDENT CORROBORATION FOUND." : ""}`)
+          : "Insufficient evidence available — no claims were cross-checked against external sources.",
+      },
+    ];
+  })();
+
+  /* ─── Language signal rows — real linguistic data only ─── */
+  const languageRows = (() => {
+    if (!currentResult || !evidenceStats) return [] as Array<{ label: string; value: number | null; color: string }>;
+    const catPct = (name: string) => {
+      const c = currentResult.categoryBreakdown.find(x => x.category === name);
+      return c && c.maxScore > 0 ? Math.round((c.score / c.maxScore) * 100) : null;
+    };
+    const total = evidenceStats.redScore + evidenceStats.greenScore;
+    return [
+      { label: "Factual Language", value: total > 0 ? Math.round((evidenceStats.greenScore / total) * 100) : null, color: "#A8906E" },
+      { label: "Warning Load", value: total > 0 ? Math.round((evidenceStats.redScore / total) * 100) : null, color: evidenceStats.redScore > evidenceStats.greenScore ? "#A85A50" : "#A8906E" },
+      { label: "Attribution", value: catPct("Attribution Language"), color: "#A8906E" },
+      { label: "Structure", value: catPct("Journalistic Structure"), color: "#A8906E" },
+    ];
+  })();
 
 
   const navItems = [
@@ -728,32 +832,54 @@ export default function Dashboard() {
                 </motion.div>
               )}
 
-              {/* ─── Confidence Visualization ─── */}
+              {/* ─── Credibility Breakdown (real, interactive) ─── */}
+              {credibilityFactors.length > 0 && (
               <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.12 }}
                 className="glass-card rounded-lg p-4 sm:p-5 mb-3">
-                <div className="flex items-center gap-1.5 mb-3">
-                  <Activity className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
-                  <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em]">Confidence Breakdown</h3>
+                <div className="flex items-center justify-between gap-1.5 mb-1">
+                  <div className="flex items-center gap-1.5">
+                    <Activity className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
+                    <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em]">Credibility Breakdown</h3>
+                  </div>
+                  <span className="text-[8px]" style={{ color: "#A8A098", opacity: 0.6 }}>click a factor for its basis</span>
                 </div>
-                <div className="space-y-2">
-                  {[
-                    { label: "Language", score: currentResult.confidence + (currentResult.greenFlags.length > currentResult.redFlags.length ? 5 : -5), color: "#A8906E" },
-                    { label: "Source", score: currentResult.greenFlags.length > 0 ? Math.min(currentResult.confidence + 8, 98) : Math.max(currentResult.confidence - 10, 15), color: "#A8906E" },
-                    { label: "Claims", score: currentResult.confidence, color: "#A8906E" },
-                    { label: "Bias", score: Math.max(100 - currentResult.redFlags.length * 15, 10), color: currentResult.redFlags.length > 2 ? "#A85A50" : "#A8906E" },
-                  ].map((item, i) => (
-                    <div key={item.label} className="flex items-center gap-3">
-                      <span className="text-[9px] font-mono tracking-wider w-12 text-muted-foreground uppercase">{item.label}</span>
-                      <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
-                        <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(item.score, 100)}%` }}
-                          transition={{ duration: 0.8, delay: 0.2 + i * 0.1 }}
-                          className="h-full rounded-full" style={{ background: item.color }} />
-                      </div>
-                      <span className="text-[9px] font-mono w-8 text-right" style={{ color: item.color }}>{item.score}%</span>
+                <div className="space-y-2 mt-3">
+                  {credibilityFactors.map((item, i) => {
+                    const isShort = item.score == null;
+                    const isOpen = credFactor === item.key;
+                    return (
+                    <div key={item.key}>
+                      <button type="button" className="w-full flex items-center gap-3 text-left cursor-pointer"
+                        onClick={() => setCredFactor(isOpen ? null : item.key)}>
+                        <span className="text-[9px] font-mono tracking-wider w-20 sm:w-28 uppercase shrink-0" style={{ color: isOpen ? "#F5F0E8" : "#A8A098" }}>{item.label}</span>
+                        <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
+                          {!isShort && (
+                            <motion.div initial={{ width: 0 }} animate={{ width: `${item.score}%` }}
+                              transition={{ duration: 0.8, delay: 0.2 + i * 0.1 }}
+                              className="h-full rounded-full" style={{ background: "#A8906E" }} />
+                          )}
+                        </div>
+                        <span className="text-[9px] font-mono w-8 text-right shrink-0" style={{ color: isShort ? "#A8A098" : "#A8906E" }}>
+                          {isShort ? "—" : `${item.score}%`}
+                        </span>
+                      </button>
+                      <AnimatePresence>
+                        {isOpen && (
+                          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                            className="overflow-hidden">
+                            <p className="text-[9px] leading-relaxed pt-1.5 pb-1 pl-0 sm:pl-28" style={{ color: "#A8A098" }}>
+                              {item.reasoning}
+                            </p>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </motion.div>
+              )}
 
               {/* ─── Source Intelligence ─── */}
               <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.14 }}
@@ -782,28 +908,28 @@ export default function Dashboard() {
                 className="glass-card rounded-lg p-4 sm:p-5 mb-3">
                 <div className="flex items-center gap-1.5 mb-3">
                   <Brain className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
-                  <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em]">Language Analysis</h3>
+                  <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em]">Language Signal</h3>
                 </div>
                 <div className="space-y-2.5">
-                  {[
-                    { label: "Emotional", value: currentResult.redFlags.length > 2 ? 72 : 28, color: currentResult.redFlags.length > 2 ? "#A85A50" : "#A8906E" },
-                    { label: "Sensational", value: currentResult.triggeredKeywords.length * 8, color: currentResult.triggeredKeywords.length > 3 ? "#A85A50" : "#A8906E" },
-                    { label: "Neutral", value: currentResult.greenFlags.length > currentResult.redFlags.length ? 65 : 30, color: "#A8906E" },
-                    { label: "Factual", value: currentResult.confidence, color: "#A8906E" },
-                  ].map((item, i) => (
+                  {languageRows.map((item, i) => (
                     <div key={item.label}>
                       <div className="flex items-center justify-between text-[9px] mb-0.5">
                         <span className="font-mono tracking-wider uppercase" style={{ color: "#A8A098" }}>{item.label}</span>
-                        <span className="font-mono" style={{ color: item.color }}>{Math.min(item.value, 100)}%</span>
+                        <span className="font-mono" style={{ color: item.color }}>{item.value == null ? "—" : `${item.value}%`}</span>
                       </div>
                       <div className="h-1 rounded-full bg-muted overflow-hidden">
-                        <motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(item.value, 100)}%` }}
-                          transition={{ duration: 0.6, delay: 0.3 + i * 0.08 }}
-                          className="h-full rounded-full" style={{ background: item.color }} />
+                        {item.value != null && (
+                          <motion.div initial={{ width: 0 }} animate={{ width: `${item.value}%` }}
+                            transition={{ duration: 0.6, delay: 0.3 + i * 0.08 }}
+                            className="h-full rounded-full" style={{ background: item.color }} />
+                        )}
                       </div>
                     </div>
                   ))}
                 </div>
+                <p className="text-[8px] mt-3 leading-relaxed" style={{ color: "#A8A098", opacity: 0.7 }}>
+                  Language signal measures writing style in the submitted text — it is NOT a percentage of content that is true. Verification comes from claims and retrieved external evidence.
+                </p>
               </motion.div>
 
               {/* Keywords */}
@@ -848,7 +974,7 @@ export default function Dashboard() {
                     <p className="text-[10px] text-muted-foreground italic">No red flags detected</p>
                   ) : (
                     currentResult.redFlags.map((flag, i) => (
-                      <ExpandableClaim key={i} claimNumber={String(i + 1).padStart(2, "0")} claimText={flag} status="misleading" confidence={Math.max(100 - i * 12, 50)} details="This flag was detected by our NLP pattern matching system and contributes to the overall misinformation score." />
+                      <ExpandableClaim key={i} claimNumber={String(i + 1).padStart(2, "0")} claimText={flag} status="misleading" details="Detected by linguistic pattern matching in the submitted text. Supplementary signal only — it does not by itself verify or refute a claim; the verdict is driven by retrieved claims and external evidence." />
                     ))
                   )}
                 </div>
@@ -863,7 +989,7 @@ export default function Dashboard() {
                     <p className="text-[10px] text-muted-foreground italic">No positive signals detected</p>
                   ) : (
                     currentResult.greenFlags.map((flag, i) => (
-                      <ExpandableClaim key={i} claimNumber={String(i + 1).padStart(2, "0")} claimText={flag} status="supported" confidence={Math.min(70 + i * 5, 95)} details="This positive signal was detected and contributes to the credibility assessment." />
+                      <ExpandableClaim key={i} claimNumber={String(i + 1).padStart(2, "0")} claimText={flag} status="supported" details="Positive linguistic pattern detected in the submitted text. Supplementary signal only — credibility is determined by claims corroborated against retrieved external evidence." />
                     ))
                   )}
                 </div>
@@ -886,6 +1012,18 @@ export default function Dashboard() {
                   greenFlags={currentResult.greenFlags}
                   triggeredKeywords={currentResult.triggeredKeywords}
                   categoryBreakdown={currentResult.categoryBreakdown}
+                  wordCount={currentResult.wordCount}
+                  claimsCount={evidenceStats?.claims.length ?? 0}
+                  sourceName={currentResult.sourceProfile?.source}
+                  externalSources={evidenceStats?.uniqueRetrieved ?? 0}
+                  supportingSources={evidenceStats?.supporting ?? 0}
+                  contradictingSources={evidenceStats?.contradicting ?? 0}
+                  corroboratedClaims={evidenceStats?.supported ?? 0}
+                  contradictedClaims={evidenceStats?.contradicted ?? 0}
+                  uncertainClaims={evidenceStats?.uncertain ?? 0}
+                  unverifiedClaims={evidenceStats?.unverified ?? 0}
+                  crossCheckedClaims={evidenceStats?.crossChecked ?? 0}
+                  searchFailed={evidenceStats?.searchFailed ?? false}
                 />
               </motion.div>
 
@@ -948,12 +1086,12 @@ export default function Dashboard() {
                 </h3>
                 <p className="text-[11px] text-muted-foreground leading-relaxed max-h-36 overflow-auto whitespace-pre-wrap">
                   {currentResult.triggeredKeywords.length > 0
-                    ? getHighlightedParts(inputText, currentResult.triggeredKeywords).map((part, i) =>
+                    ? getHighlightedParts(currentResult.extractedText || inputText, currentResult.triggeredKeywords).map((part, i) =>
                         part.highlighted
                           ? <span key={i} className="bg-destructive/10 text-destructive font-medium px-0.5 rounded">{part.text}</span>
                           : <span key={i}>{part.text}</span>
                       )
-                    : inputText
+                    : (currentResult.extractedText || inputText)
                   }
                 </p>
               </motion.div>
@@ -979,55 +1117,94 @@ export default function Dashboard() {
                         runAnalysis({ text: textB, inputType: "text" }),
                       ]);
 
-                      // Simple comparison based on analysis results
+                      // ONE investigation per article — the comparison is derived only
+                      // from the real analysis results (claims, evidence, language signals).
                       const sharedClaims: ComparisonResult["sharedClaims"] = [];
                       const contradictoryClaims: ComparisonResult["contradictoryClaims"] = [];
                       const differentFraming: ComparisonResult["differentFraming"] = [];
                       const missingInformation: ComparisonResult["missingInformation"] = [];
                       const sourceDifferences: ComparisonResult["sourceDifferences"] = [];
 
-                      // Compare keywords
-                      const sharedKw = resultA.triggeredKeywords.filter(k => resultB.triggeredKeywords.includes(k));
-                      if (sharedKw.length > 0) {
-                        sharedClaims.push({ claim: `Both articles reference: ${sharedKw.slice(0, 3).join(", ")}`, relationship: "agree" });
-                      }
+                      const tokens = (t: string) => [...new Set(t.toLowerCase().replace(/[^a-z0-9%$\s-]/g, " ").split(/\s+/).filter(w => w.length >= 4))];
+                      const overlap = (a: string, b: string) => {
+                        const ta = tokens(a);
+                        if (ta.length === 0) return 0;
+                        const tb = new Set(tokens(b));
+                        return ta.filter(t => tb.has(t)).length / ta.length;
+                      };
 
-                      // Compare verdicts
-                      if (resultA.verdict === resultB.verdict) {
-                        sharedClaims.push({ claim: `Both articles reached the same verdict: ${resultA.verdict.replace("_", " ")}`, relationship: "agree" });
-                      } else {
-                        contradictoryClaims.push({
-                          claimA: `Article A verdict: ${resultA.verdict.replace("_", " ")} (${resultA.confidence}%)`,
-                          claimB: `Article B verdict: ${resultB.verdict.replace("_", " ")} (${resultB.confidence}%)`,
-                          explanation: "The two articles reached different credibility assessments.",
+                      const claimsA = resultA.claims ?? [];
+                      const claimsB = resultB.claims ?? [];
+
+                      // SHARED CLAIMS — statements present in both articles (real text overlap only).
+                      const matchedB = new Set<number>();
+                      for (const ca of claimsA) {
+                        const match = claimsB.find(cb => !matchedB.has(cb.id) && overlap(ca.text, cb.text) >= 0.5);
+                        if (!match) continue;
+                        matchedB.add(match.id);
+                        const conflict = ca.status !== match.status &&
+                          (ca.status === "contradicted" || match.status === "contradicted");
+                        const agree = ca.status === match.status && ca.status === "supported";
+                        sharedClaims.push({
+                          claim: ca.text,
+                          relationship: conflict ? "conflict" : agree ? "agree" : "unverified",
                         });
+                        // CONFLICT is only reported when evidence-backed statuses genuinely differ.
+                        if (conflict) {
+                          contradictoryClaims.push({
+                            claimA: `Article A — ${ca.status.replace("_", " ")}: ${ca.evidence}`,
+                            claimB: `Article B — ${match.status.replace("_", " ")}: ${match.evidence}`,
+                            explanation: "The same claim received different evidence-backed statuses in the two analyses of retrieved coverage.",
+                          });
+                        }
+                      }
+                      if (sharedClaims.length === 0 && claimsA.length === 0 && claimsB.length === 0) {
+                        sharedClaims.push({ claim: "No distinct factual claims could be extracted from either article — insufficient evidence available for comparison.", relationship: "unverified" });
                       }
 
-                      // Compare red flags
-                      const sharedRed = resultA.redFlags.filter(f => resultB.redFlags.some(f2 => f2.toLowerCase().includes(f.toLowerCase().slice(0, 20))));
-                      if (sharedRed.length > 0) {
-                        sharedClaims.push({ claim: `Shared concerns: ${sharedRed.slice(0, 2).join("; ")}`, relationship: "agree" });
-                      }
-
-                      // Different framing
-                      if (resultA.greenFlags.length !== resultB.greenFlags.length) {
+                      // DIFFERENT FRAMING — real differences in assessment and language.
+                      if (resultA.verdict !== resultB.verdict) {
                         differentFraming.push({
-                          topic: "Source quality assessment",
-                          framingA: `${resultA.greenFlags.length} positive signals detected`,
-                          framingB: `${resultB.greenFlags.length} positive signals detected`,
+                          topic: "Overall assessment",
+                          framingA: resultA.summary.slice(0, 180),
+                          framingB: resultB.summary.slice(0, 180),
+                        });
+                      }
+                      const onlyA = resultA.triggeredKeywords.filter(k => !resultB.triggeredKeywords.includes(k));
+                      const onlyB = resultB.triggeredKeywords.filter(k => !resultA.triggeredKeywords.includes(k));
+                      if (onlyA.length > 0 || onlyB.length > 0) {
+                        differentFraming.push({
+                          topic: "Warning language",
+                          framingA: onlyA.length > 0 ? `Only in A: ${onlyA.slice(0, 3).join(", ")}` : "No unique warning language",
+                          framingB: onlyB.length > 0 ? `Only in B: ${onlyB.slice(0, 3).join(", ")}` : "No unique warning language",
                         });
                       }
 
-                      // Missing information
-                      if (resultA.triggeredKeywords.length > 0 && resultB.triggeredKeywords.length === 0) {
-                        missingInformation.push({ present: "A", information: "Sensational language patterns detected in Article A" });
-                      } else if (resultB.triggeredKeywords.length > 0 && resultA.triggeredKeywords.length === 0) {
-                        missingInformation.push({ present: "B", information: "Sensational language patterns detected in Article B" });
-                      }
+                      // MISSING INFORMATION — figures present in one article but not the other.
+                      const nums = (t: string) => [...new Set((t.match(/\d+(?:[.,]\d+)*/g) || []).map(n => n.replace(/,/g, "")))];
+                      const numsA = nums(textA);
+                      const numsB = nums(textB);
+                      const setA = new Set(numsA);
+                      const setB = new Set(numsB);
+                      numsA.filter(n => !setB.has(n)).slice(0, 5).forEach(n =>
+                        missingInformation.push({ present: "A", information: `Figure "${n}" appears in Article A but not in Article B.` }));
+                      numsB.filter(n => !setA.has(n)).slice(0, 5).forEach(n =>
+                        missingInformation.push({ present: "B", information: `Figure "${n}" appears in Article B but not in Article A.` }));
 
-                      // Source differences
+                      // SOURCE DIFFERENCES — what each analysis actually detected.
+                      const srcA = resultA.sourceProfile?.source ?? "NOT AVAILABLE";
+                      const srcB = resultB.sourceProfile?.source ?? "NOT AVAILABLE";
+                      if (srcA !== srcB) {
+                        sourceDifferences.push({ source: "Named source attribution", inArticle: "A", detail: srcA === "NOT AVAILABLE" ? "No named source detected in Article A" : `Detected in Article A: ${srcA}` });
+                        sourceDifferences.push({ source: "Named source attribution", inArticle: "B", detail: srcB === "NOT AVAILABLE" ? "No named source detected in Article B" : `Detected in Article B: ${srcB}` });
+                      }
                       if (resultA.wordCount !== resultB.wordCount) {
-                        sourceDifferences.push({ source: "Content length", inArticle: resultA.wordCount > resultB.wordCount ? "A" : "B", detail: `Article ${resultA.wordCount > resultB.wordCount ? "A" : "B"} is longer (${Math.max(resultA.wordCount, resultB.wordCount)} words)` });
+                        const longer: "A" | "B" = resultA.wordCount > resultB.wordCount ? "A" : "B";
+                        sourceDifferences.push({
+                          source: "Content length",
+                          inArticle: longer,
+                          detail: `Article ${longer} is longer (${Math.max(resultA.wordCount, resultB.wordCount)} words vs ${Math.min(resultA.wordCount, resultB.wordCount)})`,
+                        });
                       }
 
                       return { sharedClaims, contradictoryClaims, differentFraming, missingInformation, sourceDifferences };
@@ -1077,7 +1254,7 @@ export default function Dashboard() {
                   <p className="text-[9px]" style={{ color: "#A8A098" }}>Interactive investigation tree</p>
                 </div>
                 <div className="px-4 sm:px-5 pb-3">
-                  <EvidenceMap articleTitle={inputText.slice(0, 80)} claims={(currentResult.claims || []).map(c => ({ id: c.id, text: c.text, status: c.status, sources: [] }))} verdict={currentResult.verdict} confidence={currentResult.confidence} />
+                  <EvidenceMap articleTitle={(currentResult.extractedText || inputText).slice(0, 80)} claims={(currentResult.claims || []).map(c => ({ id: c.id, text: c.text, status: c.status, sources: (currentResult.crossCheck?.find(x => x.claimId === c.id)?.sources ?? []).filter(s => !!s.url).map(s => ({ name: s.name, relationship: s.relationship })) }))} verdict={currentResult.verdict} confidence={currentResult.confidence} />
                 </div>
               </motion.div>
 

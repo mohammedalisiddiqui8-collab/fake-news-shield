@@ -18,19 +18,32 @@ export function InvestigationReplay({ analysis }: {
     verdict: string;
     confidence: number;
     sourceProfile?: { source: string };
+    claims?: Array<{ id: number; status: string }>;
+    crossCheck?: Array<{ claimId: number; sources: Array<{ relationship: string; url?: string }> }>;
   }
 }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentStage, setCurrentStage] = useState(0);
 
+  // Every stage detail below is derived from the real investigation result —
+  // nothing is simulated. Missing data is reported as unavailable, never invented.
+  const claims = analysis.claims ?? [];
+  const crossCheck = analysis.crossCheck ?? [];
+  const retrieved = crossCheck.flatMap(c => c.sources).filter(s => !!s.url);
+  const supporting = retrieved.filter(s => s.relationship === "supports").length;
+  const contradicting = retrieved.filter(s => s.relationship === "contradicts").length;
+  const contradictedClaims = claims.filter(c => c.status === "contradicted").length;
+  const searchFailed = crossCheck.length > 0 && crossCheck.every(c =>
+    c.sources.length === 0 || c.sources.every(s => !s.url));
+
   const stages: ReplayStage[] = [
     { id: 0, label: "ARTICLE RECEIVED", detail: analysis.wordCount + " words analyzed", icon: FileText },
-    { id: 1, label: "CLAIMS IDENTIFIED", detail: "Factual claims extracted from content", icon: Search },
-    { id: 2, label: "SOURCES SEARCHED", detail: analysis.sourceProfile?.source ? "Source: " + analysis.sourceProfile.source : "Source analysis performed", icon: Globe },
-    { id: 3, label: "EVIDENCE COLLECTED", detail: analysis.greenFlags.length + " positive signals found", icon: CheckCircle2 },
-    { id: 4, label: "CROSS-CHECKED", detail: analysis.triggeredKeywords.length + " keywords flagged", icon: Brain },
-    { id: 5, label: "CONFLICTS IDENTIFIED", detail: analysis.redFlags.length + " red flags detected", icon: AlertTriangle },
-    { id: 6, label: "FRAMING ANALYZED", detail: "Narrative patterns evaluated", icon: Target },
+    { id: 1, label: "CLAIMS IDENTIFIED", detail: claims.length > 0 ? claims.length + " factual claim(s) extracted from the content" : "No claim data available for this result", icon: Search },
+    { id: 2, label: "SOURCES SEARCHED", detail: crossCheck.length > 0 ? crossCheck.length + " claim(s) searched against live news coverage" : "No cross-check data available for this result", icon: Globe },
+    { id: 3, label: "EVIDENCE COLLECTED", detail: searchFailed ? "Source search unavailable — insufficient evidence available" : retrieved.length > 0 ? retrieved.length + " independent source result(s) retrieved" : crossCheck.length > 0 ? "NO INDEPENDENT CORROBORATION FOUND" : "No evidence data available for this result", icon: CheckCircle2 },
+    { id: 4, label: "CROSS-CHECKED", detail: retrieved.length > 0 ? supporting + " supporting · " + contradicting + " contradicting retrieved source(s)" : "Insufficient evidence available", icon: Brain },
+    { id: 5, label: "CONFLICTS IDENTIFIED", detail: contradictedClaims > 0 ? contradictedClaims + " claim(s) contradicted by retrieved coverage" : "No contradictions found in retrieved evidence", icon: AlertTriangle },
+    { id: 6, label: "FRAMING ANALYZED", detail: analysis.redFlags.length + " warning · " + analysis.greenFlags.length + " positive linguistic signal(s)", icon: Target },
     { id: 7, label: "FINAL ASSESSMENT", detail: analysis.confidence + "% confidence — " + analysis.verdict.replace("_", " "), icon: Shield },
   ];
 
