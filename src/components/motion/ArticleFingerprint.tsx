@@ -3,7 +3,10 @@ import { Fingerprint, Link2, Shield, CheckCircle2, HelpCircle, XCircle, AlertTri
 
 export interface FingerprintData {
   claims: number;
+  /** UNIQUE sources (distinct retrieved URLs). */
   sources: number;
+  /** CLAIM–SOURCE REFERENCES — one source cited by N claims counts N times. */
+  sourceRefs?: number;
   verified: number;
   uncertain: number;
   contradicted: number;
@@ -14,7 +17,7 @@ export interface FingerprintData {
 
 const statCards = [
   { key: "claims" as const, label: "CLAIMS", icon: Fingerprint, color: "#F5F0E8" },
-  { key: "sources" as const, label: "SOURCES", icon: Link2, color: "#F5F0E8" },
+  { key: "sources" as const, label: "UNIQUE SOURCES", icon: Link2, color: "#F5F0E8" },
   { key: "verified" as const, label: "VERIFIED", icon: CheckCircle2, color: "#D4C4A8" },
   { key: "uncertain" as const, label: "UNCERTAIN", icon: HelpCircle, color: "#A8A098" },
   { key: "contradicted" as const, label: "CONTRADICTED", icon: XCircle, color: "#A85A50" },
@@ -61,6 +64,11 @@ export function ArticleFingerprint({ fingerprint }: { fingerprint: FingerprintDa
                 transition={{ duration: 0.6, delay: 0.3 }} className="h-full rounded-full" style={{ background: "#A8906E" }} />
             </div>
           </div>
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.26 }}
+          className="flex-1 p-2.5 rounded" style={{ background: "#0D0D0D", border: "1px solid #1E1E1E" }}>
+          <span className="text-[8px] tracking-[0.15em] uppercase font-semibold block mb-1" style={{ color: "#A8A098" }}>CLAIM-SOURCE REFS</span>
+          <span className="text-[14px] font-bold" style={{ color: "#F5F0E8", fontFamily: "'DM Serif Display', serif" }}>{fingerprint.sourceRefs ?? "—"}</span>
         </motion.div>
         <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.26 }}
           className="flex-1 p-2.5 rounded" style={{ background: "#0D0D0D", border: "1px solid #1E1E1E" }}>

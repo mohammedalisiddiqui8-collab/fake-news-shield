@@ -86,7 +86,9 @@ export const create = mutation({
       timestamp: v.optional(v.string()),
     }))),
     fingerprint: v.optional(v.object({
-      claims: v.number(), sources: v.number(), verified: v.number(),
+      claims: v.number(), sources: v.number(),
+      sourceRefs: v.optional(v.number()), // claim–source references
+      verified: v.number(),
       uncertain: v.number(), contradicted: v.number(), unverified: v.number(),
       sourceCoverage: v.number(), evidenceFound: v.number(),
     })),

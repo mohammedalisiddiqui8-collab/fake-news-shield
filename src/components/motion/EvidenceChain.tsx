@@ -38,6 +38,8 @@ interface EvidenceChainProps {
   uncertainClaims?: number;
   unverifiedClaims?: number;
   crossCheckedClaims?: number;
+  /** CLAIM–SOURCE REFERENCES — one source cited by N claims counts N times. */
+  claimSourceRefs?: number;
   searchFailed?: boolean;
 }
 
@@ -55,6 +57,7 @@ function getStepDetail(
   p: EvidenceChainProps
 ): { title: string; items: string[] } {
   const external = p.externalSources ?? 0;
+  const refs = p.claimSourceRefs ?? 0;
   const supporting = p.supportingSources ?? 0;
   const contradicting = p.contradictingSources ?? 0;
   const checked = p.crossCheckedClaims ?? 0;
@@ -64,7 +67,7 @@ function getStepDetail(
   const searchStatement = searchFailed
     ? "External source search unavailable — insufficient evidence available"
     : external > 0
-      ? external + " independent source result(s) retrieved via live search"
+      ? external + " unique independent source(s) retrieved via live search (" + refs + " claim–source reference(s))"
       : "NO INDEPENDENT CORROBORATION FOUND";
 
   switch (step) {
@@ -90,7 +93,7 @@ function getStepDetail(
             : "No named source detected in text",
           searchStatement,
           supporting > 0
-            ? supporting + " retrieved result(s) support extracted claims"
+            ? supporting + " claim–source reference(s) support extracted claims"
             : "No retrieved source supports the extracted claims",
         ],
       };
@@ -122,11 +125,14 @@ function getStepDetail(
       return {
         title: "Cross-Reference",
         items: [
+          external > 0 || refs > 0
+            ? external + " unique source(s) across " + refs + " claim–source reference(s)"
+            : "No independent sources retrieved",
           contradicting > 0
-            ? contradicting + " retrieved source(s) contradict extracted claims"
+            ? contradicting + " claim–source reference(s) contradict extracted claims"
             : "No retrieved source contradicts the extracted claims",
           supporting > 0
-            ? supporting + " retrieved source(s) support extracted claims"
+            ? supporting + " claim–source reference(s) support extracted claims"
             : "NO INDEPENDENT CORROBORATION FOUND",
           checked > 0
             ? searchFailed

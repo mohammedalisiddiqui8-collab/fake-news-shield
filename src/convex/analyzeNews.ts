@@ -348,20 +348,28 @@ function extractRawClaims(text: string, maxClaims: number): RawClaim[] {
   const sentences = text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 15);
   const claims: RawClaim[] = [];
 
+  // ONLY sentences that assert verifiable facts may become claims.
+  // Linguistic/structural observations ("statistics are cited", "dates are
+  // present", "balanced reporting language", "appropriate article length",
+  // "neutral wording", "emotional language detected" …) are reported
+  // separately as language signals and are NEVER extracted as factual claims.
   const factualPatterns = [
     /\d+%/, /\$[\d,]+/, /\d+ (million|billion|thousand)/i,
+    /\b\d+(\.\d+)?\s?(percent|per cent|km|miles|tonnes|tons|people|jobs|cases|deaths)\b/i,
     /according to/i, /study (found|showed|revealed|published)/i,
     /researchers? (found|discovered|confirmed|published)/i,
     /officials? (said|stated|announced|confirmed)/i,
     /university of/i, /institute/i, /published in/i,
+    /\b(said|says|stated|announced|confirmed|reported|estimated|launched|approved|banned|signed|elected|appointed|died|killed|discovered|developed|increased|decreased|recorded|measured)\b/i,
+    /\b(19|20)\d{2}\b/,
   ];
 
   let claimId = 1;
   for (const sentence of sentences) {
     if (claimId > maxClaims) break;
     const isFactual = factualPatterns.some(p => p.test(sentence));
-    if (!isFactual && claims.length >= 3) continue;
-    if (!isFactual && claims.length < 3 && sentence.split(/\s+/).length < 8) continue;
+    if (!isFactual) continue;
+    if (sentence.split(/\s+/).length < 6) continue;
 
     claims.push({
       id: claimId++,
@@ -481,7 +489,10 @@ interface FreshnessResult {
 
 interface FingerprintResult {
   claims: number;
+  /** UNIQUE external sources (distinct retrieved URLs). */
   sources: number;
+  /** CLAIM–SOURCE REFERENCES: one source cited by N claims counts N times. */
+  sourceRefs: number;
   verified: number;
   uncertain: number;
   contradicted: number;
@@ -501,7 +512,10 @@ function buildTimeline(args: {
   crossCheck: CrossCheckClaimResult[];
   checkedCount: number;
   searchFailures: number;
+  /** UNIQUE retrieved sources (distinct URLs). */
   totalRetrieved: number;
+  /** CLAIM–SOURCE REFERENCES across all cross-checked claims. */
+  sourceRefs: number;
   verdict: string;
   confidence: number;
 }): TimelineEventResult[] {
@@ -558,7 +572,7 @@ function buildTimeline(args: {
     events.push({
       id: eventId++, type: "source_searched",
       title: "Live source search completed",
-      detail: args.totalRetrieved + " independent source result(s) retrieved across " + args.checkedCount + " cross-checked claim(s).",
+      detail: args.totalRetrieved + " unique independent source(s) retrieved (" + args.sourceRefs + " claim–source reference(s)) across " + args.checkedCount + " cross-checked claim(s).",
     });
   }
 
@@ -859,7 +873,8 @@ async function analyzeText(text: string, depth: Depth) {
 
   const realSourcesAll = crossCheck.flatMap(c => c.sources).filter(s => s.url);
   const uniqueUrls = new Set(realSourcesAll.map(s => s.url));
-  const totalRetrieved = uniqueUrls.size;
+  const totalRetrieved = uniqueUrls.size; // UNIQUE sources (distinct URLs)
+  const sourceRefs = realSourcesAll.length; // claim–source references (a source cited by 2 claims counts twice)
 
   // ── EVIDENCE-BASED VERDICT ──
   const supportedCount = claims.filter(c => c.status === "supported").length;
@@ -924,7 +939,7 @@ async function analyzeText(text: string, depth: Depth) {
       verdict = "uncertain";
       confidence = Math.min(baseConfidence, 40);
       summary = "INSUFFICIENT EVIDENCE — NO INDEPENDENT CORROBORATION FOUND across " + checked.length + " cross-checked claim(s) ("
-        + totalRetrieved + " source result(s) retrieved, none corroborating). Unable to verify. Confidence is limited accordingly.";
+        + totalRetrieved + " unique source(s) retrieved (" + sourceRefs + " claim–source reference(s)), none corroborating). Unable to verify. Confidence is limited accordingly.";
     }
   }
 
@@ -942,7 +957,7 @@ async function analyzeText(text: string, depth: Depth) {
     parts.push(
       "Evidence basis: " + supportedCount + " corroborated, " + contradictedCount + " contradicted, " +
       partialCount + " partially addressed, " + (claims.length - checked.length) + " not cross-checked — " +
-      "derived from " + totalRetrieved + " independent source result(s) retrieved in a live search" +
+      "derived from " + totalRetrieved + " unique independent source(s) (" + sourceRefs + " claim–source reference(s)) retrieved in a live search" +
       (searchFailures > 0 ? " (" + searchFailures + " claim search(es) unavailable)" : "") + ".",
     );
   }
@@ -952,6 +967,7 @@ async function analyzeText(text: string, depth: Depth) {
   const fingerprint: FingerprintResult = {
     claims: claims.length,
     sources: uniqueUrls.size,
+    sourceRefs,
     verified: supportedCount,
     uncertain: partialCount,
     contradicted: contradictedCount,
@@ -964,7 +980,7 @@ async function analyzeText(text: string, depth: Depth) {
   const evidenceTimeline = buildTimeline({
     text, claims, sourceProfile, greenFlags, redFlags,
     crossCheck, checkedCount: checked.length, searchFailures,
-    totalRetrieved, verdict, confidence,
+    totalRetrieved, sourceRefs, verdict, confidence,
   });
 
   // ── FRAMING SIGNALS ──
@@ -1080,7 +1096,7 @@ function emptyResult(summary: string, rawInput: string, analyzedText: string) {
       signals: [] as Array<{ label: string; available: boolean }>,
     },
     evidenceTimeline: [] as TimelineEventResult[],
-    fingerprint: { claims: 0, sources: 0, verified: 0, uncertain: 0, contradicted: 0, unverified: 0, sourceCoverage: 0, evidenceFound: 0 } as FingerprintResult,
+    fingerprint: { claims: 0, sources: 0, sourceRefs: 0, verified: 0, uncertain: 0, contradicted: 0, unverified: 0, sourceCoverage: 0, evidenceFound: 0 } as FingerprintResult,
     crossCheck: [] as CrossCheckClaimResult[],
     framingSignals: [] as Array<{ type: string; description: string; severity: "low" | "medium" | "high" }>,
     freshness: [] as FreshnessResult[],

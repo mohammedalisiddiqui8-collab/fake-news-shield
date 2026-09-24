@@ -90,6 +90,13 @@ const verdictConfig: Record<Verdict, {
   },
 };
 
+/* ─── Signal classifier — observations are signals, never factual claims ─── */
+function signalLabelFor(flag: string): string {
+  if (/structure|article length|5 w|journalistic|word count/i.test(flag)) return "STRUCTURAL SIGNAL";
+  if (/language|wording|sensational|clickbait|emotional|caps|emoji|fear|conspiracy|urgency|sharing|tone|sourcing|certainty|superlative|anonymous|balanc/i.test(flag)) return "LINGUISTIC SIGNAL";
+  return "LANGUAGE SIGNAL";
+}
+
 /* ─── Sample Texts ─── */
 /* ─── Static sample fallback ─── */
 const sampleTexts = FALLBACK_SAMPLES;
@@ -363,7 +370,9 @@ export default function Dashboard() {
     const redScore = currentResult.categoryBreakdown.filter(c => c.type === "red").reduce((a, c) => a + c.score, 0);
     const greenScore = currentResult.categoryBreakdown.filter(c => c.type === "green").reduce((a, c) => a + c.score, 0);
     return {
-      claims, crossCheck, crossChecked: crossCheck.length, uniqueRetrieved: uniqueUrls.size,
+      claims, crossCheck, crossChecked: crossCheck.length,
+      uniqueRetrieved: uniqueUrls.size,
+      claimSourceRefs: retrieved.length,
       supported, contradicted, uncertain, unverified, supporting, contradicting, partial,
       addressed, searchFailed, signals, signalsAvailable, redScore, greenScore,
     };
@@ -404,7 +413,7 @@ export default function Dashboard() {
         reasoning: s.crossChecked > 0
           ? (s.searchFailed
             ? "External source search unavailable — insufficient evidence available."
-            : `${s.addressed} of ${s.crossChecked} cross-checked claim(s) had at least one independent source retrieved (${s.uniqueRetrieved} unique source result(s): ${s.supporting} supporting, ${s.partial} partial, ${s.contradicting} contradicting).${s.uniqueRetrieved === 0 ? " NO INDEPENDENT CORROBORATION FOUND." : ""}`)
+            : `${s.addressed} of ${s.crossChecked} cross-checked claim(s) had at least one independent source retrieved — ${s.uniqueRetrieved} unique source(s) across ${s.claimSourceRefs} claim–source reference(s): ${s.supporting} supporting, ${s.partial} partial, ${s.contradicting} contradicting.${s.uniqueRetrieved === 0 ? " NO INDEPENDENT CORROBORATION FOUND." : ""}`)
           : "Insufficient evidence available — no claims were cross-checked against external sources.",
       },
     ];
@@ -974,7 +983,7 @@ export default function Dashboard() {
                     <p className="text-[10px] text-muted-foreground italic">No red flags detected</p>
                   ) : (
                     currentResult.redFlags.map((flag, i) => (
-                      <ExpandableClaim key={i} claimNumber={String(i + 1).padStart(2, "0")} claimText={flag} status="misleading" details="Detected by linguistic pattern matching in the submitted text. Supplementary signal only — it does not by itself verify or refute a claim; the verdict is driven by retrieved claims and external evidence." />
+                      <ExpandableClaim key={i} claimNumber={String(i + 1).padStart(2, "0")} claimText={flag} status="misleading" kind="signal" signalLabel={signalLabelFor(flag)} details="Detected by linguistic pattern matching in the submitted text — this is a language signal, not a factual claim. A signal never proves or disproves a claim; the verdict is driven by retrieved claims and external evidence." />
                     ))
                   )}
                 </div>
@@ -989,7 +998,7 @@ export default function Dashboard() {
                     <p className="text-[10px] text-muted-foreground italic">No positive signals detected</p>
                   ) : (
                     currentResult.greenFlags.map((flag, i) => (
-                      <ExpandableClaim key={i} claimNumber={String(i + 1).padStart(2, "0")} claimText={flag} status="supported" details="Positive linguistic pattern detected in the submitted text. Supplementary signal only — credibility is determined by claims corroborated against retrieved external evidence." />
+                      <ExpandableClaim key={i} claimNumber={String(i + 1).padStart(2, "0")} claimText={flag} status="supported" kind="signal" signalLabel={signalLabelFor(flag)} details="Positive pattern detected in the submitted text — this is a language signal, not a factual claim. Language signals are NOT proof that any statement is true; credibility is determined by claims corroborated against retrieved external evidence." />
                     ))
                   )}
                 </div>
@@ -1023,6 +1032,7 @@ export default function Dashboard() {
                   uncertainClaims={evidenceStats?.uncertain ?? 0}
                   unverifiedClaims={evidenceStats?.unverified ?? 0}
                   crossCheckedClaims={evidenceStats?.crossChecked ?? 0}
+                  claimSourceRefs={evidenceStats?.claimSourceRefs ?? 0}
                   searchFailed={evidenceStats?.searchFailed ?? false}
                 />
               </motion.div>
@@ -1036,7 +1046,7 @@ export default function Dashboard() {
                       <FileText className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
                       <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "#F5F0E8" }}>Claim Analysis</h3>
                     </div>
-                    <p className="text-[9px]" style={{ color: "#A8A098" }}>{currentResult.claims.length} claims extracted — click to explore evidence</p>
+                    <p className="text-[9px]" style={{ color: "#A8A098" }}>{currentResult.claims.length} factual claims extracted — click to explore evidence. Language and structural observations are reported separately as signals, never as claims.</p>
                   </div>
                   <div className="px-4 sm:px-5 pb-3">
                     <ClaimAnalysis claims={currentResult.claims} />
@@ -1070,7 +1080,7 @@ export default function Dashboard() {
                       <Globe className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
                       <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "#F5F0E8" }}>Source Profile</h3>
                     </div>
-                    <p className="text-[9px]" style={{ color: "#A8A098" }}>Source credibility assessment</p>
+                    <p className="text-[9px]" style={{ color: "#A8A098" }}>Original article metadata detected in the submitted text — kept separate from external cross-check sources. SOURCE — NOT AVAILABLE means no publisher could be identified.</p>
                   </div>
                   <div className="px-4 sm:px-5 pb-4">
                     <SourceProfile profile={currentResult.sourceProfile} />
@@ -1237,7 +1247,7 @@ export default function Dashboard() {
                       <GitCompare className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
                       <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "#F5F0E8" }}>Source Cross-Check</h3>
                     </div>
-                    <p className="text-[9px]" style={{ color: "#A8A098" }}>{currentResult.crossCheck.length} claims cross-referenced</p>
+                    <p className="text-[9px]" style={{ color: "#A8A098" }}>{currentResult.crossCheck.length} claims cross-referenced · {evidenceStats?.uniqueRetrieved ?? 0} unique sources retrieved · {evidenceStats?.claimSourceRefs ?? 0} claim–source references — independent external sources retrieved during live cross-checking</p>
                   </div>
                   <div className="px-4 sm:px-5 pb-3"><SourceCrossCheck crossCheck={currentResult.crossCheck} /></div>
                 </motion.div>

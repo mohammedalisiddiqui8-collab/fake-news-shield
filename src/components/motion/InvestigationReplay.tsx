@@ -19,7 +19,7 @@ export function InvestigationReplay({ analysis }: {
     confidence: number;
     sourceProfile?: { source: string };
     claims?: Array<{ id: number; status: string }>;
-    crossCheck?: Array<{ claimId: number; sources: Array<{ relationship: string; url?: string }> }>;
+    crossCheck?: Array<{ claimId: number; sources: Array<{ name: string; relationship: string; url?: string }> }>;
   }
 }) {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -30,18 +30,23 @@ export function InvestigationReplay({ analysis }: {
   const claims = analysis.claims ?? [];
   const crossCheck = analysis.crossCheck ?? [];
   const retrieved = crossCheck.flatMap(c => c.sources).filter(s => !!s.url);
+  const uniqueUrls = new Set(retrieved.map(s => s.url as string));
+  const sourceRefs = retrieved.length; // claim–source references
   const supporting = retrieved.filter(s => s.relationship === "supports").length;
   const contradicting = retrieved.filter(s => s.relationship === "contradicts").length;
   const contradictedClaims = claims.filter(c => c.status === "contradicted").length;
+  // Same rule as the rest of the investigation: only an explicit sentinel marks
+  // an unavailable search (a "no corroboration" notice is a real result).
   const searchFailed = crossCheck.length > 0 && crossCheck.every(c =>
-    c.sources.length === 0 || c.sources.every(s => !s.url));
+    c.sources.length === 0 ||
+    c.sources.every(s => !s.url && s.name === "SOURCE SEARCH UNAVAILABLE"));
 
   const stages: ReplayStage[] = [
     { id: 0, label: "ARTICLE RECEIVED", detail: analysis.wordCount + " words analyzed", icon: FileText },
     { id: 1, label: "CLAIMS IDENTIFIED", detail: claims.length > 0 ? claims.length + " factual claim(s) extracted from the content" : "No claim data available for this result", icon: Search },
     { id: 2, label: "SOURCES SEARCHED", detail: crossCheck.length > 0 ? crossCheck.length + " claim(s) searched against live news coverage" : "No cross-check data available for this result", icon: Globe },
-    { id: 3, label: "EVIDENCE COLLECTED", detail: searchFailed ? "Source search unavailable — insufficient evidence available" : retrieved.length > 0 ? retrieved.length + " independent source result(s) retrieved" : crossCheck.length > 0 ? "NO INDEPENDENT CORROBORATION FOUND" : "No evidence data available for this result", icon: CheckCircle2 },
-    { id: 4, label: "CROSS-CHECKED", detail: retrieved.length > 0 ? supporting + " supporting · " + contradicting + " contradicting retrieved source(s)" : "Insufficient evidence available", icon: Brain },
+    { id: 3, label: "EVIDENCE COLLECTED", detail: searchFailed ? "Source search unavailable — insufficient evidence available" : retrieved.length > 0 ? uniqueUrls.size + " unique independent source(s) retrieved (" + sourceRefs + " claim–source reference(s))" : crossCheck.length > 0 ? "NO INDEPENDENT CORROBORATION FOUND" : "No evidence data available for this result", icon: CheckCircle2 },
+    { id: 4, label: "CROSS-CHECKED", detail: retrieved.length > 0 ? supporting + " supporting · " + contradicting + " contradicting claim–source reference(s) across " + uniqueUrls.size + " unique source(s)" : "Insufficient evidence available", icon: Brain },
     { id: 5, label: "CONFLICTS IDENTIFIED", detail: contradictedClaims > 0 ? contradictedClaims + " claim(s) contradicted by retrieved coverage" : "No contradictions found in retrieved evidence", icon: AlertTriangle },
     { id: 6, label: "FRAMING ANALYZED", detail: analysis.redFlags.length + " warning · " + analysis.greenFlags.length + " positive linguistic signal(s)", icon: Target },
     { id: 7, label: "FINAL ASSESSMENT", detail: analysis.confidence + "% confidence — " + analysis.verdict.replace("_", " "), icon: Shield },

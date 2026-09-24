@@ -10,6 +10,15 @@ interface ExpandableClaimProps {
   confidence?: number;
   details?: string;
   className?: string;
+  /**
+   * "claim" (default) renders a factual claim: CLAIM nn + verification status.
+   * "signal" renders a language/linguistic/structural observation as
+   * "… SIGNAL — DETECTED". Language signals are NEVER presented as factual
+   * claims and NEVER as proof that anything is true.
+   */
+  kind?: "claim" | "signal";
+  /** e.g. "LANGUAGE SIGNAL", "LINGUISTIC SIGNAL", "STRUCTURAL SIGNAL". */
+  signalLabel?: string;
 }
 
 const statusConfig = {
@@ -38,6 +47,8 @@ export function ExpandableClaim({
   confidence,
   details,
   className = "",
+  kind = "claim",
+  signalLabel,
 }: ExpandableClaimProps) {
   const [expanded, setExpanded] = useState(false);
   const config = statusConfig[status];
@@ -66,7 +77,9 @@ export function ExpandableClaim({
               className="text-[8px] font-bold tracking-[0.2em]"
               style={{ fontFamily: "'JetBrains Mono', monospace", color: "#8A6A45" }}
             >
-              CLAIM {claimNumber}
+              {kind === "signal"
+                ? (signalLabel ?? "LANGUAGE SIGNAL")
+                : `CLAIM ${claimNumber}`}
             </span>
             <span
               className="text-[8px] font-bold tracking-[0.1em] px-1.5 py-0.5 flex items-center gap-1"
@@ -77,7 +90,7 @@ export function ExpandableClaim({
               }}
             >
               <Icon className="w-2.5 h-2.5" />
-              {config.label}
+              {kind === "signal" ? "DETECTED" : config.label}
             </span>
           </div>
           <p

@@ -17,6 +17,15 @@ export interface CrossCheckClaim {
   sources: CrossCheckSource[];
 }
 
+function domainOf(url?: string): string | null {
+  if (!url) return null;
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return null;
+  }
+}
+
 const relConfig: Record<string, { label: string; icon: typeof CheckCircle2; color: string; bg: string }> = {
   supports: { label: "SUPPORTS", icon: CheckCircle2, color: "#D4C4A8", bg: "rgba(212,196,168,0.08)" },
   contradicts: { label: "CONTRADICTS", icon: AlertTriangle, color: "#A85A50", bg: "rgba(168,90,80,0.08)" },
@@ -53,7 +62,7 @@ export function SourceCrossCheck({ crossCheck }: { crossCheck: CrossCheckClaim[]
                   <div className="flex items-center gap-2 mt-1.5">
                     {supports > 0 && <span className="text-[8px] font-semibold" style={{ color: "#D4C4A8" }}>{supports} SUPPORTS</span>}
                     {contradicts > 0 && <span className="text-[8px] font-semibold" style={{ color: "#A85A50" }}>{contradicts} CONTRADICTS</span>}
-                    <span className="text-[8px]" style={{ color: "#A8A098" }}>{claim.sources.length} sources</span>
+                    <span className="text-[8px]" style={{ color: "#A8A098" }}>{claim.sources.length} source ref(s) for this claim</span>
                   </div>
                 </div>
                 <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }} className="shrink-0 mt-1">
@@ -76,7 +85,11 @@ export function SourceCrossCheck({ crossCheck }: { crossCheck: CrossCheckClaim[]
                             <div className="flex items-center gap-1.5 mb-0.5">
                               <span className="text-[9px] font-semibold" style={{ color: rc.color }}>{rc.label}</span>
                               <span className="text-[8px]" style={{ color: "#A8A098" }}>{src.name}</span>
+                              {domainOf(src.url) && domainOf(src.url) !== src.name && (
+                                <span className="text-[8px]" style={{ color: "#A8A098", opacity: 0.6 }}>· {domainOf(src.url)}</span>
+                              )}
                             </div>
+                            <p className="text-[9px] font-semibold leading-snug mb-0.5" style={{ color: "#F5F0E8" }}>{src.headline}</p>
                             <p className="text-[9px] leading-relaxed" style={{ color: "#A8A098" }}>{src.excerpt}</p>
                             {src.url ? (
                               <a href={src.url} target="_blank" rel="noopener noreferrer"

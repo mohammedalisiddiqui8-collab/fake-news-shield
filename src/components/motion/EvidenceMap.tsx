@@ -40,7 +40,7 @@ export function EvidenceMap({ articleTitle, claims, verdict, confidence }: Evide
   const tree: MapNode[] = [
     {
       id: "article", label: articleTitle.slice(0, 60) + (articleTitle.length > 60 ? "..." : ""), type: "article",
-      children: claims.slice(0, 5).map(c => ({
+      children: claims.map(c => ({
         id: "claim-" + c.id, label: "CLAIM " + String(c.id).padStart(2, "0"), type: "claim" as const,
         status: c.status === "supported" || c.status === "verified" ? "supported" as const : c.status === "contradicted" ? "contradicted" as const : "uncertain" as const,
         children: c.sources.length > 0
