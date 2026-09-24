@@ -1129,6 +1129,26 @@ function emptyResult(summary: string, rawInput: string, analyzedText: string) {
   };
 }
 
+// ─── URL RETRIEVAL FAILED — investigation TERMINATED before analysis ───────
+// No claim extraction, source search, evidence collection, cross-checking,
+// framing analysis, confidence calculation or verdict generation is performed.
+// The frontend renders a distinct "RETRIEVAL FAILED" state (confidence shown
+// as "—", verdict "RETRIEVAL FAILED", not "UNCERTAIN"), and this result is
+// never persisted as an investigation case file.
+function retrievalFailedResult(summary: string, url: string, reason: string) {
+  return {
+    ...emptyResult(summary, url, ""),
+    retrievalFailed: true as const,
+    failedUrl: url,
+    failureReason: reason || "URL could not be accessed or article content could not be retrieved.",
+    // Internal placeholder only — never displayed (the UI gates on
+    // retrievalFailed and shows confidence "—" / verdict "RETRIEVAL FAILED").
+    confidence: 0,
+    // No article text was ever analyzed — never count the URL's own words.
+    wordCount: 0,
+  };
+}
+
 export const analyzeNews = action({
   args: {
     text: v.string(),
@@ -1143,9 +1163,10 @@ export const analyzeNews = action({
     if (args.inputType === "url") {
       const fetched = await fetchArticleText(rawInput);
       if (!fetched.ok) {
-        return emptyResult(
+        // FETCH FAILED → STOP. Nothing downstream of retrieval is executed.
+        return retrievalFailedResult(
           "UNABLE TO RETRIEVE — could not fetch article text from the provided URL (" + fetched.error + "). No analysis was performed. Paste the article text directly instead.",
-          rawInput, "",
+          rawInput, fetched.error,
         );
       }
       analyzedText = fetched.text;

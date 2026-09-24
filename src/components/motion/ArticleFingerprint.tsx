@@ -24,7 +24,7 @@ const statCards = [
   { key: "unverified" as const, label: "UNVERIFIED", icon: AlertTriangle, color: "#A8A098" },
 ];
 
-export function ArticleFingerprint({ fingerprint }: { fingerprint: FingerprintData }) {
+export function ArticleFingerprint({ fingerprint, note }: { fingerprint: FingerprintData; note?: string }) {
   const now = new Date();
   const dateStr = now.getDate() + " " + now.toLocaleString("en", { month: "short" }).toUpperCase() + " " + now.getFullYear();
 
@@ -79,7 +79,7 @@ export function ArticleFingerprint({ fingerprint }: { fingerprint: FingerprintDa
 
       <div className="flex items-center gap-1.5 pt-1" style={{ borderTop: "1px solid #1E1E1E" }}>
         <Shield className="w-2.5 h-2.5" style={{ color: "#A8906E" }} />
-        <span className="text-[8px] tracking-[0.1em] uppercase" style={{ color: "#A8A098" }}>LAST UPDATED {dateStr}</span>
+        <span className="text-[8px] tracking-[0.1em] uppercase" style={{ color: "#A8A098" }}>{note ?? `LAST UPDATED ${dateStr}`}</span>
       </div>
     </div>
   );

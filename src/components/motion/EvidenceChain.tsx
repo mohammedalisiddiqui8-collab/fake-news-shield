@@ -9,6 +9,7 @@ import {
   Target,
   Link2,
   Shield,
+  AlertTriangle,
 } from "lucide-react";
 
 interface EvidenceChainProps {
@@ -41,6 +42,10 @@ interface EvidenceChainProps {
   /** CLAIM–SOURCE REFERENCES — one source cited by N claims counts N times. */
   claimSourceRefs?: number;
   searchFailed?: boolean;
+  /** URL retrieval failed — no investigation occurred. The chain is replaced
+   *  by INPUT → RETRIEVAL FAILED with every stage disabled. */
+  retrievalFailed?: boolean;
+  failureReason?: string;
 }
 
 const chainSteps = [
@@ -161,6 +166,61 @@ function getStepDetail(
 
 export function EvidenceChain(props: EvidenceChainProps) {
   const [expandedStep, setExpandedStep] = useState<string | null>(null);
+
+  // ── RETRIEVAL FAILED: the investigation never ran — show only the stop
+  // point and mark every real stage as not executed. ──
+  if (props.retrievalFailed) {
+    return (
+      <div className="space-y-0">
+        <div
+          className="w-full flex items-center gap-3 py-2.5"
+          style={{ borderBottom: "1px solid #1E1E1E" }}
+        >
+          <div
+            className="w-6 h-6 rounded-sm flex items-center justify-center shrink-0"
+            style={{ background: "rgba(168,90,80,0.08)", border: "1px solid rgba(168,90,80,0.3)" }}
+          >
+            <AlertTriangle className="w-3 h-3" style={{ color: "#A85A50" }} />
+          </div>
+          <span
+            className="text-[9px] font-bold tracking-[0.2em] flex-1 text-left"
+            style={{ color: "#A85A50" }}
+          >
+            INPUT → RETRIEVAL FAILED
+          </span>
+        </div>
+        <div className="py-2 pl-9 pr-4">
+          <p className="text-[10px] leading-relaxed" style={{ color: "#A8A098" }}>
+            Reason: {props.failureReason || "URL could not be accessed or article content could not be retrieved."} The investigation stopped here — claim extraction, source search, evidence collection, cross-checking, framing analysis, confidence calculation and verdict generation were not executed.
+          </p>
+        </div>
+        {chainSteps.map((step) => (
+          <div
+            key={step.key}
+            className="w-full flex items-center gap-3 py-2.5 opacity-40"
+            style={{ borderBottom: "1px solid #1E1E1E" }}
+            aria-disabled="true"
+          >
+            <div
+              className="w-6 h-6 rounded-sm flex items-center justify-center shrink-0"
+              style={{ background: "#111111", border: "1px solid #1E1E1E" }}
+            >
+              <step.icon className="w-3 h-3" style={{ color: "#A8A098" }} />
+            </div>
+            <span
+              className="text-[9px] font-bold tracking-[0.2em] flex-1 text-left"
+              style={{ color: "#A8A098" }}
+            >
+              {step.label}
+            </span>
+            <span className="text-[8px] mr-1" style={{ color: "#A8A098" }}>
+              NOT EXECUTED
+            </span>
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-0">

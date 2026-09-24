@@ -13,7 +13,7 @@ interface ReplayStage {
   occurred: boolean;
 }
 
-export function InvestigationReplay({ analysis }: {
+export function InvestigationReplay({ analysis, retrievalFailed, failedUrl, failureReason }: {
   analysis: {
     wordCount: number;
     redFlags: string[];
@@ -24,7 +24,12 @@ export function InvestigationReplay({ analysis }: {
     sourceProfile?: { source: string };
     claims?: Array<{ id: number; status: string }>;
     crossCheck?: Array<{ claimId: number; sources: Array<{ name: string; relationship: string; url?: string }> }>;
-  }
+  };
+  /** URL retrieval failed — the investigation never ran. Only the stop trace
+   *  (URL received → attempt → failed → stopped) is shown. */
+  retrievalFailed?: boolean;
+  failedUrl?: string;
+  failureReason?: string;
 }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentStage, setCurrentStage] = useState(0);
@@ -48,7 +53,12 @@ export function InvestigationReplay({ analysis }: {
     c.sources.length === 0 ||
     c.sources.every(s => !s.url && s.name === "SOURCE SEARCH UNAVAILABLE"));
 
-  const stages: ReplayStage[] = [
+  const stages: ReplayStage[] = retrievalFailed ? [
+    { id: 0, label: "ARTICLE URL RECEIVED", detail: failedUrl ? "URL submitted: " + failedUrl : "Article URL submitted for analysis", icon: FileText, occurred: true },
+    { id: 1, label: "ARTICLE RETRIEVAL ATTEMPTED", detail: "Fetching article content from the provided URL", icon: Globe, occurred: true },
+    { id: 2, label: "RETRIEVAL FAILED", detail: failureReason ? "Reason: " + failureReason : "Article content could not be retrieved", icon: AlertTriangle, occurred: true },
+    { id: 3, label: "INVESTIGATION STOPPED", detail: "No claims, source search, evidence collection, cross-checking, framing analysis, confidence calculation, or verdict generation was performed.", icon: Shield, occurred: true },
+  ] : [
     { id: 0, label: "ARTICLE RECEIVED", detail: analysis.wordCount + " words analyzed", icon: FileText, occurred: true },
     { id: 1, label: "CLAIMS IDENTIFIED", detail: claims.length > 0 ? claims.length + " factual claim(s) extracted from the content" : "No claim data available for this result", icon: Search, occurred: claims.length > 0 },
     { id: 2, label: "SOURCES SEARCHED", detail: crossCheck.length > 0 ? crossCheck.length + " claim(s) searched against live news coverage" : "No cross-check data available for this result", icon: Globe, occurred: crossCheck.length > 0 },

@@ -35,6 +35,7 @@ import { FramingSignals, type FramingSignal } from "@/components/motion/FramingS
 import { FreshnessIndicator, type FreshnessItem } from "@/components/motion/FreshnessIndicator";
 import { WhatChanged } from "@/components/motion/WhatChanged";
 import { InvestigationReplay } from "@/components/motion/InvestigationReplay";
+import { RetrievalFailedState } from "@/components/motion/RetrievalFailedState";
 import { getLiveNews, FALLBACK_SAMPLES, getCategoryIconComponent, relativeTime, type LiveArticle } from "@/lib/news";
 import { deriveSourceCounts } from "@/lib/investigationStats";
 
@@ -67,6 +68,10 @@ interface AnalysisResult {
   framingSignals?: FramingSignal[];
   freshness?: FreshnessItem[];
   extractedText?: string;
+  /** URL retrieval failed — investigation NOT performed (no verdict exists). */
+  retrievalFailed?: boolean;
+  failedUrl?: string;
+  failureReason?: string;
 }
 
 /* ─── Verdict Config (editorial palette) ─── */
@@ -254,10 +259,11 @@ export default function Dashboard() {
     setIsAnalyzing(true);
     setCurrentResult(null);
     try {
-      const result = await runAnalysis({ text: inputText.trim(), inputType, depth: analysisDepth });
-      setCurrentResult(result as AnalysisResult);
+      const result: AnalysisResult = await runAnalysis({ text: inputText.trim(), inputType, depth: analysisDepth });
+      setCurrentResult(result);
       setActiveView("result");
-      try {
+      // A retrieval failure is NOT an investigation — never persist it as a case file.
+      if (!result.retrievalFailed) try {
         await createAnalysis({
           inputText: inputText.trim().slice(0, 5000), inputType,
           verdict: result.verdict, confidence: result.confidence, summary: result.summary,
@@ -276,7 +282,8 @@ export default function Dashboard() {
           freshness: result.freshness,
         });
       } catch { /* best-effort */ }
-      toast.success("Analysis complete.");
+      if (result.retrievalFailed) toast.error("Could not retrieve the article — no analysis was performed.");
+      else toast.success("Analysis complete.");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Analysis failed.");
     } finally {
@@ -292,6 +299,13 @@ export default function Dashboard() {
 
   const handleLoadFromHistory = useCallback((analysis: any) => {
     if (!analysis) return;
+    // Legacy rows: retrieval failures were stored before the RETRIEVAL FAILED
+    // state existed — restore them as retrieval failures, not investigations.
+    const legacyFailure: string | null =
+      typeof analysis.summary === "string" && analysis.summary.startsWith("UNABLE TO RETRIEVE")
+        ? (analysis.summary.match(/\(([^)]+)\)/)?.[1] ??
+           "URL could not be accessed or article content could not be retrieved.")
+        : null;
     setCurrentResult({
       verdict: analysis.verdict, confidence: analysis.confidence, summary: analysis.summary,
       redFlags: analysis.redFlags, greenFlags: analysis.greenFlags, reasoning: analysis.reasoning,
@@ -305,6 +319,9 @@ export default function Dashboard() {
       crossCheck: analysis.crossCheck ?? undefined,
       framingSignals: analysis.framingSignals ?? undefined,
       freshness: analysis.freshness ?? undefined,
+      retrievalFailed: legacyFailure ? true : undefined,
+      failedUrl: legacyFailure ? analysis.inputText : undefined,
+      failureReason: legacyFailure ?? undefined,
     });
     setCredFactor(null);
     setInputText(analysis.inputText); setInputType(analysis.inputType); setActiveView("result");
@@ -348,6 +365,8 @@ export default function Dashboard() {
   }, [currentResult]);
 
   const vc = currentResult ? verdictConfig[currentResult.verdict] : null;
+  // Distinct state: URL retrieval failed → no investigation, no verdict.
+  const retrievalFailed = !!currentResult?.retrievalFailed;
 
   /* ─── Real evidence stats — derived ONCE from the single investigation result ─── */
   const evidenceStats = (() => {
@@ -703,6 +722,15 @@ export default function Dashboard() {
           {activeView === "result" && currentResult && vc && (
             <motion.div key="result" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.25 }}>
+            {retrievalFailed ? (
+              <RetrievalFailedState
+                failedUrl={currentResult.failedUrl}
+                failureReason={currentResult.failureReason}
+                onRetry={() => setActiveView("analyze")}
+                onPasteText={() => { setInputType("text"); setActiveView("analyze"); }}
+              />
+            ) : (
+              <>
 
               {/* Sidebar + Content layout */}
               <div className="grid grid-cols-1 lg:grid-cols-[180px_1fr] gap-5">
@@ -1328,6 +1356,8 @@ export default function Dashboard() {
                 </div>
                 <div className="px-4 sm:px-5 pb-4"><InvestigationReplay analysis={currentResult} /></div>
               </motion.div>
+              </>
+            )}
             </motion.div>
           )}
 
@@ -1358,6 +1388,10 @@ export default function Dashboard() {
                 <div className="space-y-0">
                   {analyses.map((analysis, i) => {
                     const avc = verdictConfig[analysis.verdict];
+                    // Legacy rows: a stored retrieval failure is NOT an investigation.
+                    const wasRetrievalFailure =
+                      typeof analysis.summary === "string" &&
+                      analysis.summary.startsWith("UNABLE TO RETRIEVE");
                     return (
                       <motion.div key={analysis._id}
                         initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
@@ -1369,8 +1403,8 @@ export default function Dashboard() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
-                              <span className={`text-[11px] font-semibold ${avc.color}`}>{avc.label}</span>
-                              <Badge variant="outline" className={`text-[9px] ${avc.border} ${avc.color} rounded`}>{analysis.confidence}%</Badge>
+                              <span className={`text-[11px] font-semibold ${avc.color}`}>{wasRetrievalFailure ? "Retrieval Failed" : avc.label}</span>
+                              <Badge variant="outline" className={`text-[9px] ${avc.border} ${avc.color} rounded`}>{wasRetrievalFailure ? "—" : `${analysis.confidence}%`}</Badge>
                               <Badge variant="outline" className="text-[9px] ml-auto rounded">{analysis.inputType === "url" ? "URL" : "Text"}</Badge>
                             </div>
                             <p className="text-[10px] text-muted-foreground line-clamp-1 mb-0.5">{analysis.summary}</p>
