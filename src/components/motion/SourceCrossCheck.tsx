@@ -34,7 +34,19 @@ const relConfig: Record<string, { label: string; icon: typeof CheckCircle2; colo
   insufficient: { label: "INSUFFICIENT", icon: HelpCircle, color: "#A8A098", bg: "rgba(168,160,152,0.06)" },
 };
 
-export function SourceCrossCheck({ crossCheck }: { crossCheck: CrossCheckClaim[] }) {
+const claimStatusConfig: Record<string, { label: string; color: string }> = {
+  supported: { label: "CORROBORATED", color: "#D4C4A8" },
+  contradicted: { label: "CONTRADICTED", color: "#A85A50" },
+  uncertain: { label: "UNCERTAIN", color: "#A8A098" },
+  needs_verification: { label: "UNVERIFIED", color: "#A8A098" },
+};
+
+export function SourceCrossCheck({ crossCheck, claims }: {
+  crossCheck: CrossCheckClaim[];
+  /** Claim statuses from the same investigation — shown so each claim row
+   *  states its corroborated / contradicted / unverified assessment. */
+  claims?: Array<{ id: number; status: string }>;
+}) {
   const [expandedClaim, setExpandedClaim] = useState<number | null>(null);
 
   if (!crossCheck || crossCheck.length === 0) {
@@ -50,6 +62,8 @@ export function SourceCrossCheck({ crossCheck }: { crossCheck: CrossCheckClaim[]
         // Same rule as the aggregate: only real retrieved sources count —
         // sentinel notices are not references. Sum over claims == aggregate.
         const refs = claimSourceRefs(claim.sources);
+        const status = claims?.find(c => c.id === claim.claimId)?.status;
+        const statusBadge = status ? claimStatusConfig[status] : undefined;
         return (
           <motion.div key={claim.claimId} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25, delay: ci * 0.05 }}>
@@ -61,6 +75,9 @@ export function SourceCrossCheck({ crossCheck }: { crossCheck: CrossCheckClaim[]
                 <div className="flex-1 min-w-0">
                   <span className="text-[8px] tracking-[0.15em] uppercase font-semibold block mb-1" style={{ color: "#A8A098" }}>
                     CLAIM {String(claim.claimId).padStart(2, "0")}
+                    {statusBadge && (
+                      <span className="ml-2 font-bold" style={{ color: statusBadge.color }}>{statusBadge.label}</span>
+                    )}
                   </span>
                   <p className="text-[11px] leading-snug line-clamp-2" style={{ color: "#F5F0E8" }}>{claim.claimText}</p>
                   <div className="flex items-center gap-2 mt-1.5">
@@ -79,6 +96,9 @@ export function SourceCrossCheck({ crossCheck }: { crossCheck: CrossCheckClaim[]
                 <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden">
                   <div className="px-3 pb-3 pt-2 space-y-1.5">
+                    <p className="text-[8px]" style={{ color: "#A8A098" }}>
+                      {refs} retrieved source(s) found for this claim — each source below states whether it supports or contradicts the claim.
+                    </p>
                     {claim.sources.map((src, si) => {
                       const rc = relConfig[src.relationship] || relConfig.insufficient;
                       const Icon = rc.icon;

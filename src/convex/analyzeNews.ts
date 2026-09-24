@@ -17,8 +17,10 @@ type Depth = "quick" | "standard" | "deep";
 
 /** How many claims get a live external cross-check, per depth. */
 const CROSSCHECK_LIMIT: Record<Depth, number> = { quick: 3, standard: 5, deep: 8 };
-/** Max claims extracted, per depth. */
-const CLAIM_LIMIT: Record<Depth, number> = { quick: 5, standard: 8, deep: 8 };
+/** Max claims extracted — EQUAL to the cross-check limit so EVERY extracted
+ *  claim is cross-checked and appears in Source Cross-Check (no claim is ever
+ *  left silently unverified because of depth truncation). */
+const CLAIM_LIMIT: Record<Depth, number> = CROSSCHECK_LIMIT;
 
 const SENSATIONALIST: Array<[RegExp, number]> = [
   [/[A-Z]{3,}!{2,}/g, 8], [/shocking|unbelievable|mind[- ]?blowing/gi, 6],
@@ -424,7 +426,12 @@ function extractSourceProfile(
   const isResearch = /university|institute|published in|journal|study|research/i.test(text);
   const isGov = /government|official|minister|agency|cdc|fda|who|nasa/i.test(text);
   const isNews = /reporter|correspondent|journalist|news|press|media/i.test(text);
-  const sourceType = isResearch ? "Research" : isGov ? "Government" : isNews ? "News" : "Other";
+  // A publisher TYPE is only displayed when a source was actually detected in
+  // the text. Keyword hints about the topic (e.g. "government") do not
+  // classify an unidentified publisher.
+  const sourceType = source === "NOT AVAILABLE"
+    ? "NOT AVAILABLE"
+    : isResearch ? "Research" : isGov ? "Government" : isNews ? "News" : "Other";
 
   const evidence: string[] = [];
   if (source !== "NOT AVAILABLE") evidence.push("Source name detected in text: " + source);
@@ -934,11 +941,14 @@ async function analyzeText(text: string, depth: Depth) {
       confidence = Math.min(baseConfidence, 35);
       summary = "UNABLE TO VERIFY — the external source search was unavailable, so this assessment is limited to linguistic pattern analysis. Insufficient evidence available.";
     } else if (baseVerdict === "likely_fake" && redRatio >= 0.55) {
-      verdict = "likely_fake";
-      confidence = Math.min(baseConfidence, 48);
-      summary = "LIKELY MISLEADING (pattern-based) — NO INDEPENDENT CORROBORATION FOUND across " + checked.length + " cross-checked claim(s). "
-        + "The assessment rests on " + redFlags.length + " linguistic warning signal(s). "
-        + "NOTE: absence of corroboration is not proof of falsity; independent verification is recommended.";
+      // Language patterns alone NEVER produce a Fake verdict. Without
+      // external evidence the result is UNCERTAIN, with the warning signals
+      // reported as supplementary context only.
+      verdict = "uncertain";
+      confidence = Math.min(baseConfidence, 40);
+      summary = "INSUFFICIENT EVIDENCE — NO INDEPENDENT CORROBORATION FOUND across " + checked.length + " cross-checked claim(s). "
+        + "The writing style shows " + redFlags.length + " linguistic warning signal(s), but language signals are supplementary only and are never treated as proof of falsity. "
+        + "Unable to verify — independent verification is recommended.";
     } else {
       verdict = "uncertain";
       confidence = Math.min(baseConfidence, 40);
@@ -948,6 +958,14 @@ async function analyzeText(text: string, depth: Depth) {
   }
 
   confidence = clamp(confidence, 25, 85);
+
+  // ── CONFIDENCE CEILING — never high while claims remain unverified ──
+  // Unresolved = no firm external evidence either for or against the claim.
+  const unresolvedCount = claims.length - supportedCount - contradictedCount;
+  if (claims.length > 0 && unresolvedCount > 0) {
+    if (unresolvedCount > claims.length / 2) confidence = Math.min(confidence, 55);
+    else confidence = Math.min(confidence, 69);
+  }
 
   // ── HONEST SUMMARY + REASONING ──
   const parts: string[] = [];
@@ -964,6 +982,9 @@ async function analyzeText(text: string, depth: Depth) {
       "derived from " + totalRetrieved + " unique independent source(s) (" + sourceRefs + " claim–source reference(s)) retrieved in a live search" +
       (searchFailures > 0 ? " (" + searchFailures + " claim search(es) unavailable)" : "") + ".",
     );
+  }
+  if (claims.length > 0 && unresolvedCount > 0) {
+    parts.push(unresolvedCount + " of " + claims.length + " claim(s) remain unverified (no firm external evidence for or against) — confidence is capped accordingly.");
   }
   parts.push("Confidence: " + confidence + "%. Verdict is driven by retrieved claims and external evidence; linguistic pattern analysis is supplementary. Independent verification is always recommended.");
 
@@ -1095,7 +1116,7 @@ function emptyResult(summary: string, rawInput: string, analyzedText: string) {
     claims: [] as ClaimResult[],
     sourceProfile: {
       source: "NOT AVAILABLE", domain: "NOT AVAILABLE", author: "NOT AVAILABLE",
-      publishedDate: "NOT AVAILABLE", updatedDate: "NOT AVAILABLE", sourceType: "Other",
+      publishedDate: "NOT AVAILABLE", updatedDate: "NOT AVAILABLE", sourceType: "NOT AVAILABLE",
       availableEvidence: ["Insufficient input for source extraction"],
       signals: [] as Array<{ label: string; available: boolean }>,
     },

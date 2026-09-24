@@ -66,9 +66,11 @@ function getStepDetail(
 
   const searchStatement = searchFailed
     ? "External source search unavailable — insufficient evidence available"
-    : external > 0
-      ? external + " unique independent source(s) retrieved via live search (" + refs + " claim–source reference(s))"
-      : "NO INDEPENDENT CORROBORATION FOUND";
+    : checked === 0
+      ? "External source search not performed — no claims were available to cross-check"
+      : external > 0
+        ? external + " unique independent source(s) retrieved via live search (" + refs + " claim–source reference(s))"
+        : "NO INDEPENDENT CORROBORATION FOUND";
 
   switch (step) {
     case "claim":

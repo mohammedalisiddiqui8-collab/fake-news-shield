@@ -8,6 +8,9 @@ interface ReplayStage {
   label: string;
   detail: string;
   icon: typeof FileText;
+  /** Whether the backend ACTUALLY performed this operation for this result.
+   *  A stage that did not occur is never shown with a completed check. */
+  occurred: boolean;
 }
 
 export function InvestigationReplay({ analysis }: {
@@ -46,14 +49,14 @@ export function InvestigationReplay({ analysis }: {
     c.sources.every(s => !s.url && s.name === "SOURCE SEARCH UNAVAILABLE"));
 
   const stages: ReplayStage[] = [
-    { id: 0, label: "ARTICLE RECEIVED", detail: analysis.wordCount + " words analyzed", icon: FileText },
-    { id: 1, label: "CLAIMS IDENTIFIED", detail: claims.length > 0 ? claims.length + " factual claim(s) extracted from the content" : "No claim data available for this result", icon: Search },
-    { id: 2, label: "SOURCES SEARCHED", detail: crossCheck.length > 0 ? crossCheck.length + " claim(s) searched against live news coverage" : "No cross-check data available for this result", icon: Globe },
-    { id: 3, label: "EVIDENCE COLLECTED", detail: searchFailed ? "Source search unavailable — insufficient evidence available" : retrieved.length > 0 ? uniqueSources + " unique independent source(s) retrieved (" + sourceRefs + " claim–source reference(s))" : crossCheck.length > 0 ? "NO INDEPENDENT CORROBORATION FOUND" : "No evidence data available for this result", icon: CheckCircle2 },
-    { id: 4, label: "CROSS-CHECKED", detail: retrieved.length > 0 ? supporting + " supporting · " + contradicting + " contradicting claim–source reference(s) across " + uniqueSources + " unique source(s)" : "Insufficient evidence available", icon: Brain },
-    { id: 5, label: "CONFLICTS IDENTIFIED", detail: contradictedClaims > 0 ? contradictedClaims + " claim(s) contradicted by retrieved coverage" : "No contradictions found in retrieved evidence", icon: AlertTriangle },
-    { id: 6, label: "FRAMING ANALYZED", detail: analysis.redFlags.length + " warning · " + analysis.greenFlags.length + " positive linguistic signal(s)", icon: Target },
-    { id: 7, label: "FINAL ASSESSMENT", detail: analysis.confidence + "% confidence — " + analysis.verdict.replace("_", " "), icon: Shield },
+    { id: 0, label: "ARTICLE RECEIVED", detail: analysis.wordCount + " words analyzed", icon: FileText, occurred: true },
+    { id: 1, label: "CLAIMS IDENTIFIED", detail: claims.length > 0 ? claims.length + " factual claim(s) extracted from the content" : "No claim data available for this result", icon: Search, occurred: claims.length > 0 },
+    { id: 2, label: "SOURCES SEARCHED", detail: crossCheck.length > 0 ? crossCheck.length + " claim(s) searched against live news coverage" : "No cross-check data available for this result", icon: Globe, occurred: crossCheck.length > 0 },
+    { id: 3, label: "EVIDENCE COLLECTED", detail: searchFailed ? "Source search unavailable — insufficient evidence available" : retrieved.length > 0 ? uniqueSources + " unique independent source(s) retrieved (" + sourceRefs + " claim–source reference(s))" : crossCheck.length > 0 ? "NO INDEPENDENT CORROBORATION FOUND" : "No evidence data available for this result", icon: CheckCircle2, occurred: crossCheck.length > 0 && !searchFailed },
+    { id: 4, label: "CROSS-CHECKED", detail: retrieved.length > 0 ? supporting + " supporting · " + contradicting + " contradicting claim–source reference(s) across " + uniqueSources + " unique source(s)" : "Insufficient evidence available", icon: Brain, occurred: retrieved.length > 0 },
+    { id: 5, label: "CONFLICTS IDENTIFIED", detail: retrieved.length === 0 ? "Not performed — no retrieved evidence to analyse for conflicts" : contradictedClaims > 0 ? contradictedClaims + " claim(s) contradicted by retrieved coverage" : "No contradictions found in retrieved evidence", icon: AlertTriangle, occurred: retrieved.length > 0 },
+    { id: 6, label: "FRAMING ANALYZED", detail: analysis.redFlags.length + " warning · " + analysis.greenFlags.length + " positive linguistic signal(s) — supplementary only, not proof of truth", icon: Target, occurred: true },
+    { id: 7, label: "FINAL ASSESSMENT", detail: analysis.confidence + "% confidence — " + analysis.verdict.replace("_", " "), icon: Shield, occurred: true },
   ];
 
   const play = useCallback(() => {
@@ -133,7 +136,9 @@ export function InvestigationReplay({ analysis }: {
                   borderColor: isDone ? "rgba(168,144,110,0.2)" : isActive ? "rgba(168,144,110,0.15)" : "#1E1E1E",
                 }} transition={{ duration: 0.3 }}
                   className="w-6 h-6 rounded-sm flex items-center justify-center shrink-0 z-10" style={{ border: "1px solid" }}>
-                  {isDone ? <CheckCircle2 className="w-3 h-3" style={{ color: "#A8906E" }} />
+                  {isDone ? (stage.occurred
+                    ? <CheckCircle2 className="w-3 h-3" style={{ color: "#A8906E" }} />
+                    : <AlertTriangle className="w-3 h-3" style={{ color: "#A8A098" }} />)
                     : isActive ? <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.2, repeat: Infinity }}>
                         <Icon className="w-3 h-3" style={{ color: "#A8906E" }} /></motion.div>
                     : <Icon className="w-3 h-3" style={{ color: "#A8A09840" }} />}

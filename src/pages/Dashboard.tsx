@@ -77,17 +77,17 @@ const verdictConfig: Record<Verdict, {
   likely_real: {
     label: "Likely Credible", icon: CheckCircle2, color: "text-primary",
     bg: "bg-primary/8", border: "border-primary/20", accentColor: "#A8906E",
-    description: "This content appears to be based on credible sourcing and journalistic standards.",
+    description: "Key factual claims are corroborated by retrieved independent external coverage. Linguistic signals are supplementary only.",
   },
   uncertain: {
     label: "Uncertain", icon: AlertTriangle, color: "text-accent",
     bg: "bg-accent/10", border: "border-accent/25", accentColor: "#C4985A",
-    description: "This content has a mix of credible and questionable elements. Exercise caution.",
+    description: "External evidence is insufficient, mixed, or unavailable — key claims remain unverified. Treat this as unconfirmed.",
   },
   likely_fake: {
     label: "Likely Misleading", icon: XCircle, color: "text-destructive",
     bg: "bg-destructive/10", border: "border-destructive/20", accentColor: "#E85D4A",
-    description: "This content shows multiple indicators of misinformation or manipulation.",
+    description: "Key factual claims are contradicted by retrieved independent external coverage. Language patterns alone never produce this verdict.",
   },
 };
 
@@ -206,8 +206,9 @@ export default function Dashboard() {
       sourceUrl: article.sourceUrl,
       isSnippet: article.isSnippet,
     }));
-    // If we have fewer than 6 live items, pad with static fallback
-    if (liveItems.length < 6) {
+    // Static samples are used ONLY when no live headlines could be fetched —
+    // they are never mixed into "Today's Headlines".
+    if (liveItems.length === 0) {
       const needed = 6 - liveItems.length;
       const filler = sampleTexts.slice(0, needed);
       liveItems.push(
@@ -1253,7 +1254,7 @@ export default function Dashboard() {
                     </div>
                     <p className="text-[9px]" style={{ color: "#A8A098" }}>{currentResult.crossCheck.length} claims cross-referenced · {evidenceStats?.uniqueRetrieved ?? 0} unique sources retrieved · {evidenceStats?.claimSourceRefs ?? 0} claim–source references — independent external sources retrieved during live cross-checking</p>
                   </div>
-                  <div className="px-4 sm:px-5 pb-3"><SourceCrossCheck crossCheck={currentResult.crossCheck} /></div>
+                  <div className="px-4 sm:px-5 pb-3"><SourceCrossCheck crossCheck={currentResult.crossCheck} claims={currentResult.claims ?? []} /></div>
                 </motion.div>
               )}
 
