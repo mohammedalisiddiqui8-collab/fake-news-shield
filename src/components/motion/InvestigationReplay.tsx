@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, SkipForward, SkipBack, RotateCcw, CheckCircle2, FileText, Search, Brain, Target, Shield, Globe, AlertTriangle } from "lucide-react";
+import { deriveSourceCounts } from "@/lib/investigationStats";
 
 interface ReplayStage {
   id: number;
@@ -29,11 +30,14 @@ export function InvestigationReplay({ analysis }: {
   // nothing is simulated. Missing data is reported as unavailable, never invented.
   const claims = analysis.claims ?? [];
   const crossCheck = analysis.crossCheck ?? [];
-  const retrieved = crossCheck.flatMap(c => c.sources).filter(s => !!s.url);
-  const uniqueUrls = new Set(retrieved.map(s => s.url as string));
-  const sourceRefs = retrieved.length; // claim–source references
-  const supporting = retrieved.filter(s => s.relationship === "supports").length;
-  const contradicting = retrieved.filter(s => s.relationship === "contradicts").length;
+  // ONE shared derivation — identical numbers to Source Cross-Check, Evidence
+  // Map, Timeline and Final Assessment (aggregate == sum of per-claim refs).
+  const counts = deriveSourceCounts(crossCheck);
+  const retrieved = counts.retrieved;
+  const uniqueSources = counts.uniqueSources;
+  const sourceRefs = counts.claimSourceRefs;
+  const supporting = counts.supporting;
+  const contradicting = counts.contradicting;
   const contradictedClaims = claims.filter(c => c.status === "contradicted").length;
   // Same rule as the rest of the investigation: only an explicit sentinel marks
   // an unavailable search (a "no corroboration" notice is a real result).
@@ -45,8 +49,8 @@ export function InvestigationReplay({ analysis }: {
     { id: 0, label: "ARTICLE RECEIVED", detail: analysis.wordCount + " words analyzed", icon: FileText },
     { id: 1, label: "CLAIMS IDENTIFIED", detail: claims.length > 0 ? claims.length + " factual claim(s) extracted from the content" : "No claim data available for this result", icon: Search },
     { id: 2, label: "SOURCES SEARCHED", detail: crossCheck.length > 0 ? crossCheck.length + " claim(s) searched against live news coverage" : "No cross-check data available for this result", icon: Globe },
-    { id: 3, label: "EVIDENCE COLLECTED", detail: searchFailed ? "Source search unavailable — insufficient evidence available" : retrieved.length > 0 ? uniqueUrls.size + " unique independent source(s) retrieved (" + sourceRefs + " claim–source reference(s))" : crossCheck.length > 0 ? "NO INDEPENDENT CORROBORATION FOUND" : "No evidence data available for this result", icon: CheckCircle2 },
-    { id: 4, label: "CROSS-CHECKED", detail: retrieved.length > 0 ? supporting + " supporting · " + contradicting + " contradicting claim–source reference(s) across " + uniqueUrls.size + " unique source(s)" : "Insufficient evidence available", icon: Brain },
+    { id: 3, label: "EVIDENCE COLLECTED", detail: searchFailed ? "Source search unavailable — insufficient evidence available" : retrieved.length > 0 ? uniqueSources + " unique independent source(s) retrieved (" + sourceRefs + " claim–source reference(s))" : crossCheck.length > 0 ? "NO INDEPENDENT CORROBORATION FOUND" : "No evidence data available for this result", icon: CheckCircle2 },
+    { id: 4, label: "CROSS-CHECKED", detail: retrieved.length > 0 ? supporting + " supporting · " + contradicting + " contradicting claim–source reference(s) across " + uniqueSources + " unique source(s)" : "Insufficient evidence available", icon: Brain },
     { id: 5, label: "CONFLICTS IDENTIFIED", detail: contradictedClaims > 0 ? contradictedClaims + " claim(s) contradicted by retrieved coverage" : "No contradictions found in retrieved evidence", icon: AlertTriangle },
     { id: 6, label: "FRAMING ANALYZED", detail: analysis.redFlags.length + " warning · " + analysis.greenFlags.length + " positive linguistic signal(s)", icon: Target },
     { id: 7, label: "FINAL ASSESSMENT", detail: analysis.confidence + "% confidence — " + analysis.verdict.replace("_", " "), icon: Shield },

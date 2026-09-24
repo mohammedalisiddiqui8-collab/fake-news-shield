@@ -36,6 +36,7 @@ import { FreshnessIndicator, type FreshnessItem } from "@/components/motion/Fres
 import { WhatChanged } from "@/components/motion/WhatChanged";
 import { InvestigationReplay } from "@/components/motion/InvestigationReplay";
 import { getLiveNews, FALLBACK_SAMPLES, getCategoryIconComponent, relativeTime, type LiveArticle } from "@/lib/news";
+import { deriveSourceCounts } from "@/lib/investigationStats";
 
 /* ─── Types ─── */
 type Verdict = "likely_real" | "likely_fake" | "uncertain";
@@ -352,15 +353,18 @@ export default function Dashboard() {
     if (!currentResult) return null;
     const claims = currentResult.claims ?? [];
     const crossCheck = currentResult.crossCheck ?? [];
-    const retrieved = crossCheck.flatMap(c => c.sources).filter(s => s.url);
-    const uniqueUrls = new Set(retrieved.map(s => s.url as string));
+    // ONE shared derivation (src/lib/investigationStats) — the same source of
+    // truth used by the engine, Evidence Map, Timeline, Replay and Final
+    // Assessment, so aggregate refs always equal the sum of per-claim refs.
+    const sourceCounts = deriveSourceCounts(crossCheck);
+    const retrieved = sourceCounts.retrieved;
     const supported = claims.filter(c => c.status === "supported").length;
     const contradicted = claims.filter(c => c.status === "contradicted").length;
     const uncertain = claims.filter(c => c.status === "uncertain").length;
     const unverified = claims.length - supported - contradicted - uncertain;
-    const supporting = retrieved.filter(s => s.relationship === "supports").length;
-    const contradicting = retrieved.filter(s => s.relationship === "contradicts").length;
-    const partial = retrieved.filter(s => s.relationship === "partial").length;
+    const supporting = sourceCounts.supporting;
+    const contradicting = sourceCounts.contradicting;
+    const partial = sourceCounts.partial;
     const addressed = crossCheck.filter(c => c.sources.some(s => !!s.url)).length;
     const searchFailed = crossCheck.length > 0 &&
       crossCheck.every(c => c.sources.length === 0 ||
@@ -371,8 +375,8 @@ export default function Dashboard() {
     const greenScore = currentResult.categoryBreakdown.filter(c => c.type === "green").reduce((a, c) => a + c.score, 0);
     return {
       claims, crossCheck, crossChecked: crossCheck.length,
-      uniqueRetrieved: uniqueUrls.size,
-      claimSourceRefs: retrieved.length,
+      uniqueRetrieved: sourceCounts.uniqueSources,
+      claimSourceRefs: sourceCounts.claimSourceRefs,
       supported, contradicted, uncertain, unverified, supporting, contradicting, partial,
       addressed, searchFailed, signals, signalsAvailable, redScore, greenScore,
     };

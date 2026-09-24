@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { CheckCircle2, AlertTriangle, HelpCircle, ExternalLink, ChevronDown } from "lucide-react";
+import { claimSourceRefs } from "@/lib/investigationStats";
 
 export interface CrossCheckSource {
   name: string;
@@ -46,6 +47,9 @@ export function SourceCrossCheck({ crossCheck }: { crossCheck: CrossCheckClaim[]
         const isOpen = expandedClaim === claim.claimId;
         const supports = claim.sources.filter(s => s.relationship === "supports").length;
         const contradicts = claim.sources.filter(s => s.relationship === "contradicts").length;
+        // Same rule as the aggregate: only real retrieved sources count —
+        // sentinel notices are not references. Sum over claims == aggregate.
+        const refs = claimSourceRefs(claim.sources);
         return (
           <motion.div key={claim.claimId} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.25, delay: ci * 0.05 }}>
@@ -62,7 +66,7 @@ export function SourceCrossCheck({ crossCheck }: { crossCheck: CrossCheckClaim[]
                   <div className="flex items-center gap-2 mt-1.5">
                     {supports > 0 && <span className="text-[8px] font-semibold" style={{ color: "#D4C4A8" }}>{supports} SUPPORTS</span>}
                     {contradicts > 0 && <span className="text-[8px] font-semibold" style={{ color: "#A85A50" }}>{contradicts} CONTRADICTS</span>}
-                    <span className="text-[8px]" style={{ color: "#A8A098" }}>{claim.sources.length} source ref(s) for this claim</span>
+                    <span className="text-[8px]" style={{ color: "#A8A098" }}>{refs > 0 ? `${refs} claim-source reference(s)` : claim.sources.length > 0 ? "0 references — search notice, no source retrieved" : "0 references"}</span>
                   </div>
                 </div>
                 <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }} className="shrink-0 mt-1">

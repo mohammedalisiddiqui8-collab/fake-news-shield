@@ -2,6 +2,7 @@
 
 import { action } from "./_generated/server";
 import { v } from "convex/values";
+import { deriveSourceCounts } from "../lib/investigationStats";
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Veritas Fake News Detection Engine v6
@@ -471,7 +472,7 @@ interface CrossCheckClaimResult {
 
 interface TimelineEventResult {
   id: number;
-  type: "claim_identified" | "source_found" | "source_searched" | "corroboration" | "contradiction" | "assessment";
+  type: "claim_identified" | "source_found" | "source_searched" | "corroboration" | "contradiction" | "linguistic_analysis" | "assessment";
   title: string;
   detail: string;
   source?: string;
@@ -607,24 +608,25 @@ function buildTimeline(args: {
     });
   }
 
-  // Linguistic signals (supplementary)
+  // Linguistic/structural signals — SUPPLEMENTARY only, never corroboration.
+  // They are never counted as factual evidence or corroboration anywhere.
   if (args.greenFlags.length > 0 && args.redFlags.length > 0) {
     events.push({
-      id: eventId++, type: "corroboration",
+      id: eventId++, type: "linguistic_analysis",
       title: "Mixed linguistic signals",
-      detail: args.greenFlags.length + " positive and " + args.redFlags.length + " negative linguistic patterns detected (supplementary signals only).",
+      detail: args.greenFlags.length + " positive and " + args.redFlags.length + " negative linguistic patterns detected (supplementary signals only — linguistic analysis is not proof of truth).",
     });
   } else if (args.greenFlags.length > 0) {
     events.push({
-      id: eventId++, type: "corroboration",
+      id: eventId++, type: "linguistic_analysis",
       title: "Positive linguistic signals",
-      detail: args.greenFlags.length + " indicators consistent with credible reporting: " + args.greenFlags.slice(0, 2).join("; ") + ".",
+      detail: args.greenFlags.length + " indicators consistent with credible reporting: " + args.greenFlags.slice(0, 2).join("; ") + ". (Supplementary only — linguistic analysis is not proof of truth.)",
     });
   } else if (args.redFlags.length > 0) {
     events.push({
-      id: eventId++, type: "contradiction",
+      id: eventId++, type: "linguistic_analysis",
       title: "Negative linguistic signals",
-      detail: args.redFlags.length + " indicators of potential unreliability: " + args.redFlags.slice(0, 2).join("; ") + ".",
+      detail: args.redFlags.length + " indicators of potential unreliability: " + args.redFlags.slice(0, 2).join("; ") + ". (Supplementary only — linguistic analysis is not proof of truth.)",
     });
   }
 
@@ -871,10 +873,12 @@ async function analyzeText(text: string, depth: Depth) {
     sources: searchResults[i].sources.map(s => ({ ...s })),
   }));
 
+  // ── SOURCE COUNTS (shared source of truth — same module the frontend uses) ──
+  const sourceCounts = deriveSourceCounts(crossCheck);
+  const totalRetrieved = sourceCounts.uniqueSources; // UNIQUE sources (distinct URLs)
+  const sourceRefs = sourceCounts.claimSourceRefs;   // claim–source references (== sum of per-claim refs)
+  // Lookup list used only to quote example headlines in summaries — NOT for counting.
   const realSourcesAll = crossCheck.flatMap(c => c.sources).filter(s => s.url);
-  const uniqueUrls = new Set(realSourcesAll.map(s => s.url));
-  const totalRetrieved = uniqueUrls.size; // UNIQUE sources (distinct URLs)
-  const sourceRefs = realSourcesAll.length; // claim–source references (a source cited by 2 claims counts twice)
 
   // ── EVIDENCE-BASED VERDICT ──
   const supportedCount = claims.filter(c => c.status === "supported").length;
@@ -966,14 +970,14 @@ async function analyzeText(text: string, depth: Depth) {
   // ── ARTICLE FINGERPRINT (derived from the same investigation) ──
   const fingerprint: FingerprintResult = {
     claims: claims.length,
-    sources: uniqueUrls.size,
+    sources: totalRetrieved,
     sourceRefs,
     verified: supportedCount,
     uncertain: partialCount,
     contradicted: contradictedCount,
     unverified: claims.length - supportedCount - partialCount - contradictedCount,
     sourceCoverage: claims.length > 0 ? Math.round((supportedCount / claims.length) * 100) : 0,
-    evidenceFound: uniqueUrls.size + redFlags.length + greenFlags.length,
+    evidenceFound: totalRetrieved + redFlags.length + greenFlags.length,
   };
 
   // ── EVIDENCE TIMELINE (actual events) ──

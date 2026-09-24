@@ -8,12 +8,13 @@ import {
   XCircle,
   Shield,
   AlertTriangle,
+  Brain,
 } from "lucide-react";
 
 /* ─── Types ─── */
 export interface TimelineEvent {
   id: number;
-  type: "claim_identified" | "source_found" | "source_searched" | "corroboration" | "contradiction" | "assessment";
+  type: "claim_identified" | "source_found" | "source_searched" | "corroboration" | "contradiction" | "linguistic_analysis" | "assessment";
   title: string;
   detail: string;
   source?: string;
@@ -53,6 +54,11 @@ const eventConfig: Record<
     icon: XCircle,
     color: "#A85A50",
     label: "CONTRADICTION",
+  },
+  linguistic_analysis: {
+    icon: Brain,
+    color: "#A8A098",
+    label: "LINGUISTIC ANALYSIS",
   },
   assessment: {
     icon: Shield,

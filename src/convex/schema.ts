@@ -84,7 +84,8 @@ const schema = defineSchema(
         type: v.union(
           v.literal("claim_identified"), v.literal("source_found"),
           v.literal("source_searched"), v.literal("corroboration"),
-          v.literal("contradiction"), v.literal("assessment"),
+          v.literal("contradiction"), v.literal("linguistic_analysis"),
+          v.literal("assessment"),
         ),
         title: v.string(),
         detail: v.string(),
