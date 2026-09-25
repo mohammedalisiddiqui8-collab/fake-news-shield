@@ -399,29 +399,120 @@ function linguisticNote(claim: RawClaim): string {
 }
 
 // ─── SOURCE PROFILE EXTRACTION ──────────────────────────────────────────────
-// Extracts metadata mentioned IN the article text.
-// Does NOT retrieve external information about the source.
+// Extracts metadata mentioned IN the article text. When a URL was retrieved,
+// the submitted URL and the retrieved page metadata are the authoritative
+// original-source metadata (per-field fallback: page JSON-LD → Open Graph →
+// URL domain → page <title> → visible byline/date in text).
+// DISPLAY METADATA ONLY — never used for verdict, confidence, claim
+// classification or evidence scoring. Does NOT retrieve external information
+// about the source.
+
+/** Per-page metadata captured during URL retrieval (Source Profile only). */
+interface PageMeta {
+  title?: string;
+  siteName?: string;
+  publisher?: string;
+  author?: string;
+  published?: string;
+  modified?: string;
+  ogType?: string;
+  articleType?: string;
+}
+
+const MONTH_NAMES = ["January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"];
+
+function cleanField(s?: string): string {
+  return (s || "").replace(/\s+/g, " ").trim();
+}
+
+/** Hostname of the submitted URL without a leading www-/m- prefix. */
+function hostOf(url?: string): string {
+  if (!url) return "";
+  try {
+    return new URL(url).hostname.toLowerCase().replace(/^(www|m|mobile)\./, "");
+  } catch {
+    return "";
+  }
+}
+
+/** Publisher display name derived from a hostname (e.g. apple.com → Apple). */
+function publisherFromHostname(host: string): string {
+  const labels = host.split(".").filter(Boolean);
+  if (labels.length < 2 || /^\d+$/.test(labels[0])) return "";
+  const secondLevel = new Set(["co", "com", "org", "net", "ac", "gov", "edu", "or", "govt", "plc", "ne", "me"]);
+  let core = secondLevel.has(labels[labels.length - 2])
+    ? labels[labels.length - 3]
+    : labels[labels.length - 2];
+  if (!core) core = labels[0];
+  if (!/^[a-z0-9-]{2,}$/i.test(core)) return "";
+  return core.length <= 3 ? core.toUpperCase() : core.charAt(0).toUpperCase() + core.slice(1);
+}
+
+/** Site name from a page <title> suffix, e.g. "Some Headline - Apple". */
+function titlePublisher(title?: string): string {
+  const t = cleanField(title);
+  if (!t) return "";
+  const parts = t.split(/\s+[-–—|]\s+/);
+  if (parts.length < 2) return "";
+  const cand = parts[parts.length - 1].trim();
+  if (!cand || cand.length > 40 || /[.!?]$/.test(cand)) return "";
+  if (!/^[A-Za-z0-9][A-Za-z0-9 ,&'’.-]*$/.test(cand)) return "";
+  return cand;
+}
+
+/** ISO8601 date → "22 September 2026"; other formats pass through trimmed. */
+function normalizePageDate(raw: string): string {
+  const s = cleanField(raw);
+  const iso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (iso) {
+    const monthIndex = parseInt(iso[2], 10) - 1;
+    if (monthIndex >= 0 && monthIndex < 12) {
+      return parseInt(iso[3], 10) + " " + MONTH_NAMES[monthIndex] + " " + iso[1];
+    }
+  }
+  return s;
+}
+
+/** Article type from page metadata (JSON-LD @type / og:type), if determinable. */
+function articleTypeOf(page?: PageMeta): string {
+  if (!page) return "";
+  const ld = page.articleType || "";
+  if (/article|blogposting/i.test(ld)) return "Article";
+  if (/report/i.test(ld)) return "Report";
+  const og = (page.ogType || "").toLowerCase();
+  if (og === "article" || og === "blog") return "Article";
+  if (og.indexOf("video") === 0) return "Video Article";
+  return "";
+}
 
 function extractSourceProfile(
   text: string,
   greenFlags: string[],
   redFlags: string[],
+  ctx?: { url?: string; page?: PageMeta },
 ) {
   const sourceMatch = text.match(/(?:according to|published (?:in|on|by)|reported (?:by|in)|from)\s+(?:the\s+)?([A-Z][A-Za-z\s.&]+(?:University|Institute|Journal|News|Times|Guardian|Reuters|BBC|Nature|Science|Agency|Organization|Report|Foundation|Centre|Center))/i)
     || text.match(/(Reuters|BBC|The New York Times|The Guardian|Nature|Science|The Lancet|CNN|AP News|AFP|Al Jazeera)/i);
-  const source = sourceMatch ? sourceMatch[1].trim() : "NOT AVAILABLE";
+  let source = sourceMatch ? sourceMatch[1].trim() : "NOT AVAILABLE";
+  /** Where the SOURCE value came from — "text" preserves original behavior. */
+  let sourceOrigin: "text" | "page" | "url" = "text";
 
   const domainMatch = text.match(/(www\.)?([a-zA-Z0-9-]+\.[a-z]{2,})/i);
-  const domain = domainMatch ? domainMatch[2] : "NOT AVAILABLE";
+  let domain = domainMatch ? domainMatch[2] : "NOT AVAILABLE";
+  let domainOrigin: "text" | "url" = "text";
 
   const authorMatch = text.match(/(?:by|author:?|written by|reporter:?)\s+([A-Z][a-z]+\s+[A-Z][a-z]+)/i)
     || text.match(/Dr\.\s+[A-Z][a-z]+\s+[A-Z][a-z]+/i)
     || text.match(/(Professor|Prof\.?)\s+[A-Z][a-z]+\s+[A-Z][a-z]+/i);
-  const author = authorMatch ? authorMatch[0].replace(/^(by|author:?|written by|reporter:?)/i, "").trim() : "NOT AVAILABLE";
+  let author = authorMatch ? authorMatch[0].replace(/^(by|author:?|written by|reporter:?)/i, "").trim() : "NOT AVAILABLE";
+  let authorOrigin: "text" | "page" = "text";
 
   const dateMatch = text.match(/(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})/i)
     || text.match(/(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),?\s+(\d{4})/i);
-  const publishedDate = dateMatch ? dateMatch[0] : "NOT AVAILABLE";
+  let publishedDate = dateMatch ? dateMatch[0] : "NOT AVAILABLE";
+  let publishedOrigin: "text" | "page" = "text";
+  let updatedDate = "NOT AVAILABLE";
 
   const isResearch = /university|institute|published in|journal|study|research/i.test(text);
   const isGov = /government|official|minister|agency|cdc|fda|who|nasa/i.test(text);
@@ -429,28 +520,120 @@ function extractSourceProfile(
   // A publisher TYPE is only displayed when a source was actually detected in
   // the text. Keyword hints about the topic (e.g. "government") do not
   // classify an unidentified publisher.
-  const sourceType = source === "NOT AVAILABLE"
+  let sourceType = source === "NOT AVAILABLE"
     ? "NOT AVAILABLE"
     : isResearch ? "Research" : isGov ? "Government" : isNews ? "News" : "Other";
+  let typeOrigin: "text" | "page" = "text";
+
+  // ── URL MODE: the submitted URL + retrieved page metadata are the
+  //    authoritative original-source metadata. Each field is filled
+  //    independently — a field is only NOT AVAILABLE when that specific
+  //    field genuinely cannot be determined.
+  if (ctx) {
+    // DOMAIN — parsed from the submitted URL (authoritative original source).
+    const host = hostOf(ctx.url);
+    if (host) {
+      domain = host;
+      domainOrigin = "url";
+    }
+    const page = ctx.page;
+
+    // SOURCE (publisher): page JSON-LD publisher → Open Graph site name →
+    // URL domain → page <title> → publisher detected in article text.
+    const ldPublisher = cleanField(page?.publisher);
+    const sitePublisher = cleanField(page?.siteName);
+    const domainPublisher = host ? publisherFromHostname(host) : "";
+    const titleName = titlePublisher(page?.title);
+    if (ldPublisher) { source = ldPublisher; sourceOrigin = "page"; }
+    else if (sitePublisher) { source = sitePublisher; sourceOrigin = "page"; }
+    else if (domainPublisher) { source = domainPublisher; sourceOrigin = "url"; }
+    else if (titleName) { source = titleName; sourceOrigin = "page"; }
+    // else: keep the publisher detected in the article text.
+
+    // AUTHOR: page metadata (JSON-LD/meta) → visible byline in text (kept).
+    const pageAuthor = cleanField(page?.author);
+    if (pageAuthor && !/^https?:\/\//i.test(pageAuthor)) {
+      author = pageAuthor;
+      authorOrigin = "page";
+    }
+
+    // PUBLISHED / UPDATED dates from page metadata → in-text date (kept).
+    const pagePublished = cleanField(page?.published);
+    if (pagePublished) {
+      publishedDate = normalizePageDate(pagePublished);
+      publishedOrigin = "page";
+    }
+    const pageModified = cleanField(page?.modified);
+    if (pageModified) updatedDate = normalizePageDate(pageModified);
+
+    // ARTICLE TYPE from page metadata (falls back to keyword heuristic above).
+    const structuredType = articleTypeOf(page);
+    if (structuredType) {
+      sourceType = structuredType;
+      typeOrigin = "page";
+    } else if (source !== "NOT AVAILABLE") {
+      sourceType = isResearch ? "Research" : isGov ? "Government" : isNews ? "News" : "Other";
+    } else {
+      sourceType = "NOT AVAILABLE";
+    }
+  }
 
   const evidence: string[] = [];
-  if (source !== "NOT AVAILABLE") evidence.push("Source name detected in text: " + source);
-  if (author !== "NOT AVAILABLE") evidence.push("Author name detected in text: " + author);
-  if (publishedDate !== "NOT AVAILABLE") evidence.push("Date detected in text: " + publishedDate);
+  if (source !== "NOT AVAILABLE") {
+    evidence.push(
+      sourceOrigin === "page"
+        ? "Publisher detected in retrieved page metadata: " + source
+        : sourceOrigin === "url"
+          ? "Publisher identified from the submitted URL: " + source
+          : "Source name detected in text: " + source,
+    );
+  }
+  if (domain !== "NOT AVAILABLE" && domainOrigin === "url") {
+    evidence.push("Domain parsed from the submitted URL: " + domain);
+  }
+  if (author !== "NOT AVAILABLE") {
+    evidence.push(
+      authorOrigin === "page"
+        ? "Author/byline detected in retrieved page metadata: " + author
+        : "Author name detected in text: " + author,
+    );
+  }
+  if (publishedDate !== "NOT AVAILABLE") {
+    evidence.push(
+      publishedOrigin === "page"
+        ? "Publication date detected in retrieved page metadata: " + publishedDate
+        : "Date detected in text: " + publishedDate,
+    );
+  }
+  if (updatedDate !== "NOT AVAILABLE") {
+    evidence.push("Last-updated date detected in retrieved page metadata: " + updatedDate);
+  }
+  if (typeOrigin === "page" && sourceType !== "NOT AVAILABLE") {
+    evidence.push("Article type detected in retrieved page metadata: " + sourceType);
+  }
   if (greenFlags.length > 0) evidence.push(greenFlags.length + " linguistic credibility signals detected");
   if (redFlags.length > 0) evidence.push(redFlags.length + " warning signals detected");
   if (evidence.length === 0) evidence.push("Limited source metadata could be extracted from text");
 
   const signals = [
-    { label: "Author name in text", available: author !== "NOT AVAILABLE" },
-    { label: "Publication date in text", available: publishedDate !== "NOT AVAILABLE" },
-    { label: "Source name in text", available: source !== "NOT AVAILABLE" },
+    {
+      label: authorOrigin === "page" ? "Author/byline in page metadata" : "Author name in text",
+      available: author !== "NOT AVAILABLE",
+    },
+    {
+      label: publishedOrigin === "page" ? "Publication date in page metadata" : "Publication date in text",
+      available: publishedDate !== "NOT AVAILABLE",
+    },
+    {
+      label: sourceOrigin === "text" ? "Source name in text" : "Publisher identified from URL/page metadata",
+      available: source !== "NOT AVAILABLE",
+    },
     { label: "Attribution language detected", available: /according to|published|official statement/i.test(text) },
     { label: "Institution mentioned", available: /university|institute|organization/i.test(text) },
     { label: "Anonymous sourcing absent", available: !/anonymous|insiders? (reveal|say)|sources? (say|claim)/i.test(text) },
   ];
 
-  return { source, domain, author, publishedDate, updatedDate: "NOT AVAILABLE", sourceType, availableEvidence: evidence, signals };
+  return { source, domain, author, publishedDate, updatedDate, sourceType, availableEvidence: evidence, signals };
 }
 
 type SourceProfile = ReturnType<typeof extractSourceProfile>;
@@ -526,6 +709,8 @@ function buildTimeline(args: {
   sourceRefs: number;
   verdict: string;
   confidence: number;
+  /** True when a URL was retrieved — original-source metadata may come from the submitted URL/page. */
+  fromUrl?: boolean;
 }): TimelineEventResult[] {
   const events: TimelineEventResult[] = [];
   let eventId = 1;
@@ -543,17 +728,28 @@ function buildTimeline(args: {
   });
 
   if (args.sourceProfile.source !== "NOT AVAILABLE") {
-    events.push({
-      id: eventId++, type: "source_found",
-      title: "Source attribution detected in text",
-      detail: "The text mentions a named source: " + args.sourceProfile.source + ". This is text detection, not independent verification.",
-      source: args.sourceProfile.source,
-    });
+    if (args.fromUrl) {
+      events.push({
+        id: eventId++, type: "source_found",
+        title: "Original source identified from submitted URL",
+        detail: "The original publisher/source was identified from the submitted article URL and its retrieved page metadata: " + args.sourceProfile.source + ". This is metadata detection, not independent verification.",
+        source: args.sourceProfile.source,
+      });
+    } else {
+      events.push({
+        id: eventId++, type: "source_found",
+        title: "Source attribution detected in text",
+        detail: "The text mentions a named source: " + args.sourceProfile.source + ". This is text detection, not independent verification.",
+        source: args.sourceProfile.source,
+      });
+    }
   } else {
     events.push({
       id: eventId++, type: "source_searched",
-      title: "No named source detected in text",
-      detail: "No specific source, author, or institution was identified in the text.",
+      title: args.fromUrl ? "No publisher identified" : "No named source detected in text",
+      detail: args.fromUrl
+        ? "No publisher could be identified from the submitted URL, its page metadata, or the article text."
+        : "No specific source, author, or institution was identified in the text.",
     });
   }
 
@@ -694,7 +890,7 @@ function buildFreshness(claims: RawClaim[], sourceProfile: SourceProfile): Fresh
 
 // ─── ARTICLE WORD/CATEGORY ANALYSIS (supplementary linguistic layer) ───────
 
-async function analyzeText(text: string, depth: Depth) {
+async function analyzeText(text: string, depth: Depth, urlCtx?: { url: string; page: PageMeta }) {
   const wordCount = text.split(/\s+/).length;
   let redFlagScore = 0, greenFlagScore = 0;
   const redFlags: string[] = [], greenFlags: string[] = [];
@@ -788,7 +984,7 @@ async function analyzeText(text: string, depth: Depth) {
 
   // ── CLAIM EXTRACTION ──
   const rawClaims = extractRawClaims(text, CLAIM_LIMIT[depth]);
-  const sourceProfile = extractSourceProfile(text, greenFlags, redFlags);
+  const sourceProfile = extractSourceProfile(text, greenFlags, redFlags, urlCtx);
 
   // ── LIVE EXTERNAL CROSS-CHECK ──
   const checked = rawClaims.slice(0, CROSSCHECK_LIMIT[depth]);
@@ -1006,6 +1202,7 @@ async function analyzeText(text: string, depth: Depth) {
     text, claims, sourceProfile, greenFlags, redFlags,
     crossCheck, checkedCount: checked.length, searchFailures,
     totalRetrieved, sourceRefs, verdict, confidence,
+    fromUrl: !!urlCtx,
   });
 
   // ── FRAMING SIGNALS ──
@@ -1060,7 +1257,123 @@ async function analyzeText(text: string, depth: Depth) {
 
 // ─── URL RETRIEVAL ──────────────────────────────────────────────────────────
 
-async function fetchArticleText(url: string): Promise<{ ok: true; text: string } | { ok: false; error: string }> {
+function htmlAttr(tag: string, name: string): string | undefined {
+  const m = tag.match(new RegExp("\\b" + name + "\\s*=\\s*(?:\"([^\"]*)\"|'([^']*)'|([^\\s\">']+))", "i"));
+  return m ? (m[1] ?? m[2] ?? m[3]) : undefined;
+}
+
+function decodeHtml(s: string): string {
+  return s
+    .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">").replace(/&quot;/g, "\"").replace(/&#39;/g, "'")
+    .replace(/&#x27;/gi, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function jsonLdName(val: unknown): string {
+  if (!val) return "";
+  if (typeof val === "string") return decodeHtml(val);
+  if (Array.isArray(val)) return val.map(jsonLdName).filter(Boolean).join(", ");
+  if (typeof val === "object") {
+    const o = val as Record<string, unknown>;
+    if (typeof o.name === "string") return decodeHtml(o.name);
+  }
+  return "";
+}
+
+/**
+ * Parse original-source metadata (title, Open Graph, JSON-LD, byline, dates,
+ * article type) from the raw retrieved HTML — BEFORE text stripping.
+ * Source Profile display only; never feeds verdict/confidence/scoring.
+ */
+function extractPageMetadata(html: string): PageMeta {
+  const page: PageMeta = {};
+
+  // "<title>" fallback
+  const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  if (titleMatch) page.title = decodeHtml(titleMatch[1]);
+
+  // <meta> tags — Open Graph and conventional names
+  const metas: Record<string, string> = {};
+  for (const tag of html.match(/<meta\b[^>]*>/gi) || []) {
+    const keyRaw = htmlAttr(tag, "name") || htmlAttr(tag, "property") || htmlAttr(tag, "itemprop");
+    const content = htmlAttr(tag, "content");
+    if (!keyRaw || !content) continue;
+    const key = keyRaw.toLowerCase();
+    if (!(key in metas)) metas[key] = decodeHtml(content);
+  }
+  page.siteName = metas["og:site_name"] || metas["application-name"] || undefined;
+  page.ogType = metas["og:type"] || undefined;
+  const authorMeta = metas["author"] || metas["article:author"] || metas["byl"];
+  if (authorMeta && !/^https?:\/\//i.test(authorMeta)) page.author = authorMeta;
+  page.publisher = metas["publisher"] && !/^https?:\/\//i.test(metas["publisher"])
+    ? metas["publisher"]
+    : undefined;
+  page.published =
+    metas["article:published_time"] || metas["og:article:published_time"] ||
+    metas["date"] || metas["pubdate"] || metas["publish-date"] || metas["publish_date"] ||
+    metas["publication_date"] || metas["dc.date"] || metas["dcterms.date"] ||
+    metas["timestamp"] || undefined;
+  page.modified =
+    metas["article:modified_time"] || metas["og:updated_time"] ||
+    metas["dcterms.modified"] || metas["last-modified"] || metas["lastmod"] || undefined;
+
+  // JSON-LD (schema.org) — resolves @id references such as
+  // publisher/author: { "@id": "https://example.com/#organization" }.
+  const nodes: any[] = [];
+  const ldRe = /<script[^>]*type\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  let ldMatch: RegExpExecArray | null;
+  while ((ldMatch = ldRe.exec(html)) !== null) {
+    try {
+      const parsed = JSON.parse(ldMatch[1].trim());
+      if (Array.isArray(parsed)) nodes.push(...parsed);
+      else if (parsed && Array.isArray(parsed["@graph"])) nodes.push(...parsed["@graph"]);
+      else if (parsed) nodes.push(parsed);
+    } catch {
+      // malformed JSON-LD — ignore and fall back to other metadata
+    }
+  }
+  const byId = new Map<string, any>();
+  for (const n of nodes) {
+    if (n && typeof n === "object" && typeof n["@id"] === "string") byId.set(n["@id"], n);
+  }
+  const resolveRef = (val: any): any => {
+    if (val && typeof val === "object" && !Array.isArray(val) &&
+        typeof val["@id"] === "string" && byId.has(val["@id"])) {
+      return byId.get(val["@id"]);
+    }
+    return val;
+  };
+  for (const raw of nodes) {
+    const node = resolveRef(raw);
+    if (!node || typeof node !== "object") continue;
+    const typeStr = Array.isArray(node["@type"])
+      ? node["@type"].join(" ")
+      : typeof node["@type"] === "string" ? node["@type"] : "";
+    if (!/article|blogposting|report/i.test(typeStr)) continue;
+    if (!page.publisher) {
+      const p = jsonLdName(resolveRef(node.publisher));
+      if (p) page.publisher = p;
+    }
+    if (!page.author) {
+      const a = jsonLdName(
+        Array.isArray(node.author)
+          ? node.author.map((x: any) => resolveRef(x))
+          : resolveRef(node.author),
+      );
+      if (a && !/^https?:\/\//i.test(a)) page.author = a;
+    }
+    if (!page.published && typeof node.datePublished === "string") page.published = node.datePublished;
+    if (!page.modified && typeof node.dateModified === "string") page.modified = node.dateModified;
+    if (!page.articleType) page.articleType = typeStr;
+    if (!page.title && typeof node.headline === "string") page.title = decodeHtml(node.headline);
+  }
+
+  return page;
+}
+
+async function fetchArticleText(url: string): Promise<{ ok: true; text: string; page: PageMeta } | { ok: false; error: string }> {
   let parsed: URL;
   try {
     parsed = new URL(url);
@@ -1081,6 +1394,9 @@ async function fetchArticleText(url: string): Promise<{ ok: true; text: string }
     });
     if (!res.ok) return { ok: false, error: "server responded with HTTP " + res.status };
     const html = await res.text();
+    // Original-source metadata for the Source Profile — parsed from the raw
+    // HTML before script/style stripping.
+    const page = extractPageMetadata(html);
     const text = html
       .replace(/<script[\s\S]*?<\/script>/gi, " ")
       .replace(/<style[\s\S]*?<\/style>/gi, " ")
@@ -1092,7 +1408,7 @@ async function fetchArticleText(url: string): Promise<{ ok: true; text: string }
       .replace(/\s+/g, " ")
       .trim();
     if (text.length < 100) return { ok: false, error: "no readable article text found on the page" };
-    return { ok: true, text: text.slice(0, 12000) };
+    return { ok: true, text: text.slice(0, 12000), page };
   } catch (e) {
     return { ok: false, error: e instanceof Error ? e.message : "fetch failed" };
   } finally {
@@ -1159,6 +1475,7 @@ export const analyzeNews = action({
     const depth: Depth = args.depth ?? "standard";
     const rawInput = args.text.trim();
     let analyzedText = rawInput;
+    let urlCtx: { url: string; page: PageMeta } | undefined;
 
     if (args.inputType === "url") {
       const fetched = await fetchArticleText(rawInput);
@@ -1170,6 +1487,7 @@ export const analyzeNews = action({
         );
       }
       analyzedText = fetched.text;
+      urlCtx = { url: rawInput, page: fetched.page };
     }
 
     if (analyzedText.length < 10) {
@@ -1179,6 +1497,6 @@ export const analyzeNews = action({
       );
     }
 
-    return await analyzeText(analyzedText, depth);
+    return await analyzeText(analyzedText, depth, urlCtx);
   },
 });

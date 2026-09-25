@@ -1113,7 +1113,7 @@ export default function Dashboard() {
                       <Globe className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
                       <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "#F5F0E8" }}>Source Profile</h3>
                     </div>
-                    <p className="text-[9px]" style={{ color: "#A8A098" }}>Original article metadata detected in the submitted text — kept separate from external cross-check sources. SOURCE — NOT AVAILABLE means no publisher could be identified.</p>
+                    <p className="text-[9px]" style={{ color: "#A8A098" }}>Original article metadata extracted from the submitted text or the retrieved URL page — kept separate from external cross-check sources. SOURCE — NOT AVAILABLE means no publisher could be identified.</p>
                   </div>
                   <div className="px-4 sm:px-5 pb-4">
                     <SourceProfile profile={currentResult.sourceProfile} />
