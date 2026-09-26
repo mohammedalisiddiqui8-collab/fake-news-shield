@@ -1373,6 +1373,213 @@ function extractPageMetadata(html: string): PageMeta {
   return page;
 }
 
+// ─── ARTICLE BODY ISOLATION (claim-extraction boundary) ────────────────────
+// Claims must be derived from the submitted article's primary content only.
+// Navigation menus, related/recommendation cards, "read more" sections,
+// headers/footers, ads, widgets and unrelated timestamps are excluded before
+// any sentence can become a claim. Preferred sources, in order: JSON-LD
+// articleBody → <article> → <main> → main-content containers → whole page
+// (legacy strip). Source Profile metadata keeps parsing the raw HTML and is
+// unaffected; verdict, confidence, evidence and cross-check logic are
+// unchanged — this only narrows the text they analyze.
+
+/** Elements that are never part of the primary article body. */
+const CHROME_TAGS = ["script", "style", "noscript", "svg", "iframe", "nav", "header", "footer", "aside", "form", "button"];
+
+/** class/id tokens that mark a recommendation, widget or ad block. */
+const WIDGET_TOKENS = new Set([
+  "related", "relatedlinks", "recommend", "recommended", "recommendations",
+  "recirculation", "readmore", "readnext", "morestories",
+  "newsletter", "subscribe", "subscription", "signup",
+  "advert", "advertisement", "ad", "ads", "sponsored",
+  "social", "share", "shares", "sharesheet", "sharing",
+  "promo", "trending", "popular", "mostpopular",
+  "comment", "comments", "sidebar", "widget", "widgets",
+  "breadcrumb", "breadcrumbs", "pagination", "pager",
+  "modal", "popup", "cookie", "banner", "skip", "follow",
+  "nav", "navigation",
+]);
+
+/** Widget phrases that simple class/id tokens would miss. */
+const WIDGET_PHRASES = /read[-_ ]?more|related[-_ ]?(?:content|articles|links|stories)|recommend|news[-_ ]?letter|most[-_ ]?popular|download|file[-_ ]?list/;
+
+/** Void elements have no closing tag — only the tag itself is removed. */
+const VOID_TAGS = new Set(["img", "input", "hr", "br", "source", "link", "meta", "area", "base", "col", "embed", "track", "wbr"]);
+
+/** Remove every element in the list, together with its content. */
+function removeTagElements(html: string, tags: string[]): string {
+  let out = html;
+  for (const tag of tags) {
+    out = out.replace(
+      new RegExp("<" + tag + "(?=[\\s>])[^>]*>[\\s\\S]*?<\\/" + tag + "\\s*>", "gi"),
+      " ",
+    );
+  }
+  return out;
+}
+
+/** Does this opening tag belong to a widget / ad / recommendation block? */
+function isWidgetOpening(openTag: string): boolean {
+  const attrRe = /(?:class|id)\s*=\s*(["'])([\s\S]*?)\1/gi;
+  let m: RegExpExecArray | null;
+  while ((m = attrRe.exec(openTag)) !== null) {
+    const value = m[2].toLowerCase();
+    if (WIDGET_PHRASES.test(value)) return true;
+    for (const token of value.split(/[^a-z0-9]+/)) {
+      if (token && WIDGET_TOKENS.has(token)) return true;
+    }
+  }
+  return false;
+}
+
+/** Position right after the balanced closing tag for `tag`, or -1 if the
+ *  element never closes (fallback keeps the legacy first-close behavior). */
+function findBalancedClose(html: string, tag: string, from: number): number {
+  const scan = new RegExp("</?" + tag + "(?=[\\s>/])[^>]*>", "gi");
+  scan.lastIndex = from;
+  let depth = 1;
+  let m: RegExpExecArray | null;
+  while ((m = scan.exec(html)) !== null) {
+    if (m[0].charAt(1) === "/") {
+      depth--;
+      if (depth === 0) return scan.lastIndex;
+    } else {
+      depth++;
+    }
+  }
+  return -1;
+}
+
+/** Cut out widget/recommendation/ad blocks matched by class or id. */
+function removeWidgetBlocks(html: string): string {
+  const openRe = /<([a-z][a-z0-9]*)((?:"[^"]*"|'[^']*'|[^>"'])*)>/gi;
+  const cuts: Array<[number, number]> = [];
+  let m: RegExpExecArray | null;
+  while ((m = openRe.exec(html)) !== null) {
+    const full = m[0];
+    const tag = m[1].toLowerCase();
+    if (!isWidgetOpening(full)) continue;
+    if (full.endsWith("/>") || VOID_TAGS.has(tag)) {
+      cuts.push([m.index, openRe.lastIndex]);
+      continue;
+    }
+    let end = findBalancedClose(html, tag, openRe.lastIndex);
+    if (end === -1) {
+      const closeMatch = new RegExp("</" + tag + "\\s*>", "i").exec(html.slice(openRe.lastIndex));
+      if (closeMatch) end = openRe.lastIndex + closeMatch.index + closeMatch[0].length;
+      else continue;
+    }
+    cuts.push([m.index, end]);
+  }
+  if (cuts.length === 0) return html;
+  cuts.sort((a, b) => a[0] - b[0]);
+  const merged: Array<[number, number]> = [];
+  for (const cut of cuts) {
+    const last = merged[merged.length - 1];
+    if (last && cut[0] <= last[1]) last[1] = Math.max(last[1], cut[1]);
+    else merged.push([cut[0], cut[1]]);
+  }
+  let out = "";
+  let pos = 0;
+  for (const span of merged) {
+    out += html.slice(pos, span[0]) + " ";
+    pos = span[1];
+  }
+  return out + html.slice(pos);
+}
+
+/** Strip tags and decode entities with the legacy rules. */
+function toReadableText(fragment: string): string {
+  return fragment
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">").replace(/&quot;/g, "\"").replace(/&#39;/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** Legacy whole-page strip — unchanged fallback when no structure exists. */
+function wholePageText(html: string): string {
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
+    .replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">").replace(/&quot;/g, "\"").replace(/&#39;/g, "'")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/** schema.org articleBody from the raw HTML, when the page publishes one. */
+function jsonLdArticleBody(html: string): string {
+  const ldRe = /<script[^>]*type\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = ldRe.exec(html)) !== null) {
+    try {
+      const parsed = JSON.parse(m[1].trim());
+      const nodes: any[] = Array.isArray(parsed) ? parsed
+        : parsed && Array.isArray(parsed["@graph"]) ? parsed["@graph"]
+        : parsed ? [parsed] : [];
+      for (const node of nodes) {
+        if (node && typeof node.articleBody === "string" && node.articleBody.trim()) {
+          return node.articleBody;
+        }
+      }
+    } catch {
+      // malformed JSON-LD — ignore and fall through to DOM structure
+    }
+  }
+  return "";
+}
+
+/** Longest match of a candidate pattern as readable text. */
+function bestCandidateText(html: string, pattern: RegExp): string {
+  let best = "";
+  let m: RegExpExecArray | null;
+  pattern.lastIndex = 0;
+  while ((m = pattern.exec(html)) !== null) {
+    const text = toReadableText(m[0]);
+    if (text.length > best.length) best = text;
+    if (pattern.lastIndex === m.index) pattern.lastIndex++;
+  }
+  return best;
+}
+
+/**
+ * Isolate the primary article body for claim extraction.
+ * Order: JSON-LD articleBody → <article> → <main> → main-content containers →
+ * chrome-stripped page → legacy whole-page strip. Returns "" only when the
+ * page has no readable text at all.
+ */
+function extractArticleBody(html: string): string {
+  // Page chrome and widgets are never article content — remove them first.
+  let work = removeTagElements(html, CHROME_TAGS);
+  work = work.replace(/<!--[\s\S]*?-->/g, " ");
+  work = removeWidgetBlocks(work);
+
+  // 1) Structured data — schema.org articleBody (when substantial enough).
+  const ldBody = toReadableText(jsonLdArticleBody(html));
+  if (ldBody.length >= 400) return ldBody;
+
+  // 2) <article>  3) <main>  4) main-content containers.
+  const candidates: RegExp[] = [
+    /<article(?=[\s>])[^>]*>[\s\S]*?<\/article\s*>/gi,
+    /<main(?=[\s>])[^>]*>[\s\S]*?<\/main\s*>/gi,
+    /<(?:div|section)(?=[\s>])[^>]*(?:class|id)\s*=\s*(["'])[^"']*(?:article[-_ ]?(?:content|body)|entry[-_ ]?content|post[-_ ]?(?:content|body)|story[-_ ]?(?:content|body)|field--name-body|rich[-_ ]?text|wysiwyg|main[-_ ]?content)[^"']*\1[^>]*>[\s\S]*?<\/(?:div|section)>/gi,
+  ];
+  for (const candidate of candidates) {
+    const best = bestCandidateText(work, candidate);
+    if (best.length >= 100) return best;
+  }
+
+  // 5) No usable structure — chrome-stripped page, then legacy whole page.
+  const chromeStripped = toReadableText(work);
+  if (chromeStripped.length >= 100) return chromeStripped;
+  return wholePageText(html);
+}
+
 async function fetchArticleText(url: string): Promise<{ ok: true; text: string; page: PageMeta } | { ok: false; error: string }> {
   let parsed: URL;
   try {
@@ -1397,16 +1604,11 @@ async function fetchArticleText(url: string): Promise<{ ok: true; text: string; 
     // Original-source metadata for the Source Profile — parsed from the raw
     // HTML before script/style stripping.
     const page = extractPageMetadata(html);
-    const text = html
-      .replace(/<script[\s\S]*?<\/script>/gi, " ")
-      .replace(/<style[\s\S]*?<\/style>/gi, " ")
-      .replace(/<noscript[\s\S]*?<\/noscript>/gi, " ")
-      .replace(/<!--[\s\S]*?-->/g, " ")
-      .replace(/<[^>]+>/g, " ")
-      .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<")
-      .replace(/&gt;/g, ">").replace(/&quot;/g, "\"").replace(/&#39;/g, "'")
-      .replace(/\s+/g, " ")
-      .trim();
+    // Claim extraction gets ONLY the primary article body: navigation,
+    // related/recommendation content, footers, ads and widgets are excluded
+    // before any sentence can become a claim. Falls back to the whole-page
+    // strip when the page exposes no usable content structure.
+    const text = extractArticleBody(html);
     if (text.length < 100) return { ok: false, error: "no readable article text found on the page" };
     return { ok: true, text: text.slice(0, 12000), page };
   } catch (e) {
