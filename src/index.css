@@ -25,6 +25,9 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  /* Status-only accents — the UI stays monochromatic until status needs meaning */
+  --color-signal-green: #93A883;
+  --color-signal-amber: #C4985A;
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -107,6 +110,40 @@
   }
 
   .text-balance { text-wrap: balance; }
+
+  /* ─── Editorial furniture ─── */
+  .kicker {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    line-height: 1.5;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+  }
+  .num-marker {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    color: #A8906E;
+    font-variant-numeric: tabular-nums;
+  }
+  .tabular { font-variant-numeric: tabular-nums; }
+  .report-sec { scroll-margin-top: 5.5rem; }
+  /* Restrained underline reveal for editorial links */
+  .ul-hover {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    background-size: 0% 1px;
+    transition: background-size 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .ul-hover:hover { background-size: 100% 1px; }
+  /* Hairline row hover — newsroom archive feel */
+  .row-hover { transition: background-color 0.2s ease, transform 0.2s ease; }
+  .row-hover:hover { background-color: rgba(245, 240, 232, 0.025); }
+  /* Horizontal strips (mobile nav) without a visible scrollbar */
+  .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
 }
 
 @keyframes statusPulse {

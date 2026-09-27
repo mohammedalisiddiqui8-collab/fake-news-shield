@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import { Fingerprint, Link2, Shield, CheckCircle2, HelpCircle, XCircle, AlertTriangle } from "lucide-react";
 
 export interface FingerprintData {
   claims: number;
@@ -15,71 +14,62 @@ export interface FingerprintData {
   evidenceFound: number;
 }
 
-const statCards = [
-  { key: "claims" as const, label: "CLAIMS", icon: Fingerprint, color: "#F5F0E8" },
-  { key: "sources" as const, label: "UNIQUE SOURCES", icon: Link2, color: "#F5F0E8" },
-  { key: "verified" as const, label: "VERIFIED", icon: CheckCircle2, color: "#D4C4A8" },
-  { key: "uncertain" as const, label: "UNCERTAIN", icon: HelpCircle, color: "#A8A098" },
-  { key: "contradicted" as const, label: "CONTRADICTED", icon: XCircle, color: "#A85A50" },
-  { key: "unverified" as const, label: "UNVERIFIED", icon: AlertTriangle, color: "#A8A098" },
-];
-
+/**
+ * Article Fingerprint as a compact typographic investigation summary —
+ * serif numerals on hairline cells, status colours used only for meaning.
+ * No analytics cards, no charts: typography and thin separators only.
+ */
 export function ArticleFingerprint({ fingerprint, note }: { fingerprint: FingerprintData; note?: string }) {
   const now = new Date();
   const dateStr = now.getDate() + " " + now.toLocaleString("en", { month: "short" }).toUpperCase() + " " + now.getFullYear();
 
+  const cells = [
+    { label: "Claims", value: String(fingerprint.claims), color: "#F5F0E8" },
+    { label: "Unique sources", value: String(fingerprint.sources), color: "#F5F0E8" },
+    { label: "Verified", value: String(fingerprint.verified), color: "#93A883" },
+    { label: "Uncertain", value: String(fingerprint.uncertain), color: "#C4985A" },
+    { label: "Contradicted", value: String(fingerprint.contradicted), color: "#A85A50" },
+    { label: "Unverified", value: String(fingerprint.unverified), color: "#A8A098" },
+    { label: "Source coverage", value: `${fingerprint.sourceCoverage}%`, color: "#F5F0E8", bar: fingerprint.sourceCoverage },
+    { label: "Claim–source refs", value: fingerprint.sourceRefs != null ? String(fingerprint.sourceRefs) : "—", color: "#F5F0E8" },
+    { label: "Evidence found", value: String(fingerprint.evidenceFound), color: "#F5F0E8" },
+  ];
+
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-3 gap-2">
-        {statCards.map((s, i) => (
+    <div>
+      <div className="grid grid-cols-3 border-t border-border">
+        {cells.map((cell, i) => (
           <motion.div
-            key={s.key}
-            initial={{ opacity: 0, y: 6 }}
+            key={cell.label}
+            initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25, delay: i * 0.04 }}
-            className="p-2.5 rounded"
-            style={{ background: "#0D0D0D", border: "1px solid #1E1E1E" }}
+            transition={{ duration: 0.2, delay: i * 0.03 }}
+            className={`px-3 sm:px-4 py-4 border-b border-border ${i % 3 !== 0 ? "border-l border-border" : ""}`}
           >
-            <span className="text-[8px] tracking-[0.15em] uppercase font-semibold block mb-1" style={{ color: "#A8A098" }}>
-              {s.label}
-            </span>
             <span
-              className="text-[18px] font-bold block leading-none"
-              style={{ color: s.color, fontFamily: "'DM Serif Display', serif" }}
+              className="block text-[24px] sm:text-[27px] leading-none tabular"
+              style={{ fontFamily: "'DM Serif Display', serif", color: cell.color }}
             >
-              {fingerprint[s.key]}
+              {cell.value}
             </span>
+            {cell.bar != null && (
+              <span className="block h-[2px] mt-2 w-full" style={{ background: "#1E1E1E" }}>
+                <motion.span
+                  className="block h-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${cell.bar}%` }}
+                  transition={{ duration: 0.6, delay: 0.2 }}
+                  style={{ background: "#A8906E" }}
+                />
+              </span>
+            )}
+            <span className="block kicker mt-2" style={{ opacity: 0.75 }}>{cell.label}</span>
           </motion.div>
         ))}
       </div>
 
-      <div className="flex gap-2">
-        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.24 }}
-          className="flex-1 p-2.5 rounded" style={{ background: "#0D0D0D", border: "1px solid #1E1E1E" }}>
-          <span className="text-[8px] tracking-[0.15em] uppercase font-semibold block mb-1" style={{ color: "#A8A098" }}>SOURCE COVERAGE</span>
-          <div className="flex items-center gap-2">
-            <span className="text-[14px] font-bold" style={{ color: "#F5F0E8", fontFamily: "'DM Serif Display', serif" }}>{fingerprint.sourceCoverage}%</span>
-            <div className="flex-1 h-1 rounded-full overflow-hidden" style={{ background: "#1E1E1E" }}>
-              <motion.div initial={{ width: 0 }} animate={{ width: fingerprint.sourceCoverage + "%" }}
-                transition={{ duration: 0.6, delay: 0.3 }} className="h-full rounded-full" style={{ background: "#A8906E" }} />
-            </div>
-          </div>
-        </motion.div>
-        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.26 }}
-          className="flex-1 p-2.5 rounded" style={{ background: "#0D0D0D", border: "1px solid #1E1E1E" }}>
-          <span className="text-[8px] tracking-[0.15em] uppercase font-semibold block mb-1" style={{ color: "#A8A098" }}>CLAIM-SOURCE REFS</span>
-          <span className="text-[14px] font-bold" style={{ color: "#F5F0E8", fontFamily: "'DM Serif Display', serif" }}>{fingerprint.sourceRefs ?? "—"}</span>
-        </motion.div>
-        <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.26 }}
-          className="flex-1 p-2.5 rounded" style={{ background: "#0D0D0D", border: "1px solid #1E1E1E" }}>
-          <span className="text-[8px] tracking-[0.15em] uppercase font-semibold block mb-1" style={{ color: "#A8A098" }}>EVIDENCE FOUND</span>
-          <span className="text-[14px] font-bold" style={{ color: "#F5F0E8", fontFamily: "'DM Serif Display', serif" }}>{fingerprint.evidenceFound}</span>
-        </motion.div>
-      </div>
-
-      <div className="flex items-center gap-1.5 pt-1" style={{ borderTop: "1px solid #1E1E1E" }}>
-        <Shield className="w-2.5 h-2.5" style={{ color: "#A8906E" }} />
-        <span className="text-[8px] tracking-[0.1em] uppercase" style={{ color: "#A8A098" }}>{note ?? `LAST UPDATED ${dateStr}`}</span>
+      <div className="mt-3 flex items-center gap-1.5">
+        <span className="kicker" style={{ opacity: 0.55 }}>{note ?? `Last updated ${dateStr}`}</span>
       </div>
     </div>
   );

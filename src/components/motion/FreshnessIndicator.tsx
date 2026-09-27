@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import { Clock, CheckCircle2, AlertTriangle, History, HelpCircle } from "lucide-react";
 
 export interface FreshnessItem {
   claimId: number;
@@ -10,41 +9,62 @@ export interface FreshnessItem {
   newerAvailable: boolean;
 }
 
-const statusConfig: Record<string, { label: string; icon: typeof Clock; color: string; bg: string }> = {
-  current: { label: "CURRENT", icon: CheckCircle2, color: "#D4C4A8", bg: "rgba(212,196,168,0.06)" },
-  recent: { label: "RECENT", icon: Clock, color: "#A8A098", bg: "rgba(168,160,152,0.06)" },
-  outdated: { label: "OUTDATED", icon: AlertTriangle, color: "#A85A50", bg: "rgba(168,90,80,0.06)" },
-  historical: { label: "HISTORICAL", icon: History, color: "#A8A098", bg: "rgba(168,160,152,0.04)" },
-  unknown: { label: "DATE NOT FOUND", icon: HelpCircle, color: "#A8A098", bg: "rgba(168,160,152,0.04)" },
+const statusConfig: Record<string, { label: string; color: string }> = {
+  current: { label: "CURRENT", color: "#93A883" },
+  recent: { label: "RECENT", color: "#A8A098" },
+  outdated: { label: "STALE", color: "#A85A50" },
+  historical: { label: "HISTORICAL", color: "#A8A098" },
+  unknown: { label: "DATE NOT FOUND", color: "#A8A098" },
 };
 
+/**
+ * Information freshness as editorial rows — one claim per hairline entry with
+ * an immediately readable status label. Status colours carry the meaning.
+ */
 export function FreshnessIndicator({ freshness }: { freshness: FreshnessItem[] }) {
   if (!freshness || freshness.length === 0) {
-    return <p className="text-[10px] text-muted-foreground italic py-2">Freshness data unavailable.</p>;
+    return <p className="text-[11px] text-muted-foreground italic py-2">Freshness data unavailable.</p>;
   }
 
   return (
-    <div className="space-y-1.5">
+    <div className="border-t border-border">
       {freshness.map((item, i) => {
         const cfg = statusConfig[item.status] || statusConfig.recent;
-        const Icon = cfg.icon;
         return (
-          <motion.div key={item.claimId} initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
+          <motion.div
+            key={item.claimId}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2, delay: i * 0.04 }}
-            className="p-2.5 rounded" style={{ background: cfg.bg, border: "1px solid #1E1E1E" }}>
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[8px] tracking-[0.12em] uppercase font-semibold" style={{ color: "#A8A098" }}>
-                CLAIM {String(item.claimId).padStart(2, "0")}
-              </span>
-              <div className="flex items-center gap-1">
-                <Icon className="w-2.5 h-2.5" style={{ color: cfg.color }} />
-                <span className="text-[8px] font-bold tracking-[0.1em] uppercase" style={{ color: cfg.color }}>{cfg.label}</span>
+            className="py-3 border-b border-border/70 flex items-start gap-3 sm:gap-4"
+          >
+            <span className="num-marker shrink-0 mt-1">{String(i + 1).padStart(2, "0")}</span>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-3">
+                <span className="kicker" style={{ opacity: 0.65 }}>
+                  Claim {String(item.claimId).padStart(2, "0")}
+                </span>
+                <span
+                  className="shrink-0 text-[8.5px] font-semibold tracking-[0.16em]"
+                  style={{ color: cfg.color }}
+                >
+                  {cfg.label}
+                </span>
               </div>
-            </div>
-            <p className="text-[9px] leading-snug line-clamp-1 mb-1" style={{ color: "#F5F0E8" }}>{item.claimText}</p>
-            <div className="flex items-center gap-2 text-[8px]" style={{ color: "#A8A098" }}>
-              {item.sourceDate !== "NOT AVAILABLE" && <span>Source: {item.sourceDate}</span>}
-              {item.newerAvailable && <span style={{ color: "#A8906E" }}>Newer info available</span>}
+              <p
+                className="mt-1 text-[12.5px] leading-snug"
+                style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#F5F0E8" }}
+              >
+                {item.claimText}
+              </p>
+              <div className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1">
+                {item.sourceDate !== "NOT AVAILABLE" && (
+                  <span className="kicker" style={{ opacity: 0.6 }}>Source: {item.sourceDate}</span>
+                )}
+                {item.newerAvailable && (
+                  <span className="kicker" style={{ color: "#C4985A" }}>Newer information available</span>
+                )}
+              </div>
             </div>
           </motion.div>
         );

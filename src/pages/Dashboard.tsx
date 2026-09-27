@@ -1,25 +1,24 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useNavigate } from "react-router";
 import { useTheme } from "@/components/ThemeProvider";
+import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import {
-  Shield, Search, Clock, Home, Loader2, CheckCircle2, AlertTriangle,
-  XCircle, FileText, Link, Trash2, ChevronRight, Brain, BarChart3,
-  ArrowLeft, ClipboardPaste, BookOpen, TrendingUp, ArrowLeftRight,
-  Sun, Moon, Download, Share2, Lightbulb, Target, Activity, ArrowRight, Globe,
-  Landmark, FlaskConical, Thermometer, Newspaper, Fingerprint, GitCompare, Eye, Play, Layers,
+  Shield, Search, Clock, Home, CheckCircle2, AlertTriangle,
+  XCircle, FileText, Trash2, ChevronRight, Brain, BarChart3,
+  ArrowLeft, ClipboardPaste, BookOpen, ArrowLeftRight,
+  Sun, Moon, Download, Share2, Lightbulb, Target, ArrowRight, Globe,
+  Landmark, FlaskConical, Thermometer, Newspaper, TrendingUp,
+  PenLine, Settings, LogOut,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { CredibilityGauge } from "@/components/CredibilityGauge";
 import { StatsView } from "@/components/StatsView";
 import { MethodologyView } from "@/components/MethodologyView";
 import { VerificationPipeline } from "@/components/motion/VerificationPipeline";
-import { DigitSwap } from "@/components/motion/DigitSwap";
 import { ExpandableClaim } from "@/components/motion/ExpandableClaim";
 import { MorphingPanel } from "@/components/motion/MorphingPanel";
 import { EvidenceChain } from "@/components/motion/EvidenceChain";
@@ -27,7 +26,6 @@ import { ClaimAnalysis, type Claim } from "@/components/motion/ClaimAnalysis";
 import { EvidenceTimeline, type TimelineEvent } from "@/components/motion/EvidenceTimeline";
 import { SourceProfile, type SourceProfileData } from "@/components/motion/SourceProfile";
 import { CompareArticles, type ComparisonResult } from "@/components/motion/CompareArticles";
-import { CaseFiles, type CaseFile } from "@/components/motion/CaseFiles";
 import { ArticleFingerprint, type FingerprintData } from "@/components/motion/ArticleFingerprint";
 import { SourceCrossCheck, type CrossCheckClaim } from "@/components/motion/SourceCrossCheck";
 import { EvidenceMap } from "@/components/motion/EvidenceMap";
@@ -36,11 +34,12 @@ import { FreshnessIndicator, type FreshnessItem } from "@/components/motion/Fres
 import { WhatChanged } from "@/components/motion/WhatChanged";
 import { InvestigationReplay } from "@/components/motion/InvestigationReplay";
 import { RetrievalFailedState } from "@/components/motion/RetrievalFailedState";
-import { getLiveNews, FALLBACK_SAMPLES, getCategoryIconComponent, relativeTime, type LiveArticle } from "@/lib/news";
+import { getLiveNews, FALLBACK_SAMPLES, getCategoryIconComponent, type LiveArticle } from "@/lib/news";
 import { deriveSourceCounts } from "@/lib/investigationStats";
 
 /* ─── Types ─── */
 type Verdict = "likely_real" | "likely_fake" | "uncertain";
+type ViewType = "home" | "result" | "headlines" | "history" | "compare" | "settings" | "stats" | "methodology";
 
 interface CategoryBreakdown {
   category: string;
@@ -74,6 +73,21 @@ interface AnalysisResult {
   failureReason?: string;
 }
 
+/* ─── Status palette — the interface stays monochromatic until status needs meaning ─── */
+const STATUS = {
+  green: "#93A883",
+  amber: "#C4985A",
+  red: "#A85A50",
+  gold: "#C8B490",
+  bronze: "#A8906E",
+} as const;
+
+const verdictStatus: Record<Verdict, string> = {
+  likely_real: STATUS.green,
+  uncertain: STATUS.amber,
+  likely_fake: STATUS.red,
+};
+
 /* ─── Verdict Config (editorial palette) ─── */
 const verdictConfig: Record<Verdict, {
   label: string; icon: typeof CheckCircle2; color: string; bg: string;
@@ -81,17 +95,17 @@ const verdictConfig: Record<Verdict, {
 }> = {
   likely_real: {
     label: "Likely Credible", icon: CheckCircle2, color: "text-primary",
-    bg: "bg-primary/8", border: "border-primary/20", accentColor: "#A8906E",
+    bg: "bg-primary/8", border: "border-primary/20", accentColor: STATUS.green,
     description: "Key factual claims are corroborated by retrieved independent external coverage. Linguistic signals are supplementary only.",
   },
   uncertain: {
     label: "Uncertain", icon: AlertTriangle, color: "text-accent",
-    bg: "bg-accent/10", border: "border-accent/25", accentColor: "#C4985A",
+    bg: "bg-accent/10", border: "border-accent/25", accentColor: STATUS.amber,
     description: "External evidence is insufficient, mixed, or unavailable — key claims remain unverified. Treat this as unconfirmed.",
   },
   likely_fake: {
     label: "Likely Misleading", icon: XCircle, color: "text-destructive",
-    bg: "bg-destructive/10", border: "border-destructive/20", accentColor: "#E85D4A",
+    bg: "bg-destructive/10", border: "border-destructive/20", accentColor: STATUS.red,
     description: "Key factual claims are contradicted by retrieved independent external coverage. Language patterns alone never produce this verdict.",
   },
 };
@@ -103,8 +117,7 @@ function signalLabelFor(flag: string): string {
   return "LANGUAGE SIGNAL";
 }
 
-/* ─── Sample Texts ─── */
-/* ─── Static sample fallback ─── */
+/* ─── Static sample fallback — used only when live headlines cannot be fetched ─── */
 const sampleTexts = FALLBACK_SAMPLES;
 
 /* ─── Unified sample item type ─── */
@@ -141,6 +154,18 @@ const pipelineSteps = [
   { key: "verdict", label: "GENERATING VERDICT", icon: Shield },
 ];
 
+/* ─── Small formatting helpers ─── */
+function fmtFiled(t?: number): string {
+  if (!t) return "—";
+  return new Date(t)
+    .toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })
+    .toUpperCase();
+}
+
+function hostOf(url: string): string {
+  try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return "Submitted URL"; }
+}
+
 /* ─── Animated Counter ─── */
 function AnimatedNumber({ value, duration = 800 }: { value: number; duration?: number }) {
   const [display, setDisplay] = useState(0);
@@ -163,11 +188,222 @@ function AnimatedNumber({ value, duration = 800 }: { value: number; duration?: n
   return <span>{display}</span>;
 }
 
-type ViewType = "analyze" | "result" | "history" | "stats" | "methodology";
+/* ═══════════════════════════════════════════════════════════════════
+   Shared editorial furniture — typography, rules and numbering instead
+   of card grids. Every section header is a newspaper-style rule.
+   ═══════════════════════════════════════════════════════════════════ */
+
+function SectionHead({ no, title, dek, right }: {
+  no: string; title: string; dek?: string; right?: ReactNode;
+}) {
+  return (
+    <div className="flex items-end justify-between gap-6 border-b border-border pb-2.5">
+      <div className="flex items-baseline gap-3 min-w-0">
+        <span className="num-marker shrink-0">{no}</span>
+        <div className="min-w-0">
+          <h2 className="text-[19px] leading-none">{title}</h2>
+          {dek && <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">{dek}</p>}
+        </div>
+      </div>
+      {right && <div className="shrink-0 pb-0.5">{right}</div>}
+    </div>
+  );
+}
+
+function ReportSection({ id, no, title, dek, aside, children }: {
+  id: string; no: string; title: string; dek?: string; aside?: ReactNode; children: ReactNode;
+}) {
+  return (
+    <section id={id} className="report-sec mt-12 lg:mt-16">
+      <div className="flex items-start justify-between gap-6 border-b border-border pb-2.5">
+        <div className="flex items-baseline gap-3 min-w-0">
+          <span className="num-marker shrink-0">{no}</span>
+          <div className="min-w-0">
+            <h2 className="text-[18px] leading-tight">{title}</h2>
+            {dek && <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground max-w-2xl">{dek}</p>}
+          </div>
+        </div>
+        {aside && <div className="hidden sm:block shrink-0 text-right">{aside}</div>}
+      </div>
+      <div className="pt-5">{children}</div>
+    </section>
+  );
+}
+
+/* Small bordered action — visually secondary to the report itself */
+function ActionBtn({ onClick, icon: Icon, children, title }: {
+  onClick: () => void; icon: typeof Download; children: ReactNode; title?: string;
+}) {
+  return (
+    <button
+      type="button"
+      title={title}
+      onClick={onClick}
+      className="inline-flex items-center gap-1.5 h-8 px-3 border border-border text-[10px] uppercase tracking-[0.14em] text-muted-foreground transition-colors hover:text-foreground hover:border-foreground/30"
+    >
+      <Icon className="w-3 h-3" />
+      {children}
+    </button>
+  );
+}
+
+/* Single-hairline metric — numbers and rules, never colourful KPI cards */
+function MetricBar({ label, value, color }: { label: string; value: number | null; color: string }) {
+  return (
+    <div className="py-2.5 border-b border-border/70 last:border-b-0">
+      <div className="flex items-baseline justify-between gap-3 mb-1.5">
+        <span className="kicker truncate">{label}</span>
+        <span className="font-mono text-[10px] tabular shrink-0" style={{ color: value == null ? "#A8A098" : color }}>
+          {value == null ? "—" : `${value}%`}
+        </span>
+      </div>
+      <div className="h-[2px] w-full" style={{ background: "#1E1E1E" }}>
+        {value != null && (
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${value}%` }}
+            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+            className="h-full"
+            style={{ background: color }}
+          />
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ─── The one editorial image: an inline-SVG front-page plate ───
+   Newspaper rules, masthead, column measures, a magnifier and a seal.
+   Monochrome, quiet, supporting — never decorative AI artwork. */
+function EditorialPlate() {
+  const leftLines = [96, 84, 92, 70, 88, 64, 90, 76];
+  const rightLines = [88, 74, 92, 60, 84];
+  return (
+    <svg viewBox="0 0 320 400" className="w-full h-auto" fill="none" aria-hidden="true">
+      <rect x="6" y="6" width="308" height="388" stroke="#F5F0E8" strokeOpacity="0.16" />
+      <rect x="13" y="13" width="294" height="374" stroke="#F5F0E8" strokeOpacity="0.07" />
+
+      {/* masthead */}
+      <text x="160" y="54" textAnchor="middle" fontFamily="'DM Serif Display', serif" fontSize="27" letterSpacing="7" fill="#F5F0E8" fillOpacity="0.85">VERITAS</text>
+      <text x="160" y="72" textAnchor="middle" fontFamily="'JetBrains Mono', monospace" fontSize="6.5" letterSpacing="3.4" fill="#A8A098">TRUTH · EVIDENCE · CONTEXT</text>
+      <line x1="30" y1="84" x2="290" y2="84" stroke="#A8906E" strokeOpacity="0.55" />
+      <line x1="30" y1="87.5" x2="290" y2="87.5" stroke="#F5F0E8" strokeOpacity="0.16" />
+
+      {/* deck headline */}
+      <rect x="30" y="102" width="212" height="8" fill="#F5F0E8" fillOpacity="0.5" />
+      <rect x="30" y="116" width="168" height="8" fill="#F5F0E8" fillOpacity="0.32" />
+      <text x="30" y="140" fontFamily="'JetBrains Mono', monospace" fontSize="6.5" letterSpacing="2.4" fill="#A8A098">FILED BY THE VERIFICATION DESK</text>
+      <line x1="30" y1="150" x2="290" y2="150" stroke="#F5F0E8" strokeOpacity="0.12" />
+
+      {/* two column measures */}
+      <line x1="160" y1="164" x2="160" y2="316" stroke="#F5F0E8" strokeOpacity="0.1" />
+      {leftLines.map((w, i) => (
+        <rect key={`l${i}`} x="30" y={168 + i * 17} width={w * 1.6} height="4" fill="#F5F0E8" fillOpacity={0.16 + (i % 3) * 0.05} />
+      ))}
+      {rightLines.map((w, i) => (
+        <rect key={`r${i}`} x="172" y={168 + i * 17} width={w * 0.95} height="4" fill="#F5F0E8" fillOpacity={0.16 + (i % 2) * 0.05} />
+      ))}
+
+      {/* magnifier over the right column — investigation, not decoration */}
+      <circle cx="220" cy="262" r="38" fill="#0A0A0A" fillOpacity="0.85" stroke="#A8906E" strokeOpacity="0.75" strokeWidth="1.4" />
+      <line x1="247" y1="289" x2="272" y2="314" stroke="#A8906E" strokeOpacity="0.75" strokeWidth="3.5" strokeLinecap="round" />
+      {[246, 256, 266].map((y, i) => (
+        <rect key={`m${i}`} x="194" y={y} width={i === 1 ? 44 : 36} height="3.5" fill="#C8B490" fillOpacity={i === 1 ? 0.65 : 0.4} />
+      ))}
+
+      {/* seal */}
+      <circle cx="56" cy="344" r="20" stroke="#A8906E" strokeOpacity="0.5" />
+      <circle cx="56" cy="344" r="15" stroke="#A8906E" strokeOpacity="0.3" />
+      <text x="56" y="342" textAnchor="middle" fontFamily="'JetBrains Mono', monospace" fontSize="6" letterSpacing="1" fill="#C8B490" fillOpacity="0.8">EVERY</text>
+      <text x="56" y="351" textAnchor="middle" fontFamily="'JetBrains Mono', monospace" fontSize="6" letterSpacing="1" fill="#C8B490" fillOpacity="0.8">CLAIM</text>
+
+      {/* footer rules + dateline */}
+      <line x1="88" y1="336" x2="290" y2="336" stroke="#F5F0E8" strokeOpacity="0.12" />
+      <line x1="88" y1="344" x2="290" y2="344" stroke="#F5F0E8" strokeOpacity="0.12" />
+      <line x1="88" y1="352" x2="248" y2="352" stroke="#F5F0E8" strokeOpacity="0.12" />
+      <line x1="30" y1="372" x2="290" y2="372" stroke="#F5F0E8" strokeOpacity="0.16" />
+      <text x="160" y="384" textAnchor="middle" fontFamily="'JetBrains Mono', monospace" fontSize="6" letterSpacing="3" fill="#A8A098">INDEPENDENT · EVIDENCE-LED · OPEN</text>
+    </svg>
+  );
+}
+
+/* ─── Today's headlines — a newsroom column: thin dividers, no cards ─── */
+function HeadlinesColumn({ items, loading, onPick }: {
+  items: SampleItem[]; loading: boolean; onPick: (item: SampleItem) => void;
+}) {
+  if (loading) {
+    return (
+      <div className="border-t border-border">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-4 py-4 border-b border-border animate-pulse">
+            <div className="h-2 w-16 shrink-0" style={{ background: "#161616" }} />
+            <div className="h-3 flex-1" style={{ background: "#141414" }} />
+            <div className="h-2 w-20 shrink-0 hidden sm:block" style={{ background: "#161616" }} />
+          </div>
+        ))}
+      </div>
+    );
+  }
+  return (
+    <div className="border-t border-border">
+      {items.map((item) => {
+        const CategoryIcon = (() => {
+          const name = getCategoryIconComponent(item.category);
+          const icons: Record<string, typeof Globe> = { Globe, AlertTriangle, Landmark, TrendingUp, FlaskConical, Thermometer, Newspaper };
+          return icons[name] || Newspaper;
+        })();
+        return (
+          <button
+            key={item.label}
+            type="button"
+            onClick={() => onPick(item)}
+            className="group w-full text-left border-b border-border row-hover -mx-2 px-2 py-3.5"
+          >
+            <div className="flex items-baseline gap-4">
+              <span className="hidden sm:flex items-center gap-1.5 w-[6.5rem] shrink-0">
+                <CategoryIcon className="w-3 h-3 shrink-0" style={{ opacity: 0.55 }} />
+                <span className="kicker truncate">{item.category}</span>
+              </span>
+              <span className="flex-1 min-w-0">
+                <span
+                  className="block text-[14px] leading-snug transition-colors group-hover:text-primary"
+                  style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#F5F0E8" }}
+                >
+                  {item.label}
+                </span>
+                <span className="sm:hidden mt-1.5 flex flex-wrap items-center gap-x-2">
+                  <span className="kicker">{item.category}</span>
+                  {item.source && <span className="kicker opacity-50">·</span>}
+                  {item.source && <span className="kicker" style={{ color: "#A8906E" }}>{item.source}</span>}
+                  {item.publishedAgo && <span className="kicker opacity-50">·</span>}
+                  {item.publishedAgo && <span className="kicker opacity-70">{item.publishedAgo}</span>}
+                </span>
+                {item.isSnippet && (
+                  <span className="hidden sm:block kicker mt-1 opacity-45">Excerpt only — full text unavailable</span>
+                )}
+              </span>
+              <span className="hidden sm:flex items-center gap-3 w-[9.5rem] justify-end shrink-0">
+                <span className="kicker truncate" style={{ color: "#A8906E" }}>{item.source}</span>
+                <span className="kicker tabular opacity-60 shrink-0">{item.publishedAgo}</span>
+              </span>
+              <ChevronRight
+                className="hidden sm:block w-3.5 h-3.5 shrink-0 translate-y-0.5 opacity-0 transition-all group-hover:opacity-70 group-hover:translate-x-0.5"
+                style={{ color: "#C8B490" }}
+              />
+            </div>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+type NavItemDef = { id: string; label: string; icon: typeof Home; view: ViewType; action?: "begin"; disabled?: boolean };
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
+  const { signOut } = useAuth();
   const analyses = useQuery(api.analyses.listByUser);
   const createAnalysis = useMutation(api.analyses.create);
   const deleteAnalysis = useMutation(api.analyses.remove);
@@ -177,15 +413,15 @@ export default function Dashboard() {
   const [inputType, setInputType] = useState<"text" | "url">("text");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [currentResult, setCurrentResult] = useState<AnalysisResult | null>(null);
-  const [activeView, setActiveView] = useState<ViewType>("analyze");
+  const [activeView, setActiveView] = useState<ViewType>("home");
   const [currentTip, setCurrentTip] = useState(0);
   const [pipelineStep, setPipelineStep] = useState(-1);
-  const [resultTab, setResultTab] = useState<"overview" | "linguistic" | "source" | "logical" | "findings" | "claims" | "evidence" | "sourceprofile" | "fingerprint" | "crosscheck" | "evidencemap" | "framing" | "freshness" | "whatchanged" | "replay">("overview");
-  const [compareView, setCompareView] = useState(false);
+  const [resultTab, setResultTab] = useState("verdict");
   const [analysisDepth, setAnalysisDepth] = useState<"quick" | "standard" | "deep">("standard");
   const [credFactor, setCredFactor] = useState<string | null>(null);
   const [liveNews, setLiveNews] = useState<LiveArticle[]>([]);
   const [newsLoading, setNewsLoading] = useState(true);
+  const [savedAt, setSavedAt] = useState<number | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   /* ─── Fetch live news on mount ─── */
@@ -235,7 +471,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && activeView === "analyze" && !isAnalyzing && inputText.trim()) {
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter" && activeView === "home" && !isAnalyzing && inputText.trim()) {
         e.preventDefault();
         handleAnalyze();
       }
@@ -262,6 +498,8 @@ export default function Dashboard() {
       const result: AnalysisResult = await runAnalysis({ text: inputText.trim(), inputType, depth: analysisDepth });
       setCurrentResult(result);
       setActiveView("result");
+      setSavedAt(Date.now());
+      setResultTab("verdict");
       // A retrieval failure is NOT an investigation — never persist it as a case file.
       if (!result.retrievalFailed) try {
         await createAnalysis({
@@ -304,7 +542,7 @@ export default function Dashboard() {
     const legacyFailure: string | null =
       typeof analysis.summary === "string" && analysis.summary.startsWith("UNABLE TO RETRIEVE")
         ? (analysis.summary.match(/\(([^)]+)\)/)?.[1] ??
-           "URL could not be accessed or article content could not be retrieved.")
+           "URL could not be accessed or article content could be retrieved.")
         : null;
     setCurrentResult({
       verdict: analysis.verdict, confidence: analysis.confidence, summary: analysis.summary,
@@ -324,7 +562,11 @@ export default function Dashboard() {
       failureReason: legacyFailure ?? undefined,
     });
     setCredFactor(null);
-    setInputText(analysis.inputText); setInputType(analysis.inputType); setActiveView("result");
+    setInputText(analysis.inputText); setInputType(analysis.inputType);
+    setSavedAt(typeof analysis._creationTime === "number" ? analysis._creationTime : Date.now());
+    setResultTab("verdict");
+    setActiveView("result");
+    window.scrollTo({ top: 0 });
   }, []);
 
   const getHighlightedParts = useCallback((text: string, keywords: string[]) => {
@@ -363,6 +605,108 @@ export default function Dashboard() {
       else { await navigator.clipboard.writeText(`${shareData.text}\n${shareData.url}`); toast.success("Copied to clipboard."); }
     } catch { /* cancelled */ }
   }, [currentResult]);
+
+  /* ─── Compare Articles — runs both texts through the REAL pipeline and
+     derives the comparison only from actual analysis results ─── */
+  const handleCompare = useCallback(async (textA: string, textB: string): Promise<ComparisonResult> => {
+    // Run both analyses
+    const [resultA, resultB] = await Promise.all([
+      runAnalysis({ text: textA, inputType: "text" }),
+      runAnalysis({ text: textB, inputType: "text" }),
+    ]);
+
+    // ONE investigation per article — the comparison is derived only
+    // from the real analysis results (claims, evidence, language signals).
+    const sharedClaims: ComparisonResult["sharedClaims"] = [];
+    const contradictoryClaims: ComparisonResult["contradictoryClaims"] = [];
+    const differentFraming: ComparisonResult["differentFraming"] = [];
+    const missingInformation: ComparisonResult["missingInformation"] = [];
+    const sourceDifferences: ComparisonResult["sourceDifferences"] = [];
+
+    const tokens = (t: string) => [...new Set(t.toLowerCase().replace(/[^a-z0-9%$\s-]/g, " ").split(/\s+/).filter(w => w.length >= 4))];
+    const overlap = (a: string, b: string) => {
+      const ta = tokens(a);
+      if (ta.length === 0) return 0;
+      const tb = new Set(tokens(b));
+      return ta.filter(t => tb.has(t)).length / ta.length;
+    };
+
+    const claimsA = resultA.claims ?? [];
+    const claimsB = resultB.claims ?? [];
+
+    // SHARED CLAIMS — statements present in both articles (real text overlap only).
+    const matchedB = new Set<number>();
+    for (const ca of claimsA) {
+      const match = claimsB.find(cb => !matchedB.has(cb.id) && overlap(ca.text, cb.text) >= 0.5);
+      if (!match) continue;
+      matchedB.add(match.id);
+      const conflict = ca.status !== match.status &&
+        (ca.status === "contradicted" || match.status === "contradicted");
+      const agree = ca.status === match.status && ca.status === "supported";
+      sharedClaims.push({
+        claim: ca.text,
+        relationship: conflict ? "conflict" : agree ? "agree" : "unverified",
+      });
+      // CONFLICT is only reported when evidence-backed statuses genuinely differ.
+      if (conflict) {
+        contradictoryClaims.push({
+          claimA: `Article A — ${ca.status.replace("_", " ")}: ${ca.evidence}`,
+          claimB: `Article B — ${match.status.replace("_", " ")}: ${match.evidence}`,
+          explanation: "The same claim received different evidence-backed statuses in the two analyses of retrieved coverage.",
+        });
+      }
+    }
+    if (sharedClaims.length === 0 && claimsA.length === 0 && claimsB.length === 0) {
+      sharedClaims.push({ claim: "No distinct factual claims could be extracted from either article — insufficient evidence available for comparison.", relationship: "unverified" });
+    }
+
+    // DIFFERENT FRAMING — real differences in assessment and language.
+    if (resultA.verdict !== resultB.verdict) {
+      differentFraming.push({
+        topic: "Overall assessment",
+        framingA: resultA.summary.slice(0, 180),
+        framingB: resultB.summary.slice(0, 180),
+      });
+    }
+    const onlyA = resultA.triggeredKeywords.filter(k => !resultB.triggeredKeywords.includes(k));
+    const onlyB = resultB.triggeredKeywords.filter(k => !resultA.triggeredKeywords.includes(k));
+    if (onlyA.length > 0 || onlyB.length > 0) {
+      differentFraming.push({
+        topic: "Warning language",
+        framingA: onlyA.length > 0 ? `Only in A: ${onlyA.slice(0, 3).join(", ")}` : "No unique warning language",
+        framingB: onlyB.length > 0 ? `Only in B: ${onlyB.slice(0, 3).join(", ")}` : "No unique warning language",
+      });
+    }
+
+    // MISSING INFORMATION — figures present in one article but not the other.
+    const nums = (t: string) => [...new Set((t.match(/\d+(?:[.,]\d+)*/g) || []).map(n => n.replace(/,/g, "")))];
+    const numsA = nums(textA);
+    const numsB = nums(textB);
+    const setA = new Set(numsA);
+    const setB = new Set(numsB);
+    numsA.filter(n => !setB.has(n)).slice(0, 5).forEach(n =>
+      missingInformation.push({ present: "A", information: `Figure "${n}" appears in Article A but not in Article B.` }));
+    numsB.filter(n => !setA.has(n)).slice(0, 5).forEach(n =>
+      missingInformation.push({ present: "B", information: `Figure "${n}" appears in Article B but not in Article A.` }));
+
+    // SOURCE DIFFERENCES — what each analysis actually detected.
+    const srcA = resultA.sourceProfile?.source ?? "NOT AVAILABLE";
+    const srcB = resultB.sourceProfile?.source ?? "NOT AVAILABLE";
+    if (srcA !== srcB) {
+      sourceDifferences.push({ source: "Named source attribution", inArticle: "A", detail: srcA === "NOT AVAILABLE" ? "No named source detected in Article A" : `Detected in Article A: ${srcA}` });
+      sourceDifferences.push({ source: "Named source attribution", inArticle: "B", detail: srcB === "NOT AVAILABLE" ? "No named source detected in Article B" : `Detected in Article B: ${srcB}` });
+    }
+    if (resultA.wordCount !== resultB.wordCount) {
+      const longer: "A" | "B" = resultA.wordCount > resultB.wordCount ? "A" : "B";
+      sourceDifferences.push({
+        source: "Content length",
+        inArticle: longer,
+        detail: `Article ${longer} is longer (${Math.max(resultA.wordCount, resultB.wordCount)} words vs ${Math.min(resultA.wordCount, resultB.wordCount)})`,
+      });
+    }
+
+    return { sharedClaims, contradictoryClaims, differentFraming, missingInformation, sourceDifferences };
+  }, [runAnalysis]);
 
   const vc = currentResult ? verdictConfig[currentResult.verdict] : null;
   // Distinct state: URL retrieval failed → no investigation, no verdict.
@@ -452,1022 +796,1405 @@ export default function Dashboard() {
     };
     const total = evidenceStats.redScore + evidenceStats.greenScore;
     return [
-      { label: "Factual Language", value: total > 0 ? Math.round((evidenceStats.greenScore / total) * 100) : null, color: "#A8906E" },
-      { label: "Warning Load", value: total > 0 ? Math.round((evidenceStats.redScore / total) * 100) : null, color: evidenceStats.redScore > evidenceStats.greenScore ? "#A85A50" : "#A8906E" },
-      { label: "Attribution", value: catPct("Attribution Language"), color: "#A8906E" },
-      { label: "Structure", value: catPct("Journalistic Structure"), color: "#A8906E" },
+      { label: "Factual Language", value: total > 0 ? Math.round((evidenceStats.greenScore / total) * 100) : null, color: STATUS.bronze },
+      { label: "Warning Load", value: total > 0 ? Math.round((evidenceStats.redScore / total) * 100) : null, color: evidenceStats.redScore > evidenceStats.greenScore ? STATUS.red : STATUS.bronze },
+      { label: "Attribution", value: catPct("Attribution Language"), color: STATUS.bronze },
+      { label: "Structure", value: catPct("Journalistic Structure"), color: STATUS.bronze },
     ];
   })();
 
-
-  const navItems = [
-    { key: "analyze" as ViewType, icon: Search, label: "Analyze" },
-    { key: "result" as ViewType, icon: BarChart3, label: "Results", disabled: !currentResult },
-    { key: "history" as ViewType, icon: Clock, label: "History" },
-    { key: "stats" as ViewType, icon: TrendingUp, label: "Statistics" },
-    { key: "methodology" as ViewType, icon: BookOpen, label: "Methodology" },
+  /* ─── Navigation — slim editorial desk + report groups ─── */
+  const navGroups: Array<{ title: string; items: NavItemDef[] }> = [
+    {
+      title: "Desk",
+      items: [
+        { id: "home", label: "Home", icon: Home, view: "home" },
+        { id: "new", label: "New Analysis", icon: PenLine, view: "home", action: "begin" },
+        { id: "headlines", label: "Daily Headlines", icon: Newspaper, view: "headlines" },
+        { id: "history", label: "Past Investigations", icon: Clock, view: "history" },
+        { id: "compare", label: "Compare Articles", icon: ArrowLeftRight, view: "compare" },
+        { id: "settings", label: "Settings", icon: Settings, view: "settings" },
+      ],
+    },
+    {
+      title: "Report",
+      items: [
+        { id: "investigation", label: "Investigation", icon: FileText, view: "result", disabled: !currentResult },
+        { id: "stats", label: "Statistics", icon: BarChart3, view: "stats" },
+        { id: "methodology", label: "Methodology", icon: BookOpen, view: "methodology" },
+      ],
+    },
   ];
+  const allNavItems = navGroups.flatMap(g => g.items);
+
+  const goDesk = useCallback((toBegin = false) => {
+    const wasHome = activeView === "home";
+    setActiveView("home");
+    if (!wasHome) window.scrollTo({ top: 0 });
+    if (toBegin) {
+      setTimeout(() => document.getElementById("begin")?.scrollIntoView({ behavior: "smooth", block: "start" }), wasHome ? 10 : 380);
+    }
+  }, [activeView]);
+
+  const goNav = (item: NavItemDef) => {
+    if (item.disabled) return;
+    if (item.action === "begin") { goDesk(true); return; }
+    setActiveView(item.view);
+    window.scrollTo({ top: 0 });
+  };
+
+  const pickHeadline = (item: SampleItem) => {
+    setInputText(item.text);
+    setInputType("text");
+    setTimeout(() => document.getElementById("begin")?.scrollIntoView({ behavior: "smooth", block: "start" }), 60);
+  };
+
+  /* ─── Report contents — single source of truth for rail + numbering ─── */
+  const reportSections: Array<{ id: string; label: string }> =
+    currentResult && !currentResult.retrievalFailed
+      ? [
+          { id: "verdict", label: "Verdict" },
+          ...(currentResult.claims && currentResult.claims.length > 0 ? [{ id: "claims", label: "Claim analysis" }] : []),
+          ...(currentResult.crossCheck && currentResult.crossCheck.length > 0 ? [{ id: "crosscheck", label: "Source cross-check" }] : []),
+          { id: "chain", label: "Evidence chain" },
+          { id: "map", label: "Evidence map" },
+          ...(currentResult.evidenceTimeline && currentResult.evidenceTimeline.length > 0 ? [{ id: "timeline", label: "Timeline" }] : []),
+          { id: "language", label: "Language analysis" },
+          ...(currentResult.framingSignals ? [{ id: "framing", label: "Framing signals" }] : []),
+          ...(currentResult.sourceProfile ? [{ id: "sourceprofile", label: "Source profile" }] : []),
+          ...(currentResult.freshness ? [{ id: "freshness", label: "Freshness" }] : []),
+          ...(currentResult.fingerprint ? [{ id: "fingerprint", label: "Fingerprint" }] : []),
+          { id: "replay", label: "Investigation replay" },
+          { id: "whatchanged", label: "What changed?" },
+          { id: "compare", label: "Compare articles" },
+          { id: "content", label: "Analyzed content" },
+        ]
+      : [];
+
+  const secNo = (id: string) => String(reportSections.findIndex(s => s.id === id) + 1).padStart(2, "0");
+
+  const goToSection = (id: string) => {
+    setResultTab(id);
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  /* Scroll-spy — the contents rail follows the section being read */
+  useEffect(() => {
+    if (activeView !== "result" || !currentResult || currentResult.retrievalFailed) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter(e => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+        if (visible?.target.id) setResultTab(visible.target.id);
+      },
+      { rootMargin: "-38% 0px -55% 0px", threshold: 0 }
+    );
+    reportSections.forEach(s => {
+      const el = document.getElementById(s.id);
+      if (el) observer.observe(el);
+    });
+    return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeView, currentResult]);
+
+  /* ─── Activity — real counts from the archive, typography not KPI cards ─── */
+  const activityCells = analyses
+    ? [
+        { value: analyses.length, label: "Investigations", dek: "filed to the archive" },
+        { value: analyses.filter(a => a.verdict === "likely_real").length, label: "Credible", dek: "corroborated verdicts" },
+        { value: analyses.filter(a => a.verdict === "uncertain").length, label: "Uncertain", dek: "insufficient evidence" },
+        { value: analyses.filter(a => a.verdict === "likely_fake").length, label: "Misleading", dek: "contradicted verdicts" },
+      ]
+    : null;
+
+  /* ─── Investigation masthead derivation — real content only ─── */
+  const reportHeadline = (() => {
+    const raw = (currentResult?.extractedText || inputText || "").trim();
+    const first = raw.split(/\n/).map(s => s.trim()).find(s => s.length > 0) ?? "";
+    const base = first.length > 0 ? first : (inputText.trim() || "Untitled submission");
+    return base.length > 120 ? `${base.slice(0, 120).replace(/\s+\S*$/, "")}…` : base;
+  })();
+  const filedLabel = fmtFiled(savedAt ?? undefined);
+  const sourceMetaLine = currentResult
+    ? `${inputType === "url" ? hostOf(inputText) : "Submitted text"} · ${currentResult.wordCount} words · ${currentResult.claims?.length ?? 0} claims extracted`
+    : "";
+  const todayLabel = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  const editionLabel = fmtFiled(Date.now());
+
+  /* ─── Archive row — a record in a newsroom archive ─── */
+  const renderArchiveRow = (analysis: any, i: number) => {
+    const avc = verdictConfig[(analysis.verdict as Verdict) ?? "uncertain"];
+    // Legacy rows: a stored retrieval failure is NOT an investigation.
+    const wasRetrievalFailure =
+      typeof analysis.summary === "string" && analysis.summary.startsWith("UNABLE TO RETRIEVE");
+    const statusColor = wasRetrievalFailure ? "#A8A098" : (verdictStatus[analysis.verdict as Verdict] ?? "#A8A098");
+    const statusLabel = wasRetrievalFailure ? "Retrieval failed" : avc.label;
+    const subject: string = analysis.inputType === "url"
+      ? analysis.inputText
+      : (analysis.inputText || "").trim().split(/\s+/).slice(0, 16).join(" ");
+    const sourceLabel = analysis.inputType === "url" ? hostOf(analysis.inputText) : "Typed text";
+    return (
+      <motion.div
+        key={analysis._id}
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2, delay: Math.min(i, 8) * 0.03 }}
+        role="button"
+        tabIndex={0}
+        onClick={() => handleLoadFromHistory(analysis)}
+        onKeyDown={(e) => { if (e.key === "Enter") handleLoadFromHistory(analysis); }}
+        className="group cursor-pointer border-b border-border row-hover"
+      >
+        <div className="flex items-center gap-4 px-2 py-3.5">
+          <span className="num-marker w-6 hidden sm:block opacity-70">{String(i + 1).padStart(2, "0")}</span>
+          <div className="flex-1 min-w-0">
+            <p className="text-[13.5px] leading-snug truncate" style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#F5F0E8" }}>
+              {subject || "Untitled submission"}
+            </p>
+            <p className="sm:hidden mt-1.5 flex flex-wrap items-center gap-x-2">
+              <span className="kicker opacity-70">{fmtFiled(analysis._creationTime)}</span>
+              <span className="kicker" style={{ color: statusColor }}>{statusLabel}</span>
+              {!wasRetrievalFailure && <span className="kicker tabular opacity-70">{analysis.confidence}%</span>}
+            </p>
+          </div>
+          <span className="hidden sm:block w-[6.5rem] shrink-0 kicker opacity-70">{fmtFiled(analysis._creationTime)}</span>
+          <span className="hidden sm:flex w-[8.5rem] shrink-0 items-center gap-2">
+            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: statusColor }} />
+            <span className="text-[11px] truncate" style={{ color: statusColor }}>{statusLabel}</span>
+          </span>
+          <span className="hidden sm:block w-10 shrink-0 text-right kicker tabular opacity-80">
+            {wasRetrievalFailure ? "—" : `${analysis.confidence}%`}
+          </span>
+          <span className="hidden sm:block w-[6.5rem] shrink-0 text-right kicker truncate opacity-70">{sourceLabel}</span>
+          <span className="w-12 shrink-0 flex items-center justify-end">
+            <button
+              type="button"
+              aria-label="Remove from archive"
+              onClick={(e) => { e.stopPropagation(); handleDelete(analysis._id); }}
+              className="p-1.5 opacity-0 group-hover:opacity-70 transition-opacity"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+            <ChevronRight
+              className="w-3.5 h-3.5 opacity-0 group-hover:opacity-70 transition-opacity"
+              style={{ color: "#C8B490" }}
+            />
+          </span>
+        </div>
+      </motion.div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* ─── Nav — Dark Green ─── */}
-      <nav className="sticky top-0 z-50"                style={{ background: "rgba(10,10,10,0.92)" }}>
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 h-12 flex items-center justify-between">
-          <button type="button" className="cursor-pointer flex items-center gap-2" onClick={() => navigate("/")}>
-            <Shield className="w-4 h-4" style={{ color: "#F5F0E8" }} />
-            <span className="font-bold tracking-[0.15em] uppercase text-xs" style={{ fontFamily: "'DM Serif Display', serif", color: "#F5F0E8" }}>Veritas</span>
+      {/* ─── Desktop: slim dark sidebar — an editorial desk, not an admin panel ─── */}
+      <aside className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-56 flex-col border-r border-border" style={{ background: "#0C0C0C" }}>
+        <div className="px-5 pt-7 pb-6">
+          <button type="button" className="flex items-center gap-2.5" onClick={() => navigate("/")}>
+            <Shield className="w-4 h-4" style={{ color: "#C8B490" }} />
+            <span className="text-[16px] uppercase tracking-[0.28em]" style={{ fontFamily: "'DM Serif Display', serif", color: "#F5F0E8" }}>
+              Veritas
+            </span>
           </button>
-          <div className="flex items-center">
-            {navItems.map(item => (
-              <Button key={item.key} variant="ghost" size="sm"
-                className="cursor-pointer gap-1 text-[10px] px-1.5 sm:px-2 h-7 rounded"
-                style={activeView === item.key ? { background: "rgba(168,144,110,0.08)", color: "#F5F0E8" } : { color: "#A8A098" }}
-                disabled={item.disabled} onClick={() => setActiveView(item.key)}>
-                <item.icon className="w-3 h-3" /><span className="hidden sm:inline">{item.label}</span>
-              </Button>
-            ))}
-            <div className="w-px h-4 mx-1" style={{ background: "rgba(245,240,232,0.12)" }} />
-            <Button variant="ghost" size="icon" className="cursor-pointer h-7 w-7" style={{ color: "#A8A098" }} onClick={() => navigate("/")}>
-              <Home className="w-3.5 h-3.5" />
-            </Button>
+          <p className="mt-2.5 kicker" style={{ fontSize: 8, letterSpacing: "0.3em" }}>Truth · Evidence · Context</p>
+        </div>
+
+        <nav className="flex-1 px-4 overflow-y-auto">
+          {navGroups.map((group) => (
+            <div key={group.title} className="mb-6">
+              <p className="kicker px-1 mb-2" style={{ opacity: 0.5 }}>{group.title}</p>
+              <div>
+                {group.items.map((item) => {
+                  const active = activeView === item.view && !item.action;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      disabled={item.disabled}
+                      onClick={() => goNav(item)}
+                      title={item.disabled ? "Run an investigation first" : item.label}
+                      className={`relative w-full flex items-center gap-2.5 pl-3 pr-2 py-2 text-left transition-colors ${
+                        item.disabled
+                          ? "opacity-30 cursor-not-allowed"
+                          : active
+                            ? "text-foreground"
+                            : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {active && (
+                        <motion.span
+                          layoutId="nav-active"
+                          className="absolute left-0 top-0 bottom-0 w-px"
+                          style={{ background: "#C8B490" }}
+                        />
+                      )}
+                      <item.icon className="w-3.5 h-3.5 shrink-0" />
+                      <span className="text-[12px] tracking-wide">{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </nav>
+
+        <div className="px-5 py-4 border-t border-border flex items-end justify-between gap-2">
+          <div className="min-w-0">
+            <p className="kicker" style={{ fontSize: 8, opacity: 0.5 }}>Edition</p>
+            <p className="kicker mt-1 tabular" style={{ fontSize: 8, color: "#F5F0E8", opacity: 0.75 }}>{editionLabel}</p>
+          </div>
+          <button
+            type="button"
+            title={theme === "dark" ? "Switch to light" : "Switch to dark"}
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            className="p-2 border border-border text-muted-foreground transition-colors hover:text-foreground hover:border-foreground/30"
+          >
+            {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+          </button>
+        </div>
+      </aside>
+
+      {/* ─── Mobile: compact top bar ─── */}
+      <header className="lg:hidden sticky top-0 z-50 border-b border-border" style={{ background: "#0A0A0A" }}>
+        <div className="h-12 pl-3 pr-2 flex items-center">
+          <button type="button" className="flex items-center gap-2 pr-3 h-full shrink-0" onClick={() => navigate("/")}>
+            <Shield className="w-3.5 h-3.5" style={{ color: "#C8B490" }} />
+            <span className="text-[13px] uppercase tracking-[0.24em]" style={{ fontFamily: "'DM Serif Display', serif", color: "#F5F0E8" }}>
+              Veritas
+            </span>
+          </button>
+          <div className="flex-1 min-w-0 flex items-center justify-end gap-0.5 overflow-x-auto no-scrollbar border-l border-border pl-2">
+            {allNavItems.map((item) => {
+              const active = activeView === item.view && !item.action;
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  disabled={item.disabled}
+                  title={item.label}
+                  aria-label={item.label}
+                  onClick={() => goNav(item)}
+                  className={`shrink-0 h-8 w-8 flex items-center justify-center transition-colors ${
+                    item.disabled ? "opacity-30" : active ? "text-primary" : "text-muted-foreground"
+                  }`}
+                  style={active ? { background: "rgba(200,180,144,0.08)" } : undefined}
+                >
+                  <item.icon className="w-3.5 h-3.5" />
+                </button>
+              );
+            })}
           </div>
         </div>
-      </nav>
+      </header>
 
-      <main className="mx-auto max-w-4xl px-4 sm:px-6 pt-16 sm:pt-14 pb-5 sm:pb-7">
-        <AnimatePresence mode="wait">
-          {/* ═══ ANALYZE ═══ */}
-          {activeView === "analyze" && (
-            <motion.div key="analyze" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }}>
+      {/* ─── Main desk ─── */}
+      <div className="lg:pl-56">
+        <main className="mx-auto max-w-5xl px-4 sm:px-7 lg:px-10 pt-6 lg:pt-12 pb-24">
+          <AnimatePresence mode="wait">
+            {/* ═══════════════ HOME ═══════════════ */}
+            {activeView === "home" && (
+              <motion.div key="home" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
 
-              {/* Pipeline overlay */}
-              <AnimatePresence>
-                {isAnalyzing && (
-                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-[60] bg-background/95 backdrop-blur-sm flex items-center justify-center">
-                    <div className="glass-card rounded-lg p-8 sm:p-10 max-w-sm w-full mx-4 text-center">
-                      <div className="w-12 h-12 rounded bg-primary/8 flex items-center justify-center mx-auto mb-5">
-                        <Activity className="w-6 h-6 text-primary animate-spin-slow" />
-                      </div>
-                      <h3 className="text-sm font-semibold mb-1" style={{ fontFamily: "'DM Serif Display', serif" }}>Verification Pipeline</h3>
-                      <p className="text-[10px] text-muted-foreground mb-6">Analyzing content patterns...</p>
-                      <VerificationPipeline currentStep={pipelineStep} />
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              {/* Header */}
-              <div className="mb-5">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.2em] mb-1">Analyze Article</p>
-                <h1 className="text-xl sm:text-2xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif" }}>Check the truth. In seconds.</h1>
-                <p className="text-xs text-muted-foreground mt-1">Paste the news article, headline or text below and let Veritas analyze it for potential misinformation.</p>
-              </div>
-
-              {/* Tip */}
-              <motion.div key={currentTip} initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }}
-                className="glass-card rounded-lg p-3 mb-3 flex items-start gap-2.5">
-                <Lightbulb className="w-3.5 h-3.5 text-accent mt-0.5 shrink-0" />
-                <p className="text-[11px] text-muted-foreground leading-relaxed">{mediaLiteracyTips[currentTip]}</p>
-              </motion.div>
-
-              {/* Input type toggle */}
-              <div className="flex gap-1.5 mb-3">
-                <Button variant={inputType === "text" ? "default" : "outline"}
-                  className={`cursor-pointer gap-1.5 text-[11px] h-8 rounded ${inputType === "text" ? "bg-primary text-primary-foreground" : "border-border"}`}
-                  onClick={() => setInputType("text")}>
-                  <FileText className="w-3 h-3" />Paste Text
-                </Button>
-                <Button variant={inputType === "url" ? "default" : "outline"}
-                  className={`cursor-pointer gap-1.5 text-[11px] h-8 rounded ${inputType === "url" ? "bg-primary text-primary-foreground" : "border-border"}`}
-                  onClick={() => setInputType("url")}>
-                  <Link className="w-3 h-3" />Paste URL
-                </Button>
-              </div>
-
-              {/* Analysis Depth */}
-              <div className="glass-card rounded-lg p-4 mb-3">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.12em]">Analysis Depth</span>
-                  <span className="text-[10px] font-semibold capitalize" style={{ color: "#A8906E" }}>{analysisDepth}</span>
-                </div>
-                <div className="flex items-center gap-0">
-                  {(["quick", "standard", "deep"] as const).map((depth, i) => (
-                    <button key={depth} type="button"
-                      className={`flex-1 cursor-pointer py-1.5 text-[9px] font-semibold tracking-[0.1em] uppercase transition-all duration-300 ${
-                        analysisDepth === depth ? "text-primary" : "text-muted-foreground/40 hover:text-muted-foreground"
-                      }`}
-                      style={analysisDepth === depth ? { background: "rgba(168,144,110,0.06)", borderBottom: "2px solid #A8906E" } : { borderBottom: "2px solid transparent" }}
-                      onClick={() => setAnalysisDepth(depth)}>
-                      {depth}
-                    </button>
-                  ))}
-                </div>
-                <p className="text-[9px] mt-2" style={{ color: "#A8A098" }}>
-                  {analysisDepth === "quick" && "Fast scan — basic pattern matching and keyword detection."}
-                  {analysisDepth === "standard" && "Full analysis — NLP patterns, source checks, and claim verification."}
-                  {analysisDepth === "deep" && "Comprehensive — deep linguistic analysis, cross-referencing, and detailed reasoning."}
-                </p>
-              </div>
-
-              {/* Textarea */}
-              <div className="glass-card rounded-lg p-0.5 mb-3">
-                <Textarea ref={textareaRef} value={inputText} onChange={e => setInputText(e.target.value)}
-                  placeholder={inputType === "text" ? "Paste your news article, headline or text here..." : "Paste a news URL here..."}
-                  className="min-h-[160px] sm:min-h-[180px] border-0 bg-transparent resize-none focus-visible:ring-0 focus-visible:ring-offset-0 text-sm leading-relaxed" />
-              </div>
-
-              {/* Controls */}
-              <div className="flex items-center justify-between mb-5">
-                <span className="text-[10px] text-muted-foreground">{inputText.length > 0 ? `${inputText.length.toLocaleString()} chars` : "Enter content"}</span>
-                <div className="flex gap-1.5 items-center">
-                  <span className="text-[9px] text-muted-foreground/40 hidden sm:inline font-mono">Ctrl+Enter</span>
-                  <Button variant="ghost" size="sm" className="cursor-pointer gap-1 text-[10px] h-7"
-                    onClick={() => navigator.clipboard.readText().then(t => { setInputText(t); toast.success("Pasted!"); }).catch(() => toast.error("Unable to read clipboard."))}>
-                    <ClipboardPaste className="w-3 h-3" />Paste
-                  </Button>
-                  <Button variant="ghost" size="sm" className="cursor-pointer text-[10px] h-7" onClick={() => setInputText("")} disabled={!inputText}>Clear</Button>
-                </div>
-              </div>
-
-              {/* Samples */}
-              {/* ── Try a Sample / Live News ── */}
-              <div className="mb-5">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-2.5">
-                  {newsLoading ? "Loading headlines…" : liveNews.length > 0 ? "Today's Headlines" : "Try a sample"}
-                </p>
-
-                {/* Loading skeleton */}
-                {newsLoading && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <div key={i} className="glass-card rounded-lg p-3.5 animate-pulse">
-                        <div className="h-3 bg-muted rounded w-3/4 mb-2" />
-                        <div className="h-2 bg-muted rounded w-full mb-1" />
-                        <div className="h-2 bg-muted rounded w-2/3 mb-2" />
-                        <div className="flex gap-1.5">
-                          <div className="h-4 bg-muted rounded w-10" />
-                          <div className="h-4 bg-muted rounded w-14" />
+                {/* Pipeline overlay */}
+                <AnimatePresence>
+                  {isAnalyzing && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="fixed inset-0 z-[60] flex items-center justify-center px-6"
+                      style={{ background: "rgba(10,10,10,0.96)" }}
+                    >
+                      <div className="w-full max-w-sm">
+                        <div className="flex items-baseline justify-between border-b pb-1.5" style={{ borderColor: "rgba(245,240,232,0.55)" }}>
+                          <span className="kicker" style={{ color: "#F5F0E8", opacity: 0.9 }}>Veritas</span>
+                          <span className="kicker">Verification in progress</span>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {/* Sample cards (live or fallback) */}
-                {!newsLoading && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
-                    {displayItems.map((item) => {
-                      const CategoryIcon = (() => {
-                        const name = getCategoryIconComponent(item.category);
-                        const icons: Record<string, typeof Globe> = { Globe, AlertTriangle, Landmark, TrendingUp, FlaskConical, Thermometer, Newspaper };
-                        return icons[name] || Newspaper;
-                      })();
-                      return (
-                      <button key={item.label} type="button"
-                        className="rounded-lg p-3.5 text-left cursor-pointer group transition-all duration-200 border hover:-translate-y-[2px] hover:border-[#A8906E]/20 active:scale-[0.98]"
-                        style={{ background: "#111111", borderColor: "#1E1E1E" }}
-                        onClick={() => { setInputText(item.text); setInputType("text"); }}>
-                        {/* Source + time — metadata first */}
-                        {(item.source || item.publishedAgo) && (
-                          <div className="flex items-center gap-1.5 mb-1.5">
-                            {item.source && (
-                              <span className="text-[8px] font-medium uppercase tracking-[0.1em]" style={{ color: "#A8906E" }}>
-                                {item.source}
-                              </span>
-                            )}
-                            {item.source && item.publishedAgo && (
-                              <span className="text-[8px]" style={{ color: "#A8A09840" }}>·</span>
-                            )}
-                            {item.publishedAgo && (
-                              <span className="text-[8px]" style={{ color: "#A8A098", opacity: 0.6 }}>
-                                {item.publishedAgo}
-                              </span>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Headline — strongest element */}
-                        <div className="flex items-start justify-between gap-2">
-                          <span className="text-[11px] font-semibold leading-snug line-clamp-2" style={{ color: "#F5F0E8" }}>
-                            {item.label}
-                          </span>
-                          <ChevronRight className="w-3 h-3 shrink-0 mt-0.5 transition-transform duration-200 group-hover:translate-x-0.5" style={{ color: "#A8A098" }} />
-                        </div>
-
-                        {/* Snippet — secondary */}
-                        <p className="text-[9px] line-clamp-2 leading-relaxed mt-1" style={{ color: "#A8A098" }}>
-                          {item.text.slice(0, 80)}…
+                        <div className="border-b border-border mt-[3px]" />
+                        <h2 className="mt-6 text-2xl">Investigating the claim</h2>
+                        <p className="mt-2 text-[12px] leading-relaxed text-muted-foreground">
+                          Retrieving sources, extracting claims and cross-checking evidence. This usually takes a few seconds.
                         </p>
-
-                        {/* Category + Status — compact metadata */}
-                        <div className="flex items-center gap-1.5 mt-2">
-                          <Badge variant="outline" className={`text-[8px] px-1.5 py-0 ${item.type === "real" ? "border-primary/25 text-primary" : "border-destructive/25 text-destructive"}`}>
-                            {item.type === "real" ? "Real" : "Fake"}
-                          </Badge>
-                          <div className="flex items-center gap-1">
-                            <CategoryIcon className="w-2.5 h-2.5" style={{ color: "#A8A098", opacity: 0.5 }} />
-                            <span className="text-[8px]" style={{ color: "#A8A098", opacity: 0.6 }}>{item.category}</span>
-                          </div>
-                          {item.isSnippet && (
-                            <span className="text-[7px] px-1 py-0 rounded" style={{ color: "#A8A098", opacity: 0.4, border: "1px solid #1E1E1E" }}>
-                              snippet
-                            </span>
-                          )}
+                        <div className="mt-7">
+                          <VerificationPipeline currentStep={pipelineStep} />
                         </div>
+                        <div className="mt-6 h-px w-full overflow-hidden" style={{ background: "#1E1E1E" }}>
+                          <motion.div
+                            className="h-full"
+                            initial={{ width: "4%" }}
+                            animate={{ width: "96%" }}
+                            transition={{ duration: 3.6, ease: "easeInOut" }}
+                            style={{ background: "#C8B490" }}
+                          />
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* ─── Hero ─── */}
+                <section className="grid lg:grid-cols-[1.5fr_1fr] gap-10 lg:gap-14 items-start">
+                  <div>
+                    <div className="flex items-center gap-3">
+                      <span className="kicker shrink-0">Welcome back</span>
+                      <span className="h-px flex-1" style={{ background: "#1E1E1E" }} />
+                      <span className="kicker shrink-0 hidden sm:inline">{todayLabel}</span>
+                    </div>
+                    <h1 className="mt-7 text-[28px] sm:text-[40px] lg:text-[50px]" style={{ lineHeight: 1.08 }}>
+                      <span className="block">Investigate the truth,</span>
+                      <span className="block">one claim at a time.</span>
+                    </h1>
+                    <p className="mt-5 text-[13.5px] leading-relaxed text-muted-foreground max-w-md">
+                      Verify news, trace evidence, and understand the context behind the claim.
+                    </p>
+                    <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3">
+                      <Button
+                        onClick={() => goDesk(true)}
+                        className="group h-10 px-5 gap-2 text-[10.5px] uppercase tracking-[0.16em] hover:opacity-90"
+                        style={{ background: "#C8B490", color: "#0A0A0A" }}
+                      >
+                        Begin an investigation
+                        <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+                      </Button>
+                      <button
+                        type="button"
+                        onClick={() => { setActiveView("methodology"); window.scrollTo({ top: 0 }); }}
+                        className="kicker ul-hover pb-0.5 transition-colors hover:text-foreground"
+                      >
+                        How Veritas works →
                       </button>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {/* Subtle live indicator */}
-                {liveNews.length > 0 && !newsLoading && (
-                  <div className="flex items-center gap-1.5 mt-2">
-                    <span className="w-1.5 h-1.5 rounded-full" style={{ background: "#A8906E", opacity: 0.6 }} />
-                    <span className="text-[8px] text-muted-foreground/50">Live news · updates every 30 min</span>
-                  </div>
-                )}
-              </div>
-
-              {/* Analyze button */}
-              <button type="button"
-                className="cursor-pointer w-full flex items-center justify-center gap-2 h-11 text-sm font-medium rounded transition-all duration-200 ease-out hover:-translate-y-[1px] hover:shadow-[0_2px_8px_rgba(168,144,110,0.15)] active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none disabled:hover:translate-y-0 disabled:hover:shadow-none"
-                style={{ background: "#A8906E", color: "#0A0A0A" }}
-                onClick={handleAnalyze} disabled={isAnalyzing || !inputText.trim()}>
-                Analyze Content <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-              </button>
-
-              {/* ── Feature cards ── */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-6">
-                {[{ icon: Brain, title: "AI-Powered Analysis", desc: "Advanced NLP & ML models", accent: "#A8906E" }, { icon: Search, title: "Multiple Checks", desc: "Source, logic, language & more", accent: "#A8906E" }, { icon: BarChart3, title: "Detailed Reports", desc: "Clear, simple, actionable", accent: "#A8906E" }].map((f, i) => (
-                  <motion.div key={f.title} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 + i * 0.06, duration: 0.35 }}
-                    className="relative overflow-hidden flex items-center gap-3 px-4 py-3 transition-all duration-200 hover:border-[#A8906E]/15"
-                    style={{ background: "#0D0D0D", border: "1px solid #1E1E1E", borderRadius: "2px" }}>
-                    <div className="absolute top-0 left-0 w-8 h-[1px]" style={{ background: f.accent, opacity: 0.25 }} />
-                    <div className="w-6 h-6 rounded-sm flex items-center justify-center shrink-0" style={{ background: `rgba(168,144,110,0.06)`, border: `1px solid rgba(168,144,110,0.1)` }}>
-                      <f.icon className="w-3 h-3" style={{ color: f.accent, opacity: 0.8 }} />
                     </div>
-                    <div>
-                      <span className="text-[9px] font-semibold block leading-tight tracking-wide" style={{ color: "#F5F0E8" }}>{f.title}</span>
-                      <span className="text-[8px] leading-relaxed" style={{ color: "#A8A098", opacity: 0.7 }}>{f.desc}</span>
+                    <div className="mt-8 pt-4 border-t border-border flex flex-wrap gap-x-6 gap-y-1.5">
+                      <span className="kicker">Live source retrieval</span>
+                      <span className="kicker">Claim-level cross-check</span>
+                      <span className="kicker">Evidence-first verdicts</span>
                     </div>
+                  </div>
+                  <motion.div
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.15 }}
+                    className="hidden sm:block max-w-[290px] lg:max-w-none mx-auto lg:mx-0 w-full"
+                  >
+                    <EditorialPlate />
                   </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          )}
+                </section>
 
-          {/* ═══ RESULT ═══ */}
-          {activeView === "result" && currentResult && vc && (
-            <motion.div key="result" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }}
-              transition={{ duration: 0.25 }}>
-            {retrievalFailed ? (
-              <RetrievalFailedState
-                failedUrl={currentResult.failedUrl}
-                failureReason={currentResult.failureReason}
-                onRetry={() => setActiveView("analyze")}
-                onPasteText={() => { setInputType("text"); setActiveView("analyze"); }}
-              />
-            ) : (
-              <>
-
-              {/* Sidebar + Content layout */}
-              <div className="grid grid-cols-1 lg:grid-cols-[180px_1fr] gap-5">
-                {/* Sidebar */}
-                <div className="hidden lg:block">
-                  <div className="sticky top-20 space-y-1">
-                    <button type="button" className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer mb-4"
-                      onClick={() => setActiveView("analyze")}>
-                      <ArrowLeft className="w-3.5 h-3.5" />Back to Analyze
-                    </button>
-                    <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-2">Analysis Results</p>
-                    {([
-                      { key: "overview" as const, label: "Overview", icon: BarChart3 },
-                      ...(currentResult.fingerprint ? [{ key: "fingerprint" as const, label: "Fingerprint", icon: Fingerprint }] : []),
-                      { key: "linguistic" as const, label: "Linguistic", icon: Search },
-                      { key: "source" as const, label: "Source", icon: Globe },
-                      { key: "logical" as const, label: "Logic", icon: Brain },
-                      { key: "findings" as const, label: "Findings", icon: AlertTriangle },
-                      ...(currentResult.claims && currentResult.claims.length > 0 ? [{ key: "claims" as const, label: "Claims", icon: FileText }] : []),
-                      ...(currentResult.crossCheck && currentResult.crossCheck.length > 0 ? [{ key: "crosscheck" as const, label: "Cross-Check", icon: GitCompare }] : []),
-                      ...(currentResult.framingSignals ? [{ key: "framing" as const, label: "Framing", icon: Eye }] : []),
-                      ...(currentResult.freshness ? [{ key: "freshness" as const, label: "Freshness", icon: Clock }] : []),
-                      ...(currentResult.evidenceTimeline && currentResult.evidenceTimeline.length > 0 ? [{ key: "evidence" as const, label: "Timeline", icon: Clock }] : []),
-                      { key: "evidencemap" as const, label: "Evidence Map", icon: Layers },
-                      { key: "sourceprofile" as const, label: "Source Profile", icon: Globe },
-                      { key: "whatchanged" as const, label: "What Changed?", icon: GitCompare },
-                      { key: "replay" as const, label: "Replay", icon: Play },
-                    ]).map(item => (
-                      <button key={item.key} type="button"
-                        className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded text-[11px] transition-colors cursor-pointer text-left ${
-                          resultTab === item.key ? "bg-primary/8 text-primary font-semibold" : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                        }`}
-                        onClick={() => setResultTab(item.key)}>
-                        <item.icon className="w-3 h-3 shrink-0" />{item.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Mobile back + actions */}
-                <div className="lg:hidden flex items-center justify-between mb-3">
-                  <button type="button" className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-                    onClick={() => setActiveView("analyze")}>
-                    <ArrowLeft className="w-3.5 h-3.5" />New Analysis
-                  </button>
-                  <div className="flex gap-1.5">
-                    <Button variant="outline" size="sm" className="cursor-pointer gap-1 text-[10px] h-7 border-border rounded" onClick={handleExport}>
-                      <Download className="w-3 h-3" />Export
-                    </Button>
-                    <Button variant="outline" size="sm" className="cursor-pointer gap-1 text-[10px] h-7 border-border rounded" onClick={handleShare}>
-                      <Share2 className="w-3 h-3" />Share
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Desktop actions */}
-                <div className="hidden lg:flex justify-end gap-1.5 mb-3">
-                  <Button variant="outline" size="sm" className="cursor-pointer gap-1 text-[10px] h-7 border-border rounded" onClick={handleExport}>
-                    <Download className="w-3 h-3" />Export
-                  </Button>
-                  <Button variant="outline" size="sm" className="cursor-pointer gap-1 text-[10px] h-7 border-border rounded" onClick={handleShare}>
-                    <Share2 className="w-3 h-3" />Share
-                  </Button>
-                </div>
-
-              {/* Verdict Card */}
-              <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.35, delay: 0.05 }} className="mb-4">
-                <div className={`glass-card rounded-lg p-5 sm:p-7 border ${vc.border} relative overflow-hidden`}>
-                  <div className="absolute top-0 left-0 right-0 h-0.5" style={{ background: vc.accentColor }} />
-                  <div className="relative flex flex-col sm:flex-row items-center gap-5">
-                    <CredibilityGauge confidence={currentResult.confidence} verdict={currentResult.verdict} size={140} />
-                    <div className="flex-1 text-center sm:text-left">
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-[0.15em] font-semibold mb-1">Verdict</p>
-                      <div className="flex items-center gap-2.5 mb-2 justify-center sm:justify-start">
-                        <div className={`w-8 h-8 rounded ${vc.bg} flex items-center justify-center`}>
-                          <vc.icon className={`w-4 h-4 ${vc.color}`} />
-                        </div>
-                        <h2 className={`text-lg sm:text-xl font-bold ${vc.color}`} style={{ fontFamily: "'DM Serif Display', serif" }}>{vc.label}</h2>
-                      </div>
-                      <p className="text-xs text-muted-foreground leading-relaxed">{vc.description}</p>
-                      <div className="flex items-center gap-3 mt-2.5 justify-center sm:justify-start flex-wrap">
-                        {currentResult.redFlags.length > 0 && (
-                          <div className="flex items-center gap-1">
-                            <AlertTriangle className="w-3 h-3 text-destructive" />
-                            <span className="text-[10px] text-destructive font-medium">{currentResult.redFlags.length} red</span>
-                          </div>
-                        )}
-                        {currentResult.greenFlags.length > 0 && (
-                          <div className="flex items-center gap-1">
-                            <CheckCircle2 className="w-3 h-3 text-primary" />
-                            <span className="text-[10px] text-primary font-medium">{currentResult.greenFlags.length} green</span>
-                          </div>
-                        )}
-                        <span className="text-[9px] text-muted-foreground/60">{currentResult.wordCount} words</span>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Confidence bar */}
-                  <div className="relative mt-5">
-                    <div className="flex items-center justify-between text-[10px] mb-1">
-                      <span className="text-muted-foreground">Confidence</span>
-                      <span className="font-semibold" style={{ color: vc.accentColor }}><DigitSwap value={currentResult.confidence} suffix="" />%</span>
-                    </div>
-                    <div className="h-1.5 rounded-full bg-muted overflow-hidden">
-                      <motion.div initial={{ width: 0 }} animate={{ width: `${currentResult.confidence}%` }}
-                        transition={{ duration: 0.8, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                        className="h-full rounded-full" style={{ background: vc.accentColor }} />
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-
-              {/* Category Breakdown */}
-              {currentResult.categoryBreakdown.length > 0 && (
-                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.1 }}
-                  className="glass-card rounded-lg p-4 sm:p-5 mb-3">
-                  <div className="flex items-center gap-1.5 mb-3">
-                    <Target className="w-3.5 h-3.5 text-primary" />
-                    <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em]">Category Breakdown</h3>
-                  </div>
-                  <div className="space-y-2">
-                    {currentResult.categoryBreakdown.filter(c => c.maxScore > 0).map((cat, i) => {
-                      const pct = Math.round((cat.score / cat.maxScore) * 100);
-                      return (
-                        <motion.div key={cat.category} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.2, delay: 0.12 + i * 0.03 }}>
-                          <div className="flex items-center justify-between text-[10px] mb-0.5">
-                            <span className="font-medium">{cat.category}</span>
-                            <span className={cat.type === "red" ? "text-destructive" : "text-primary"}>{pct}%</span>
-                          </div>
-                          <div className="h-1 rounded-full bg-muted overflow-hidden">
-                            <motion.div initial={{ width: 0 }} animate={{ width: `${pct}%` }}
-                              transition={{ duration: 0.5, delay: 0.15 + i * 0.04 }}
-                              className="h-full rounded-full"
-                              style={{ background: cat.type === "red" ? "#A85A50" : "#A8906E" }} />
-                          </div>
-                        </motion.div>
-                      );
-                    })}
-                  </div>
-                </motion.div>
-              )}
-
-              {/* ─── Credibility Breakdown (real, interactive) ─── */}
-              {credibilityFactors.length > 0 && (
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.12 }}
-                className="glass-card rounded-lg p-4 sm:p-5 mb-3">
-                <div className="flex items-center justify-between gap-1.5 mb-1">
-                  <div className="flex items-center gap-1.5">
-                    <Activity className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
-                    <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em]">Credibility Breakdown</h3>
-                  </div>
-                  <span className="text-[8px]" style={{ color: "#A8A098", opacity: 0.6 }}>click a factor for its basis</span>
-                </div>
-                <div className="space-y-2 mt-3">
-                  {credibilityFactors.map((item, i) => {
-                    const isShort = item.score == null;
-                    const isOpen = credFactor === item.key;
-                    return (
-                    <div key={item.key}>
-                      <button type="button" className="w-full flex items-center gap-3 text-left cursor-pointer"
-                        onClick={() => setCredFactor(isOpen ? null : item.key)}>
-                        <span className="text-[9px] font-mono tracking-wider w-20 sm:w-28 uppercase shrink-0" style={{ color: isOpen ? "#F5F0E8" : "#A8A098" }}>{item.label}</span>
-                        <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
-                          {!isShort && (
-                            <motion.div initial={{ width: 0 }} animate={{ width: `${item.score}%` }}
-                              transition={{ duration: 0.8, delay: 0.2 + i * 0.1 }}
-                              className="h-full rounded-full" style={{ background: "#A8906E" }} />
-                          )}
-                        </div>
-                        <span className="text-[9px] font-mono w-8 text-right shrink-0" style={{ color: isShort ? "#A8A098" : "#A8906E" }}>
-                          {isShort ? "—" : `${item.score}%`}
-                        </span>
-                      </button>
-                      <AnimatePresence>
-                        {isOpen && (
-                          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-                            className="overflow-hidden">
-                            <p className="text-[9px] leading-relaxed pt-1.5 pb-1 pl-0 sm:pl-28" style={{ color: "#A8A098" }}>
-                              {item.reasoning}
-                            </p>
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                    );
-                  })}
-                </div>
-              </motion.div>
-              )}
-
-              {/* ─── Source Intelligence ─── */}
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.14 }}
-                className="glass-card rounded-lg p-4 sm:p-5 mb-3">
-                <div className="flex items-center gap-1.5 mb-3">
-                  <Globe className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
-                  <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em]">Source Intelligence</h3>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { label: "Input Type", value: inputType === "url" ? "URL" : "Text" },
-                    { label: "Word Count", value: `${currentResult.wordCount}` },
-                    { label: "Red Flags", value: `${currentResult.redFlags.length} detected` },
-                    { label: "Green Flags", value: `${currentResult.greenFlags.length} detected` },
-                  ].map((item) => (
-                    <div key={item.label} className="p-2.5 rounded" style={{ background: "#111111" }}>
-                      <span className="text-[8px] tracking-[0.15em] uppercase font-semibold block mb-0.5" style={{ color: "#A8A098" }}>{item.label}</span>
-                      <span className="text-[11px] font-semibold" style={{ color: "#F5F0E8" }}>{item.value}</span>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
-
-              {/* ─── NLP Language Analysis ─── */}
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.16 }}
-                className="glass-card rounded-lg p-4 sm:p-5 mb-3">
-                <div className="flex items-center gap-1.5 mb-3">
-                  <Brain className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
-                  <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em]">Language Signal</h3>
-                </div>
-                <div className="space-y-2.5">
-                  {languageRows.map((item, i) => (
-                    <div key={item.label}>
-                      <div className="flex items-center justify-between text-[9px] mb-0.5">
-                        <span className="font-mono tracking-wider uppercase" style={{ color: "#A8A098" }}>{item.label}</span>
-                        <span className="font-mono" style={{ color: item.color }}>{item.value == null ? "—" : `${item.value}%`}</span>
-                      </div>
-                      <div className="h-1 rounded-full bg-muted overflow-hidden">
-                        {item.value != null && (
-                          <motion.div initial={{ width: 0 }} animate={{ width: `${item.value}%` }}
-                            transition={{ duration: 0.6, delay: 0.3 + i * 0.08 }}
-                            className="h-full rounded-full" style={{ background: item.color }} />
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <p className="text-[8px] mt-3 leading-relaxed" style={{ color: "#A8A098", opacity: 0.7 }}>
-                  Language signal measures writing style in the submitted text — it is NOT a percentage of content that is true. Verification comes from claims and retrieved external evidence.
-                </p>
-              </motion.div>
-
-              {/* Keywords */}
-              {currentResult.triggeredKeywords.length > 0 && (
-                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.18 }}
-                  className="glass-card rounded-lg p-4 sm:p-5 mb-3">
-                  <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-2.5">Detected Keywords</h3>
-                  <div className="flex flex-wrap gap-1">
-                    {currentResult.triggeredKeywords.map(kw => (
-                      <Badge key={kw} variant="outline" className="text-[9px] border-destructive/25 text-destructive bg-destructive/5 rounded">{kw}</Badge>
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Summary + Reasoning — MorphingPanel */}
-              <MorphingPanel
-                preview={
-                  <div>
-                    <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-2">Summary</h3>
-                    <p className="text-xs leading-relaxed">{currentResult.summary}</p>
-                  </div>
-                }
-                detail={
-                  <div>
-                    <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-2">Detailed Reasoning</h3>
-                    <p className="text-xs leading-relaxed text-muted-foreground">{currentResult.reasoning}</p>
-                  </div>
-                }
-                triggerLabel="VIEW REASONING"
-                className="mb-3"
-                accentColor="#A8906E"
-              />
-
-              {/* Red Flags — ExpandableClaim style */}
-              <div className="mb-3">
-                <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-2 flex items-center gap-1.5">
-                  <AlertTriangle className="w-3 h-3 text-destructive" />Red Flags {currentResult.redFlags.length > 0 && <span className="text-destructive">({currentResult.redFlags.length})</span>}
-                </h3>
-                <div className="space-y-1.5">
-                  {currentResult.redFlags.length === 0 ? (
-                    <p className="text-[10px] text-muted-foreground italic">No red flags detected</p>
-                  ) : (
-                    currentResult.redFlags.map((flag, i) => (
-                      <ExpandableClaim key={i} claimNumber={String(i + 1).padStart(2, "0")} claimText={flag} status="misleading" kind="signal" signalLabel={signalLabelFor(flag)} details="Detected by linguistic pattern matching in the submitted text — this is a language signal, not a factual claim. A signal never proves or disproves a claim; the verdict is driven by retrieved claims and external evidence." />
-                    ))
-                  )}
-                </div>
-              </div>
-              {/* Green Flags */}
-              <div className="mb-3">
-                <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-2 flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3 h-3" style={{ color: "#A8906E" }} />Green Flags {currentResult.greenFlags.length > 0 && <span style={{ color: "#A8906E" }}>({currentResult.greenFlags.length})</span>}
-                </h3>
-                <div className="space-y-1.5">
-                  {currentResult.greenFlags.length === 0 ? (
-                    <p className="text-[10px] text-muted-foreground italic">No positive signals detected</p>
-                  ) : (
-                    currentResult.greenFlags.map((flag, i) => (
-                      <ExpandableClaim key={i} claimNumber={String(i + 1).padStart(2, "0")} claimText={flag} status="supported" kind="signal" signalLabel={signalLabelFor(flag)} details="Positive pattern detected in the submitted text — this is a language signal, not a factual claim. Language signals are NOT proof that any statement is true; credibility is determined by claims corroborated against retrieved external evidence." />
-                    ))
-                  )}
-                </div>
-              </div>
-
-              {/* ─── Evidence Chain ─── */}
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.3 }}
-                className="rounded-lg mb-3 overflow-hidden" style={{ background: "#111111", border: "1px solid #1E1E1E" }}>
-                <div className="px-4 sm:px-5 pt-4 pb-2">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <Link className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
-                    <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "#F5F0E8" }}>Evidence Chain</h3>
-                  </div>
-                  <p className="text-[9px]" style={{ color: "#A8A098" }}>How Veritas reached this verdict — click each stage to explore</p>
-                </div>
-                <EvidenceChain
-                  verdict={currentResult.verdict}
-                  confidence={currentResult.confidence}
-                  redFlags={currentResult.redFlags}
-                  greenFlags={currentResult.greenFlags}
-                  triggeredKeywords={currentResult.triggeredKeywords}
-                  categoryBreakdown={currentResult.categoryBreakdown}
-                  wordCount={currentResult.wordCount}
-                  claimsCount={evidenceStats?.claims.length ?? 0}
-                  sourceName={currentResult.sourceProfile?.source}
-                  externalSources={evidenceStats?.uniqueRetrieved ?? 0}
-                  supportingSources={evidenceStats?.supporting ?? 0}
-                  contradictingSources={evidenceStats?.contradicting ?? 0}
-                  corroboratedClaims={evidenceStats?.supported ?? 0}
-                  contradictedClaims={evidenceStats?.contradicted ?? 0}
-                  uncertainClaims={evidenceStats?.uncertain ?? 0}
-                  unverifiedClaims={evidenceStats?.unverified ?? 0}
-                  crossCheckedClaims={evidenceStats?.crossChecked ?? 0}
-                  claimSourceRefs={evidenceStats?.claimSourceRefs ?? 0}
-                  searchFailed={evidenceStats?.searchFailed ?? false}
-                />
-              </motion.div>
-
-              {/* ─── Claim Analysis ─── */}
-              {currentResult.claims && currentResult.claims.length > 0 && (
-                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.32 }}
-                  className="rounded-lg mb-3 overflow-hidden" style={{ background: "#111111", border: "1px solid #1E1E1E" }}>
-                  <div className="px-4 sm:px-5 pt-4 pb-2">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <FileText className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
-                      <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "#F5F0E8" }}>Claim Analysis</h3>
-                    </div>
-                    <p className="text-[9px]" style={{ color: "#A8A098" }}>{currentResult.claims.length} factual claims extracted — click to explore evidence. Language and structural observations are reported separately as signals, never as claims.</p>
-                  </div>
-                  <div className="px-4 sm:px-5 pb-3">
-                    <ClaimAnalysis claims={currentResult.claims} />
-                  </div>
-                </motion.div>
-              )}
-
-              {/* ─── Evidence Timeline ─── */}
-              {currentResult.evidenceTimeline && currentResult.evidenceTimeline.length > 0 && (
-                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.34 }}
-                  className="rounded-lg mb-3 overflow-hidden" style={{ background: "#111111", border: "1px solid #1E1E1E" }}>
-                  <div className="px-4 sm:px-5 pt-4 pb-2">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <Clock className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
-                      <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "#F5F0E8" }}>Evidence Timeline</h3>
-                    </div>
-                    <p className="text-[9px]" style={{ color: "#A8A098" }}>Chronological verification trail</p>
-                  </div>
-                  <div className="px-4 sm:px-5 pb-3">
-                    <EvidenceTimeline events={currentResult.evidenceTimeline} />
-                  </div>
-                </motion.div>
-              )}
-
-              {/* ─── Source Profile ─── */}
-              {currentResult.sourceProfile && (
-                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.36 }}
-                  className="rounded-lg mb-3 overflow-hidden" style={{ background: "#111111", border: "1px solid #1E1E1E" }}>
-                  <div className="px-4 sm:px-5 pt-4 pb-2">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <Globe className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
-                      <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "#F5F0E8" }}>Source Profile</h3>
-                    </div>
-                    <p className="text-[9px]" style={{ color: "#A8A098" }}>Original article metadata extracted from the submitted text or the retrieved URL page — kept separate from external cross-check sources. SOURCE — NOT AVAILABLE means no publisher could be identified.</p>
-                  </div>
-                  <div className="px-4 sm:px-5 pb-4">
-                    <SourceProfile profile={currentResult.sourceProfile} />
-                  </div>
-                </motion.div>
-              )}
-
-              {/* Highlighted content */}
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.38 }}
-                className="glass-card rounded-lg p-4 sm:p-5">
-                <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-2">
-                  Analyzed Content {currentResult.triggeredKeywords.length > 0 && <span className="text-destructive normal-case">(highlighted)</span>}
-                </h3>
-                <p className="text-[11px] text-muted-foreground leading-relaxed max-h-36 overflow-auto whitespace-pre-wrap">
-                  {currentResult.triggeredKeywords.length > 0
-                    ? getHighlightedParts(currentResult.extractedText || inputText, currentResult.triggeredKeywords).map((part, i) =>
-                        part.highlighted
-                          ? <span key={i} className="bg-destructive/10 text-destructive font-medium px-0.5 rounded">{part.text}</span>
-                          : <span key={i}>{part.text}</span>
-                      )
-                    : (currentResult.extractedText || inputText)
-                  }
-                </p>
-              </motion.div>
-
-              </div>{/* end grid */}
-
-              {/* ─── Compare Articles ─── */}
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.4 }}
-                className="rounded-lg mb-3 overflow-hidden mt-3" style={{ background: "#111111", border: "1px solid #1E1E1E" }}>
-                <div className="px-4 sm:px-5 pt-4 pb-2">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <ArrowLeftRight className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
-                    <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "#F5F0E8" }}>Compare Articles</h3>
-                  </div>
-                  <p className="text-[9px]" style={{ color: "#A8A098" }}>Compare this article with another to find shared claims, contradictions, and differences</p>
-                </div>
-                <div className="px-4 sm:px-5 pb-4">
-                  <CompareArticles
-                    onCompare={async (textA, textB) => {
-                      // Run both analyses
-                      const [resultA, resultB] = await Promise.all([
-                        runAnalysis({ text: textA, inputType: "text" }),
-                        runAnalysis({ text: textB, inputType: "text" }),
-                      ]);
-
-                      // ONE investigation per article — the comparison is derived only
-                      // from the real analysis results (claims, evidence, language signals).
-                      const sharedClaims: ComparisonResult["sharedClaims"] = [];
-                      const contradictoryClaims: ComparisonResult["contradictoryClaims"] = [];
-                      const differentFraming: ComparisonResult["differentFraming"] = [];
-                      const missingInformation: ComparisonResult["missingInformation"] = [];
-                      const sourceDifferences: ComparisonResult["sourceDifferences"] = [];
-
-                      const tokens = (t: string) => [...new Set(t.toLowerCase().replace(/[^a-z0-9%$\s-]/g, " ").split(/\s+/).filter(w => w.length >= 4))];
-                      const overlap = (a: string, b: string) => {
-                        const ta = tokens(a);
-                        if (ta.length === 0) return 0;
-                        const tb = new Set(tokens(b));
-                        return ta.filter(t => tb.has(t)).length / ta.length;
-                      };
-
-                      const claimsA = resultA.claims ?? [];
-                      const claimsB = resultB.claims ?? [];
-
-                      // SHARED CLAIMS — statements present in both articles (real text overlap only).
-                      const matchedB = new Set<number>();
-                      for (const ca of claimsA) {
-                        const match = claimsB.find(cb => !matchedB.has(cb.id) && overlap(ca.text, cb.text) >= 0.5);
-                        if (!match) continue;
-                        matchedB.add(match.id);
-                        const conflict = ca.status !== match.status &&
-                          (ca.status === "contradicted" || match.status === "contradicted");
-                        const agree = ca.status === match.status && ca.status === "supported";
-                        sharedClaims.push({
-                          claim: ca.text,
-                          relationship: conflict ? "conflict" : agree ? "agree" : "unverified",
-                        });
-                        // CONFLICT is only reported when evidence-backed statuses genuinely differ.
-                        if (conflict) {
-                          contradictoryClaims.push({
-                            claimA: `Article A — ${ca.status.replace("_", " ")}: ${ca.evidence}`,
-                            claimB: `Article B — ${match.status.replace("_", " ")}: ${match.evidence}`,
-                            explanation: "The same claim received different evidence-backed statuses in the two analyses of retrieved coverage.",
-                          });
-                        }
-                      }
-                      if (sharedClaims.length === 0 && claimsA.length === 0 && claimsB.length === 0) {
-                        sharedClaims.push({ claim: "No distinct factual claims could be extracted from either article — insufficient evidence available for comparison.", relationship: "unverified" });
-                      }
-
-                      // DIFFERENT FRAMING — real differences in assessment and language.
-                      if (resultA.verdict !== resultB.verdict) {
-                        differentFraming.push({
-                          topic: "Overall assessment",
-                          framingA: resultA.summary.slice(0, 180),
-                          framingB: resultB.summary.slice(0, 180),
-                        });
-                      }
-                      const onlyA = resultA.triggeredKeywords.filter(k => !resultB.triggeredKeywords.includes(k));
-                      const onlyB = resultB.triggeredKeywords.filter(k => !resultA.triggeredKeywords.includes(k));
-                      if (onlyA.length > 0 || onlyB.length > 0) {
-                        differentFraming.push({
-                          topic: "Warning language",
-                          framingA: onlyA.length > 0 ? `Only in A: ${onlyA.slice(0, 3).join(", ")}` : "No unique warning language",
-                          framingB: onlyB.length > 0 ? `Only in B: ${onlyB.slice(0, 3).join(", ")}` : "No unique warning language",
-                        });
-                      }
-
-                      // MISSING INFORMATION — figures present in one article but not the other.
-                      const nums = (t: string) => [...new Set((t.match(/\d+(?:[.,]\d+)*/g) || []).map(n => n.replace(/,/g, "")))];
-                      const numsA = nums(textA);
-                      const numsB = nums(textB);
-                      const setA = new Set(numsA);
-                      const setB = new Set(numsB);
-                      numsA.filter(n => !setB.has(n)).slice(0, 5).forEach(n =>
-                        missingInformation.push({ present: "A", information: `Figure "${n}" appears in Article A but not in Article B.` }));
-                      numsB.filter(n => !setA.has(n)).slice(0, 5).forEach(n =>
-                        missingInformation.push({ present: "B", information: `Figure "${n}" appears in Article B but not in Article A.` }));
-
-                      // SOURCE DIFFERENCES — what each analysis actually detected.
-                      const srcA = resultA.sourceProfile?.source ?? "NOT AVAILABLE";
-                      const srcB = resultB.sourceProfile?.source ?? "NOT AVAILABLE";
-                      if (srcA !== srcB) {
-                        sourceDifferences.push({ source: "Named source attribution", inArticle: "A", detail: srcA === "NOT AVAILABLE" ? "No named source detected in Article A" : `Detected in Article A: ${srcA}` });
-                        sourceDifferences.push({ source: "Named source attribution", inArticle: "B", detail: srcB === "NOT AVAILABLE" ? "No named source detected in Article B" : `Detected in Article B: ${srcB}` });
-                      }
-                      if (resultA.wordCount !== resultB.wordCount) {
-                        const longer: "A" | "B" = resultA.wordCount > resultB.wordCount ? "A" : "B";
-                        sourceDifferences.push({
-                          source: "Content length",
-                          inArticle: longer,
-                          detail: `Article ${longer} is longer (${Math.max(resultA.wordCount, resultB.wordCount)} words vs ${Math.min(resultA.wordCount, resultB.wordCount)})`,
-                        });
-                      }
-
-                      return { sharedClaims, contradictoryClaims, differentFraming, missingInformation, sourceDifferences };
-                    }}
+                {/* ─── 01 · Begin an investigation ─── */}
+                <section id="begin" className="report-sec mt-14 lg:mt-20">
+                  <SectionHead
+                    no="01"
+                    title="Begin an investigation"
+                    dek="Submit a URL or pasted text — Veritas retrieves live sources, extracts factual claims and cross-checks each one against independent coverage."
                   />
-                </div>
-              </motion.div>
 
-              {/* ─── Article Fingerprint ─── */}
-              {currentResult.fingerprint && (
-                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.42 }}
-                  className="rounded-lg mb-3 overflow-hidden" style={{ background: "#111111", border: "1px solid #1E1E1E" }}>
-                  <div className="px-4 sm:px-5 pt-4 pb-2">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <Fingerprint className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
-                      <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "#F5F0E8" }}>Article Fingerprint</h3>
+                  {/* Mode + depth — underlined editorial tabs */}
+                  <div className="mt-4 flex flex-wrap items-center justify-between gap-y-1 border-b border-border">
+                    <div className="flex">
+                      {([["text", "Paste text"], ["url", "Paste url"]] as const).map(([mode, label]) => (
+                        <button
+                          key={mode}
+                          type="button"
+                          onClick={() => setInputType(mode)}
+                          className={`relative px-3 py-2.5 text-[10px] uppercase tracking-[0.16em] transition-colors ${
+                            inputType === mode ? "text-foreground" : "text-muted-foreground/50 hover:text-muted-foreground"
+                          }`}
+                        >
+                          {label}
+                          {inputType === mode && (
+                            <motion.span layoutId="mode-tab" className="absolute left-0 right-0 -bottom-px h-[1.5px]" style={{ background: "#C8B490" }} />
+                          )}
+                        </button>
+                      ))}
                     </div>
-                    <p className="text-[9px]" style={{ color: "#A8A098" }}>Analytical summary of the investigation</p>
-                  </div>
-                  <div className="px-4 sm:px-5 pb-4"><ArticleFingerprint fingerprint={currentResult.fingerprint} /></div>
-                </motion.div>
-              )}
-
-              {/* ─── Source Cross-Check ─── */}
-              {currentResult.crossCheck && currentResult.crossCheck.length > 0 && (
-                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.44 }}
-                  className="rounded-lg mb-3 overflow-hidden" style={{ background: "#111111", border: "1px solid #1E1E1E" }}>
-                  <div className="px-4 sm:px-5 pt-4 pb-2">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <GitCompare className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
-                      <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "#F5F0E8" }}>Source Cross-Check</h3>
+                    <div className="flex items-center">
+                      <span className="kicker mr-3 hidden sm:inline" style={{ opacity: 0.5 }}>Depth</span>
+                      {(["quick", "standard", "deep"] as const).map((depth) => (
+                        <button
+                          key={depth}
+                          type="button"
+                          onClick={() => setAnalysisDepth(depth)}
+                          className={`relative px-3 py-2.5 text-[10px] uppercase tracking-[0.16em] transition-colors ${
+                            analysisDepth === depth ? "text-foreground" : "text-muted-foreground/45 hover:text-muted-foreground"
+                          }`}
+                        >
+                          {depth}
+                          {analysisDepth === depth && (
+                            <motion.span layoutId="depth-tab" className="absolute left-0 right-0 -bottom-px h-[1.5px]" style={{ background: "#A8906E" }} />
+                          )}
+                        </button>
+                      ))}
                     </div>
-                    <p className="text-[9px]" style={{ color: "#A8A098" }}>{currentResult.crossCheck.length} claims cross-referenced · {evidenceStats?.uniqueRetrieved ?? 0} unique sources retrieved · {evidenceStats?.claimSourceRefs ?? 0} claim–source references — independent external sources retrieved during live cross-checking</p>
                   </div>
-                  <div className="px-4 sm:px-5 pb-3"><SourceCrossCheck crossCheck={currentResult.crossCheck} claims={currentResult.claims ?? []} /></div>
-                </motion.div>
-              )}
+                  <p className="mt-2 text-[10.5px] text-muted-foreground">
+                    {analysisDepth === "quick" && "Fast scan — basic pattern matching and keyword detection."}
+                    {analysisDepth === "standard" && "Full analysis — NLP patterns, source checks, and claim verification."}
+                    {analysisDepth === "deep" && "Comprehensive — deep linguistic analysis, cross-referencing, and detailed reasoning."}
+                  </p>
 
-              {/* ─── Evidence Map ─── */}
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.46 }}
-                className="rounded-lg mb-3 overflow-hidden" style={{ background: "#111111", border: "1px solid #1E1E1E" }}>
-                <div className="px-4 sm:px-5 pt-4 pb-2">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <Layers className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
-                    <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "#F5F0E8" }}>Evidence Map</h3>
-                  </div>
-                  <p className="text-[9px]" style={{ color: "#A8A098" }}>Interactive investigation tree</p>
-                </div>
-                <div className="px-4 sm:px-5 pb-3">
-                  <EvidenceMap articleTitle={(currentResult.extractedText || inputText).slice(0, 80)} claims={(currentResult.claims || []).map(c => ({ id: c.id, text: c.text, status: c.status, sources: (currentResult.crossCheck?.find(x => x.claimId === c.id)?.sources ?? []).filter(s => !!s.url).map(s => ({ name: s.name, relationship: s.relationship })) }))} verdict={currentResult.verdict} confidence={currentResult.confidence} />
-                </div>
-              </motion.div>
-
-              {/* ─── Framing Signals ─── */}
-              {currentResult.framingSignals && (
-                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.48 }}
-                  className="rounded-lg mb-3 overflow-hidden" style={{ background: "#111111", border: "1px solid #1E1E1E" }}>
-                  <div className="px-4 sm:px-5 pt-4 pb-2">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <Eye className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
-                      <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "#F5F0E8" }}>Framing Signals</h3>
+                  {/* Editor — one bordered instrument, not a floating card */}
+                  <div className="mt-4 border border-border" style={{ background: "#0D0D0D" }}>
+                    <Textarea
+                      ref={textareaRef}
+                      value={inputText}
+                      onChange={(e) => setInputText(e.target.value)}
+                      placeholder={inputType === "text" ? "Paste your news article, headline or text here..." : "Paste a news URL here..."}
+                      className="min-h-[170px] sm:min-h-[200px] border-0 bg-transparent resize-none focus-visible:ring-0 focus-visible:ring-offset-0 text-[13.5px] leading-relaxed placeholder:text-muted-foreground/40"
+                    />
+                    <div className="flex items-center justify-between gap-3 border-t border-border px-3 py-2">
+                      <span className="kicker tabular">
+                        {inputText.length > 0
+                          ? `${inputText.length.toLocaleString()} characters`
+                          : inputType === "url" ? "Awaiting article URL" : "Awaiting article text"}
+                      </span>
+                      <div className="flex items-center gap-1">
+                        <span className="kicker mr-2 hidden sm:inline" style={{ opacity: 0.5 }}>Ctrl + Enter</span>
+                        <button
+                          type="button"
+                          className="kicker px-2 py-1 transition-colors hover:text-foreground"
+                          onClick={() => navigator.clipboard.readText().then(t => { setInputText(t); toast.success("Pasted!"); }).catch(() => toast.error("Unable to read clipboard."))}
+                        >
+                          <span className="inline-flex items-center gap-1"><ClipboardPaste className="w-3 h-3" />Paste</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="kicker px-2 py-1 transition-colors hover:text-foreground disabled:opacity-30"
+                          disabled={!inputText}
+                          onClick={() => setInputText("")}
+                        >
+                          Clear
+                        </button>
+                      </div>
                     </div>
-                    <p className="text-[9px]" style={{ color: "#A8A098" }}>Narrative and rhetorical analysis</p>
                   </div>
-                  <div className="px-4 sm:px-5 pb-3"><FramingSignals signals={currentResult.framingSignals} /></div>
-                </motion.div>
-              )}
 
-              {/* ─── Information Freshness ─── */}
-              {currentResult.freshness && (
-                <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.5 }}
-                  className="rounded-lg mb-3 overflow-hidden" style={{ background: "#111111", border: "1px solid #1E1E1E" }}>
-                  <div className="px-4 sm:px-5 pt-4 pb-2">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <Clock className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
-                      <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "#F5F0E8" }}>Information Freshness</h3>
+                  {/* Actions — a rotating media-literacy note beside the single strong CTA */}
+                  <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={currentTip}
+                        initial={{ opacity: 0, y: -3 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 3 }}
+                        transition={{ duration: 0.3 }}
+                        className="flex items-start gap-2 max-w-md"
+                      >
+                        <Lightbulb className="w-3.5 h-3.5 mt-0.5 shrink-0" style={{ color: "#C4985A" }} />
+                        <p className="text-[11px] leading-relaxed text-muted-foreground italic">{mediaLiteracyTips[currentTip]}</p>
+                      </motion.div>
+                    </AnimatePresence>
+                    <Button
+                      onClick={handleAnalyze}
+                      disabled={isAnalyzing || !inputText.trim()}
+                      className="group shrink-0 h-11 px-7 gap-2 text-[10.5px] uppercase tracking-[0.16em] hover:opacity-90 disabled:opacity-40"
+                      style={{ background: "#C8B490", color: "#0A0A0A" }}
+                    >
+                      Analyze
+                      <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+                    </Button>
+                  </div>
+                </section>
+
+                {/* ─── 02 · Recent investigations ─── */}
+                <section className="mt-14 lg:mt-20">
+                  <SectionHead
+                    no="02"
+                    title="Recent investigations"
+                    dek="Every filed case — verdicts are generated from retrieved evidence, never from language alone."
+                    right={
+                      <button
+                        type="button"
+                        onClick={() => { setActiveView("history"); window.scrollTo({ top: 0 }); }}
+                        className="kicker ul-hover transition-colors hover:text-foreground"
+                      >
+                        View all →
+                      </button>
+                    }
+                  />
+                  {analyses === undefined ? (
+                    <div className="mt-4 space-y-3">
+                      {Array.from({ length: 3 }).map((_, i) => (
+                        <div key={i} className="flex items-center gap-4 py-3.5 border-b border-border animate-pulse">
+                          <div className="h-3 w-6" style={{ background: "#161616" }} />
+                          <div className="h-3 flex-1" style={{ background: "#141414" }} />
+                          <div className="h-3 w-24 hidden sm:block" style={{ background: "#161616" }} />
+                        </div>
+                      ))}
                     </div>
-                    <p className="text-[9px]" style={{ color: "#A8A098" }}>Timeliness assessment</p>
-                  </div>
-                  <div className="px-4 sm:px-5 pb-3"><FreshnessIndicator freshness={currentResult.freshness} /></div>
-                </motion.div>
-              )}
+                  ) : analyses.length === 0 ? (
+                    <div className="mt-6 border border-border px-6 py-10 text-center">
+                      <p className="text-lg" style={{ fontFamily: "'DM Serif Display', serif" }}>No investigations filed yet.</p>
+                      <p className="mt-2 text-[12px] text-muted-foreground max-w-sm mx-auto leading-relaxed">
+                        The archive fills as you verify — every verdict, source and confidence score is kept here.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => goDesk(true)}
+                        className="mt-5 kicker ul-hover transition-colors"
+                        style={{ color: "#C8B490" }}
+                      >
+                        Begin your first investigation →
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="mt-3 hidden sm:flex items-center gap-4 px-2 pb-1.5 border-b border-border">
+                        <span className="kicker w-6" style={{ opacity: 0.55 }}>No.</span>
+                        <span className="kicker flex-1" style={{ opacity: 0.55 }}>Subject</span>
+                        <span className="kicker w-[6.5rem] shrink-0" style={{ opacity: 0.55 }}>Filed</span>
+                        <span className="kicker w-[8.5rem] shrink-0" style={{ opacity: 0.55 }}>Verdict</span>
+                        <span className="kicker w-10 shrink-0 text-right" style={{ opacity: 0.55 }}>Conf.</span>
+                        <span className="kicker w-[6.5rem] shrink-0 text-right" style={{ opacity: 0.55 }}>Source</span>
+                        <span className="w-12 shrink-0" />
+                      </div>
+                      {analyses.slice(0, 6).map((analysis, i) => renderArchiveRow(analysis, i))}
+                    </>
+                  )}
+                </section>
 
-              {/* ─── What Changed? ─── */}
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.52 }}
-                className="rounded-lg mb-3 overflow-hidden" style={{ background: "#111111", border: "1px solid #1E1E1E" }}>
-                <div className="px-4 sm:px-5 pt-4 pb-2">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <GitCompare className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
-                    <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "#F5F0E8" }}>What Changed?</h3>
+                {/* ─── 03 · Activity ─── */}
+                <section className="mt-14 lg:mt-20">
+                  <SectionHead
+                    no="03"
+                    title="Activity"
+                    dek="Counts drawn from your archive — updated as investigations are filed."
+                  />
+                  <div className="mt-1 grid grid-cols-2 sm:grid-cols-4">
+                    {(activityCells ?? [
+                      { value: 0, label: "Investigations", dek: "loading archive" },
+                      { value: 0, label: "Credible", dek: "loading archive" },
+                      { value: 0, label: "Uncertain", dek: "loading archive" },
+                      { value: 0, label: "Misleading", dek: "loading archive" },
+                    ]).map((cell, i) => (
+                      <div
+                        key={cell.label}
+                        className={`px-4 py-5 sm:py-6 ${i % 2 === 1 ? "border-l border-border" : ""} ${i >= 2 ? "border-t border-border sm:border-t-0" : ""} ${i === 2 ? "sm:border-l sm:border-border" : ""}`}
+                      >
+                        <span className="block text-[36px] sm:text-[42px] leading-none tabular" style={{ fontFamily: "'DM Serif Display', serif", color: "#F5F0E8" }}>
+                          {activityCells ? <AnimatedNumber value={cell.value} /> : "—"}
+                        </span>
+                        <span className="block kicker mt-2.5">{cell.label}</span>
+                        <span className="block text-[10px] mt-0.5" style={{ color: "#A8A098", opacity: 0.55 }}>{cell.dek}</span>
+                      </div>
+                    ))}
                   </div>
-                  <p className="text-[9px]" style={{ color: "#A8A098" }}>Version tracking</p>
-                </div>
-                <div className="px-4 sm:px-5 pb-3"><WhatChanged /></div>
-              </motion.div>
+                </section>
 
-              {/* ─── Investigation Replay ─── */}
-              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, delay: 0.54 }}
-                className="rounded-lg mb-3 overflow-hidden" style={{ background: "#111111", border: "1px solid #1E1E1E" }}>
-                <div className="px-4 sm:px-5 pt-4 pb-2">
-                  <div className="flex items-center gap-1.5 mb-1">
-                    <Play className="w-3.5 h-3.5" style={{ color: "#A8906E" }} />
-                    <h3 className="text-[10px] font-semibold uppercase tracking-[0.15em]" style={{ color: "#F5F0E8" }}>Investigation Replay</h3>
+                {/* ─── 04 · Today's headlines ─── */}
+                <section className="mt-14 lg:mt-20">
+                  <SectionHead
+                    no="04"
+                    title="Today's headlines"
+                    dek={
+                      newsLoading
+                        ? "Retrieving live headlines from major wires…"
+                        : liveNews.length > 0
+                          ? "Live from major wires — click any headline to load it into the editor."
+                          : "Live feeds unavailable — showing sample articles instead."
+                    }
+                    right={
+                      <span className="inline-flex items-center gap-1.5 kicker">
+                        {liveNews.length > 0 && (
+                          <span className="w-1.5 h-1.5 rounded-full" style={{ background: STATUS.green, animation: "statusPulse 2.4s ease-in-out infinite" }} />
+                        )}
+                        {newsLoading ? "Retrieving" : liveNews.length > 0 ? "Live · 30 min" : "Offline"}
+                      </span>
+                    }
+                  />
+                  <div className="mt-3">
+                    <HeadlinesColumn items={displayItems} loading={newsLoading} onPick={pickHeadline} />
                   </div>
-                  <p className="text-[9px]" style={{ color: "#A8A098" }}>Step through the verification process</p>
-                </div>
-                <div className="px-4 sm:px-5 pb-4"><InvestigationReplay analysis={currentResult} /></div>
+                  <p className="mt-3 kicker" style={{ opacity: 0.5 }}>
+                    Headlines refresh every 30 minutes · select one to investigate it
+                  </p>
+                </section>
               </motion.div>
-              </>
             )}
-            </motion.div>
-          )}
 
-          {/* ═══ HISTORY ═══ */}
-          {activeView === "history" && (
-            <motion.div key="history" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }}>
-              <div className="mb-5">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.2em] mb-1">Analysis History</p>
-                <h1 className="text-xl sm:text-2xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif" }}>Your Past Verifications</h1>
-                <p className="text-xs text-muted-foreground mt-1">View and manage your previously analyzed articles.</p>
-              </div>
-              {!analyses ? (
-                <div className="glass-card rounded-lg p-10 text-center">
-                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground mx-auto" />
+            {/* ═══════════════ DAILY HEADLINES ═══════════════ */}
+            {activeView === "headlines" && (
+              <motion.div key="headlines" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
+                <div className="flex items-baseline justify-between gap-4 border-b pb-2" style={{ borderColor: "rgba(245,240,232,0.6)" }}>
+                  <span className="kicker" style={{ color: "#F5F0E8", opacity: 0.9 }}>The wire</span>
+                  <span className="kicker hidden sm:inline">{todayLabel}</span>
                 </div>
-              ) : analyses.length === 0 ? (
-                <div className="glass-card rounded-lg p-10 text-center">
-                  <div className="w-12 h-12 rounded bg-primary/8 flex items-center justify-center mx-auto mb-3">
-                    <Search className="w-5 h-5 text-primary" />
+                <div className="border-b border-border mt-[3px]" />
+                <h1 className="mt-6 text-3xl sm:text-[40px]">Today's Headlines</h1>
+                <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground max-w-xl">
+                  Current stories retrieved live from major news wires. Select any headline to load it into the editor and investigate it.
+                </p>
+                <div className="mt-8">
+                  <HeadlinesColumn items={displayItems} loading={newsLoading} onPick={(item) => { setInputText(item.text); setInputType("text"); goDesk(true); }} />
+                </div>
+                <p className="mt-4 kicker" style={{ opacity: 0.55 }}>
+                  {newsLoading
+                    ? "Retrieving live headlines…"
+                    : liveNews.length > 0
+                      ? `${liveNews.length} live stories · refreshes every 30 minutes`
+                      : "Live feeds unavailable — sample articles shown"}
+                </p>
+              </motion.div>
+            )}
+
+            {/* ═══════════════ PAST INVESTIGATIONS ═══════════════ */}
+            {activeView === "history" && (
+              <motion.div key="history" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
+                <div className="flex items-baseline justify-between gap-4 border-b pb-2" style={{ borderColor: "rgba(245,240,232,0.6)" }}>
+                  <span className="kicker" style={{ color: "#F5F0E8", opacity: 0.9 }}>Archive</span>
+                  <span className="kicker hidden sm:inline">{analyses ? `${analyses.length} filed` : "Loading…"}</span>
+                </div>
+                <div className="border-b border-border mt-[3px]" />
+                <h1 className="mt-6 text-3xl sm:text-[40px]">Past Investigations</h1>
+                <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground max-w-xl">
+                  Every investigation you have filed, most recent first. Select a record to reopen its full report.
+                </p>
+
+                {!analyses ? (
+                  <div className="mt-8 space-y-3">
+                    {Array.from({ length: 4 }).map((_, i) => (
+                      <div key={i} className="flex items-center gap-4 py-3.5 border-b border-border animate-pulse">
+                        <div className="h-3 w-6" style={{ background: "#161616" }} />
+                        <div className="h-3 flex-1" style={{ background: "#141414" }} />
+                        <div className="h-3 w-24 hidden sm:block" style={{ background: "#161616" }} />
+                      </div>
+                    ))}
                   </div>
-                  <h3 className="text-base font-semibold mb-1" style={{ fontFamily: "'DM Serif Display', serif" }}>No analyses yet</h3>
-                  <p className="text-xs text-muted-foreground mb-5">Start by analyzing your first piece of content.</p>
-                  <Button className="cursor-pointer bg-primary text-primary-foreground gap-1.5 text-xs h-9 rounded" onClick={() => setActiveView("analyze")}>
-                    Analyze Content
-                  </Button>
+                ) : analyses.length === 0 ? (
+                  <div className="mt-8 border border-border px-6 py-12 text-center">
+                    <p className="text-lg" style={{ fontFamily: "'DM Serif Display', serif" }}>The archive is empty.</p>
+                    <p className="mt-2 text-[12px] text-muted-foreground max-w-sm mx-auto leading-relaxed">
+                      Investigations are filed automatically once an analysis completes.
+                    </p>
+                    <Button
+                      onClick={() => goDesk(true)}
+                      className="mt-5 h-9 px-5 text-[10.5px] uppercase tracking-[0.16em] hover:opacity-90"
+                      style={{ background: "#C8B490", color: "#0A0A0A" }}
+                    >
+                      Begin an investigation
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="mt-8">
+                    <div className="hidden sm:flex items-center gap-4 px-2 pb-1.5 border-b border-border">
+                      <span className="kicker w-6" style={{ opacity: 0.55 }}>No.</span>
+                      <span className="kicker flex-1" style={{ opacity: 0.55 }}>Subject</span>
+                      <span className="kicker w-[6.5rem] shrink-0" style={{ opacity: 0.55 }}>Filed</span>
+                      <span className="kicker w-[8.5rem] shrink-0" style={{ opacity: 0.55 }}>Verdict</span>
+                      <span className="kicker w-10 shrink-0 text-right" style={{ opacity: 0.55 }}>Conf.</span>
+                      <span className="kicker w-[6.5rem] shrink-0 text-right" style={{ opacity: 0.55 }}>Source</span>
+                      <span className="w-12 shrink-0" />
+                    </div>
+                    {analyses.map((analysis, i) => renderArchiveRow(analysis, i))}
+                  </div>
+                )}
+              </motion.div>
+            )}
+
+            {/* ═══════════════ COMPARE ARTICLES ═══════════════ */}
+            {activeView === "compare" && (
+              <motion.div key="compare" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
+                <div className="flex items-baseline justify-between gap-4 border-b pb-2" style={{ borderColor: "rgba(245,240,232,0.6)" }}>
+                  <span className="kicker" style={{ color: "#F5F0E8", opacity: 0.9 }}>Comparison desk</span>
+                  <span className="kicker hidden sm:inline">Two articles · one method</span>
                 </div>
-              ) : (
-                <div className="space-y-0">
-                  {analyses.map((analysis, i) => {
-                    const avc = verdictConfig[analysis.verdict];
-                    // Legacy rows: a stored retrieval failure is NOT an investigation.
-                    const wasRetrievalFailure =
-                      typeof analysis.summary === "string" &&
-                      analysis.summary.startsWith("UNABLE TO RETRIEVE");
-                    return (
-                      <motion.div key={analysis._id}
-                        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.2, delay: i * 0.04 }}
-                        className="glass-card rounded-lg p-3.5 hover:shadow-sm cursor-pointer group border-b border-border last:border-b-0 first:rounded-b-none last:rounded-t-none" onClick={() => handleLoadFromHistory(analysis)}>
-                        <div className="flex items-start gap-3">
-                          <div className={`w-8 h-8 rounded ${avc.bg} flex items-center justify-center shrink-0`}>
-                            <avc.icon className={`w-3.5 h-3.5 ${avc.color}`} />
+                <div className="border-b border-border mt-[3px]" />
+                <h1 className="mt-6 text-3xl sm:text-[40px]">Compare Articles</h1>
+                <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground max-w-xl">
+                  Run two texts through the full pipeline, then compare shared claims, contradictions, framing and the figures each one reports.
+                </p>
+                <div className="mt-8">
+                  <CompareArticles onCompare={handleCompare} />
+                </div>
+              </motion.div>
+            )}
+
+            {/* ═══════════════ SETTINGS ═══════════════ */}
+            {activeView === "settings" && (
+              <motion.div key="settings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
+                <div className="flex items-baseline justify-between gap-4 border-b pb-2" style={{ borderColor: "rgba(245,240,232,0.6)" }}>
+                  <span className="kicker" style={{ color: "#F5F0E8", opacity: 0.9 }}>Settings</span>
+                  <span className="kicker hidden sm:inline">{editionLabel}</span>
+                </div>
+                <div className="border-b border-border mt-[3px]" />
+                <h1 className="mt-6 text-3xl sm:text-[40px]">Settings</h1>
+
+                {/* Appearance */}
+                <section className="mt-10">
+                  <SectionHead no="01" title="Appearance" dek="Veritas is built on a near-black and warm ivory foundation." />
+                  <div className="mt-4 flex items-center gap-2">
+                    {(["light", "dark"] as const).map((mode) => (
+                      <button
+                        key={mode}
+                        type="button"
+                        onClick={() => setTheme(mode)}
+                        className={`inline-flex items-center gap-2 h-9 px-4 border text-[10px] uppercase tracking-[0.16em] transition-colors ${
+                          theme === mode ? "border-foreground/40 text-foreground" : "border-border text-muted-foreground hover:text-foreground"
+                        }`}
+                        style={theme === mode ? { background: "rgba(200,180,144,0.07)" } : undefined}
+                      >
+                        {mode === "light" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
+                        {mode}
+                      </button>
+                    ))}
+                  </div>
+                </section>
+
+                {/* Investigation defaults */}
+                <section className="mt-12">
+                  <SectionHead no="02" title="Investigation" dek="Default analysis depth for new investigations in this session." />
+                  <div className="mt-4 flex items-center gap-2">
+                    {(["quick", "standard", "deep"] as const).map((depth) => (
+                      <button
+                        key={depth}
+                        type="button"
+                        onClick={() => setAnalysisDepth(depth)}
+                        className={`h-9 px-4 border text-[10px] uppercase tracking-[0.16em] transition-colors ${
+                          analysisDepth === depth ? "border-foreground/40 text-foreground" : "border-border text-muted-foreground hover:text-foreground"
+                        }`}
+                        style={analysisDepth === depth ? { background: "rgba(200,180,144,0.07)" } : undefined}
+                      >
+                        {depth}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="mt-3 text-[11px] text-muted-foreground">
+                    {analysisDepth === "quick" && "Fast scan — basic pattern matching and keyword detection."}
+                    {analysisDepth === "standard" && "Full analysis — NLP patterns, source checks, and claim verification."}
+                    {analysisDepth === "deep" && "Comprehensive — deep linguistic analysis, cross-referencing, and detailed reasoning."}
+                  </p>
+                </section>
+
+                {/* Session */}
+                <section className="mt-12">
+                  <SectionHead no="03" title="Session" dek="Your investigations are stored privately against your account." />
+                  <div className="mt-4 flex flex-wrap items-center gap-3">
+                    <ActionBtn icon={ArrowLeft} onClick={() => navigate("/")}>Return to the front page</ActionBtn>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try { await signOut(); } catch { /* signed out anyway */ }
+                        navigate("/");
+                      }}
+                      className="inline-flex items-center gap-1.5 h-8 px-3 border text-[10px] uppercase tracking-[0.14em] transition-colors"
+                      style={{ borderColor: "rgba(168,90,80,0.4)", color: STATUS.red }}
+                    >
+                      <LogOut className="w-3 h-3" />
+                      Sign out
+                    </button>
+                  </div>
+                </section>
+
+                {/* About */}
+                <section className="mt-12">
+                  <SectionHead no="04" title="About Veritas" />
+                  <div className="mt-4 grid sm:grid-cols-2 gap-x-10 gap-y-4 max-w-3xl">
+                    <p className="text-[12.5px] leading-relaxed text-muted-foreground" style={{ fontFamily: "'Source Serif 4', Georgia, serif" }}>
+                      Veritas is an evidence-led verification desk. It retrieves the original article, extracts factual claims,
+                      searches live independent coverage and cross-checks each claim against what was found.
+                    </p>
+                    <p className="text-[12.5px] leading-relaxed text-muted-foreground" style={{ fontFamily: "'Source Serif 4', Georgia, serif" }}>
+                      Linguistic and framing analysis are reported separately as signals — they describe how something is written,
+                      never whether it is true. Where evidence is missing, Veritas says so rather than guessing.
+                    </p>
+                  </div>
+                </section>
+              </motion.div>
+            )}
+
+            {/* ═══════════════ STATISTICS ═══════════════ */}
+            {activeView === "stats" && (
+              <motion.div key="stats" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
+                <div className="flex items-baseline justify-between gap-4 border-b pb-2" style={{ borderColor: "rgba(245,240,232,0.6)" }}>
+                  <span className="kicker" style={{ color: "#F5F0E8", opacity: 0.9 }}>Statistics</span>
+                  <span className="kicker hidden sm:inline">{analyses ? `${analyses.length} records` : "Loading…"}</span>
+                </div>
+                <div className="border-b border-border mt-[3px]" />
+                <h1 className="mt-6 text-3xl sm:text-[40px]">The Bigger Picture</h1>
+                <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground max-w-xl">
+                  Trends, patterns and insights drawn from everything you have analyzed.
+                </p>
+                <div className="mt-8">
+                  {!analyses ? (
+                    <div className="space-y-3">
+                      {Array.from({ length: 3 }).map((_, i) => (
+                        <div key={i} className="h-16 border-b border-border animate-pulse" style={{ background: "#111111" }} />
+                      ))}
+                    </div>
+                  ) : analyses.length === 0 ? (
+                    <div className="border border-border px-6 py-12 text-center">
+                      <p className="text-lg" style={{ fontFamily: "'DM Serif Display', serif" }}>No data yet.</p>
+                      <p className="mt-2 text-[12px] text-muted-foreground">Analyze some content and the statistics will assemble themselves.</p>
+                      <Button
+                        onClick={() => goDesk(true)}
+                        className="mt-5 h-9 px-5 text-[10.5px] uppercase tracking-[0.16em] hover:opacity-90"
+                        style={{ background: "#C8B490", color: "#0A0A0A" }}
+                      >
+                        Begin an investigation
+                      </Button>
+                    </div>
+                  ) : (
+                    <StatsView analyses={analyses} />
+                  )}
+                </div>
+              </motion.div>
+            )}
+
+            {/* ═══════════════ METHODOLOGY ═══════════════ */}
+            {activeView === "methodology" && (
+              <motion.div key="methodology" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
+                <div className="flex items-baseline justify-between gap-4 border-b pb-2" style={{ borderColor: "rgba(245,240,232,0.6)" }}>
+                  <span className="kicker" style={{ color: "#F5F0E8", opacity: 0.9 }}>Methodology</span>
+                  <span className="kicker hidden sm:inline">How we know what we know</span>
+                </div>
+                <div className="border-b border-border mt-[3px]" />
+                <h1 className="mt-6 text-3xl sm:text-[40px]">How Veritas Works</h1>
+                <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground max-w-xl">
+                  A detailed look at the fact-checking process behind every analysis — retrieval, claim extraction, cross-checking and honest confidence.
+                </p>
+                <div className="mt-8">
+                  <MethodologyView />
+                </div>
+              </motion.div>
+            )}
+
+            {/* ═══════════════ INVESTIGATION REPORT ═══════════════ */}
+            {activeView === "result" && currentResult && vc && (
+              <motion.div key="result" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
+                {retrievalFailed ? (
+                  <RetrievalFailedState
+                    failedUrl={currentResult.failedUrl}
+                    failureReason={currentResult.failureReason}
+                    onRetry={() => goDesk(true)}
+                    onPasteText={() => { setInputType("text"); goDesk(true); }}
+                  />
+                ) : (
+                  <div className="grid grid-cols-1 lg:grid-cols-[176px_minmax(0,1fr)] gap-x-10">
+
+                    {/* ─── Contents rail ─── */}
+                    <aside className="hidden lg:block">
+                      <div className="sticky top-10">
+                        <button
+                          type="button"
+                          onClick={() => goDesk(true)}
+                          className="inline-flex items-center gap-1.5 kicker transition-colors hover:text-foreground"
+                        >
+                          <ArrowLeft className="w-3 h-3" />
+                          New analysis
+                        </button>
+                        <p className="kicker mt-7 mb-2.5" style={{ opacity: 0.5 }}>Contents</p>
+                        <nav className="border-l border-border">
+                          {reportSections.map((s) => {
+                            const active = resultTab === s.id;
+                            return (
+                              <button
+                                key={s.id}
+                                type="button"
+                                onClick={() => goToSection(s.id)}
+                                className={`relative w-full flex items-baseline gap-2.5 py-[5px] pl-3 pr-2 text-left transition-colors ${
+                                  active ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                                }`}
+                              >
+                                {active && (
+                                  <motion.span layoutId="toc-active" className="absolute left-0 top-0 bottom-0 w-px" style={{ background: "#C8B490" }} />
+                                )}
+                                <span className="num-marker shrink-0" style={{ opacity: active ? 1 : 0.55 }}>{secNo(s.id)}</span>
+                                <span className="text-[11.5px] leading-tight">{s.label}</span>
+                              </button>
+                            );
+                          })}
+                        </nav>
+                        <div className="mt-7 pt-4 border-t border-border flex flex-col items-start gap-2">
+                          <ActionBtn icon={Download} onClick={handleExport}>Export</ActionBtn>
+                          <ActionBtn icon={Share2} onClick={handleShare}>Share</ActionBtn>
+                        </div>
+                      </div>
+                    </aside>
+
+                    {/* ─── Report body ─── */}
+                    <div className="min-w-0">
+
+                      {/* Masthead */}
+                      <header>
+                        <div className="flex items-baseline justify-between gap-4 border-b pb-1.5" style={{ borderColor: "rgba(245,240,232,0.6)" }}>
+                          <span className="kicker" style={{ color: "#F5F0E8", opacity: 0.9 }}>Investigation</span>
+                          <span className="kicker">
+                            Filed {filedLabel} · Status <span style={{ color: STATUS.green }}>Complete</span>
+                          </span>
+                        </div>
+                        <div className="border-b border-border mt-[3px]" />
+                        <h1 className="mt-6 text-[23px] sm:text-[30px] lg:text-[35px] max-w-3xl break-words" style={{ lineHeight: 1.2 }}>
+                          {reportHeadline}
+                        </h1>
+                        <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
+                          <p className="kicker">{sourceMetaLine}</p>
+                          <div className="flex items-center gap-2">
+                            <ActionBtn icon={ArrowLeft} onClick={() => goDesk(true)}>New analysis</ActionBtn>
+                            <ActionBtn icon={Download} onClick={handleExport}>Export</ActionBtn>
+                            <ActionBtn icon={Share2} onClick={handleShare}>Share</ActionBtn>
+                          </div>
+                        </div>
+                      </header>
+
+                      {/* ─── Verdict — typography-led, no gauges ─── */}
+                      <section id="verdict" className="report-sec mt-9">
+                        <div className="flex items-baseline justify-between gap-4">
+                          <span className="kicker">Assessment</span>
+                          <span className="kicker tabular" style={{ opacity: 0.6 }}>
+                            {currentResult.redFlags.length} warning · {currentResult.greenFlags.length} positive signals
+                          </span>
+                        </div>
+
+                        <div className="mt-5 flex flex-col lg:flex-row lg:items-end gap-6 lg:gap-12">
+                          <div className="shrink-0">
+                            <h2 className="text-[34px] sm:text-[44px] leading-none" style={{ color: vc.accentColor }}>{vc.label}</h2>
+                            <p className="mt-3 font-mono text-[11px] tracking-[0.2em] tabular" style={{ color: vc.accentColor }}>
+                              {currentResult.confidence}% CONFIDENCE
+                            </p>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
-                              <span className={`text-[11px] font-semibold ${avc.color}`}>{wasRetrievalFailure ? "Retrieval Failed" : avc.label}</span>
-                              <Badge variant="outline" className={`text-[9px] ${avc.border} ${avc.color} rounded`}>{wasRetrievalFailure ? "—" : `${analysis.confidence}%`}</Badge>
-                              <Badge variant="outline" className="text-[9px] ml-auto rounded">{analysis.inputType === "url" ? "URL" : "Text"}</Badge>
-                            </div>
-                            <p className="text-[10px] text-muted-foreground line-clamp-1 mb-0.5">{analysis.summary}</p>
-                            <p className="text-[9px] text-muted-foreground/50 line-clamp-1">{analysis.inputText.slice(0, 100)}</p>
-                          </div>
-                          <div className="flex items-center gap-0.5 shrink-0">
-                            <Button variant="ghost" size="icon" className="cursor-pointer h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                              onClick={e => { e.stopPropagation(); handleDelete(analysis._id); }}>
-                              <Trash2 className="w-3 h-3 text-muted-foreground" />
-                            </Button>
-                            <ChevronRight className="w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
+                            <p className="text-[14px] leading-relaxed" style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#F5F0E8" }}>
+                              {currentResult.summary}
+                            </p>
+                            <p className="mt-2.5 text-[11px] leading-relaxed text-muted-foreground">{vc.description}</p>
                           </div>
                         </div>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              )}
-            </motion.div>
-          )}
 
-          {/* ═══ STATS ═══ */}
-          {activeView === "stats" && (
-            <motion.div key="stats" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }}>
-              <div className="mb-5">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.2em] mb-1">Insights & Statistics</p>
-                <h1 className="text-xl sm:text-2xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif" }}>The Bigger Picture</h1>
-                <p className="text-xs text-muted-foreground mt-1">Explore trends, patterns, and insights from analyzed articles.</p>
-              </div>
-              {!analyses ? (
-                <div className="glass-card rounded-lg p-10 text-center">
-                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground mx-auto" />
-                </div>
-              ) : analyses.length === 0 ? (
-                <div className="glass-card rounded-lg p-10 text-center">
-                  <div className="w-12 h-12 rounded bg-primary/8 flex items-center justify-center mx-auto mb-3">
-                    <TrendingUp className="w-5 h-5 text-primary" />
+                        {/* Confidence rule */}
+                        <div className="mt-6 h-[3px] w-full" style={{ background: "#1E1E1E" }}>
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${currentResult.confidence}%` }}
+                            transition={{ duration: 0.9, delay: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                            className="h-full"
+                            style={{ background: vc.accentColor }}
+                          />
+                        </div>
+
+                        {/* Metadata strip — source intelligence, hairline cells */}
+                        <div className="mt-7 grid grid-cols-2 sm:grid-cols-4 border-y border-border">
+                          {[
+                            ["Input type", inputType === "url" ? "URL" : "Text"],
+                            ["Word count", `${currentResult.wordCount}`],
+                            ["Warning signals", `${currentResult.redFlags.length}`],
+                            ["Positive signals", `${currentResult.greenFlags.length}`],
+                          ].map(([label, value], i) => (
+                            <div
+                              key={label}
+                              className={`px-4 py-3.5 ${i % 2 === 1 ? "border-l border-border" : ""} ${i >= 2 ? "border-t border-border sm:border-t-0" : ""} ${i === 2 ? "sm:border-l sm:border-border" : ""}`}
+                            >
+                              <span className="kicker block" style={{ opacity: 0.6 }}>{label}</span>
+                              <span className="block mt-1.5 text-[15px] tabular" style={{ fontFamily: "'JetBrains Mono', monospace", color: "#F5F0E8" }}>{value}</span>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Credibility breakdown — real factors, expandable basis */}
+                        {credibilityFactors.length > 0 && (
+                          <div className="mt-8">
+                            <div className="flex items-baseline justify-between gap-4 border-b border-border pb-1.5">
+                              <span className="kicker">Credibility breakdown</span>
+                              <span className="kicker" style={{ opacity: 0.5 }}>Click a factor for its basis</span>
+                            </div>
+                            {credibilityFactors.map((item) => {
+                              const isOpen = credFactor === item.key;
+                              return (
+                                <div key={item.key} className="border-b border-border/70">
+                                  <button
+                                    type="button"
+                                    className="w-full flex items-center gap-4 py-3 text-left"
+                                    onClick={() => setCredFactor(isOpen ? null : item.key)}
+                                  >
+                                    <span className="kicker w-32 sm:w-44 shrink-0" style={isOpen ? { color: "#F5F0E8" } : undefined}>{item.label}</span>
+                                    <span className="flex-1 h-[3px]" style={{ background: "#1E1E1E" }}>
+                                      {item.score != null && (
+                                        <motion.span
+                                          className="block h-full"
+                                          initial={{ width: 0 }}
+                                          animate={{ width: `${item.score}%` }}
+                                          transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                                          style={{ background: STATUS.bronze }}
+                                        />
+                                      )}
+                                    </span>
+                                    <span
+                                      className="w-10 text-right text-[10px] tabular shrink-0"
+                                      style={{ fontFamily: "'JetBrains Mono', monospace", color: item.score == null ? "#A8A098" : "#C8B490" }}
+                                    >
+                                      {item.score == null ? "n/a" : `${item.score}%`}
+                                    </span>
+                                  </button>
+                                  <AnimatePresence>
+                                    {isOpen && (
+                                      <motion.div
+                                        initial={{ height: 0, opacity: 0 }}
+                                        animate={{ height: "auto", opacity: 1 }}
+                                        exit={{ height: 0, opacity: 0 }}
+                                        transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                                        className="overflow-hidden"
+                                      >
+                                        <p className="pb-3.5 sm:pl-44 text-[11px] leading-relaxed text-muted-foreground">{item.reasoning}</p>
+                                      </motion.div>
+                                    )}
+                                  </AnimatePresence>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {/* Full reasoning on demand */}
+                        <div className="mt-7">
+                          <MorphingPanel
+                            preview={
+                              <p className="text-[11.5px] leading-relaxed text-muted-foreground">
+                                The complete reasoning behind this verdict — how retrieved evidence, claim consistency and language signals were weighed.
+                              </p>
+                            }
+                            detail={<p className="text-[12px] leading-relaxed text-muted-foreground">{currentResult.reasoning}</p>}
+                            triggerLabel="Read the full reasoning"
+                            accentColor="#C8B490"
+                          />
+                        </div>
+                      </section>
+
+                      {/* ─── 01 · Claim analysis ─── */}
+                      {currentResult.claims && currentResult.claims.length > 0 && (
+                        <ReportSection
+                          id="claims"
+                          no={secNo("claims")}
+                          title="Claim analysis"
+                          dek={`${currentResult.claims.length} factual claims extracted — each one cross-checked against retrieved independent coverage. Language and structural observations are reported separately as signals, never as claims.`}
+                          aside={
+                            <span className="kicker tabular">
+                              {evidenceStats?.supported ?? 0} supported · {evidenceStats?.contradicted ?? 0} contradicted
+                            </span>
+                          }
+                        >
+                          <ClaimAnalysis claims={currentResult.claims} />
+                        </ReportSection>
+                      )}
+
+                      {/* ─── 02 · Source cross-check ─── */}
+                      {currentResult.crossCheck && currentResult.crossCheck.length > 0 && (
+                        <ReportSection
+                          id="crosscheck"
+                          no={secNo("crosscheck")}
+                          title="Source cross-check"
+                          dek={`${currentResult.crossCheck.length} claims cross-referenced against independent external sources retrieved during live cross-checking.`}
+                          aside={
+                            <span className="kicker tabular">
+                              {evidenceStats?.uniqueRetrieved ?? 0} unique · {evidenceStats?.claimSourceRefs ?? 0} refs
+                            </span>
+                          }
+                        >
+                          <SourceCrossCheck crossCheck={currentResult.crossCheck} claims={currentResult.claims ?? []} />
+                        </ReportSection>
+                      )}
+
+                      {/* ─── 03 · Evidence chain ─── */}
+                      <ReportSection
+                        id="chain"
+                        no={secNo("chain")}
+                        title="Evidence chain"
+                        dek="How Veritas reached this verdict — every stage derived from this single investigation result."
+                      >
+                        <EvidenceChain
+                          verdict={currentResult.verdict}
+                          confidence={currentResult.confidence}
+                          redFlags={currentResult.redFlags}
+                          greenFlags={currentResult.greenFlags}
+                          triggeredKeywords={currentResult.triggeredKeywords}
+                          categoryBreakdown={currentResult.categoryBreakdown}
+                          wordCount={currentResult.wordCount}
+                          claimsCount={evidenceStats?.claims.length ?? 0}
+                          sourceName={currentResult.sourceProfile?.source}
+                          externalSources={evidenceStats?.uniqueRetrieved ?? 0}
+                          supportingSources={evidenceStats?.supporting ?? 0}
+                          contradictingSources={evidenceStats?.contradicting ?? 0}
+                          corroboratedClaims={evidenceStats?.supported ?? 0}
+                          contradictedClaims={evidenceStats?.contradicted ?? 0}
+                          uncertainClaims={evidenceStats?.uncertain ?? 0}
+                          unverifiedClaims={evidenceStats?.unverified ?? 0}
+                          crossCheckedClaims={evidenceStats?.crossChecked ?? 0}
+                          claimSourceRefs={evidenceStats?.claimSourceRefs ?? 0}
+                          searchFailed={evidenceStats?.searchFailed ?? false}
+                        />
+                      </ReportSection>
+
+                      {/* ─── 04 · Evidence map ─── */}
+                      <ReportSection
+                        id="map"
+                        no={secNo("map")}
+                        title="Evidence map"
+                        dek="The investigation as a tree — claim → sources → evidence → cross-check → verdict."
+                      >
+                        <EvidenceMap
+                          articleTitle={(currentResult.extractedText || inputText).slice(0, 80)}
+                          claims={(currentResult.claims || []).map(c => ({
+                            id: c.id,
+                            text: c.text,
+                            status: c.status,
+                            sources: (currentResult.crossCheck?.find(x => x.claimId === c.id)?.sources ?? [])
+                              .filter(s => !!s.url)
+                              .map(s => ({ name: s.name, relationship: s.relationship })),
+                          }))}
+                          verdict={currentResult.verdict}
+                          confidence={currentResult.confidence}
+                        />
+                      </ReportSection>
+
+                      {/* ─── 05 · Evidence timeline ─── */}
+                      {currentResult.evidenceTimeline && currentResult.evidenceTimeline.length > 0 && (
+                        <ReportSection
+                          id="timeline"
+                          no={secNo("timeline")}
+                          title="Evidence timeline"
+                          dek="Chronological trail of every verification step recorded during this investigation."
+                          aside={<span className="kicker tabular">{currentResult.evidenceTimeline.length} events</span>}
+                        >
+                          <EvidenceTimeline events={currentResult.evidenceTimeline} />
+                        </ReportSection>
+                      )}
+
+                      {/* ─── 06 · Language analysis ─── */}
+                      <ReportSection
+                        id="language"
+                        no={secNo("language")}
+                        title="Language analysis"
+                        dek="How the text is written — reported separately from whether it is true."
+                        aside={<span className="kicker" style={{ color: STATUS.amber }}>Linguistic signal ≠ truth</span>}
+                      >
+                        <div className="grid lg:grid-cols-2 gap-x-10 gap-y-8">
+                          <div>
+                            <p className="kicker mb-2" style={{ opacity: 0.55 }}>Linguistic profile</p>
+                            <div className="border-t border-border/70">
+                              {languageRows.map((row) => (
+                                <MetricBar key={row.label} label={row.label} value={row.value} color={row.color} />
+                              ))}
+                            </div>
+                            {currentResult.triggeredKeywords.length > 0 && (
+                              <div className="mt-6">
+                                <p className="kicker mb-2.5" style={{ opacity: 0.55 }}>Detected keywords</p>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {currentResult.triggeredKeywords.map((kw) => (
+                                    <span
+                                      key={kw}
+                                      className="text-[9.5px] px-2 py-0.5 border"
+                                      style={{ borderColor: "rgba(168,90,80,0.35)", color: "#C98A80", background: "rgba(168,90,80,0.07)" }}
+                                    >
+                                      {kw}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <p className="kicker mb-2" style={{ opacity: 0.55 }}>Signal categories</p>
+                            <div className="border-t border-border/70">
+                              {currentResult.categoryBreakdown.filter(c => c.maxScore > 0).length > 0 ? (
+                                currentResult.categoryBreakdown.filter(c => c.maxScore > 0).map((cat) => (
+                                  <MetricBar
+                                    key={cat.category}
+                                    label={cat.category}
+                                    value={Math.round((cat.score / cat.maxScore) * 100)}
+                                    color={cat.type === "red" ? STATUS.red : STATUS.green}
+                                  />
+                                ))
+                              ) : (
+                                <p className="py-4 text-[11px] italic text-muted-foreground">
+                                  No signal categories were produced for this analysis.
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Signals, in two restrained columns */}
+                        <div className="mt-9 grid lg:grid-cols-2 gap-x-10 gap-y-7">
+                          <div>
+                            <div className="flex items-baseline justify-between border-b border-border pb-1.5">
+                              <p className="kicker" style={{ color: STATUS.red }}>Warning signals</p>
+                              <p className="kicker tabular" style={{ opacity: 0.6 }}>{currentResult.redFlags.length}</p>
+                            </div>
+                            <div className="mt-3 space-y-1.5">
+                              {currentResult.redFlags.length === 0 ? (
+                                <p className="text-[11px] italic text-muted-foreground">No warning signals detected.</p>
+                              ) : (
+                                currentResult.redFlags.map((flag, i) => (
+                                  <ExpandableClaim
+                                    key={i}
+                                    claimNumber={String(i + 1).padStart(2, "0")}
+                                    claimText={flag}
+                                    status="misleading"
+                                    kind="signal"
+                                    signalLabel={signalLabelFor(flag)}
+                                    details="Detected by linguistic pattern matching in the submitted text — this is a language signal, not a factual claim. A signal never proves or disproves a claim; the verdict is driven by retrieved claims and external evidence."
+                                  />
+                                ))
+                              )}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="flex items-baseline justify-between border-b border-border pb-1.5">
+                              <p className="kicker" style={{ color: STATUS.green }}>Positive signals</p>
+                              <p className="kicker tabular" style={{ opacity: 0.6 }}>{currentResult.greenFlags.length}</p>
+                            </div>
+                            <div className="mt-3 space-y-1.5">
+                              {currentResult.greenFlags.length === 0 ? (
+                                <p className="text-[11px] italic text-muted-foreground">No positive signals detected.</p>
+                              ) : (
+                                currentResult.greenFlags.map((flag, i) => (
+                                  <ExpandableClaim
+                                    key={i}
+                                    claimNumber={String(i + 1).padStart(2, "0")}
+                                    claimText={flag}
+                                    status="supported"
+                                    kind="signal"
+                                    signalLabel={signalLabelFor(flag)}
+                                    details="Positive pattern detected in the submitted text — this is a language signal, not a factual claim. Language signals are NOT proof that any statement is true; credibility is determined by claims corroborated against retrieved external evidence."
+                                  />
+                                ))
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="mt-8 border-t border-border pt-3.5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                          <span className="kicker shrink-0" style={{ color: STATUS.amber, fontSize: 10 }}>Linguistic signal ≠ truth</span>
+                          <span className="text-[11px] leading-relaxed text-muted-foreground">
+                            Style is measured separately from fact. Verdicts are produced only from factual claims cross-checked against retrieved external evidence.
+                          </span>
+                        </div>
+                      </ReportSection>
+
+                      {/* ─── 07 · Framing signals ─── */}
+                      {currentResult.framingSignals && (
+                        <ReportSection
+                          id="framing"
+                          no={secNo("framing")}
+                          title="Framing signals"
+                          dek="Narrative and rhetorical analysis of the submitted text — observations about presentation, not verification."
+                          aside={<span className="kicker">Reported apart from fact</span>}
+                        >
+                          <FramingSignals signals={currentResult.framingSignals} />
+                          <div className="mt-5 border-t border-border pt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                            <span className="kicker shrink-0" style={{ color: STATUS.amber }}>Language / framing signals</span>
+                            <span className="text-[11px] leading-relaxed text-muted-foreground">
+                              are distinct from factual verification — framing alone never changes a verdict.
+                            </span>
+                          </div>
+                        </ReportSection>
+                      )}
+
+                      {/* ─── 08 · Source profile ─── */}
+                      {currentResult.sourceProfile && (
+                        <ReportSection
+                          id="sourceprofile"
+                          no={secNo("sourceprofile")}
+                          title="Source profile"
+                          dek="Original article metadata extracted from the submitted text or the retrieved page — kept separate from external cross-check sources. NOT AVAILABLE means no publisher could be identified."
+                          aside={
+                            <span className="kicker">
+                              {currentResult.sourceProfile.domain !== "NOT AVAILABLE" ? currentResult.sourceProfile.domain : "Domain not found"}
+                            </span>
+                          }
+                        >
+                          <SourceProfile profile={currentResult.sourceProfile} />
+                        </ReportSection>
+                      )}
+
+                      {/* ─── 09 · Information freshness ─── */}
+                      {currentResult.freshness && (
+                        <ReportSection
+                          id="freshness"
+                          no={secNo("freshness")}
+                          title="Information freshness"
+                          dek="Timeliness of each claim against retrieved coverage — recent, updated, date not found, or stale."
+                          aside={<span className="kicker tabular">{currentResult.freshness.length} claims</span>}
+                        >
+                          <FreshnessIndicator freshness={currentResult.freshness} />
+                        </ReportSection>
+                      )}
+
+                      {/* ─── 10 · Article fingerprint ─── */}
+                      {currentResult.fingerprint && (
+                        <ReportSection
+                          id="fingerprint"
+                          no={secNo("fingerprint")}
+                          title="Article fingerprint"
+                          dek="A compact summary of the whole investigation — claims, sources, verification outcomes and coverage."
+                          aside={
+                            <span className="kicker tabular">
+                              {currentResult.fingerprint.claims} claims · {currentResult.fingerprint.sources} sources
+                            </span>
+                          }
+                        >
+                          <ArticleFingerprint fingerprint={currentResult.fingerprint} />
+                        </ReportSection>
+                      )}
+
+                      {/* ─── 11 · Investigation replay ─── */}
+                      <ReportSection
+                        id="replay"
+                        no={secNo("replay")}
+                        title="Investigation replay"
+                        dek="Step through what the engine actually did, stage by stage — only stages that genuinely occurred are marked complete."
+                      >
+                        <InvestigationReplay analysis={currentResult} />
+                      </ReportSection>
+
+                      {/* ─── 12 · What changed ─── */}
+                      <ReportSection
+                        id="whatchanged"
+                        no={secNo("whatchanged")}
+                        title="What changed?"
+                        dek="Version history for this article — if no earlier versions exist, that is stated honestly."
+                      >
+                        <WhatChanged />
+                      </ReportSection>
+
+                      {/* ─── 13 · Compare articles ─── */}
+                      <ReportSection
+                        id="compare"
+                        no={secNo("compare")}
+                        title="Compare articles"
+                        dek="Run a second text through the same pipeline, then compare claims, contradictions, framing and reported figures side by side."
+                      >
+                        <CompareArticles onCompare={handleCompare} />
+                      </ReportSection>
+
+                      {/* ─── 14 · Analyzed content ─── */}
+                      <ReportSection
+                        id="content"
+                        no={secNo("content")}
+                        title="Analyzed content"
+                        dek={
+                          currentResult.triggeredKeywords.length > 0
+                            ? "The submitted text with detected keywords highlighted."
+                            : "The text that was investigated."
+                        }
+                      >
+                        <p className="text-[12.5px] leading-[1.8] text-muted-foreground max-h-64 overflow-auto whitespace-pre-wrap pr-2">
+                          {currentResult.triggeredKeywords.length > 0
+                            ? getHighlightedParts(currentResult.extractedText || inputText, currentResult.triggeredKeywords).map((part, i) =>
+                                part.highlighted
+                                  ? <span key={i} className="bg-destructive/10 text-destructive font-medium">{part.text}</span>
+                                  : <span key={i}>{part.text}</span>
+                              )
+                            : (currentResult.extractedText || inputText)}
+                        </p>
+                      </ReportSection>
+
+                    </div>{/* end report body */}
                   </div>
-                  <h3 className="text-base font-semibold mb-1" style={{ fontFamily: "'DM Serif Display', serif" }}>No data yet</h3>
-                  <p className="text-xs text-muted-foreground mb-5">Analyze some content to see statistics.</p>
-                  <Button className="cursor-pointer bg-primary text-primary-foreground gap-1.5 text-xs h-9 rounded" onClick={() => setActiveView("analyze")}>
-                    Analyze Content
-                  </Button>
-                </div>
-              ) : (
-                <StatsView analyses={analyses} />
-              )}
-            </motion.div>
-          )}
-
-          {/* ═══ METHODOLOGY ═══ */}
-          {activeView === "methodology" && (
-            <motion.div key="methodology" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -12 }} transition={{ duration: 0.25 }}>
-              <div className="mb-5">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.2em] mb-1">Our Approach</p>
-                <h1 className="text-xl sm:text-2xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif" }}>How Veritas Works</h1>
-                <p className="text-xs text-muted-foreground mt-1">A detailed look at the fact-checking process behind every analysis.</p>
-              </div>
-              <MethodologyView />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </main>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </main>
+      </div>
     </div>
   );
 }

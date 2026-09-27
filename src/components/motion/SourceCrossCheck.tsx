@@ -28,21 +28,26 @@ function domainOf(url?: string): string | null {
 }
 
 const relConfig: Record<string, { label: string; icon: typeof CheckCircle2; color: string; bg: string }> = {
-  supports: { label: "SUPPORTS", icon: CheckCircle2, color: "#D4C4A8", bg: "rgba(212,196,168,0.08)" },
-  contradicts: { label: "CONTRADICTS", icon: AlertTriangle, color: "#A85A50", bg: "rgba(168,90,80,0.08)" },
-  partial: { label: "PARTIAL", icon: HelpCircle, color: "#A8A098", bg: "rgba(168,160,152,0.06)" },
-  does_not_address: { label: "DOES NOT ADDRESS", icon: HelpCircle, color: "#A8A098", bg: "rgba(168,160,152,0.06)" },
-  unverified: { label: "UNVERIFIED", icon: HelpCircle, color: "#A8A098", bg: "rgba(168,160,152,0.06)" },
-  insufficient: { label: "INSUFFICIENT", icon: HelpCircle, color: "#A8A098", bg: "rgba(168,160,152,0.06)" },
+  supports: { label: "SUPPORTS", icon: CheckCircle2, color: "#93A883", bg: "rgba(147,168,131,0.07)" },
+  contradicts: { label: "CONTRADICTS", icon: AlertTriangle, color: "#A85A50", bg: "rgba(168,90,80,0.07)" },
+  partial: { label: "PARTIAL", icon: HelpCircle, color: "#C4985A", bg: "rgba(196,152,90,0.07)" },
+  does_not_address: { label: "DOES NOT ADDRESS", icon: HelpCircle, color: "#A8A098", bg: "rgba(168,160,152,0.05)" },
+  unverified: { label: "UNVERIFIED", icon: HelpCircle, color: "#A8A098", bg: "rgba(168,160,152,0.05)" },
+  insufficient: { label: "INSUFFICIENT", icon: HelpCircle, color: "#A8A098", bg: "rgba(168,160,152,0.05)" },
 };
 
 const claimStatusConfig: Record<string, { label: string; color: string }> = {
-  supported: { label: "CORROBORATED", color: "#D4C4A8" },
+  supported: { label: "CORROBORATED", color: "#93A883" },
   contradicted: { label: "CONTRADICTED", color: "#A85A50" },
-  uncertain: { label: "UNCERTAIN", color: "#A8A098" },
+  uncertain: { label: "UNCERTAIN", color: "#C4985A" },
   needs_verification: { label: "UNVERIFIED", color: "#A8A098" },
 };
 
+/**
+ * Source Cross-Check as an editorial evidence list: numbered claims on
+ * hairline rows, expandable into numbered sources with subtle status pills.
+ * No card grids — dividers, numbering and typography carry the structure.
+ */
 export function SourceCrossCheck({ crossCheck, claims }: {
   crossCheck: CrossCheckClaim[];
   /** Claim statuses from the same investigation — shown so each claim row
@@ -52,11 +57,11 @@ export function SourceCrossCheck({ crossCheck, claims }: {
   const [expandedClaim, setExpandedClaim] = useState<number | null>(null);
 
   if (!crossCheck || crossCheck.length === 0) {
-    return <p className="text-[10px] text-muted-foreground italic py-2">No cross-check data available.</p>;
+    return <p className="text-[11px] text-muted-foreground italic py-2">No cross-check data available.</p>;
   }
 
   return (
-    <div className="space-y-2">
+    <div className="border-t border-border">
       {crossCheck.map((claim, ci) => {
         const isOpen = expandedClaim === claim.claimId;
         const supports = claim.sources.filter(s => s.relationship === "supports").length;
@@ -67,72 +72,137 @@ export function SourceCrossCheck({ crossCheck, claims }: {
         const status = claims?.find(c => c.id === claim.claimId)?.status;
         const statusBadge = status ? claimStatusConfig[status] : undefined;
         return (
-          <motion.div key={claim.claimId} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25, delay: ci * 0.05 }}>
-            <button type="button"
-              className="w-full text-left p-3 rounded cursor-pointer transition-all duration-200 hover:border-[#A8906E]/15"
-              style={{ background: "#0D0D0D", border: "1px solid #1E1E1E" }}
-              onClick={() => setExpandedClaim(isOpen ? null : claim.claimId)}>
-              <div className="flex items-start justify-between gap-2">
+          <div key={claim.claimId} className="border-b border-border">
+            <button
+              type="button"
+              onClick={() => setExpandedClaim(isOpen ? null : claim.claimId)}
+              className="w-full text-left py-3.5 -mx-2 px-2 row-hover"
+            >
+              <div className="flex items-start gap-3 sm:gap-4">
+                <span className="num-marker shrink-0 mt-1">{String(ci + 1).padStart(2, "0")}</span>
                 <div className="flex-1 min-w-0">
-                  <span className="text-[8px] tracking-[0.15em] uppercase font-semibold block mb-1" style={{ color: "#A8A098" }}>
-                    CLAIM {String(claim.claimId).padStart(2, "0")}
+                  <div className="flex items-center flex-wrap gap-x-3 gap-y-1">
                     {statusBadge && (
-                      <span className="ml-2 font-bold" style={{ color: statusBadge.color }}>{statusBadge.label}</span>
+                      <span className="text-[8.5px] font-semibold tracking-[0.14em]" style={{ color: statusBadge.color }}>
+                        {statusBadge.label}
+                      </span>
                     )}
-                  </span>
-                  <p className="text-[11px] leading-snug line-clamp-2" style={{ color: "#F5F0E8" }}>{claim.claimText}</p>
-                  <div className="flex items-center gap-2 mt-1.5">
-                    {supports > 0 && <span className="text-[8px] font-semibold" style={{ color: "#D4C4A8" }}>{supports} SUPPORTS</span>}
-                    {contradicts > 0 && <span className="text-[8px] font-semibold" style={{ color: "#A85A50" }}>{contradicts} CONTRADICTS</span>}
-                    <span className="text-[8px]" style={{ color: "#A8A098" }}>{refs > 0 ? `${refs} claim-source reference(s)` : claim.sources.length > 0 ? "0 references — search notice, no source retrieved" : "0 references"}</span>
+                    {supports > 0 && (
+                      <span className="text-[8.5px] font-semibold tracking-[0.14em]" style={{ color: "#93A883" }}>
+                        {supports} SUPPORT{supports > 1 ? "S" : ""}
+                      </span>
+                    )}
+                    {contradicts > 0 && (
+                      <span className="text-[8.5px] font-semibold tracking-[0.14em]" style={{ color: "#A85A50" }}>
+                        {contradicts} CONTRADICT{contradicts > 1 ? "S" : ""}
+                      </span>
+                    )}
+                    <span className="kicker" style={{ opacity: 0.7 }}>
+                      {refs > 0
+                        ? `${refs} source ref${refs > 1 ? "s" : ""}`
+                        : claim.sources.length > 0
+                          ? "0 refs — search notice, no source retrieved"
+                          : "0 refs"}
+                    </span>
                   </div>
+                  <p
+                    className="mt-1.5 text-[13px] leading-snug"
+                    style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#F5F0E8" }}
+                  >
+                    {claim.claimText}
+                  </p>
                 </div>
-                <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }} className="shrink-0 mt-1">
+                <span className="hidden sm:block kicker shrink-0 mt-1" style={{ opacity: 0.6 }}>
+                  {claim.sources.length} source{claim.sources.length === 1 ? "" : "s"}
+                </span>
+                <motion.span
+                  animate={{ rotate: isOpen ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="shrink-0 mt-1"
+                >
                   <ChevronDown className="w-3.5 h-3.5" style={{ color: "#A8A098" }} />
-                </motion.div>
+                </motion.span>
               </div>
             </button>
             <AnimatePresence>
               {isOpen && (
-                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }} className="overflow-hidden">
-                  <div className="px-3 pb-3 pt-2 space-y-1.5">
-                    <p className="text-[8px]" style={{ color: "#A8A098" }}>
-                      {refs} retrieved source(s) found for this claim — each source below states whether it supports or contradicts the claim.
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="overflow-hidden"
+                >
+                  <div className="pb-4 sm:pl-9">
+                    <p className="kicker mb-2">
+                      {refs > 0
+                        ? "Retrieved sources — each states whether it supports or contradicts the claim"
+                        : "No independent source was retrieved for this claim"}
                     </p>
-                    {claim.sources.map((src, si) => {
-                      const rc = relConfig[src.relationship] || relConfig.insufficient;
-                      const Icon = rc.icon;
-                      return (
-                        <div key={si} className="p-2 rounded flex items-start gap-2" style={{ background: rc.bg, border: "1px solid #1E1E1E" }}>
-                          <Icon className="w-3 h-3 shrink-0 mt-0.5" style={{ color: rc.color }} />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5 mb-0.5">
-                              <span className="text-[9px] font-semibold" style={{ color: rc.color }}>{rc.label}</span>
-                              <span className="text-[8px]" style={{ color: "#A8A098" }}>{src.name}</span>
-                              {domainOf(src.url) && domainOf(src.url) !== src.name && (
-                                <span className="text-[8px]" style={{ color: "#A8A098", opacity: 0.6 }}>· {domainOf(src.url)}</span>
-                              )}
+                    {claim.sources.length > 0 && (
+                      <div className="border-t border-border/70">
+                        {claim.sources.map((src, si) => {
+                          const rc = relConfig[src.relationship] || relConfig.insufficient;
+                          const Icon = rc.icon;
+                          const dom = domainOf(src.url);
+                          return (
+                            <div key={si} className="py-3 border-b border-border/70 last:border-b-0">
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="flex items-baseline gap-2.5 min-w-0">
+                                  <span className="num-marker shrink-0" style={{ opacity: 0.65 }}>
+                                    {String(si + 1).padStart(2, "0")}
+                                  </span>
+                                  <span className="text-[12px] font-medium truncate" style={{ color: "#F5F0E8" }}>
+                                    {src.name}
+                                  </span>
+                                  {dom && dom !== src.name && (
+                                    <span className="kicker truncate" style={{ opacity: 0.6 }}>{dom}</span>
+                                  )}
+                                </div>
+                                <span
+                                  className="shrink-0 inline-flex items-center gap-1 text-[8px] font-semibold tracking-[0.14em] px-1.5 py-0.5 border"
+                                  style={{ color: rc.color, borderColor: `${rc.color}55`, background: rc.bg }}
+                                >
+                                  <Icon className="w-2.5 h-2.5" />
+                                  {rc.label}
+                                </span>
+                              </div>
+                              <p
+                                className="mt-1.5 text-[12px] leading-snug"
+                                style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#EDE7DD" }}
+                              >
+                                {src.headline}
+                              </p>
+                              <p className="mt-1 text-[10.5px] leading-relaxed" style={{ color: "#A8A098" }}>
+                                {src.excerpt}
+                              </p>
+                              <div className="mt-1.5 flex items-center gap-4">
+                                {src.url && (
+                                  <a
+                                    href={src.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 kicker ul-hover transition-colors hover:text-foreground"
+                                    style={{ color: "#A8906E" }}
+                                  >
+                                    <ExternalLink className="w-2.5 h-2.5" />
+                                    Open source
+                                  </a>
+                                )}
+                                {src.date !== "N/A" && (
+                                  <span className="kicker" style={{ opacity: 0.55 }}>{src.date}</span>
+                                )}
+                              </div>
                             </div>
-                            <p className="text-[9px] font-semibold leading-snug mb-0.5" style={{ color: "#F5F0E8" }}>{src.headline}</p>
-                            <p className="text-[9px] leading-relaxed" style={{ color: "#A8A098" }}>{src.excerpt}</p>
-                            {src.url ? (
-                              <a href={src.url} target="_blank" rel="noopener noreferrer"
-                                className="inline-flex items-center gap-1 mt-1 text-[8px] hover:underline" style={{ color: "#A8906E" }}>
-                                <ExternalLink className="w-2.5 h-2.5" />Open retrieved source
-                              </a>
-                            ) : null}
-                            {src.date !== "N/A" && <span className="text-[8px] mt-0.5 block" style={{ color: "#A8A098", opacity: 0.6 }}>{src.date}</span>}
-                          </div>
-                        </div>
-                      );
-                    })}
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
-          </motion.div>
+          </div>
         );
       })}
     </div>
