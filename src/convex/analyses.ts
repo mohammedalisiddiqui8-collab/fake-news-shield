@@ -100,7 +100,8 @@ export const create = mutation({
         name: v.string(), headline: v.string(), date: v.string(), excerpt: v.string(),
         relationship: v.union(
           v.literal("supports"), v.literal("contradicts"),
-          v.literal("partial"), v.literal("insufficient"),
+          v.literal("partial"), v.literal("does_not_address"),
+          v.literal("unverified"), v.literal("insufficient"),
         ),
         url: v.optional(v.string()),
       })),

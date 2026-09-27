@@ -8,7 +8,7 @@ export interface CrossCheckSource {
   headline: string;
   date: string;
   excerpt: string;
-  relationship: "supports" | "contradicts" | "partial" | "insufficient";
+  relationship: "supports" | "contradicts" | "partial" | "does_not_address" | "unverified" | "insufficient";
   url?: string;
 }
 
@@ -31,6 +31,8 @@ const relConfig: Record<string, { label: string; icon: typeof CheckCircle2; colo
   supports: { label: "SUPPORTS", icon: CheckCircle2, color: "#D4C4A8", bg: "rgba(212,196,168,0.08)" },
   contradicts: { label: "CONTRADICTS", icon: AlertTriangle, color: "#A85A50", bg: "rgba(168,90,80,0.08)" },
   partial: { label: "PARTIAL", icon: HelpCircle, color: "#A8A098", bg: "rgba(168,160,152,0.06)" },
+  does_not_address: { label: "DOES NOT ADDRESS", icon: HelpCircle, color: "#A8A098", bg: "rgba(168,160,152,0.06)" },
+  unverified: { label: "UNVERIFIED", icon: HelpCircle, color: "#A8A098", bg: "rgba(168,160,152,0.06)" },
   insufficient: { label: "INSUFFICIENT", icon: HelpCircle, color: "#A8A098", bg: "rgba(168,160,152,0.06)" },
 };
 

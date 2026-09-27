@@ -129,7 +129,16 @@ const clamp = (n: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, n
 // reported explicitly.
 // ═══════════════════════════════════════════════════════════════════════════════
 
-type Relationship = "supports" | "contradicts" | "partial" | "insufficient";
+// Proposition-level relationship of a retrieved source to a claim:
+//   supports        — source content AGREES with the claim's proposition
+//   contradicts     — source content is INCOMPATIBLE with the claim's proposition
+//   partial         — source addresses the proposition but only confirms part of it
+//   does_not_address— source mentions the same topic/entity but never the proposition
+//   unverified      — snippet too thin to compare the proposition reliably
+//   insufficient    — sentinel notice (no real source retrieved)
+type Relationship =
+  | "supports" | "contradicts" | "partial"
+  | "does_not_address" | "unverified" | "insufficient";
 
 interface RetrievedSource {
   name: string;        // real publisher
@@ -138,6 +147,8 @@ interface RetrievedSource {
   excerpt: string;     // real description/snippet from the result
   url: string;         // real URL ("" for sentinel notices)
   relationship: Relationship;
+  /** Why this relationship was assigned (proposition-level detail). */
+  reason?: string;
 }
 
 interface ClaimSearch {
@@ -175,40 +186,481 @@ function claimNumbers(text: string): string[] {
   return [...new Set(matches.map(m => m.replace(/,/g, "")))];
 }
 
+// ─── PROPOSITION-LEVEL CLAIM ↔ EVIDENCE COMPARISON ────────────────────────
+// A claim is decomposed into its full proposition: key entities, event,
+// action, location/destination, date, quantities, relationships and
+// superlatives. A retrieved source is compared against that PROPOSITION —
+// never against the topic alone. Mentioning the same person, organization,
+// event or topic is NOT corroboration. A source only SUPPORTS a claim when
+// its content actually agrees with what the claim asserts, and it
+// CONTRADICTS when its content is directly incompatible with the claim.
+
 /** Headline-level signals that a source disputes the claim. Conservative. */
 const DEBUNK_PATTERN =
   /\b(false|misleading|debunk(ed|ing)?|fact[- ]?check(ed|ing)?|hoax|misinformation|disinformation|untrue|not true|no evidence|false claim|wrong|baseless|conspiracy (claim|theory|theories))\b/i;
+
+/** Evidentiary rank used when selecting the most relevant retrieved results. */
+const RELATIONSHIP_RANK: Record<Relationship, number> = {
+  contradicts: 4, supports: 4, partial: 3, unverified: 1,
+  does_not_address: 0, insufficient: 0,
+};
+
+/** Number words → value so quantities compare ("ten days" == "10 days"). */
+const NUMBER_WORDS: Record<string, number> = {
+  zero: 0, one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7,
+  eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12, thirteen: 13,
+  fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18,
+  nineteen: 19, twenty: 20, thirty: 30, forty: 40, fifty: 50,
+};
+const SCALE_WORDS = new Set(["hundred", "thousand", "million", "billion", "trillion"]);
+
+/** Canonical place lexicon — generic (celestial bodies, countries, regions). */
+const PLACE_LEXICON: Array<[string, RegExp]> = [
+  ["mars", /\b(mars|martian)\b/i],
+  ["moon", /\b(moon|lunar)\b/i],
+  ["earth", /\b(earth|earthbound)\b/i],
+  ["venus", /\bvenus\b/i],
+  ["jupiter", /\b(jupiter|jovian)\b/i],
+  ["saturn", /\b(saturn|saturnian)\b/i],
+  ["mercury", /\bmercury\b/i],
+  ["the sun", /\b(the sun|solar)\b/i],
+  ["international space station", /\b(international space station|iss)\b/i],
+  ["north korea", /\bnorth korea\b/i],
+  ["south korea", /\bsouth korea\b/i],
+  ["united states", /\b(united states|usa)\b/i],
+  ["united kingdom", /\b(united kingdom|great britain)\b/i],
+  ["afghanistan", /\bafghanistan\b/i], ["iraq", /\biraq\b/i],
+  ["iran", /\biran\b/i], ["israel", /\bisrael\b/i],
+  ["lebanon", /\blebanon\b/i], ["syria", /\bsyria\b/i],
+  ["ukraine", /\bukraine\b/i], ["russia", /\brussia\b/i],
+  ["china", /\bchina\b/i], ["taiwan", /\btaiwan\b/i],
+  ["japan", /\bjapan\b/i], ["india", /\bindia\b/i],
+  ["pakistan", /\bpakistan\b/i], ["vietnam", /\bvietnam\b/i],
+  ["france", /\bfrance\b/i], ["germany", /\bgermany\b/i],
+  ["italy", /\bitaly\b/i], ["spain", /\bspain\b/i],
+  ["greece", /\bgreece\b/i], ["turkey", /\bturkey\b/i],
+  ["poland", /\bpoland\b/i], ["ireland", /\bireland\b/i],
+  ["brazil", /\bbrazil\b/i], ["mexico", /\bmexico\b/i],
+  ["canada", /\bcanada\b/i], ["australia", /\baustralia\b/i],
+  ["south africa", /\bsouth africa\b/i], ["nigeria", /\bnigeria\b/i],
+  ["egypt", /\begypt\b/i], ["saudi arabia", /\bsaudi arabia\b/i],
+];
+
+const MONTHS =
+  "january|february|march|april|may|june|july|august|september|october|november|december";
+
+/** Verb cues tying a nearby place to an event (NOT commercial wording). */
+const PLACE_CUES =
+  /\b(mission|flight|trip|journey|voyage|expedition|launch(?:ed|es|ing)?|land(?:ed|s|ing)?|touchdown|surface|orbit(?:ed|s|ing)?|flyby|fly\s+by|flew|flies|flown|fly|travel(?:ed|ing)?|visit(?:ed|s|ing)?|summit|conference|war|conflict|crash(?:ed|es)?|earthquake|hurricane|tornado|flood|storm|attack(?:ed|s)?|deployed|stationed|held|takes?\s+place|election|stadium|tournament)\b/i;
+
+/** "<event verb> … to/on/around <place>" directly before a place mention. */
+const DEST_CONTEXT =
+  /\b(?:mission|flight|trip|journey|voyage|expedition|travel(?:ing|led)?|flew|flies|flown|fly|flying|land(?:ed|ing)?|touchdown|orbit(?:ed|ing)?|visit(?:ed|ing)?|launch(?:ed|ing)?|arrived|arriving|heading|headed)\b[^.?!]{0,24}\b(?:to|on|in|at|around|into|onto|across|toward|towards)\s+(?:the\s+)?$/i;
+
+/** A place right after a home-return phrase is an origin/home, not the claim's
+ *  event destination ("returned safely to Earth" never contradicts a mission). */
+const RETURN_CONTEXT =
+  /\b(?:return(?:ed|s|ing)?|coming\s+back|head(?:ed|ing)\s+back|homeward|travell?ing\s+home)\b[^.?!]{0,30}\b(?:back\s+)?to\s*$/i;
+
+/** Actions a claim can assert — drives agreement and explicit-negation checks. */
+const ACTION_LEXICON: Array<[string, RegExp]> = [
+  ["confirm", /\b(confirm(?:ed|s|ing)?)\b/i],
+  ["land", /\b(land(?:ed|s|ing)|touch(?:ed|ing)?\s*down|touchdown|set\s+foot)\b/i],
+  ["launch", /\b(launch(?:ed|es|ing)?)\b/i],
+  ["win", /\b(win(?:s|ning)?|won)\b/i],
+  ["discover", /\b(discover(?:ed|s|ing)?)\b/i],
+  ["release", /\b(release(?:d|s|ing)?)\b/i],
+  ["approve", /\b(approv(?:ed|es|ing)|approval)\b/i],
+  ["ban", /\b(bann(?:ed|s|ing)|ban)\b/i],
+  ["sign", /\b(sign(?:ed|s|ing))\b/i],
+  ["elect", /\b(elect(?:ed|s|ing)|election)\b/i],
+  ["die", /\b(died|dies|dying|death|killed|killing)\b/i],
+  ["crash", /\b(crash(?:ed|es|ing)?)\b/i],
+  ["explode", /\b(explod(?:ed|es|ing)|explosion)\b/i],
+  ["acquire", /\b(acquir(?:ed|es|ing)|acquisition)\b/i],
+  ["merge", /\b(merg(?:ed|es|ing)|merger)\b/i],
+  ["recall", /\b(recall(?:ed|s|ing)?)\b/i],
+  ["arrive", /\b(arriv(?:ed|es|ing)|reach(?:ed|es|ing))\b/i],
+  ["orbit", /\b(orbit(?:ed|s|ing)|flyby|flew\s+around|circled)\b/i],
+];
+
+/** Mutually informative event-type signals (a flyby involves no landing). */
+const EVENT_LANDING = /\b(land(?:ed|s|ing)|touch(?:ed|ing)?\s*down|touchdown|set\s+foot)\b/i;
+const EVENT_FLYBY =
+  /\b(flyby|fly\s+by|flew\s+around|flies\s+around|flying\s+around|orbited|orbit(?:s|ing)?\s+around|circled|flew\s+past|lunar\s+orbit)\b/i;
+
+/** Explicit negation of an asserted action ("did not land", "never confirmed"). */
+const NEGATION_PATTERN =
+  /\b(?:not|never|no|did\s+not|didn['’]t|does\s+not|doesn['’]t|has\s+not|hasn['’]t|was\s+not|weren['’]t|wasn['’]t|cannot|can['’]t|won['’]t)\s+(?:\w+\s+){0,3}?(land|confirm|launch|win|discover|release|approve|approval|ban|sign|elect|died|die|dies|crash|explode|acquire|merge|recall|reach|arrived|arrives|arriving)\b/i;
+
+/** Common words that merely start a sentence — never entities. */
+const COMMON_START_WORDS = new Set([
+  "the", "a", "an", "in", "on", "at", "by", "for", "and", "but", "or", "so",
+  "we", "he", "she", "it", "they", "this", "that", "these", "those", "after",
+  "before", "why", "how", "what", "when", "where", "who", "new", "says",
+  "said", "as", "of", "to", "from", "with", "its", "their",
+]);
+
+interface PropositionQuant { noun: string; value: number; }
+
+/** Full proposition expressed by a claim (or asserted by a source). */
+interface Proposition {
+  text: string;
+  tokens: string[];
+  entities: string[];
+  places: string[];
+  quantities: PropositionQuant[];
+  actions: string[];
+  dates: string[];
+  ordinals: Array<{ ord: string; noun: string }>;
+}
+
+function canonicalPlace(fragment: string): string | null {
+  for (const [canon, re] of PLACE_LEXICON) if (re.test(fragment)) return canon;
+  return null;
+}
+
+function isReturnContext(text: string, index: number): boolean {
+  const before = text.slice(Math.max(0, index - 40), index);
+  return RETURN_CONTEXT.test(before);
+}
+
+/** Canonical places mentioned (home-return mentions excluded). */
+function extractPlaces(text: string): string[] {
+  const out = new Set<string>();
+  for (const [canon, re] of PLACE_LEXICON) {
+    const m = re.exec(text);
+    if (!m) continue;
+    if (isReturnContext(text, m.index)) continue;
+    out.add(canon);
+  }
+  return [...out];
+}
+
+/**
+ * Places stated in an event/destination context: directly tied to an event
+ * cue, a destination phrase, or the shared subject itself. Topic-only place
+ * mentions do not qualify — this is what makes destination conflicts precise.
+ */
+function qualifiedPlaces(text: string, shared: string[]): string[] {
+  const out = new Set<string>();
+  for (const [canon, re] of PLACE_LEXICON) {
+    const m = re.exec(text);
+    if (!m) continue;
+    if (isReturnContext(text, m.index)) continue;
+    const beforeWords = text.slice(Math.max(0, m.index - 70), m.index).toLowerCase().split(/\s+/).filter(Boolean).slice(-5).join(" ");
+    const afterWords = text.slice(m.index + m[0].length, m.index + m[0].length + 40).toLowerCase().split(/\s+/).filter(Boolean).slice(0, 3).join(" ");
+    const before = text.slice(Math.max(0, m.index - 60), m.index);
+    const after = text.slice(m.index + m[0].length, m.index + m[0].length + 40);
+    const nearShared = shared.some(t =>
+      new RegExp("\\b" + t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b").test(beforeWords + " " + afterWords));
+    if (nearShared || PLACE_CUES.test(before) || DEST_CONTEXT.test(before) || PLACE_CUES.test(after)) {
+      out.add(canon);
+    }
+  }
+  return [...out];
+}
+
+/** Key named entities (capitalized, non-place, non-date), normalized lowercase. */
+function extractEntities(text: string): string[] {
+  const out = new Set<string>();
+  const words = text.split(/\s+/);
+  const monthRe = new RegExp("^(" + MONTHS + ")$", "i");
+  for (const raw of words) {
+    const w = raw.replace(/^[^A-Za-z0-9]+/, "").replace(/[^A-Za-z0-9.]+$/, "").replace(/'s$/i, "");
+    if (!/^[A-Z][A-Za-z0-9.-]{1,}$/.test(w)) continue;
+    if (COMMON_START_WORDS.has(w.toLowerCase())) continue;
+    if (monthRe.test(w)) continue;
+    if (canonicalPlace(w)) continue;
+    out.add(w.toLowerCase());
+  }
+  return [...out];
+}
+
+/** Quantity pairs ("four astronauts" → astronaut:4, "10-day" → day:10). */
+function quantityPairs(text: string): PropositionQuant[] {
+  const out: PropositionQuant[] = [];
+  const plain =
+    /\b(\d{1,3}(?:[.,]\d+)?|zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty)\s*[-\s]?\s*([a-z]{3,})\b/gi;
+  let m: RegExpExecArray | null;
+  while ((m = plain.exec(text)) !== null) {
+    const unit = m[2].toLowerCase();
+    if (unit in NUMBER_WORDS || SCALE_WORDS.has(unit)) continue;
+    const value = /^\d/.test(m[1])
+      ? parseFloat(m[1].replace(",", "."))
+      : (NUMBER_WORDS as Record<string, number | undefined>)[m[1].toLowerCase()] ?? -1;
+    if (value < 0 || Number.isNaN(value)) continue;
+    out.push({ noun: unit.replace(/s$/, ""), value });
+  }
+  const scaled = /\b(\d+(?:[.,]\d+)?)\s*(thousand|million|billion|trillion)\s+([a-z]{3,})\b/gi;
+  while ((m = scaled.exec(text)) !== null) {
+    const scale = m[2].toLowerCase() === "thousand" ? 1e3
+      : m[2].toLowerCase() === "million" ? 1e6
+      : m[2].toLowerCase() === "billion" ? 1e9 : 1e12;
+    out.push({ noun: m[3].toLowerCase().replace(/s$/, ""), value: parseFloat(m[1].replace(",", ".")) * scale });
+  }
+  return out;
+}
+
+/** Full date expressions normalized to "month year" (plus ISO dates). */
+function extractDates(text: string): string[] {
+  const out = new Set<string>();
+  const monthFirst = new RegExp("\\b(" + MONTHS + ")\\s+(?:\\d{1,2}(?:st|nd|rd|th)?,?\\s+)?((?:19|20)\\d{2})\\b", "gi");
+  let m: RegExpExecArray | null;
+  while ((m = monthFirst.exec(text)) !== null) out.add((m[1] + " " + m[2]).toLowerCase());
+  const dayFirst = new RegExp("\\b(\\d{1,2})(?:st|nd|rd|th)?\\s+(" + MONTHS + ")\\s+((?:19|20)\\d{2})\\b", "gi");
+  while ((m = dayFirst.exec(text)) !== null) out.add((m[2] + " " + m[3]).toLowerCase());
+  const iso = /\b((?:19|20)\d{2})-(\d{2})-(\d{2})\b/g;
+  while ((m = iso.exec(text)) !== null) out.add((m[1] + "-" + m[2] + "-" + m[3]));
+  return [...out];
+}
+
+/** Superlatives/ordinals tied to a category noun ("first crewed"). */
+function extractOrdinals(text: string): Array<{ ord: string; noun: string }> {
+  const out: Array<{ ord: string; noun: string }> = [];
+  const re = /\b(first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth)\s+([a-z][a-z-]{2,})/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text)) !== null) out.push({ ord: m[1].toLowerCase(), noun: m[2].toLowerCase().replace(/s$/, "") });
+  return out;
+}
+
+/** Decompose any text into its proposition elements. */
+function extractProposition(text: string): Proposition {
+  return {
+    text,
+    tokens: claimTokens(text),
+    entities: extractEntities(text),
+    places: extractPlaces(text),
+    quantities: quantityPairs(text),
+    actions: ACTION_LEXICON.filter(([, re]) => re.test(text)).map(([canon]) => canon),
+    dates: extractDates(text),
+    ordinals: extractOrdinals(text),
+  };
+}
+
+function numberInText(n: string, haystack: string): boolean {
+  return new RegExp("(^|[^0-9])" + n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "([^0-9]|$)").test(haystack);
+}
+
+function canonicalAction(verb: string): string | null {
+  for (const [canon, re] of ACTION_LEXICON) if (re.test(verb)) return canon;
+  return null;
+}
+
+/** Host-based evidence quality: official/primary ≫ established press ≫ other.
+ *  Generic heuristics only — never topic-specific hardcoding. */
+const ESTABLISHED_PRESS =
+  /\b(reuters|bbc|cnn|guardian|nytimes|newyorktimes|wsj|bloomberg|nbcnews|cbsnews|abcaus|usatoday|npr|pbs|sky|telegraph|independent|france24|dw|aljazeera|politico|axios|forbes|fortune|apnews|associatedpress)\b/i;
+
+function sourceAuthority(url: string, claimText: string): number {
+  const host = hostOf(url);
+  if (!host) return 1;
+  let authority = 1;
+  if (/\.(gov|mil|edu)(\.|\/|$)/.test(host)) authority = 3;          // official / primary
+  else if (ESTABLISHED_PRESS.test(host)) authority = 2;              // established newsroom
+  if (/\b(blogspot|wordpress|wixsite|weebly|reddit|quora|forum)\b/.test(host)) {
+    authority = Math.min(authority, 0.5);                            // low-quality surface
+  }
+  // The claim's own subject owns this domain (NASA claim → nasa.gov):
+  // the primary source for that subject substantially outranks secondary coverage.
+  const parts = host.split(".");
+  const entities = extractProposition(claimText).entities;
+  const owned = entities.some(e => e.length >= 4 &&
+    parts.some(p => p === e || (e.length >= 5 && (p.startsWith(e) || p.endsWith(e)))));
+  if (owned) authority = Math.max(authority, 3);
+  return authority;
+}
+
+/**
+ * Detect a proposition-level CONFLICT between the claim and the source text.
+ * Returns a human-readable reason, or undefined when no conflict is proven.
+ * Topic/entity similarity alone is NEVER a conflict and NEVER a support.
+ */
+function detectConflict(
+  claim: Proposition,
+  src: Proposition,
+  sourceText: string,
+  haystack: string,
+  headline: string,
+  shared: string[],
+  overlap: number,
+): string | undefined {
+  // 1. Fact-check / debunk coverage of this claim.
+  if (overlap >= 0.34 && DEBUNK_PATTERN.test(headline)) {
+    return "The retrieved source is fact-check/debunk coverage disputing this claim";
+  }
+
+  const entityShared = claim.entities.some(e =>
+    src.entities.includes(e) || src.entities.some(x => x === e || (e.length >= 4 && x.includes(e)) || (x.length >= 4 && e.includes(x))));
+  const qtyAnchor = claim.quantities.some(cq => src.quantities.some(sq => sq.noun === cq.noun));
+  const dateAnchor = claim.dates.some(d => src.dates.includes(d));
+  if (shared.length < 2 && overlap < 0.4 && !entityShared && !qtyAnchor && !dateAnchor) {
+    return undefined; // not anchored to the same subject — cannot conflict
+  }
+
+  // 2. Temporal disambiguation: when both texts carry explicit years and
+  //    none in common, the source concerns a different period or edition of
+  //    the topic — it does NOT address this claim and never contradicts it.
+  const claimYears: string[] = [...(claim.text.match(/\b(?:19|20)\d{2}\b/g) ?? [])];
+  const srcYears: string[] = [...(sourceText.match(/\b(?:19|20)\d{2}\b/g) ?? [])];
+  if (claimYears.length > 0 && srcYears.length > 0 &&
+      !claimYears.some(y => srcYears.includes(y))) {
+    return undefined;
+  }
+
+  // 3. Destination / location conflict (both sides state a different place
+  //    for the same subject in an event context).
+  const claimQ = qualifiedPlaces(claim.text, shared);
+  const srcQ = qualifiedPlaces(sourceText, shared);
+  if (claimQ.length > 0 && srcQ.length > 0 && !claimQ.some(p => srcQ.includes(p))) {
+    return "Destination/location conflict — the claim places this subject at \"" +
+      claimQ.join(", ") + "\", while the retrieved source places it at \"" + srcQ.join(", ") + "\"";
+  }
+
+  // 4. Event-type conflict (claimed surface landing vs described flyby/orbit).
+  const claimLand = EVENT_LANDING.test(claim.text);
+  const claimFlyby = EVENT_FLYBY.test(claim.text);
+  const srcLand = EVENT_LANDING.test(sourceText);
+  const srcFlyby = EVENT_FLYBY.test(sourceText);
+  if (claimLand && !claimFlyby && srcFlyby && !srcLand) {
+    return "Event-type conflict — the claim describes a surface landing, while the retrieved source describes a flyby/orbit with no landing";
+  }
+  if (claimFlyby && !claimLand && srcLand && !srcFlyby) {
+    return "Event-type conflict — the claim describes a flyby/orbit, while the retrieved source describes a surface landing";
+  }
+
+  // 5. Explicit negation of an action the claim asserts.
+  const neg = haystack.match(NEGATION_PATTERN);
+  if (neg && neg[1]) {
+    const verb = canonicalAction(neg[1]);
+    if (verb && claim.actions.includes(verb)) {
+      return "The retrieved source explicitly negates the action the claim asserts (\"" + neg[1] + "\")";
+    }
+  }
+
+  // 6. Quantity conflict for the same measured noun.
+  for (const cq of claim.quantities) {
+    const sq = src.quantities.find(q => q.noun === cq.noun && q.value !== cq.value);
+    if (sq) {
+      return "Quantity conflict — the claim states \"" + cq.value + " " + cq.noun +
+        "\", while the retrieved source states \"" + sq.value + " " + sq.noun + "\"";
+    }
+  }
+
+  // 7. Date conflict (full date expressions on both sides, none in common).
+  if (claim.dates.length > 0 && src.dates.length > 0 &&
+      !claim.dates.some(d => src.dates.includes(d))) {
+    return "Date conflict — the claim dates this to \"" + claim.dates.join(", ") +
+      "\", while the retrieved source dates it to \"" + src.dates.join(", ") + "\"";
+  }
+
+  // 8. Superlative/ordinal conflict for the same category noun.
+  for (const co of claim.ordinals) {
+    const so = src.ordinals.find(o => o.noun === co.noun);
+    if (so && so.ord !== co.ord) {
+      return "Superlative conflict — the claim calls this the \"" + co.ord + " " + co.noun +
+        "\", while the retrieved source calls it the \"" + so.ord + " " + so.noun + "\"";
+    }
+    if (co.ord === "first" &&
+        new RegExp("\\b(?:was|is|were)?\\s*not\\s+the\\s+first\\b[^.]{0,40}\\b" + co.noun).test(haystack)) {
+      return "Superlative conflict — the retrieved source states this is not the first \"" + co.noun + "\"";
+    }
+  }
+  return undefined;
+}
+
+/** Classify how a retrieved source relates to the claim's PROPOSITION. */
+function compareProposition(
+  claim: Proposition,
+  headline: string,
+  description: string,
+): { relationship: Relationship; overlap: number; reason?: string } {
+  const sourceText = (headline + " " + description).replace(/\s+/g, " ").trim();
+  const haystack = sourceText.toLowerCase();
+  const src = extractProposition(sourceText);
+
+  const matched = claim.tokens.filter(t => haystack.includes(t));
+  const overlap = claim.tokens.length > 0 ? matched.length / claim.tokens.length : 0;
+  const shared = claim.tokens.filter(t => src.tokens.includes(t));
+  const entityShared = claim.entities.some(e =>
+    src.entities.includes(e) || src.entities.some(x => x === e || (e.length >= 4 && x.includes(e)) || (x.length >= 4 && e.includes(x))));
+  const anchored = shared.length >= 2 || overlap >= 0.4 || entityShared;
+
+  const conflict = detectConflict(claim, src, sourceText, haystack, headline, shared, overlap);
+  if (conflict) return { relationship: "contradicts", overlap, reason: conflict };
+
+  if (!anchored) {
+    return overlap >= 0.25
+      ? {
+          relationship: "unverified", overlap,
+          reason: "The result is topically related, but the snippet contains too little comparable detail to verify the claim's proposition",
+        }
+      : {
+          relationship: "does_not_address", overlap,
+          reason: "The retrieved source does not concern the subject of this claim",
+        };
+  }
+
+  // Subject is shared — compare the proposition itself, element by element.
+  const claimQ = qualifiedPlaces(claim.text, shared);
+  const srcQ = qualifiedPlaces(sourceText, shared);
+  const nums = claimNumbers(claim.text);
+  const numsOk = nums.length === 0 || nums.every(n => numberInText(n, haystack));
+  const placeAgree = claim.places.length > 0 && claim.places.some(p => src.places.includes(p));
+  const destAddressed = claimQ.length === 0 || claimQ.some(p => srcQ.includes(p));
+  const qtyAgree = claim.quantities.some(cq => src.quantities.some(sq => sq.noun === cq.noun && sq.value === cq.value));
+  const dateAgree = claim.dates.length > 0 && claim.dates.some(d => src.dates.includes(d));
+  const actionAgree = claim.actions.some(a => src.actions.includes(a));
+  const entityGuard = claim.entities.length === 0 ? shared.length >= 3 : entityShared;
+  const realDetail =
+    (placeAgree ? 1 : 0) + (qtyAgree ? 1 : 0) + (dateAgree ? 1 : 0) + (actionAgree ? 1 : 0);
+  const detailScore =
+    (placeAgree ? 2 : 0) + (qtyAgree ? 2 : 0) + (dateAgree ? 1 : 0) +
+    (actionAgree ? 1 : 0) + (entityShared ? 1 : 0) + (overlap >= 0.5 ? 1 : 0);
+
+  // SUPPORTS requires agreement with the proposition itself — never with the topic.
+  if (entityGuard && numsOk && destAddressed && detailScore >= 3) {
+    const agrees: string[] = [];
+    if (placeAgree) agrees.push("same location/destination");
+    if (qtyAgree) agrees.push("matching figures");
+    if (dateAgree) agrees.push("matching date");
+    if (actionAgree) agrees.push("matching action");
+    return {
+      relationship: "supports", overlap,
+      reason: "The retrieved content agrees with the claim's proposition (" + (agrees.join(", ") || "specific details") + ")",
+    };
+  }
+
+  if (realDetail >= 1) {
+    let reason = "The retrieved source addresses this subject but only partially confirms the claim's proposition";
+    if (!destAddressed) reason = "The retrieved source does not state the location/destination asserted by the claim";
+    else if (!numsOk) reason = "The retrieved source does not confirm the specific figures asserted by the claim";
+    return { relationship: "partial", overlap, reason };
+  }
+
+  const claimHasDetail = claimQ.length > 0 || claim.quantities.length > 0 ||
+    claim.dates.length > 0 || claim.actions.length > 0;
+  if (!claimHasDetail) {
+    return {
+      relationship: "unverified", overlap,
+      reason: "The claim's snippet-level detail is too thin for a reliable proposition comparison",
+    };
+  }
+  return {
+    relationship: "does_not_address", overlap,
+    reason: "The source mentions the same subject but does not address the specific proposition asserted by the claim",
+  };
+}
 
 function evaluateRelationship(
   claimText: string,
   headline: string,
   description: string,
-): { relationship: Relationship; overlap: number } {
-  const tokens = claimTokens(claimText);
-  const haystack = (headline + " " + description).toLowerCase();
-  const matched = tokens.filter(t => haystack.includes(t)).length;
-  const overlap = tokens.length > 0 ? matched / tokens.length : 0;
-
-  const nums = claimNumbers(claimText);
-  const numsMatched = nums.filter(n =>
-    new RegExp(`(^|[^0-9])${n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}([^0-9]|$)`).test(haystack),
-  ).length;
-  const numsOk = nums.length === 0 || numsMatched >= nums.length;
-
-  // A fact-check style headline about the same claim → contradiction signal.
-  if (overlap >= 0.34 && DEBUNK_PATTERN.test(headline)) {
-    return { relationship: "contradicts", overlap };
-  }
-  // Strong token overlap + matching figures → corroborating coverage.
-  if (overlap >= 0.5 && numsOk) {
-    return { relationship: "supports", overlap };
-  }
-  // Partial topical overlap → partial.
-  if (overlap >= 0.3 || (nums.length > 0 && numsMatched > 0 && overlap >= 0.2)) {
-    return { relationship: "partial", overlap };
-  }
-  return { relationship: "insufficient", overlap };
+): { relationship: Relationship; overlap: number; reason?: string } {
+  const claim = extractProposition(claimText);
+  return compareProposition(claim, headline, description);
 }
+
 
 function parseRssItems(xml: string): Array<{ title: string; link: string; pubDate: string; description: string; publisher: string }> {
   const items: Array<{ title: string; link: string; pubDate: string; description: string; publisher: string }> = [];
@@ -230,7 +682,7 @@ function parseRssItems(xml: string): Array<{ title: string; link: string; pubDat
       title,
       link: get("link"),
       pubDate: get("pubDate"),
-      description: get("description").replace(/<[^>]*>/g, ""),
+      description: decodeHtml(get("description").replace(/<[^>]*>/g, "")).replace(/<[^>]*>/g, ""),
       publisher: get("source"),
     });
     if (items.length >= 10) break;
@@ -280,7 +732,10 @@ async function searchClaim(claimText: string): Promise<ClaimSearch> {
     const items = parseRssItems(xml);
 
     const evaluated = items.map(item => {
-      const { relationship, overlap } = evaluateRelationship(claimText, item.title, item.description);
+      const { relationship, overlap, reason } = evaluateRelationship(claimText, item.title, item.description);
+      // Evidence quality: primary/authoritative sources outrank loosely
+      // related secondary coverage when the best results are selected.
+      const authority = sourceAuthority(item.link, claimText);
       return {
         name: publisherFromItem(item),
         headline: item.title,
@@ -289,14 +744,18 @@ async function searchClaim(claimText: string): Promise<ClaimSearch> {
         url: item.link,
         relationship,
         overlap,
+        reason,
+        rank: RELATIONSHIP_RANK[relationship] * 100 + authority * 10 + Math.round(overlap * 5),
       };
     });
 
-    evaluated.sort((a, b) => b.overlap - a.overlap);
-    const top = evaluated.slice(0, 3).map(({ overlap: _overlap, ...src }) => src);
+    // Most evidentiary results first: decisive relationships, then authority.
+    evaluated.sort((a, b) => b.rank - a.rank);
+    const top: RetrievedSource[] = evaluated.slice(0, 3).map(({ overlap: _overlap, rank: _rank, ...src }) => src);
 
-    const anySupport = top.some(s => s.relationship === "supports" || s.relationship === "partial");
-    if (top.length > 0 && !anySupport) {
+    const anyAddressed = top.some(s =>
+      s.relationship === "supports" || s.relationship === "contradicts" || s.relationship === "partial");
+    if (top.length > 0 && !anyAddressed) {
       // Honest notice in addition to the (non-corroborating) real results.
       top.push({
         name: "NO INDEPENDENT CORROBORATION FOUND",
@@ -1010,6 +1469,8 @@ async function analyzeText(text: string, depth: Depth, urlCtx?: { url: string; p
     const supports = sources.filter(s => s.relationship === "supports");
     const partials = sources.filter(s => s.relationship === "partial");
     const contradicts = sources.filter(s => s.relationship === "contradicts");
+    const notAddressing = sources.filter(s =>
+      s.relationship === "does_not_address" || s.relationship === "unverified");
 
     if (!result.ok) {
       return {
@@ -1021,15 +1482,27 @@ async function analyzeText(text: string, depth: Depth, urlCtx?: { url: string; p
       };
     }
 
-    if (contradicts.length > 0 && supports.length === 0) {
-      const c = contradicts[0];
+    // ── EVIDENCE QUALITY: primary/authoritative sources weigh more than
+    // loosely related secondary coverage. A low-quality source never
+    // overrides direct primary-source evidence.
+    const authorityOf = (s: { url: string }) => sourceAuthority(s.url, raw.text);
+    const bestContraAuthority = contradicts.reduce((m, s) => Math.max(m, authorityOf(s)), 0);
+    const bestSupportAuthority = supports.reduce((m, s) => Math.max(m, authorityOf(s)), 0);
+    const contradictionDecisive = contradicts.length > 0 &&
+      (supports.length === 0 || bestContraAuthority >= bestSupportAuthority);
+
+    if (contradictionDecisive) {
+      const ranked = [...contradicts].sort((a, b) => authorityOf(b) - authorityOf(a));
+      const c = ranked[0];
       return {
         id: raw.id, text: raw.text,
-        status: "contradicted", confidence: 65,
-        evidence: "Contradicted by retrieved independent coverage: \"" + c.headline + "\" — " + c.name + (c.date !== "N/A" ? " (" + c.date + ")" : "") + ".",
+        status: "contradicted", confidence: bestContraAuthority >= 2 ? 68 : 64,
+        evidence: "CONTRADICTED — " + (c.reason ? c.reason + ". " : "") +
+          "Retrieved source: \"" + c.headline + "\" — " + c.name +
+          (c.date !== "N/A" ? " (" + c.date + ")" : "") + ".",
         sources: [],
         contradictingSources: contradicts.map(s => s.name + " — \"" + s.headline + "\""),
-        explanation: "Retrieved independent coverage disputes this claim. The source was found through a live search for this claim. " + note,
+        explanation: "The content of the retrieved source conflicts with the proposition asserted by this claim (relationship: CONTRADICTS). Sharing the same topic, person, organization or event is never treated as corroboration. " + note,
       };
     }
 
@@ -1038,10 +1511,11 @@ async function analyzeText(text: string, depth: Depth, urlCtx?: { url: string; p
       return {
         id: raw.id, text: raw.text,
         status: "supported", confidence: 75,
-        evidence: "Corroborated by " + supports.length + " independent retrieved source(s): \"" + s.headline + "\" — " + s.name + (s.date !== "N/A" ? " (" + s.date + ")" : "") + ".",
+        evidence: "Corroborated by " + supports.length + " independent retrieved source(s) whose content matches this claim's proposition" + (s.reason ? " — " + s.reason.toLowerCase() : "") + ": \"" + s.headline + "\" — " + s.name +
+          (s.date !== "N/A" ? " (" + s.date + ")" : "") + ".",
         sources: supports.map(x => x.name + " — \"" + x.headline + "\""),
         contradictingSources: contradicts.map(s => s.name + " — \"" + s.headline + "\""),
-        explanation: "Independent retrieved coverage matches the specific details of this claim. This is corroboration of coverage, not absolute proof. " + note,
+        explanation: "The retrieved source content agrees with the specific proposition asserted by this claim — entity or topic overlap alone was never counted as corroboration. This is corroboration of coverage, not absolute proof. " + note,
       };
     }
 
@@ -1050,22 +1524,23 @@ async function analyzeText(text: string, depth: Depth, urlCtx?: { url: string; p
       return {
         id: raw.id, text: raw.text,
         status: "uncertain", confidence: 45,
-        evidence: "Partially addressed by retrieved coverage: \"" + p.headline + "\" — " + p.name + ". Insufficient independent corroboration found.",
-        sources: [],
-        contradictingSources: contradicts.map(s => s.name + " — \"" + s.headline + "\""),
-        explanation: "Retrieved coverage only partially addresses this claim — independent corroboration remains incomplete. " + note,
+        evidence: "Partially addressed by retrieved coverage" + (p.reason ? " — " + p.reason.toLowerCase() : "") + ": \"" + p.headline + "\" — " + p.name + ". Insufficient independent corroboration found.",
+        sources: [], contradictingSources: contradicts.map(s => s.name + " — \"" + s.headline + "\""),
+        explanation: "Retrieved coverage only partially addresses this claim's proposition — independent corroboration remains incomplete. " + note,
       };
     }
 
+    // No source addressed the proposition: results that merely mention the
+    // same topic or entity are explicitly reported as not addressing it.
     const nonCorroborating = sources.filter(s => s.name !== "NO INDEPENDENT CORROBORATION FOUND" && s.name !== "SOURCE SEARCH UNAVAILABLE");
     return {
       id: raw.id, text: raw.text,
       status: "needs_verification", confidence: 30,
       evidence: nonCorroborating.length > 0
-        ? "NO INDEPENDENT CORROBORATION FOUND — a live search returned " + nonCorroborating.length + " result(s), but none addressed this claim closely enough. Insufficient evidence available."
+        ? "NO INDEPENDENT CORROBORATION FOUND — " + nonCorroborating.length + " retrieved result(s) mention the same topic or entity, but none address the specific proposition asserted by this claim. Insufficient evidence available."
         : "NO INDEPENDENT CORROBORATION FOUND — insufficient evidence available.",
       sources: [], contradictingSources: [],
-      explanation: "No independent source corroborates or contradicts this claim. Absence of corroboration is not proof of falsity — the claim remains unverified. " + note,
+      explanation: "Topic similarity is not corroboration: retrieved results that only mention the same person, organization or event do not verify this claim. Absence of corroboration is not proof of falsity — the claim remains unverified. " + note,
     };
   });
 
@@ -1073,7 +1548,10 @@ async function analyzeText(text: string, depth: Depth, urlCtx?: { url: string; p
   const crossCheck: CrossCheckClaimResult[] = checked.map((raw, i) => ({
     claimId: raw.id,
     claimText: raw.text,
-    sources: searchResults[i].sources.map(s => ({ ...s })),
+    sources: searchResults[i].sources.map(s => ({
+      name: s.name, headline: s.headline, date: s.date, excerpt: s.excerpt,
+      relationship: s.relationship, url: s.url,
+    })),
   }));
 
   // ── SOURCE COUNTS (shared source of truth — same module the frontend uses) ──
@@ -1151,6 +1629,15 @@ async function analyzeText(text: string, depth: Depth, urlCtx?: { url: string; p
       summary = "INSUFFICIENT EVIDENCE — NO INDEPENDENT CORROBORATION FOUND across " + checked.length + " cross-checked claim(s) ("
         + totalRetrieved + " unique source(s) retrieved (" + sourceRefs + " claim–source reference(s)), none corroborating). Unable to verify. Confidence is limited accordingly.";
     }
+  }
+
+  // ── HARD RULE: a contradicted claim never yields a credible verdict ──
+  // The verdict must reflect the strongest verified contradictions, not the
+  // number of retrieved sources. Authoritative contradicting evidence caps
+  // the result well below "LIKELY CREDIBLE".
+  if (contradictedCount > 0 && verdict === "likely_real") {
+    verdict = "uncertain";
+    confidence = Math.min(confidence, 50);
   }
 
   confidence = clamp(confidence, 25, 85);
