@@ -60,7 +60,7 @@ export function EvidenceMap({ articleTitle, claims, verdict, confidence }: Evide
     return (
       <div key={node.id}>
         <button type="button"
-          className="flex items-center gap-2 w-full text-left py-1.5 px-2 rounded cursor-pointer transition-all duration-150 hover:bg-[#D8D0C3]/40"
+          className="flex items-center gap-2 w-full text-left py-1.5 px-2 cursor-pointer transition-all duration-150 hover:bg-[#D8D0C3]/40"
           style={{ paddingLeft: depth * 16 + 8, background: isSelected ? "rgba(89,100,81,0.06)" : undefined }}
           onClick={() => setSelectedNode(isSelected ? null : node.id)}>
           {depth > 0 && <div className="w-3 h-px" style={{ background: "#D8D0C3" }} />}

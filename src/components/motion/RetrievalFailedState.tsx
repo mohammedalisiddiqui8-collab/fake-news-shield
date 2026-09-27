@@ -65,7 +65,7 @@ function Panel({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, delay }}
-      className="rounded-lg mb-3 overflow-hidden"
+      className="mb-3 overflow-hidden"
       style={{ background: "#ECE7DB", border: "1px solid #D8D0C3" }}
     >
       <div className="px-4 sm:px-5 pt-4 pb-2">
@@ -103,7 +103,7 @@ export function RetrievalFailedState({
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.35 }}
-        className="glass-card rounded-lg p-5 sm:p-7 mb-4"
+        className="glass-card p-5 sm:p-7 mb-4"
         style={{ border: "1px solid rgba(168,97,85,0.25)" }}
       >
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">

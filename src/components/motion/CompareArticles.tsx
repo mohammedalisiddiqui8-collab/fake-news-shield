@@ -199,7 +199,7 @@ export function CompareArticles({ onCompare }: CompareArticlesProps) {
             <div key={section.key}>
               <button
                 type="button"
-                className="w-full flex items-center gap-3 py-2.5 cursor-pointer transition-colors hover:bg-white/[0.02] text-left"
+                className="w-full flex items-center gap-3 py-2.5 cursor-pointer transition-colors hover:bg-[rgba(23,23,22,0.025)] text-left"
                 style={{ borderBottom: "1px solid #D8D0C3" }}
                 onClick={() =>
                   setExpandedSection(

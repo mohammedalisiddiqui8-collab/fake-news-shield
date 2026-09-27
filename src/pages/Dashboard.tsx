@@ -214,7 +214,7 @@ function ReportSection({ id, no, title, dek, aside, children }: {
   id: string; no: string; title: string; dek?: string; aside?: ReactNode; children: ReactNode;
 }) {
   return (
-    <section id={id} className="report-sec mt-12 lg:mt-16">
+    <section id={id} className="report-sec mt-14 lg:mt-24">
       <div className="flex items-start justify-between gap-6 border-b border-border pb-2.5">
         <div className="flex items-baseline gap-3 min-w-0">
           <span className="num-marker shrink-0">{no}</span>
@@ -968,7 +968,7 @@ export default function Dashboard() {
   })();
   const filedLabel = fmtFiled(savedAt ?? undefined);
   const sourceMetaLine = currentResult
-    ? `${inputType === "url" ? hostOf(inputText) : "Submitted text"} · ${currentResult.wordCount} words · ${currentResult.claims?.length ?? 0} claims extracted`
+    ? `${inputType === "url" ? hostOf(inputText) : "Submitted text"} · ${filedLabel} · ${inputType === "url" ? "URL" : "Pasted text"} · ${currentResult.claims?.length ?? 0} claims extracted`
     : "";
   const todayLabel = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   const editionLabel = fmtFiled(Date.now());
@@ -1089,22 +1089,22 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* ─── Desktop: slim dark sidebar — an editorial desk, not an admin panel ─── */}
-      <aside className="hidden lg:flex fixed inset-y-0 left-0 z-40 w-56 flex-col border-r border-border" style={{ background: "#111211" }}>
+      {/* ─── Desktop: dark charcoal navigation rail — a publication index, not an admin panel ─── */}
+      <aside className="veritas-nav-surface hidden lg:flex fixed inset-y-0 left-0 z-40 w-56 flex-col" style={{ background: "#111211" }}>
         <div className="px-5 pt-7 pb-6">
           <button type="button" className="flex items-center gap-2.5" onClick={() => navigate("/")}>
-            <Shield className="w-4 h-4" style={{ color: "#596451" }} />
-            <span className="text-[16px] uppercase tracking-[0.28em]" style={{ fontFamily: "'DM Serif Display', serif", color: "#171716" }}>
+            <Shield className="w-4 h-4" style={{ color: "#71836B" }} />
+            <span className="text-[16px] uppercase tracking-[0.28em]" style={{ fontFamily: "'DM Serif Display', serif", color: "#F3EFE6" }}>
               Veritas
             </span>
           </button>
-          <p className="mt-2.5 kicker" style={{ fontSize: 8, letterSpacing: "0.3em" }}>Truth · Evidence · Context</p>
+          <p className="mt-2.5 kicker" style={{ fontSize: 8, letterSpacing: "0.3em", color: "#8E887B" }}>Truth · Evidence · Context</p>
         </div>
 
         <nav className="flex-1 px-4 overflow-y-auto">
           {navGroups.map((group) => (
             <div key={group.title} className="mb-6">
-              <p className="kicker px-1 mb-2" style={{ opacity: 0.5 }}>{group.title}</p>
+              <p className="kicker px-1 mb-2" style={{ color: "#6E6A60" }}>{group.title}</p>
               <div>
                 {group.items.map((item) => {
                   const active = activeView === item.view && !item.action;
@@ -1117,17 +1117,17 @@ export default function Dashboard() {
                       title={item.disabled ? "Run an investigation first" : item.label}
                       className={`relative w-full flex items-center gap-2.5 pl-3 pr-2 py-2 text-left transition-colors ${
                         item.disabled
-                          ? "opacity-30 cursor-not-allowed"
+                          ? "opacity-35 cursor-not-allowed"
                           : active
-                            ? "text-foreground"
-                            : "text-muted-foreground hover:text-foreground"
+                            ? "text-[#F3EFE6]"
+                            : "text-[#9C968A] hover:text-[#F3EFE6]"
                       }`}
                     >
                       {active && (
                         <motion.span
                           layoutId="nav-active"
                           className="absolute left-0 top-0 bottom-0 w-px"
-                          style={{ background: "#596451" }}
+                          style={{ background: "#71836B" }}
                         />
                       )}
                       <item.icon className="w-3.5 h-3.5 shrink-0" />
@@ -1140,32 +1140,33 @@ export default function Dashboard() {
           ))}
         </nav>
 
-        <div className="px-5 py-4 border-t border-border flex items-end justify-between gap-2">
+        <div className="px-5 py-4 flex items-end justify-between gap-2" style={{ borderTop: "1px solid rgba(243,239,230,0.12)" }}>
           <div className="min-w-0">
-            <p className="kicker" style={{ fontSize: 8, opacity: 0.5 }}>Edition</p>
-            <p className="kicker mt-1 tabular" style={{ fontSize: 8, color: "#171716", opacity: 0.75 }}>{editionLabel}</p>
+            <p className="kicker" style={{ fontSize: 8, color: "#6E6A60" }}>Edition</p>
+            <p className="kicker mt-1 tabular" style={{ fontSize: 8, color: "#B7B0A2" }}>{editionLabel}</p>
           </div>
           <button
             type="button"
             title={theme === "dark" ? "Switch to light" : "Switch to dark"}
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="p-2 border border-border text-muted-foreground transition-colors hover:text-foreground hover:border-foreground/30"
+            className="p-2 transition-colors hover:text-[#F3EFE6]"
+            style={{ border: "1px solid rgba(243,239,230,0.18)", color: "#9C968A" }}
           >
             {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
           </button>
         </div>
       </aside>
 
-      {/* ─── Mobile: compact top bar ─── */}
-      <header className="lg:hidden sticky top-0 z-50 border-b border-border" style={{ background: "#F3EFE6" }}>
+      {/* ─── Mobile: compact charcoal header — same publication navigation, no vertical waste ─── */}
+      <header className="veritas-nav-surface lg:hidden sticky top-0 z-50" style={{ background: "#111211", borderBottom: "1px solid rgba(243,239,230,0.14)" }}>
         <div className="h-12 pl-3 pr-2 flex items-center">
           <button type="button" className="flex items-center gap-2 pr-3 h-full shrink-0" onClick={() => navigate("/")}>
-            <Shield className="w-3.5 h-3.5" style={{ color: "#596451" }} />
-            <span className="text-[13px] uppercase tracking-[0.24em]" style={{ fontFamily: "'DM Serif Display', serif", color: "#171716" }}>
+            <Shield className="w-3.5 h-3.5" style={{ color: "#71836B" }} />
+            <span className="text-[13px] uppercase tracking-[0.24em]" style={{ fontFamily: "'DM Serif Display', serif", color: "#F3EFE6" }}>
               Veritas
             </span>
           </button>
-          <div className="flex-1 min-w-0 flex items-center justify-end gap-0.5 overflow-x-auto no-scrollbar border-l border-border pl-2">
+          <div className="flex-1 min-w-0 flex items-center justify-end gap-0.5 overflow-x-auto no-scrollbar pl-2" style={{ borderLeft: "1px solid rgba(243,239,230,0.14)" }}>
             {allNavItems.map((item) => {
               const active = activeView === item.view && !item.action;
               return (
@@ -1177,9 +1178,9 @@ export default function Dashboard() {
                   aria-label={item.label}
                   onClick={() => goNav(item)}
                   className={`shrink-0 h-8 w-8 flex items-center justify-center transition-colors ${
-                    item.disabled ? "opacity-30" : active ? "text-primary" : "text-muted-foreground"
+                    item.disabled ? "opacity-35" : active ? "text-[#F3EFE6]" : "text-[#9C968A]"
                   }`}
-                  style={active ? { background: "rgba(89,100,81,0.08)" } : undefined}
+                  style={active ? { background: "rgba(243,239,230,0.08)" } : undefined}
                 >
                   <item.icon className="w-3.5 h-3.5" />
                 </button>
@@ -1238,7 +1239,7 @@ export default function Dashboard() {
                 <section className="grid lg:grid-cols-[1.5fr_1fr] gap-10 lg:gap-14 items-start">
                   <div>
                     <div className="flex items-center gap-3">
-                      <span className="kicker shrink-0">Veritas · The verification desk</span>
+                      <span className="kicker shrink-0">Fact-checking platform</span>
                       <span className="h-px flex-1" style={{ background: "#D8D0C3" }} />
                       <span className="kicker shrink-0 hidden sm:inline">{todayLabel}</span>
                     </div>
@@ -1247,7 +1248,7 @@ export default function Dashboard() {
                       <span className="block">Follow the evidence.</span>
                     </h1>
                     <p className="mt-5 text-[13.5px] leading-relaxed text-muted-foreground max-w-lg">
-                      Veritas retrieves the original article, extracts its factual claims, and cross-checks each one against live independent coverage — reporting what the evidence supports, and saying so when it doesn't.
+                      Veritas helps you cut through misinformation with real sources, transparent analysis, and clear context.
                     </p>
                     <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3">
                       <Button
@@ -1279,6 +1280,7 @@ export default function Dashboard() {
                     className="hidden sm:block max-w-[290px] lg:max-w-none mx-auto lg:mx-0 w-full"
                   >
                     <EditorialPlate />
+                    <p className="mt-3 kicker text-center" style={{ opacity: 0.55 }}>Fig. 01 — The verification desk</p>
                   </motion.div>
                 </section>
 
@@ -1290,7 +1292,7 @@ export default function Dashboard() {
                     <section id="begin" className="report-sec">
                       <SectionHead
                         no="01"
-                        title="Begin an investigation"
+                        title="New analysis"
                         dek="Submit a URL or pasted text — Veritas retrieves live sources, extracts factual claims and cross-checks each one against independent coverage."
                       />
 
@@ -1411,10 +1413,35 @@ export default function Dashboard() {
                       </div>
                     </section>
 
-                    {/* ─── 02 · Recent investigations — the archive ─── */}
-                    <section className="mt-14 lg:mt-20">
+                    {/* ─── 02 · Veritas at a glance — one horizontal strip, thin vertical rules ─── */}
+                    <section className="mt-12 lg:mt-16">
                       <SectionHead
                         no="02"
+                        title="Veritas at a glance"
+                        dek="Real totals from your archive, summed as investigations are filed."
+                      />
+                      <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
+                        {statCells.map((cell, i) => (
+                          <div
+                            key={cell.label}
+                            className={`py-4 sm:py-5 ${["pr-4", "px-4 border-l border-border", "pr-4 border-t border-border sm:border-t-0 sm:border-l sm:border-border sm:px-4 lg:border-t lg:border-l-0 lg:pl-0 lg:pr-4 xl:border-t-0 xl:border-l xl:pl-4", "px-4 border-l border-t border-border sm:border-t-0 lg:border-t xl:border-t-0"][i]}`}
+                          >
+                            <p
+                              className="text-[30px] sm:text-[34px] leading-none tabular"
+                              style={{ fontFamily: "'DM Serif Display', serif", color: cell.value == null ? "#6F6A61" : "#171716" }}
+                            >
+                              {cell.value == null ? "—" : <AnimatedNumber value={cell.value} />}
+                            </p>
+                            <p className="kicker mt-2.5" style={{ opacity: 0.7, letterSpacing: "0.14em" }}>{cell.label}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </section>
+
+                    {/* ─── 03 · Recent investigations — the archive ─── */}
+                    <section className="mt-14 lg:mt-20">
+                      <SectionHead
+                        no="03"
                         title="Recent investigations"
                         dek="Every filed case — verdicts are generated from retrieved evidence, never from language alone."
                         right={
@@ -1466,7 +1493,7 @@ export default function Dashboard() {
                     {/* ─── 03 · Today's headlines — a newsroom column ─── */}
                     <section>
                       <SectionHead
-                        no="03"
+                        no="04"
                         title="Today's headlines"
                         dek={
                           newsLoading
@@ -1492,29 +1519,39 @@ export default function Dashboard() {
                       </p>
                     </section>
 
-                    {/* ─── 04 · Statistics — typography and thin separators, never KPI cards ─── */}
+                    {/* ─── 05 · Activity — a quiet record of the archive ─── */}
                     <section className="mt-12 lg:mt-16">
                       <SectionHead
-                        no="04"
-                        title="Statistics"
-                        dek="Real totals from your archive, summed as investigations are filed."
+                        no="05"
+                        title="Activity"
+                        dek="A quiet record of what this desk has filed."
                       />
                       <div className="mt-3 border-t border-border">
-                        {statCells.map((cell) => (
-                          <div key={cell.label} className="flex items-baseline justify-between gap-3 py-3 border-b border-border">
-                            <span className="kicker" style={{ opacity: 0.65 }}>{cell.label}</span>
+                        {[
+                          { label: "Credible", value: analyses ? analyses.filter((a) => a.verdict === "likely_real").length : null, color: STATUS.green },
+                          { label: "Uncertain", value: analyses ? analyses.filter((a) => a.verdict === "uncertain").length : null, color: STATUS.amber },
+                          { label: "Misleading", value: analyses ? analyses.filter((a) => a.verdict === "likely_fake").length : null, color: STATUS.red },
+                        ].map((row) => (
+                          <div key={row.label} className="flex items-baseline justify-between gap-3 py-2.5 border-b border-border">
+                            <span className="flex items-center gap-2 kicker" style={{ opacity: 0.75 }}>
+                              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: row.color }} />
+                              {row.label}
+                            </span>
                             <span
-                              className="text-[18px] leading-none tabular shrink-0"
-                              style={{ fontFamily: "'JetBrains Mono', monospace", color: cell.value == null ? "#6F6A61" : "#171716" }}
+                              className="text-[15px] leading-none tabular shrink-0"
+                              style={{ fontFamily: "'JetBrains Mono', monospace", color: row.value == null ? "#6F6A61" : "#171716" }}
                             >
-                              {cell.value == null ? "—" : <AnimatedNumber value={cell.value} />}
+                              {row.value == null ? "—" : <AnimatedNumber value={row.value} />}
                             </span>
                           </div>
                         ))}
+                        <div className="flex items-baseline justify-between gap-3 py-2.5 border-b border-border">
+                          <span className="kicker" style={{ opacity: 0.75 }}>Last filed</span>
+                          <span className="kicker tabular shrink-0" style={{ opacity: 0.85 }}>
+                            {analyses && analyses.length > 0 ? fmtFiled(analyses[0]._creationTime) : "—"}
+                          </span>
+                        </div>
                       </div>
-                      <p className="mt-3 kicker" style={{ opacity: 0.55 }}>
-                        {verdictTally ? `Verdict tally — ${verdictTally}` : "Counting the archive…"}
-                      </p>
                     </section>
                   </div>
                 </div>
@@ -1826,13 +1863,14 @@ export default function Dashboard() {
                       {/* Masthead */}
                       <header>
                         <div className="flex items-baseline justify-between gap-4 border-b pb-1.5" style={{ borderColor: "rgba(23,23,22,0.6)" }}>
-                          <span className="kicker" style={{ color: "#171716", opacity: 0.9 }}>Investigation</span>
+                          <span className="kicker" style={{ color: "#171716", opacity: 0.9 }}>Veritas</span>
                           <span className="kicker">
                             Filed {filedLabel} · Status <span style={{ color: STATUS.green }}>Complete</span>
                           </span>
                         </div>
                         <div className="border-b border-border mt-[3px]" />
-                        <h1 className="mt-6 text-[23px] sm:text-[30px] lg:text-[35px] max-w-3xl break-words" style={{ lineHeight: 1.2 }}>
+                        <p className="kicker mt-4" style={{ color: "#596451" }}>Investigation</p>
+                        <h1 className="mt-3 text-[23px] sm:text-[30px] lg:text-[35px] max-w-3xl break-words" style={{ lineHeight: 1.2 }}>
                           {reportHeadline}
                         </h1>
                         <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
@@ -1846,7 +1884,7 @@ export default function Dashboard() {
                       </header>
 
                       {/* ─── Verdict — typography-led, no gauges ─── */}
-                      <section id="verdict" className="report-sec mt-9">
+                      <section id="verdict" className="report-sec mt-12 lg:mt-16">
                         <div className="flex items-baseline justify-between gap-4">
                           <span className="kicker">Assessment</span>
                           <span className="kicker tabular" style={{ opacity: 0.6 }}>
@@ -1854,9 +1892,9 @@ export default function Dashboard() {
                           </span>
                         </div>
 
-                        <div className="mt-5 flex flex-col lg:flex-row lg:items-end gap-6 lg:gap-12">
+                        <div className="mt-5 flex flex-col xl:flex-row xl:items-end gap-6 xl:gap-12">
                           <div className="shrink-0">
-                            <h2 className="text-[34px] sm:text-[44px] leading-none" style={{ color: vc.accentColor }}>{vc.label}</h2>
+                            <h2 className="text-[34px] sm:text-[44px] lg:text-[50px] leading-none" style={{ color: vc.accentColor }}>{vc.label}</h2>
                             <p className="mt-3 font-mono text-[11px] tracking-[0.2em] tabular" style={{ color: vc.accentColor }}>
                               {currentResult.confidence}% CONFIDENCE
                             </p>

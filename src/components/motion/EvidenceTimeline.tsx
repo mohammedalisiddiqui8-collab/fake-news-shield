@@ -25,7 +25,7 @@ interface EvidenceTimelineProps {
   events: TimelineEvent[];
 }
 
-/* ─── Event Config ─── */
+/* ─── Event Config — status colour carries meaning, nothing else ─── */
 const eventConfig: Record<
   TimelineEvent["type"],
   { icon: typeof FileSearch; color: string; label: string }
@@ -47,7 +47,7 @@ const eventConfig: Record<
   },
   corroboration: {
     icon: CheckCircle2,
-    color: "#596451",
+    color: "#71836B",
     label: "CORROBORATION",
   },
   contradiction: {
@@ -62,14 +62,15 @@ const eventConfig: Record<
   },
   assessment: {
     icon: Shield,
-    color: "#8A6A45",
+    color: "#A9854D",
     label: "ASSESSMENT",
   },
 };
 
 /**
- * Chronological evidence timeline showing the verification process.
- * Each node connects via a thin vertical line with staggered reveal animation.
+ * Chronological investigation timeline — editorial numbering, a thin
+ * vertical rule and small mono markers. Reads like the process log of a
+ * published investigation, not a software workflow diagram.
  */
 export function EvidenceTimeline({ events }: EvidenceTimelineProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -89,40 +90,28 @@ export function EvidenceTimeline({ events }: EvidenceTimelineProps) {
     <div ref={containerRef} className="relative">
       {events.map((event, i) => {
         const config = eventConfig[event.type];
-        const Icon = config.icon;
         const isLast = i === events.length - 1;
 
         return (
-          <div key={event.id} className="flex gap-3">
-            {/* Vertical line + node */}
+          <div key={event.id} className="flex gap-4">
+            {/* Numbered marker + thin connecting rule */}
             <div className="flex flex-col items-center">
-              {/* Node */}
-              <motion.div
-                initial={{ scale: 0, opacity: 0 }}
-                animate={
-                  inView
-                    ? { scale: 1, opacity: 1 }
-                    : { scale: 0, opacity: 0 }
-                }
-                transition={{
-                  delay: i * 0.12,
-                  duration: 0.3,
-                  type: "spring",
-                  stiffness: 300,
-                  damping: 20,
-                }}
-                className="w-6 h-6 rounded-sm flex items-center justify-center shrink-0 z-10"
+              <motion.span
+                initial={{ opacity: 0 }}
+                animate={inView ? { opacity: 1 } : { opacity: 0 }}
+                transition={{ delay: i * 0.1, duration: 0.3 }}
+                className="w-7 shrink-0 text-center text-[9px] tracking-[0.12em] leading-none pt-[3px]"
                 style={{
-                  background: `${config.color}12`,
-                  border: `1px solid ${config.color}30`,
+                  fontFamily: "'JetBrains Mono', monospace",
+                  color: config.color,
+                  fontVariantNumeric: "tabular-nums",
                 }}
               >
-                <Icon className="w-3 h-3" style={{ color: config.color }} />
-              </motion.div>
+                {String(i + 1).padStart(2, "0")}
+              </motion.span>
 
-              {/* Connecting line */}
               {!isLast && (
-                <div className="relative w-px flex-1 min-h-[20px]">
+                <div className="relative w-px flex-1 min-h-[26px]">
                   <div className="absolute inset-0" style={{ background: "#D8D0C3" }} />
                   <motion.div
                     initial={{ height: 0 }}
@@ -133,31 +122,26 @@ export function EvidenceTimeline({ events }: EvidenceTimelineProps) {
                       ease: [0.22, 1, 0.36, 1],
                     }}
                     className="absolute top-0 left-0 w-full"
-                    style={{ background: `${config.color}30` }}
+                    style={{ background: config.color, opacity: 0.4 }}
                   />
                 </div>
               )}
             </div>
 
-            {/* Event content */}
+            {/* Event entry */}
             <motion.div
-              initial={{ opacity: 0, x: -8 }}
-              animate={
-                inView
-                  ? { opacity: 1, x: 0 }
-                  : { opacity: 0, x: -8 }
-              }
+              initial={{ opacity: 0, y: 6 }}
+              animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
               transition={{
                 delay: i * 0.12 + 0.05,
-                duration: 0.3,
+                duration: 0.35,
                 ease: [0.22, 1, 0.36, 1],
               }}
-              className="flex-1 pb-4"
+              className="flex-1 min-w-0 pb-7 last:pb-1"
             >
-              {/* Type label */}
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-baseline justify-between gap-3 border-b border-border/70 pb-1">
                 <span
-                  className="text-[7px] font-bold tracking-[0.2em]"
+                  className="text-[9px] tracking-[0.22em] uppercase"
                   style={{
                     fontFamily: "'JetBrains Mono', monospace",
                     color: config.color,
@@ -167,46 +151,30 @@ export function EvidenceTimeline({ events }: EvidenceTimelineProps) {
                 </span>
                 {event.timestamp && (
                   <span
-                    className="text-[7px]"
-                    style={{ color: "#6F6A61", opacity: 0.5 }}
+                    className="text-[8px] tracking-[0.14em] tabular shrink-0 uppercase"
+                    style={{ fontFamily: "'JetBrains Mono', monospace", color: "#6F6A61", opacity: 0.7 }}
                   >
                     {event.timestamp}
                   </span>
                 )}
               </div>
 
-              {/* Title */}
               <p
-                className="text-[11px] font-semibold mb-0.5"
-                style={{ color: "#171716" }}
+                className="mt-2 text-[13px] leading-snug"
+                style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#171716" }}
               >
                 {event.title}
               </p>
 
-              {/* Detail */}
-              <p
-                className="text-[10px] leading-relaxed"
-                style={{ color: "#6F6A61" }}
-              >
+              <p className="mt-1 text-[11px] leading-relaxed" style={{ color: "#6F6A61" }}>
                 {event.detail}
               </p>
 
-              {/* Source */}
               {event.source && (
-                <div className="flex items-center gap-1 mt-1">
-                  <span
-                    className="text-[8px]"
-                    style={{ color: "#6F6A61", opacity: 0.5 }}
-                  >
-                    Source:
-                  </span>
-                  <span
-                    className="text-[8px]"
-                    style={{ color: "#596451" }}
-                  >
-                    {event.source}
-                  </span>
-                </div>
+                <p className="mt-1.5 text-[9px] tracking-[0.14em] uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                  <span style={{ color: "#6F6A61", opacity: 0.75 }}>Source · </span>
+                  <span style={{ color: "#596451" }}>{event.source}</span>
+                </p>
               )}
             </motion.div>
           </div>
