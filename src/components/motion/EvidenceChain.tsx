@@ -174,23 +174,23 @@ export function EvidenceChain(props: EvidenceChainProps) {
       <div className="space-y-0">
         <div
           className="w-full flex items-center gap-3 py-2.5"
-          style={{ borderBottom: "1px solid #1E1E1E" }}
+          style={{ borderBottom: "1px solid #D8D0C3" }}
         >
           <div
             className="w-6 h-6 rounded-sm flex items-center justify-center shrink-0"
-            style={{ background: "rgba(168,90,80,0.08)", border: "1px solid rgba(168,90,80,0.3)" }}
+            style={{ background: "rgba(168,97,85,0.08)", border: "1px solid rgba(168,97,85,0.3)" }}
           >
-            <AlertTriangle className="w-3 h-3" style={{ color: "#A85A50" }} />
+            <AlertTriangle className="w-3 h-3" style={{ color: "#A86155" }} />
           </div>
           <span
             className="text-[9px] font-bold tracking-[0.2em] flex-1 text-left"
-            style={{ color: "#A85A50" }}
+            style={{ color: "#A86155" }}
           >
             INPUT → RETRIEVAL FAILED
           </span>
         </div>
         <div className="py-2 pl-9 pr-4">
-          <p className="text-[10px] leading-relaxed" style={{ color: "#A8A098" }}>
+          <p className="text-[10px] leading-relaxed" style={{ color: "#6F6A61" }}>
             Reason: {props.failureReason || "URL could not be accessed or article content could not be retrieved."} The investigation stopped here — claim extraction, source search, evidence collection, cross-checking, framing analysis, confidence calculation and verdict generation were not executed.
           </p>
         </div>
@@ -198,22 +198,22 @@ export function EvidenceChain(props: EvidenceChainProps) {
           <div
             key={step.key}
             className="w-full flex items-center gap-3 py-2.5 opacity-40"
-            style={{ borderBottom: "1px solid #1E1E1E" }}
+            style={{ borderBottom: "1px solid #D8D0C3" }}
             aria-disabled="true"
           >
             <div
               className="w-6 h-6 rounded-sm flex items-center justify-center shrink-0"
-              style={{ background: "#111111", border: "1px solid #1E1E1E" }}
+              style={{ background: "#ECE7DB", border: "1px solid #D8D0C3" }}
             >
-              <step.icon className="w-3 h-3" style={{ color: "#A8A098" }} />
+              <step.icon className="w-3 h-3" style={{ color: "#6F6A61" }} />
             </div>
             <span
               className="text-[9px] font-bold tracking-[0.2em] flex-1 text-left"
-              style={{ color: "#A8A098" }}
+              style={{ color: "#6F6A61" }}
             >
               {step.label}
             </span>
-            <span className="text-[8px] mr-1" style={{ color: "#A8A098" }}>
+            <span className="text-[8px] mr-1" style={{ color: "#6F6A61" }}>
               NOT EXECUTED
             </span>
           </div>
@@ -235,7 +235,7 @@ export function EvidenceChain(props: EvidenceChainProps) {
               type="button"
               className="w-full flex items-center gap-3 py-2.5 cursor-pointer transition-colors hover:bg-white/[0.02]"
               style={{
-                borderBottom: "1px solid #1E1E1E",
+                borderBottom: "1px solid #D8D0C3",
               }}
               onClick={() =>
                 setExpandedStep(isExpanded ? null : step.key)
@@ -245,29 +245,29 @@ export function EvidenceChain(props: EvidenceChainProps) {
                 className="w-6 h-6 rounded-sm flex items-center justify-center shrink-0"
                 style={{
                   background: isExpanded
-                    ? "rgba(168,144,110,0.08)"
-                    : "#111111",
-                  border: `1px solid ${isExpanded ? "rgba(168,144,110,0.2)" : "#1E1E1E"}`,
+                    ? "rgba(89,100,81,0.08)"
+                    : "#ECE7DB",
+                  border: `1px solid ${isExpanded ? "rgba(89,100,81,0.2)" : "#D8D0C3"}`,
                 }}
               >
                 <step.icon
                   className="w-3 h-3"
                   style={{
-                    color: isExpanded ? "#A8906E" : "#A8A098",
+                    color: isExpanded ? "#596451" : "#6F6A61",
                   }}
                 />
               </div>
               <span
                 className="text-[9px] font-bold tracking-[0.2em] flex-1 text-left"
                 style={{
-                  color: isExpanded ? "#F5F0E8" : "#A8A098",
+                  color: isExpanded ? "#171716" : "#6F6A61",
                 }}
               >
                 {step.label}
               </span>
               <span
                 className="text-[8px] mr-1"
-                style={{ color: "#A8A098", opacity: 0.5 }}
+                style={{ color: "#6F6A61", opacity: 0.5 }}
               >
                 {String(i + 1).padStart(2, "0")}
               </span>
@@ -277,7 +277,7 @@ export function EvidenceChain(props: EvidenceChainProps) {
               >
                 <ChevronDown
                   className="w-3 h-3"
-                  style={{ color: "#A8A098" }}
+                  style={{ color: "#6F6A61" }}
                 />
               </motion.div>
             </button>
@@ -295,7 +295,7 @@ export function EvidenceChain(props: EvidenceChainProps) {
                   <div className="py-3 pl-9 pr-4">
                     <p
                       className="text-[9px] font-semibold uppercase tracking-[0.12em] mb-2"
-                      style={{ color: "#A8906E" }}
+                      style={{ color: "#596451" }}
                     >
                       {detail.title}
                     </p>
@@ -322,13 +322,13 @@ export function EvidenceChain(props: EvidenceChainProps) {
                                 item.includes("concerns") ||
                                 item.includes("gaps") ||
                                 item.includes("No verifiable")
-                                  ? "#A85A50"
-                                  : "#A8906E",
+                                  ? "#A86155"
+                                  : "#596451",
                             }}
                           />
                           <span
                             className="text-[10px] leading-relaxed"
-                            style={{ color: "#A8A098" }}
+                            style={{ color: "#6F6A61" }}
                           >
                             {item}
                           </span>

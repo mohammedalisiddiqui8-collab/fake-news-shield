@@ -30,8 +30,8 @@ interface CompareArticlesProps {
 
 /* ─── Comparison state badge ─── */
 const relConfig: Record<string, { label: string; color: string }> = {
-  agree: { label: "AGREE", color: "#A8906E" },
-  conflict: { label: "CONFLICT", color: "#A85A50" },
+  agree: { label: "AGREE", color: "#596451" },
+  conflict: { label: "CONFLICT", color: "#A86155" },
   unverified: { label: "UNVERIFIED", color: "#8A6A45" },
 };
 
@@ -80,7 +80,7 @@ export function CompareArticles({ onCompare }: CompareArticlesProps) {
           <div className="flex items-center gap-2 mb-2">
             <span
               className="text-[8px] font-bold tracking-[0.2em]"
-              style={{ fontFamily: "'JetBrains Mono', monospace", color: "#A8906E" }}
+              style={{ fontFamily: "'JetBrains Mono', monospace", color: "#596451" }}
             >
               ARTICLE A
             </span>
@@ -91,9 +91,9 @@ export function CompareArticles({ onCompare }: CompareArticlesProps) {
                   type="button"
                   className="text-[7px] px-1.5 py-0.5 cursor-pointer transition-colors uppercase tracking-wider"
                   style={{
-                    color: inputTypeA === t ? "#F5F0E8" : "#A8A098",
-                    background: inputTypeA === t ? "rgba(168,144,110,0.08)" : "transparent",
-                    border: `1px solid ${inputTypeA === t ? "rgba(168,144,110,0.2)" : "#1E1E1E"}`,
+                    color: inputTypeA === t ? "#171716" : "#6F6A61",
+                    background: inputTypeA === t ? "rgba(89,100,81,0.08)" : "transparent",
+                    border: `1px solid ${inputTypeA === t ? "rgba(89,100,81,0.2)" : "#D8D0C3"}`,
                     borderRadius: "1px",
                   }}
                   onClick={() => setInputTypeA(t)}
@@ -104,7 +104,7 @@ export function CompareArticles({ onCompare }: CompareArticlesProps) {
               ))}
             </div>
           </div>
-          <div className="rounded-sm overflow-hidden" style={{ background: "#111111", border: "1px solid #1E1E1E" }}>
+          <div className="rounded-sm overflow-hidden" style={{ background: "#ECE7DB", border: "1px solid #D8D0C3" }}>
             <Textarea
               value={textA}
               onChange={(e) => setTextA(e.target.value)}
@@ -130,9 +130,9 @@ export function CompareArticles({ onCompare }: CompareArticlesProps) {
                   type="button"
                   className="text-[7px] px-1.5 py-0.5 cursor-pointer transition-colors uppercase tracking-wider"
                   style={{
-                    color: inputTypeB === t ? "#F5F0E8" : "#A8A098",
-                    background: inputTypeB === t ? "rgba(168,144,110,0.08)" : "transparent",
-                    border: `1px solid ${inputTypeB === t ? "rgba(168,144,110,0.2)" : "#1E1E1E"}`,
+                    color: inputTypeB === t ? "#171716" : "#6F6A61",
+                    background: inputTypeB === t ? "rgba(89,100,81,0.08)" : "transparent",
+                    border: `1px solid ${inputTypeB === t ? "rgba(89,100,81,0.2)" : "#D8D0C3"}`,
                     borderRadius: "1px",
                   }}
                   onClick={() => setInputTypeB(t)}
@@ -143,7 +143,7 @@ export function CompareArticles({ onCompare }: CompareArticlesProps) {
               ))}
             </div>
           </div>
-          <div className="rounded-sm overflow-hidden" style={{ background: "#111111", border: "1px solid #1E1E1E" }}>
+          <div className="rounded-sm overflow-hidden" style={{ background: "#ECE7DB", border: "1px solid #D8D0C3" }}>
             <Textarea
               value={textB}
               onChange={(e) => setTextB(e.target.value)}
@@ -163,8 +163,8 @@ export function CompareArticles({ onCompare }: CompareArticlesProps) {
           disabled={isComparing || !textA.trim() || !textB.trim()}
           onClick={handleCompare}
           style={{
-            background: isComparing ? "rgba(168,144,110,0.06)" : "#A8906E",
-            color: "#0A0A0A",
+            background: isComparing ? "rgba(89,100,81,0.06)" : "#596451",
+            color: "#F3EFE6",
             border: "none",
           }}
         >
@@ -179,7 +179,7 @@ export function CompareArticles({ onCompare }: CompareArticlesProps) {
           <button
             type="button"
             className="text-[9px] cursor-pointer"
-            style={{ color: "#A8A098" }}
+            style={{ color: "#6F6A61" }}
             onClick={() => { setResult(null); setTextA(""); setTextB(""); }}
           >
             Clear
@@ -200,7 +200,7 @@ export function CompareArticles({ onCompare }: CompareArticlesProps) {
               <button
                 type="button"
                 className="w-full flex items-center gap-3 py-2.5 cursor-pointer transition-colors hover:bg-white/[0.02] text-left"
-                style={{ borderBottom: "1px solid #1E1E1E" }}
+                style={{ borderBottom: "1px solid #D8D0C3" }}
                 onClick={() =>
                   setExpandedSection(
                     expandedSection === section.key ? null : section.key,
@@ -209,18 +209,18 @@ export function CompareArticles({ onCompare }: CompareArticlesProps) {
               >
                 <span
                   className="text-[9px] font-bold tracking-[0.15em] flex-1"
-                  style={{ fontFamily: "'JetBrains Mono', monospace", color: "#A8A098" }}
+                  style={{ fontFamily: "'JetBrains Mono', monospace", color: "#6F6A61" }}
                 >
                   {section.label}
                 </span>
                 <span
                   className="text-[8px] px-1.5 py-0.5"
-                  style={{ color: "#A8906E", background: "rgba(168,144,110,0.08)", borderRadius: "1px" }}
+                  style={{ color: "#596451", background: "rgba(89,100,81,0.08)", borderRadius: "1px" }}
                 >
                   {section.count}
                 </span>
                 <motion.div animate={{ rotate: expandedSection === section.key ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                  <ChevronDown className="w-3 h-3" style={{ color: "#A8A098" }} />
+                  <ChevronDown className="w-3 h-3" style={{ color: "#6F6A61" }} />
                 </motion.div>
               </button>
 
@@ -238,9 +238,9 @@ export function CompareArticles({ onCompare }: CompareArticlesProps) {
                         result.sharedClaims.map((item, i) => {
                           const rel = relConfig[item.relationship];
                           return (
-                            <div key={i} className="flex items-start gap-2 py-1.5" style={{ borderBottom: "1px solid #1E1E1E10" }}>
+                            <div key={i} className="flex items-start gap-2 py-1.5" style={{ borderBottom: "1px solid #D8D0C310" }}>
                               <div className="flex-1">
-                                <p className="text-[10px] italic" style={{ color: "#F5F0E8" }}>
+                                <p className="text-[10px] italic" style={{ color: "#171716" }}>
                                   "{item.claim}"
                                 </p>
                               </div>
@@ -256,38 +256,38 @@ export function CompareArticles({ onCompare }: CompareArticlesProps) {
 
                       {section.key === "contradictions" &&
                         result.contradictoryClaims.map((item, i) => (
-                          <div key={i} className="py-2" style={{ borderBottom: "1px solid #1E1E1E10" }}>
+                          <div key={i} className="py-2" style={{ borderBottom: "1px solid #D8D0C310" }}>
                             <div className="flex items-start gap-2 mb-1">
-                              <span className="text-[7px] font-bold tracking-wider shrink-0 mt-0.5" style={{ color: "#A8906E" }}>A</span>
-                              <p className="text-[10px] italic flex-1" style={{ color: "#F5F0E8" }}>"{item.claimA}"</p>
+                              <span className="text-[7px] font-bold tracking-wider shrink-0 mt-0.5" style={{ color: "#596451" }}>A</span>
+                              <p className="text-[10px] italic flex-1" style={{ color: "#171716" }}>"{item.claimA}"</p>
                             </div>
                             <div className="flex items-center gap-2 my-1 pl-4">
-                              <div className="w-4 h-px" style={{ background: "#A85A50" }} />
-                              <span className="text-[7px] font-bold" style={{ color: "#A85A50" }}>CONFLICT</span>
-                              <div className="w-4 h-px" style={{ background: "#A85A50" }} />
+                              <div className="w-4 h-px" style={{ background: "#A86155" }} />
+                              <span className="text-[7px] font-bold" style={{ color: "#A86155" }}>CONFLICT</span>
+                              <div className="w-4 h-px" style={{ background: "#A86155" }} />
                             </div>
                             <div className="flex items-start gap-2">
                               <span className="text-[7px] font-bold tracking-wider shrink-0 mt-0.5" style={{ color: "#8A6A45" }}>B</span>
-                              <p className="text-[10px] italic flex-1" style={{ color: "#F5F0E8" }}>"{item.claimB}"</p>
+                              <p className="text-[10px] italic flex-1" style={{ color: "#171716" }}>"{item.claimB}"</p>
                             </div>
-                            <p className="text-[9px] mt-1.5 pl-4" style={{ color: "#A8A098" }}>{item.explanation}</p>
+                            <p className="text-[9px] mt-1.5 pl-4" style={{ color: "#6F6A61" }}>{item.explanation}</p>
                           </div>
                         ))}
 
                       {section.key === "framing" &&
                         result.differentFraming.map((item, i) => (
-                          <div key={i} className="py-2" style={{ borderBottom: "1px solid #1E1E1E10" }}>
-                            <p className="text-[8px] font-bold tracking-[0.15em] uppercase mb-1.5" style={{ color: "#A8906E" }}>
+                          <div key={i} className="py-2" style={{ borderBottom: "1px solid #D8D0C310" }}>
+                            <p className="text-[8px] font-bold tracking-[0.15em] uppercase mb-1.5" style={{ color: "#596451" }}>
                               {item.topic}
                             </p>
                             <div className="grid grid-cols-2 gap-2">
-                              <div className="p-2 rounded-sm" style={{ background: "#0A0A0A", border: "1px solid #1E1E1E" }}>
-                                <span className="text-[7px] font-bold block mb-0.5" style={{ color: "#A8906E" }}>ARTICLE A</span>
-                                <p className="text-[9px] leading-relaxed" style={{ color: "#A8A098" }}>{item.framingA}</p>
+                              <div className="p-2 rounded-sm" style={{ background: "#F3EFE6", border: "1px solid #D8D0C3" }}>
+                                <span className="text-[7px] font-bold block mb-0.5" style={{ color: "#596451" }}>ARTICLE A</span>
+                                <p className="text-[9px] leading-relaxed" style={{ color: "#6F6A61" }}>{item.framingA}</p>
                               </div>
-                              <div className="p-2 rounded-sm" style={{ background: "#0A0A0A", border: "1px solid #1E1E1E" }}>
+                              <div className="p-2 rounded-sm" style={{ background: "#F3EFE6", border: "1px solid #D8D0C3" }}>
                                 <span className="text-[7px] font-bold block mb-0.5" style={{ color: "#8A6A45" }}>ARTICLE B</span>
-                                <p className="text-[9px] leading-relaxed" style={{ color: "#A8A098" }}>{item.framingB}</p>
+                                <p className="text-[9px] leading-relaxed" style={{ color: "#6F6A61" }}>{item.framingB}</p>
                               </div>
                             </div>
                           </div>
@@ -295,35 +295,35 @@ export function CompareArticles({ onCompare }: CompareArticlesProps) {
 
                       {section.key === "missing" &&
                         result.missingInformation.map((item, i) => (
-                          <div key={i} className="flex items-start gap-2 py-1.5" style={{ borderBottom: "1px solid #1E1E1E10" }}>
+                          <div key={i} className="flex items-start gap-2 py-1.5" style={{ borderBottom: "1px solid #D8D0C310" }}>
                             <span
                               className="text-[7px] font-bold tracking-wider px-1 py-0.5 shrink-0"
-                              style={{ color: item.present === "A" ? "#A8906E" : "#8A6A45", background: item.present === "A" ? "rgba(168,144,110,0.1)" : "rgba(138,106,69,0.1)", borderRadius: "1px" }}
+                              style={{ color: item.present === "A" ? "#596451" : "#8A6A45", background: item.present === "A" ? "rgba(89,100,81,0.1)" : "rgba(138,106,69,0.1)", borderRadius: "1px" }}
                             >
                               {item.present === "A" ? "IN A" : "IN B"}
                             </span>
-                            <p className="text-[10px]" style={{ color: "#A8A098" }}>{item.information}</p>
+                            <p className="text-[10px]" style={{ color: "#6F6A61" }}>{item.information}</p>
                           </div>
                         ))}
 
                       {section.key === "sources" &&
                         result.sourceDifferences.map((item, i) => (
-                          <div key={i} className="flex items-start gap-2 py-1.5" style={{ borderBottom: "1px solid #1E1E1E10" }}>
+                          <div key={i} className="flex items-start gap-2 py-1.5" style={{ borderBottom: "1px solid #D8D0C310" }}>
                             <span
                               className="text-[7px] font-bold tracking-wider px-1 py-0.5 shrink-0"
-                              style={{ color: item.inArticle === "A" ? "#A8906E" : "#8A6A45", background: item.inArticle === "A" ? "rgba(168,144,110,0.1)" : "rgba(138,106,69,0.1)", borderRadius: "1px" }}
+                              style={{ color: item.inArticle === "A" ? "#596451" : "#8A6A45", background: item.inArticle === "A" ? "rgba(89,100,81,0.1)" : "rgba(138,106,69,0.1)", borderRadius: "1px" }}
                             >
                               {item.inArticle === "A" ? "A" : "B"}
                             </span>
                             <div>
-                              <span className="text-[10px] font-semibold block" style={{ color: "#F5F0E8" }}>{item.source}</span>
-                              <span className="text-[9px]" style={{ color: "#A8A098" }}>{item.detail}</span>
+                              <span className="text-[10px] font-semibold block" style={{ color: "#171716" }}>{item.source}</span>
+                              <span className="text-[9px]" style={{ color: "#6F6A61" }}>{item.detail}</span>
                             </div>
                           </div>
                         ))}
 
                       {section.count === 0 && (
-                        <p className="text-[10px] text-center py-3 italic" style={{ color: "#A8A098" }}>
+                        <p className="text-[10px] text-center py-3 italic" style={{ color: "#6F6A61" }}>
                           No {section.label.toLowerCase()} found.
                         </p>
                       )}

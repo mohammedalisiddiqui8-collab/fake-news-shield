@@ -22,23 +22,15 @@ interface ExpandableClaimProps {
 }
 
 const statusConfig = {
-  supported: { icon: CheckCircle2, color: "#A8906E", label: "SUPPORTED" },
-  unverified: { icon: AlertTriangle, color: "#8A6A45", label: "UNVERIFIED" },
-  misleading: { icon: XCircle, color: "#A85A50", label: "MISLEADING" },
+  supported: { icon: CheckCircle2, color: "#71836B", label: "SUPPORTED" },
+  unverified: { icon: AlertTriangle, color: "#A9854D", label: "UNVERIFIED" },
+  misleading: { icon: XCircle, color: "#A86155", label: "MISLEADING" },
 };
 
 /**
- * Expandable claim card for the results page.
- * Shows claim number, text, status badge, confidence — tap to expand details.
- *
- * Usage:
- *   <ExpandableClaim
- *     claimNumber="01"
- *     claimText="Scientists discovered a new species"
- *     status="supported"
- *     confidence={86}
- *     details="Claim is supported by..."
- *   />
+ * Editorial entry for the report — thin rules and whitespace instead of a
+ * floating card. Shows label, status, quotation, confidence; tap to expand
+ * the supporting detail.
  */
 export function ExpandableClaim({
   claimNumber,
@@ -52,80 +44,58 @@ export function ExpandableClaim({
 }: ExpandableClaimProps) {
   const [expanded, setExpanded] = useState(false);
   const config = statusConfig[status];
-  const Icon = config.icon;
 
   return (
-    <div
-      className={`overflow-hidden transition-all duration-300 ${className}`}
-      style={{
-        background: "#111111",
-        border: "1px solid #1E1E1E",
-        borderRadius: "2px",
-        borderColor: expanded ? `${config.color}33` : undefined,
-      }}
-    >
+    <div className={`border-b border-border/70 ${className}`}>
       {/* Header — always visible */}
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="w-full cursor-pointer text-left px-4 py-3 flex items-start gap-3"
-        style={{ background: "transparent" }}
+        className="w-full cursor-pointer text-left py-3.5 px-1 flex items-start gap-3 transition-colors hover:bg-[rgba(23,23,22,0.018)]"
       >
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-baseline justify-between gap-3">
             <span
-              className="text-[8px] font-bold tracking-[0.2em]"
-              style={{ fontFamily: "'JetBrains Mono', monospace", color: "#8A6A45" }}
+              className="kicker"
+              style={{ color: "#596451" }}
             >
               {kind === "signal"
-                ? (signalLabel ?? "LANGUAGE SIGNAL")
-                : `CLAIM ${claimNumber}`}
+                ? (signalLabel ?? "Language signal")
+                : `Claim ${claimNumber}`}
             </span>
             <span
-              className="text-[8px] font-bold tracking-[0.1em] px-1.5 py-0.5 flex items-center gap-1"
-              style={{
-                background: `${config.color}15`,
-                color: config.color,
-                borderRadius: "1px",
-              }}
+              className="kicker shrink-0 inline-flex items-center gap-1.5"
+              style={{ color: config.color }}
             >
-              <Icon className="w-2.5 h-2.5" />
-              {kind === "signal" ? "DETECTED" : config.label}
+              <config.icon className="w-3 h-3" />
+              {kind === "signal" ? "Detected" : config.label}
             </span>
           </div>
           <p
-            className="text-[11px] leading-relaxed italic"
-            style={{ color: "#F5F0E8" }}
+            className="mt-1.5 text-[12.5px] leading-relaxed italic"
+            style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#171716" }}
           >
-            "{claimText}"
+            “{claimText}”
           </p>
           {confidence != null && (
-          <div className="flex items-center gap-2 mt-1.5">
-            <span
-              className="text-[9px] font-mono"
-              style={{ color: "#A8A098" }}
-            >
-              CONFIDENCE
-            </span>
-            <div
-              className="h-[2px] flex-1 max-w-[80px] rounded-full overflow-hidden"
-              style={{ background: "#1E1E1E" }}
-            >
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${confidence}%` }}
-                transition={{ duration: 1, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                className="h-full rounded-full"
-                style={{ background: config.color, opacity: 0.7 }}
-              />
+            <div className="mt-2 flex items-center gap-2.5">
+              <span className="kicker" style={{ opacity: 0.7 }}>Confidence</span>
+              <span className="h-[2px] w-20" style={{ background: "#D8D0C3" }}>
+                <motion.span
+                  className="block h-full"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${confidence}%` }}
+                  transition={{ duration: 1, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                  style={{ background: config.color }}
+                />
+              </span>
+              <span
+                className="text-[10.5px] tabular"
+                style={{ fontFamily: "'JetBrains Mono', monospace", color: config.color }}
+              >
+                {confidence}%
+              </span>
             </div>
-            <span
-              className="text-[10px] font-bold"
-              style={{ fontFamily: "'JetBrains Mono', monospace", color: config.color }}
-            >
-              {confidence}%
-            </span>
-          </div>
           )}
         </div>
 
@@ -134,7 +104,7 @@ export function ExpandableClaim({
           transition={{ duration: 0.2 }}
           className="shrink-0 mt-1"
         >
-          <ChevronDown className="w-3.5 h-3.5" style={{ color: "#A8A098" }} />
+          <ChevronDown className="w-3.5 h-3.5" style={{ color: "#6F6A61" }} />
         </motion.div>
       </button>
 
@@ -148,13 +118,8 @@ export function ExpandableClaim({
             transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
             className="overflow-hidden"
           >
-            <div
-              className="px-4 pb-4 pt-1"
-              style={{ borderTop: "1px solid #1E1E1E" }}
-            >
-              <p className="text-[10px] leading-[1.7]" style={{ color: "#A8A098" }}>
-                {details}
-              </p>
+            <div className="px-1 pb-4 pt-1 sm:pl-8">
+              <p className="text-[11.5px] leading-[1.8] text-muted-foreground">{details}</p>
             </div>
           </motion.div>
         )}

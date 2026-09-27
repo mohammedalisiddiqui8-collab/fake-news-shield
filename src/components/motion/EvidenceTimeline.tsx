@@ -32,32 +32,32 @@ const eventConfig: Record<
 > = {
   claim_identified: {
     icon: FileSearch,
-    color: "#A8906E",
+    color: "#596451",
     label: "CLAIM IDENTIFIED",
   },
   source_found: {
     icon: Search,
-    color: "#A8906E",
+    color: "#596451",
     label: "SOURCE FOUND",
   },
   source_searched: {
     icon: Search,
-    color: "#A8906E",
+    color: "#596451",
     label: "SOURCE SEARCH",
   },
   corroboration: {
     icon: CheckCircle2,
-    color: "#A8906E",
+    color: "#596451",
     label: "CORROBORATION",
   },
   contradiction: {
     icon: XCircle,
-    color: "#A85A50",
+    color: "#A86155",
     label: "CONTRADICTION",
   },
   linguistic_analysis: {
     icon: Brain,
-    color: "#A8A098",
+    color: "#6F6A61",
     label: "LINGUISTIC ANALYSIS",
   },
   assessment: {
@@ -78,7 +78,7 @@ export function EvidenceTimeline({ events }: EvidenceTimelineProps) {
   if (events.length === 0) {
     return (
       <div className="py-6 text-center">
-        <p className="text-[10px]" style={{ color: "#A8A098" }}>
+        <p className="text-[10px]" style={{ color: "#6F6A61" }}>
           Insufficient evidence to construct a timeline.
         </p>
       </div>
@@ -123,7 +123,7 @@ export function EvidenceTimeline({ events }: EvidenceTimelineProps) {
               {/* Connecting line */}
               {!isLast && (
                 <div className="relative w-px flex-1 min-h-[20px]">
-                  <div className="absolute inset-0" style={{ background: "#1E1E1E" }} />
+                  <div className="absolute inset-0" style={{ background: "#D8D0C3" }} />
                   <motion.div
                     initial={{ height: 0 }}
                     animate={inView ? { height: "100%" } : { height: 0 }}
@@ -168,7 +168,7 @@ export function EvidenceTimeline({ events }: EvidenceTimelineProps) {
                 {event.timestamp && (
                   <span
                     className="text-[7px]"
-                    style={{ color: "#A8A098", opacity: 0.5 }}
+                    style={{ color: "#6F6A61", opacity: 0.5 }}
                   >
                     {event.timestamp}
                   </span>
@@ -178,7 +178,7 @@ export function EvidenceTimeline({ events }: EvidenceTimelineProps) {
               {/* Title */}
               <p
                 className="text-[11px] font-semibold mb-0.5"
-                style={{ color: "#F5F0E8" }}
+                style={{ color: "#171716" }}
               >
                 {event.title}
               </p>
@@ -186,7 +186,7 @@ export function EvidenceTimeline({ events }: EvidenceTimelineProps) {
               {/* Detail */}
               <p
                 className="text-[10px] leading-relaxed"
-                style={{ color: "#A8A098" }}
+                style={{ color: "#6F6A61" }}
               >
                 {event.detail}
               </p>
@@ -196,13 +196,13 @@ export function EvidenceTimeline({ events }: EvidenceTimelineProps) {
                 <div className="flex items-center gap-1 mt-1">
                   <span
                     className="text-[8px]"
-                    style={{ color: "#A8A098", opacity: 0.5 }}
+                    style={{ color: "#6F6A61", opacity: 0.5 }}
                   >
                     Source:
                   </span>
                   <span
                     className="text-[8px]"
-                    style={{ color: "#A8906E" }}
+                    style={{ color: "#596451" }}
                   >
                     {event.source}
                   </span>

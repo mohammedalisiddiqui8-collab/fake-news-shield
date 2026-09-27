@@ -24,15 +24,15 @@ export function ArticleFingerprint({ fingerprint, note }: { fingerprint: Fingerp
   const dateStr = now.getDate() + " " + now.toLocaleString("en", { month: "short" }).toUpperCase() + " " + now.getFullYear();
 
   const cells = [
-    { label: "Claims", value: String(fingerprint.claims), color: "#F5F0E8" },
-    { label: "Unique sources", value: String(fingerprint.sources), color: "#F5F0E8" },
-    { label: "Verified", value: String(fingerprint.verified), color: "#93A883" },
-    { label: "Uncertain", value: String(fingerprint.uncertain), color: "#C4985A" },
-    { label: "Contradicted", value: String(fingerprint.contradicted), color: "#A85A50" },
-    { label: "Unverified", value: String(fingerprint.unverified), color: "#A8A098" },
-    { label: "Source coverage", value: `${fingerprint.sourceCoverage}%`, color: "#F5F0E8", bar: fingerprint.sourceCoverage },
-    { label: "Claim–source refs", value: fingerprint.sourceRefs != null ? String(fingerprint.sourceRefs) : "—", color: "#F5F0E8" },
-    { label: "Evidence found", value: String(fingerprint.evidenceFound), color: "#F5F0E8" },
+    { label: "Claims", value: String(fingerprint.claims), color: "#171716" },
+    { label: "Unique sources", value: String(fingerprint.sources), color: "#171716" },
+    { label: "Verified", value: String(fingerprint.verified), color: "#71836B" },
+    { label: "Uncertain", value: String(fingerprint.uncertain), color: "#A9854D" },
+    { label: "Contradicted", value: String(fingerprint.contradicted), color: "#A86155" },
+    { label: "Unverified", value: String(fingerprint.unverified), color: "#6F6A61" },
+    { label: "Source coverage", value: `${fingerprint.sourceCoverage}%`, color: "#171716", bar: fingerprint.sourceCoverage },
+    { label: "Claim–source refs", value: fingerprint.sourceRefs != null ? String(fingerprint.sourceRefs) : "—", color: "#171716" },
+    { label: "Evidence found", value: String(fingerprint.evidenceFound), color: "#171716" },
   ];
 
   return (
@@ -53,13 +53,13 @@ export function ArticleFingerprint({ fingerprint, note }: { fingerprint: Fingerp
               {cell.value}
             </span>
             {cell.bar != null && (
-              <span className="block h-[2px] mt-2 w-full" style={{ background: "#1E1E1E" }}>
+              <span className="block h-[2px] mt-2 w-full" style={{ background: "#D8D0C3" }}>
                 <motion.span
                   className="block h-full"
                   initial={{ width: 0 }}
                   animate={{ width: `${cell.bar}%` }}
                   transition={{ duration: 0.6, delay: 0.2 }}
-                  style={{ background: "#A8906E" }}
+                  style={{ background: "#596451" }}
                 />
               </span>
             )}

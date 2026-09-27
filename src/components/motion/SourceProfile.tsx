@@ -55,18 +55,18 @@ export function SourceProfile({ profile }: SourceProfileProps) {
             animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
             transition={{ delay: i * 0.05, duration: 0.3 }}
             className="p-2.5 rounded-sm"
-            style={{ background: "#0A0A0A", border: "1px solid #1E1E1E" }}
+            style={{ background: "#F3EFE6", border: "1px solid #D8D0C3" }}
           >
             <div className="flex items-center gap-1.5 mb-1">
               <item.icon
                 className="w-2.5 h-2.5"
-                style={{ color: "#A8906E", opacity: 0.6 }}
+                style={{ color: "#596451", opacity: 0.6 }}
               />
               <span
                 className="text-[7px] font-bold tracking-[0.15em]"
                 style={{
                   fontFamily: "'JetBrains Mono', monospace",
-                  color: "#A8A098",
+                  color: "#6F6A61",
                 }}
               >
                 {item.label}
@@ -75,7 +75,7 @@ export function SourceProfile({ profile }: SourceProfileProps) {
             <span
               className="text-[10px] font-semibold block leading-snug"
               style={{
-                color: item.value === "NOT AVAILABLE" ? "#A8A098" : "#F5F0E8",
+                color: item.value === "NOT AVAILABLE" ? "#6F6A61" : "#171716",
                 opacity: item.value === "NOT AVAILABLE" ? 0.5 : 1,
                 fontStyle: item.value === "NOT AVAILABLE" ? "italic" : "normal",
               }}
@@ -90,7 +90,7 @@ export function SourceProfile({ profile }: SourceProfileProps) {
       <div>
         <p
           className="text-[8px] font-bold tracking-[0.15em] uppercase mb-2"
-          style={{ color: "#A8906E" }}
+          style={{ color: "#596451" }}
         >
           Source Signals
         </p>
@@ -102,23 +102,23 @@ export function SourceProfile({ profile }: SourceProfileProps) {
               animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: -4 }}
               transition={{ delay: 0.2 + i * 0.04, duration: 0.25 }}
               className="flex items-center gap-2 py-1.5 px-2.5 rounded-sm"
-              style={{ background: "#0A0A0A" }}
+              style={{ background: "#F3EFE6" }}
             >
               {signal.available ? (
                 <CheckCircle2
                   className="w-2.5 h-2.5 shrink-0"
-                  style={{ color: "#A8906E" }}
+                  style={{ color: "#596451" }}
                 />
               ) : (
                 <HelpCircle
                   className="w-2.5 h-2.5 shrink-0"
-                  style={{ color: "#A8A098", opacity: 0.4 }}
+                  style={{ color: "#6F6A61", opacity: 0.4 }}
                 />
               )}
               <span
                 className="text-[9px]"
                 style={{
-                  color: signal.available ? "#A8A098" : "#A8A098",
+                  color: signal.available ? "#6F6A61" : "#6F6A61",
                   opacity: signal.available ? 1 : 0.5,
                 }}
               >
@@ -134,7 +134,7 @@ export function SourceProfile({ profile }: SourceProfileProps) {
         <div>
           <p
             className="text-[8px] font-bold tracking-[0.15em] uppercase mb-2"
-            style={{ color: "#A8906E" }}
+            style={{ color: "#596451" }}
           >
             Available Evidence
           </p>
@@ -149,11 +149,11 @@ export function SourceProfile({ profile }: SourceProfileProps) {
               >
                 <span
                   className="w-1 h-1 rounded-full mt-1.5 shrink-0"
-                  style={{ background: "#A8906E" }}
+                  style={{ background: "#596451" }}
                 />
                 <span
                   className="text-[10px] leading-relaxed"
-                  style={{ color: "#A8A098" }}
+                  style={{ color: "#6F6A61" }}
                 >
                   {evidence}
                 </span>

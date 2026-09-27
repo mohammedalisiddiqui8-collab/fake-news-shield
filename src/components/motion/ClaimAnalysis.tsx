@@ -3,7 +3,6 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ChevronDown,
-  FileText,
   CheckCircle2,
   AlertTriangle,
   XCircle,
@@ -27,44 +26,29 @@ interface ClaimAnalysisProps {
   claims: Claim[];
 }
 
-/* ─── Status Config ─── */
+/* ─── Status Config — muted printed palette, never glowing ─── */
 const statusConfig: Record<
   Claim["status"],
   { icon: typeof CheckCircle2; color: string; label: string }
 > = {
-  supported: {
-    icon: CheckCircle2,
-    color: "#A8906E",
-    label: "SUPPORTED",
-  },
-  uncertain: {
-    icon: HelpCircle,
-    color: "#8A6A45",
-    label: "UNCERTAIN",
-  },
-  contradicted: {
-    icon: XCircle,
-    color: "#A85A50",
-    label: "CONTRADICTED",
-  },
-  needs_verification: {
-    icon: AlertTriangle,
-    color: "#A8A098",
-    label: "NEEDS VERIFICATION",
-  },
+  supported: { icon: CheckCircle2, color: "#71836B", label: "SUPPORTED" },
+  uncertain: { icon: HelpCircle, color: "#A9854D", label: "UNCERTAIN" },
+  contradicted: { icon: XCircle, color: "#A86155", label: "CONTRADICTED" },
+  needs_verification: { icon: AlertTriangle, color: "#6F6A61", label: "NEEDS VERIFICATION" },
 };
 
 /**
- * Claim-by-claim analysis extracted from an article.
- * Each claim is expandable to show evidence, sources, and reasoning.
+ * Claim-by-claim analysis rendered as an investigative document:
+ * editorial numbering, thin rules, generous whitespace — no floating cards.
+ * Each claim expands to show evidence, sources and reasoning.
  */
 export function ClaimAnalysis({ claims }: ClaimAnalysisProps) {
   const [expandedId, setExpandedId] = useState<number | null>(null);
 
   if (claims.length === 0) {
     return (
-      <div className="py-6 text-center">
-        <p className="text-[10px]" style={{ color: "#A8A098" }}>
+      <div className="py-8 text-center">
+        <p className="text-[10.5px] text-muted-foreground">
           No distinct claims could be extracted from this content.
         </p>
       </div>
@@ -72,231 +56,122 @@ export function ClaimAnalysis({ claims }: ClaimAnalysisProps) {
   }
 
   return (
-    <div className="space-y-0">
+    <div className="border-t border-border">
       {claims.map((claim) => {
         const config = statusConfig[claim.status];
-        const Icon = config.icon;
         const isExpanded = expandedId === claim.id;
 
         return (
-          <div key={claim.id}>
-            {/* Claim header */}
+          <div key={claim.id} className="border-b border-border">
+            {/* Claim header — number, status, quotation, confidence */}
             <button
               type="button"
-              className="w-full text-left cursor-pointer flex items-start gap-3 py-3 px-0 transition-colors hover:bg-white/[0.015]"
-              style={{ borderBottom: "1px solid #1E1E1E" }}
-              onClick={() =>
-                setExpandedId(isExpanded ? null : claim.id)
-              }
+              className="w-full cursor-pointer text-left py-6 transition-colors hover:bg-[rgba(23,23,22,0.018)]"
+              onClick={() => setExpandedId(isExpanded ? null : claim.id)}
             >
-              {/* Status icon */}
-              <div
-                className="w-6 h-6 rounded-sm flex items-center justify-center shrink-0 mt-0.5"
-                style={{
-                  background: isExpanded
-                    ? `${config.color}12`
-                    : "#0A0A0A",
-                  border: `1px solid ${isExpanded ? `${config.color}30` : "#1E1E1E"}`,
-                }}
-              >
-                <Icon
-                  className="w-3 h-3"
+              <div className="flex items-baseline justify-between gap-4 px-1">
+                <span className="num-marker" style={{ color: "#596451" }}>
+                  Claim {String(claim.id).padStart(2, "0")}
+                </span>
+                <span
+                  className="kicker shrink-0 inline-flex items-center gap-1.5"
                   style={{ color: config.color }}
-                />
-              </div>
-
-              <div className="flex-1 min-w-0">
-                {/* Claim number + status badge */}
-                <div className="flex items-center gap-2 mb-1">
-                  <span
-                    className="text-[8px] font-bold tracking-[0.2em]"
-                    style={{
-                      fontFamily: "'JetBrains Mono', monospace",
-                      color: "#8A6A45",
-                    }}
-                  >
-                    CLAIM {String(claim.id).padStart(2, "0")}
-                  </span>
-                  <span
-                    className="text-[7px] font-bold tracking-[0.1em] px-1.5 py-0.5"
-                    style={{
-                      background: `${config.color}15`,
-                      color: config.color,
-                      borderRadius: "1px",
-                    }}
-                  >
-                    {config.label}
-                  </span>
-                </div>
-
-                {/* Claim text */}
-                <p
-                  className="text-[11px] leading-relaxed italic"
-                  style={{ color: "#F5F0E8" }}
                 >
-                  "{claim.text}"
-                </p>
-
-                {/* Confidence bar */}
-                <div className="flex items-center gap-2 mt-1.5">
-                  <span
-                    className="text-[8px] tracking-wider"
-                    style={{
-                      fontFamily: "'JetBrains Mono', monospace",
-                      color: "#A8A098",
-                    }}
-                  >
-                    CONFIDENCE
-                  </span>
-                  <div
-                    className="h-[2px] flex-1 max-w-[60px] rounded-full overflow-hidden"
-                    style={{ background: "#1E1E1E" }}
-                  >
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${claim.confidence}%` }}
-                      transition={{
-                        duration: 1,
-                        delay: 0.3,
-                        ease: [0.22, 1, 0.36, 1],
-                      }}
-                      className="h-full rounded-full"
-                      style={{
-                        background: config.color,
-                        opacity: 0.7,
-                      }}
-                    />
-                  </div>
-                  <span
-                    className="text-[9px] font-bold"
-                    style={{
-                      fontFamily: "'JetBrains Mono', monospace",
-                      color: config.color,
-                    }}
-                  >
-                    {claim.confidence}%
-                  </span>
-                </div>
+                  <config.icon className="w-3 h-3" />
+                  {config.label}
+                </span>
               </div>
 
-              <motion.div
-                animate={{ rotate: isExpanded ? 180 : 0 }}
-                transition={{ duration: 0.2 }}
-                className="shrink-0 mt-1"
-              >
-                <ChevronDown
-                  className="w-3.5 h-3.5"
-                  style={{ color: "#A8A098" }}
-                />
-              </motion.div>
+              <div className="mt-3 flex items-start gap-4 px-1">
+                <p
+                  className="flex-1 min-w-0 text-[15px] sm:text-[16px] leading-[1.65] italic"
+                  style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#171716" }}
+                >
+                  “{claim.text}”
+                </p>
+                <motion.div
+                  animate={{ rotate: isExpanded ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="shrink-0 mt-1.5"
+                >
+                  <ChevronDown className="w-4 h-4" style={{ color: "#6F6A61" }} />
+                </motion.div>
+              </div>
+
+              <div className="mt-3.5 flex items-center gap-3 px-1">
+                <span className="kicker" style={{ opacity: 0.7 }}>Confidence</span>
+                <span className="h-[2px] w-24 sm:w-32" style={{ background: "#D8D0C3" }}>
+                  <motion.span
+                    className="block h-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${claim.confidence}%` }}
+                    transition={{ duration: 0.9, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
+                    style={{ background: config.color }}
+                  />
+                </span>
+                <span
+                  className="text-[11px] tabular"
+                  style={{ fontFamily: "'JetBrains Mono', monospace", color: config.color }}
+                >
+                  {claim.confidence}%
+                </span>
+              </div>
             </button>
 
-            {/* Expanded evidence */}
+            {/* Expanded evidence — indented document block */}
             <AnimatePresence>
               {isExpanded && (
                 <motion.div
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  transition={{
-                    duration: 0.3,
-                    ease: [0.22, 1, 0.36, 1],
-                  }}
+                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
                   className="overflow-hidden"
                 >
-                  <div
-                    className="px-4 pb-4 pt-3 pl-12"
-                    style={{ borderTop: "1px solid #1E1E1E" }}
-                  >
-                    {/* Evidence */}
-                    <div className="mb-3">
+                  <div className="px-1 pb-7 pt-1 sm:pl-10 space-y-5">
+                    <div>
+                      <p className="kicker" style={{ color: "#596451" }}>Evidence</p>
                       <p
-                        className="text-[8px] font-bold tracking-[0.15em] uppercase mb-1"
-                        style={{ color: "#A8906E" }}
-                      >
-                        Evidence
-                      </p>
-                      <p
-                        className="text-[10px] leading-relaxed"
-                        style={{ color: "#A8A098" }}
+                        className="mt-2 text-[13px] leading-[1.8]"
+                        style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#171716" }}
                       >
                         {claim.evidence}
                       </p>
                     </div>
 
-                    {/* Supporting sources */}
                     {claim.sources.length > 0 && (
-                      <div className="mb-3">
-                        <p
-                          className="text-[8px] font-bold tracking-[0.15em] uppercase mb-1"
-                          style={{ color: "#A8906E" }}
-                        >
-                          Supporting Sources
-                        </p>
-                        <div className="space-y-1">
+                      <div>
+                        <p className="kicker" style={{ color: "#71836B" }}>Supporting sources</p>
+                        <div className="mt-2 space-y-1.5">
                           {claim.sources.map((src, j) => (
-                            <div
-                              key={j}
-                              className="flex items-center gap-1.5"
-                            >
-                              <ExternalLink
-                                className="w-2.5 h-2.5 shrink-0"
-                                style={{ color: "#A8906E" }}
-                              />
-                              <span
-                                className="text-[9px]"
-                                style={{ color: "#A8A098" }}
-                              >
-                                {src}
-                              </span>
+                            <div key={j} className="flex items-start gap-2">
+                              <ExternalLink className="w-3 h-3 shrink-0 mt-0.5" style={{ color: "#71836B" }} />
+                              <span className="text-[12px] leading-relaxed text-muted-foreground">{src}</span>
                             </div>
                           ))}
                         </div>
                       </div>
                     )}
 
-                    {/* Contradicting sources */}
                     {claim.contradictingSources.length > 0 && (
-                      <div className="mb-3">
-                        <p
-                          className="text-[8px] font-bold tracking-[0.15em] uppercase mb-1"
-                          style={{ color: "#A85A50" }}
-                        >
-                          Contradicting Sources
-                        </p>
-                        <div className="space-y-1">
+                      <div>
+                        <p className="kicker" style={{ color: "#A86155" }}>Contradicting sources</p>
+                        <div className="mt-2 space-y-1.5">
                           {claim.contradictingSources.map((src, j) => (
-                            <div
-                              key={j}
-                              className="flex items-center gap-1.5"
-                            >
-                              <XCircle
-                                className="w-2.5 h-2.5 shrink-0"
-                                style={{ color: "#A85A50" }}
-                              />
-                              <span
-                                className="text-[9px]"
-                                style={{ color: "#A8A098" }}
-                              >
-                                {src}
-                              </span>
+                            <div key={j} className="flex items-start gap-2">
+                              <XCircle className="w-3 h-3 shrink-0 mt-0.5" style={{ color: "#A86155" }} />
+                              <span className="text-[12px] leading-relaxed text-muted-foreground">{src}</span>
                             </div>
                           ))}
                         </div>
                       </div>
                     )}
 
-                    {/* Explanation */}
                     <div>
+                      <p className="kicker" style={{ color: "#596451" }}>Reasoning</p>
                       <p
-                        className="text-[8px] font-bold tracking-[0.15em] uppercase mb-1"
-                        style={{ color: "#A8906E" }}
-                      >
-                        Reasoning
-                      </p>
-                      <p
-                        className="text-[10px] leading-relaxed"
-                        style={{ color: "#A8A098" }}
+                        className="mt-2 text-[13px] leading-[1.8]"
+                        style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#171716" }}
                       >
                         {claim.explanation}
                       </p>

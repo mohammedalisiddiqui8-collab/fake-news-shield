@@ -105,30 +105,30 @@ export function InvestigationReplay({ analysis, retrievalFailed, failedUrl, fail
       {/* Controls */}
       <div className="flex items-center gap-1.5 mb-3">
         <button type="button" onClick={reset}
-          className="cursor-pointer w-7 h-7 rounded flex items-center justify-center transition-colors hover:bg-[#1E1E1E]"
-          style={{ border: "1px solid #1E1E1E", color: "#A8A098" }}>
+          className="cursor-pointer w-7 h-7 rounded flex items-center justify-center transition-colors hover:bg-[#D8D0C3]"
+          style={{ border: "1px solid #D8D0C3", color: "#6F6A61" }}>
           <RotateCcw className="w-3 h-3" />
         </button>
         <button type="button" onClick={stepBack} disabled={currentStage === 0}
-          className="cursor-pointer w-7 h-7 rounded flex items-center justify-center transition-colors hover:bg-[#1E1E1E] disabled:opacity-30"
-          style={{ border: "1px solid #1E1E1E", color: "#A8A098" }}>
+          className="cursor-pointer w-7 h-7 rounded flex items-center justify-center transition-colors hover:bg-[#D8D0C3] disabled:opacity-30"
+          style={{ border: "1px solid #D8D0C3", color: "#6F6A61" }}>
           <SkipBack className="w-3 h-3" />
         </button>
         <button type="button" onClick={isPlaying ? pause : play}
-          className="cursor-pointer w-8 h-8 rounded flex items-center justify-center transition-colors hover:bg-[#1E1E1E]"
-          style={{ border: "1px solid #A8906E", color: "#A8906E" }}>
+          className="cursor-pointer w-8 h-8 rounded flex items-center justify-center transition-colors hover:bg-[#D8D0C3]"
+          style={{ border: "1px solid #596451", color: "#596451" }}>
           {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
         </button>
         <button type="button" onClick={stepForward} disabled={currentStage >= stages.length - 1}
-          className="cursor-pointer w-7 h-7 rounded flex items-center justify-center transition-colors hover:bg-[#1E1E1E] disabled:opacity-30"
-          style={{ border: "1px solid #1E1E1E", color: "#A8A098" }}>
+          className="cursor-pointer w-7 h-7 rounded flex items-center justify-center transition-colors hover:bg-[#D8D0C3] disabled:opacity-30"
+          style={{ border: "1px solid #D8D0C3", color: "#6F6A61" }}>
           <SkipForward className="w-3 h-3" />
         </button>
-        <div className="flex-1 h-1 rounded-full overflow-hidden ml-2" style={{ background: "#1E1E1E" }}>
+        <div className="flex-1 h-1 rounded-full overflow-hidden ml-2" style={{ background: "#D8D0C3" }}>
           <motion.div animate={{ width: ((currentStage / (stages.length - 1)) * 100) + "%" }}
-            transition={{ duration: 0.3 }} className="h-full rounded-full" style={{ background: "#A8906E" }} />
+            transition={{ duration: 0.3 }} className="h-full rounded-full" style={{ background: "#596451" }} />
         </div>
-        <span className="text-[8px] font-mono ml-1" style={{ color: "#A8A098" }}>{currentStage + 1}/{stages.length}</span>
+        <span className="text-[8px] font-mono ml-1" style={{ color: "#6F6A61" }}>{currentStage + 1}/{stages.length}</span>
       </div>
 
       {/* Timeline */}
@@ -142,22 +142,22 @@ export function InvestigationReplay({ analysis, retrievalFailed, failedUrl, fail
             <div key={stage.id} className="flex items-stretch gap-3">
               <div className="flex flex-col items-center">
                 <motion.div animate={{
-                  background: isDone ? "rgba(168,144,110,0.08)" : isActive ? "rgba(168,144,110,0.06)" : "#0D0D0D",
-                  borderColor: isDone ? "rgba(168,144,110,0.2)" : isActive ? "rgba(168,144,110,0.15)" : "#1E1E1E",
+                  background: isDone ? "rgba(89,100,81,0.08)" : isActive ? "rgba(89,100,81,0.06)" : "#FBF9F3",
+                  borderColor: isDone ? "rgba(89,100,81,0.2)" : isActive ? "rgba(89,100,81,0.15)" : "#D8D0C3",
                 }} transition={{ duration: 0.3 }}
                   className="w-6 h-6 rounded-sm flex items-center justify-center shrink-0 z-10" style={{ border: "1px solid" }}>
                   {isDone ? (stage.occurred
-                    ? <CheckCircle2 className="w-3 h-3" style={{ color: "#A8906E" }} />
-                    : <AlertTriangle className="w-3 h-3" style={{ color: "#A8A098" }} />)
+                    ? <CheckCircle2 className="w-3 h-3" style={{ color: "#596451" }} />
+                    : <AlertTriangle className="w-3 h-3" style={{ color: "#6F6A61" }} />)
                     : isActive ? <motion.div animate={{ opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.2, repeat: Infinity }}>
-                        <Icon className="w-3 h-3" style={{ color: "#A8906E" }} /></motion.div>
-                    : <Icon className="w-3 h-3" style={{ color: "#A8A09840" }} />}
+                        <Icon className="w-3 h-3" style={{ color: "#596451" }} /></motion.div>
+                    : <Icon className="w-3 h-3" style={{ color: "#6F6A6140" }} />}
                 </motion.div>
                 {i < stages.length - 1 && (
                   <div className="relative w-px flex-1 min-h-[20px]">
-                    <div className="absolute inset-0" style={{ background: "#1E1E1E" }} />
+                    <div className="absolute inset-0" style={{ background: "#D8D0C3" }} />
                     <motion.div animate={{ height: isDone || isActive ? "100%" : "0%" }}
-                      transition={{ duration: 0.4 }} className="absolute top-0 left-0 w-full" style={{ background: "rgba(168,144,110,0.25)" }} />
+                      transition={{ duration: 0.4 }} className="absolute top-0 left-0 w-full" style={{ background: "rgba(89,100,81,0.25)" }} />
                   </div>
                 )}
               </div>
@@ -165,14 +165,14 @@ export function InvestigationReplay({ analysis, retrievalFailed, failedUrl, fail
                 transition={{ duration: 0.3 }} className="py-1 flex-1">
                 <span className="text-[9px] font-bold tracking-[0.1em] block" style={{
                   fontFamily: "'JetBrains Mono', monospace",
-                  color: isActive ? "#A8906E" : isDone ? "#A8A098" : "#A8A098",
+                  color: isActive ? "#596451" : isDone ? "#6F6A61" : "#6F6A61",
                 }}>{stage.label}</span>
                 {isActive && (
                   <motion.p initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }}
-                    className="text-[9px] mt-0.5 leading-relaxed" style={{ color: "#A8A098" }}>{stage.detail}</motion.p>
+                    className="text-[9px] mt-0.5 leading-relaxed" style={{ color: "#6F6A61" }}>{stage.detail}</motion.p>
                 )}
                 {!isActive && isDone && (
-                  <p className="text-[8px] mt-0.5 leading-relaxed" style={{ color: "#A8A098", opacity: 0.5 }}>{stage.detail}</p>
+                  <p className="text-[8px] mt-0.5 leading-relaxed" style={{ color: "#6F6A61", opacity: 0.5 }}>{stage.detail}</p>
                 )}
               </motion.div>
             </div>

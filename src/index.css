@@ -25,9 +25,9 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
-  /* Status-only accents — the UI stays monochromatic until status needs meaning */
-  --color-signal-green: #93A883;
-  --color-signal-amber: #C4985A;
+  /* Status-only accents — muted, printed, never neon */
+  --color-signal-green: #71836B;
+  --color-signal-amber: #A9854D;
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -46,9 +46,83 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/* ─── LOCKED PALETTE — Black + Ivory ─── */
+/* ─── LOCKED PALETTE — Warm Ivory editorial edition ───
+   Warm Ivory canvas · near-black ink · deep charcoal navigation ·
+   soft taupe rules · muted olive accent · sage / ochre / terracotta status */
 :root {
   --radius: 0.25rem;
+  --background: #F3EFE6;
+  --foreground: #171716;
+  --card: #FBF9F3;
+  --card-foreground: #171716;
+  --popover: #FBF9F3;
+  --popover-foreground: #171716;
+  --primary: #596451;
+  --primary-foreground: #F3EFE6;
+  --secondary: #ECE7DB;
+  --secondary-foreground: #6F6A61;
+  --muted: #EDE8DD;
+  --muted-foreground: #6F6A61;
+  --accent: #596451;
+  --accent-foreground: #F3EFE6;
+  --destructive: #A86155;
+  --border: #D8D0C3;
+  --input: #D8D0C3;
+  --ring: #596451;
+  --chart-1: #596451;
+  --chart-2: #6F6A61;
+  --chart-3: #A86155;
+  --chart-4: #71836B;
+  --chart-5: #A9854D;
+  --sidebar: #111211;
+  --sidebar-foreground: #E9E4D7;
+  --sidebar-primary: #E9E4D7;
+  --sidebar-primary-foreground: #111211;
+  --sidebar-accent: #1C1D1B;
+  --sidebar-accent-foreground: #E9E4D7;
+  --sidebar-border: #2A2B28;
+  --sidebar-ring: #71836B;
+}
+
+/* One editorial edition: the theme switch keeps the same printed palette so
+   inline editorial colors can never desynchronize from the tokens. */
+.dark {
+  --background: #F3EFE6;
+  --foreground: #171716;
+  --card: #FBF9F3;
+  --card-foreground: #171716;
+  --popover: #FBF9F3;
+  --popover-foreground: #171716;
+  --primary: #596451;
+  --primary-foreground: #F3EFE6;
+  --secondary: #ECE7DB;
+  --secondary-foreground: #6F6A61;
+  --muted: #EDE8DD;
+  --muted-foreground: #6F6A61;
+  --accent: #596451;
+  --accent-foreground: #F3EFE6;
+  --destructive: #A86155;
+  --border: #D8D0C3;
+  --input: #D8D0C3;
+  --ring: #596451;
+  --chart-1: #596451;
+  --chart-2: #6F6A61;
+  --chart-3: #A86155;
+  --chart-4: #71836B;
+  --chart-5: #A9854D;
+  --sidebar: #111211;
+  --sidebar-foreground: #E9E4D7;
+  --sidebar-primary: #E9E4D7;
+  --sidebar-primary-foreground: #111211;
+  --sidebar-accent: #1C1D1B;
+  --sidebar-accent-foreground: #E9E4D7;
+  --sidebar-border: #2A2B28;
+  --sidebar-ring: #71836B;
+}
+
+/* ─── Night edition scope — only the front page (Landing) uses the original
+   dark printed palette; everything inside resolves these tokens locally. ─── */
+.veritas-night {
   --background: #0A0A0A;
   --foreground: #F5F0E8;
   --card: #111111;
@@ -98,15 +172,15 @@
 
 @layer utilities {
   .glass-card {
-    background: #111111;
-    border: 1px solid #1E1E1E;
+    background: #FBF9F3;
+    border: 1px solid #D8D0C3;
     border-radius: 0.25rem;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.4);
+    box-shadow: 0 1px 2px rgba(23, 23, 22, 0.05);
   }
 
   .editorial-rule {
     height: 1px;
-    background: #1E1E1E;
+    background: #D8D0C3;
   }
 
   .text-balance { text-wrap: balance; }
@@ -124,7 +198,7 @@
     font-family: 'JetBrains Mono', monospace;
     font-size: 9px;
     letter-spacing: 0.14em;
-    color: #A8906E;
+    color: #596451;
     font-variant-numeric: tabular-nums;
   }
   .tabular { font-variant-numeric: tabular-nums; }
@@ -140,10 +214,14 @@
   .ul-hover:hover { background-size: 100% 1px; }
   /* Hairline row hover — newsroom archive feel */
   .row-hover { transition: background-color 0.2s ease, transform 0.2s ease; }
-  .row-hover:hover { background-color: rgba(245, 240, 232, 0.025); }
+  .row-hover:hover { background-color: rgba(23, 23, 22, 0.03); }
   /* Horizontal strips (mobile nav) without a visible scrollbar */
   .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
   .no-scrollbar::-webkit-scrollbar { display: none; }
+
+  /* ─── Charcoal navigation surfaces (desktop rail + mobile header) ─── */
+  .veritas-nav-surface .kicker { color: #8E887B; }
+  .veritas-nav-surface .num-marker { color: #8E887B; }
 }
 
 @keyframes statusPulse {
@@ -185,17 +263,17 @@
 
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #1E1E1E; border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: #C8B490; }
+::-webkit-scrollbar-thumb { background: #D8D0C3; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #596451; }
 
-::selection { background: rgba(200, 180, 144, 0.2); color: #F5F0E8; }
+::selection { background: rgba(89, 100, 81, 0.18); color: #171716; }
 
 html { scroll-behavior: smooth; }
 
 .tiptap { outline: none; }
 .tiptap p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
-  float: left;  color: #A8A098;
+  float: left;  color: #6F6A61;
   pointer-events: none; height: 0;
 }
 
@@ -206,7 +284,7 @@ body::before {
   inset: 0;
   z-index: 9998;
   pointer-events: none;
-  opacity: 0.025;
+  opacity: 0.03;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 200px;
 }

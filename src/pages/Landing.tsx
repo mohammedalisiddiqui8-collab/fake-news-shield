@@ -364,7 +364,7 @@ export default function Landing() {
   const heroScale = useTransform(scrollYProgress, [0, 0.6], [1, 0.97]);
 
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-hidden">
+    <div className="veritas-night min-h-screen bg-background text-foreground overflow-hidden">
       <CursorSpotlight />
 
       {/* ─── Scroll Progress ─── */}

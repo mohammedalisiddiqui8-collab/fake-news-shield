@@ -66,19 +66,19 @@ function Panel({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, delay }}
       className="rounded-lg mb-3 overflow-hidden"
-      style={{ background: "#111111", border: "1px solid #1E1E1E" }}
+      style={{ background: "#ECE7DB", border: "1px solid #D8D0C3" }}
     >
       <div className="px-4 sm:px-5 pt-4 pb-2">
         <div className="flex items-center gap-1.5 mb-1">
           <Icon className="w-3.5 h-3.5" style={{ color: accent }} />
           <h3
             className="text-[10px] font-semibold uppercase tracking-[0.15em]"
-            style={{ color: "#F5F0E8" }}
+            style={{ color: "#171716" }}
           >
             {title}
           </h3>
         </div>
-        <p className="text-[9px]" style={{ color: "#A8A098" }}>
+        <p className="text-[9px]" style={{ color: "#6F6A61" }}>
           {subtitle}
         </p>
       </div>
@@ -104,14 +104,14 @@ export function RetrievalFailedState({
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.35 }}
         className="glass-card rounded-lg p-5 sm:p-7 mb-4"
-        style={{ border: "1px solid rgba(168,90,80,0.25)" }}
+        style={{ border: "1px solid rgba(168,97,85,0.25)" }}
       >
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
           <div
             className="w-14 h-14 rounded flex items-center justify-center shrink-0"
-            style={{ background: "rgba(168,90,80,0.08)", border: "1px solid rgba(168,90,80,0.25)" }}
+            style={{ background: "rgba(168,97,85,0.08)", border: "1px solid rgba(168,97,85,0.25)" }}
           >
-            <AlertTriangle className="w-6 h-6" style={{ color: "#A85A50" }} />
+            <AlertTriangle className="w-6 h-6" style={{ color: "#A86155" }} />
           </div>
           <div className="flex-1 text-center sm:text-left">
             <p className="text-[10px] text-muted-foreground uppercase tracking-[0.15em] font-semibold mb-1">
@@ -119,20 +119,20 @@ export function RetrievalFailedState({
             </p>
             <h2
               className="text-lg sm:text-xl font-bold mb-2"
-              style={{ fontFamily: "'DM Serif Display', serif", color: "#F5F0E8" }}
+              style={{ fontFamily: "'DM Serif Display', serif", color: "#171716" }}
             >
               UNABLE TO ANALYZE
             </h2>
             <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start mb-2">
               <span
                 className="text-[8px] font-bold tracking-[0.1em] px-1.5 py-0.5"
-                style={{ background: "rgba(168,90,80,0.15)", color: "#A85A50", borderRadius: "1px" }}
+                style={{ background: "rgba(168,97,85,0.15)", color: "#A86155", borderRadius: "1px" }}
               >
                 RETRIEVAL FAILED
               </span>
               <span
                 className="text-[9px] font-mono tracking-wider"
-                style={{ color: "#A8A098" }}
+                style={{ color: "#6F6A61" }}
               >
                 CONFIDENCE —
               </span>
@@ -140,18 +140,18 @@ export function RetrievalFailedState({
             <p className="text-xs text-muted-foreground leading-relaxed">
               Could not retrieve article content from the provided URL.
             </p>
-            <p className="text-[11px] leading-relaxed mt-1" style={{ color: "#A8A098" }}>
+            <p className="text-[11px] leading-relaxed mt-1" style={{ color: "#6F6A61" }}>
               Reason: {reason}
             </p>
             {failedUrl && (
               <p
                 className="text-[9px] font-mono mt-1 break-all"
-                style={{ color: "#A8A098", opacity: 0.7 }}
+                style={{ color: "#6F6A61", opacity: 0.7 }}
               >
                 URL {failedUrl}
               </p>
             )}
-            <p className="text-[11px] font-semibold mt-2" style={{ color: "#A85A50" }}>
+            <p className="text-[11px] font-semibold mt-2" style={{ color: "#A86155" }}>
               No factual verification was performed.
             </p>
           </div>
@@ -162,7 +162,7 @@ export function RetrievalFailedState({
           <button
             type="button"
             className="cursor-pointer flex items-center justify-center gap-2 h-9 px-5 text-xs font-medium rounded transition-all duration-200 hover:-translate-y-[1px] active:scale-[0.98]"
-            style={{ background: "#A8906E", color: "#0A0A0A" }}
+            style={{ background: "#596451", color: "#F3EFE6" }}
             onClick={onRetry}
           >
             <RotateCcw className="w-3.5 h-3.5" />Try Again
@@ -170,7 +170,7 @@ export function RetrievalFailedState({
           <button
             type="button"
             className="cursor-pointer flex items-center justify-center gap-2 h-9 px-5 text-xs font-medium rounded transition-all duration-200 hover:-translate-y-[1px] active:scale-[0.98]"
-            style={{ background: "#111111", color: "#F5F0E8", border: "1px solid #1E1E1E" }}
+            style={{ background: "#ECE7DB", color: "#171716", border: "1px solid #D8D0C3" }}
             onClick={onPasteText}
           >
             <ClipboardPaste className="w-3.5 h-3.5" />Paste Article Text
@@ -183,7 +183,7 @@ export function RetrievalFailedState({
         icon={Fingerprint}
         title="Article Fingerprint"
         subtitle="Zeros below mean no investigation ran — they are not an analysis result"
-        accent="#A8906E"
+        accent="#596451"
         delay={0.1}
       >
         <ArticleFingerprint fingerprint={EMPTY_FINGERPRINT} note="ANALYSIS NOT PERFORMED" />
@@ -194,7 +194,7 @@ export function RetrievalFailedState({
         icon={Link2}
         title="Evidence Chain"
         subtitle="Investigation stopped at retrieval"
-        accent="#A85A50"
+        accent="#A86155"
         delay={0.16}
       >
         <EvidenceChain
@@ -214,7 +214,7 @@ export function RetrievalFailedState({
         icon={Play}
         title="Investigation Replay"
         subtitle="Trace of what actually happened"
-        accent="#A85A50"
+        accent="#A86155"
         delay={0.22}
       >
         <InvestigationReplay
