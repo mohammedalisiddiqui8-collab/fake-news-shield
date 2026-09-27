@@ -328,8 +328,8 @@ function EditorialPlate() {
 }
 
 /* ─── Today's headlines — a newsroom column: thin dividers, no cards ─── */
-function HeadlinesColumn({ items, loading, onPick }: {
-  items: SampleItem[]; loading: boolean; onPick: (item: SampleItem) => void;
+function HeadlinesColumn({ items, loading, onPick, variant = "table" }: {
+  items: SampleItem[]; loading: boolean; onPick: (item: SampleItem) => void; variant?: "table" | "stack";
 }) {
   if (loading) {
     return (
@@ -344,6 +344,49 @@ function HeadlinesColumn({ items, loading, onPick }: {
       </div>
     );
   }
+
+  /* Stacked newsroom column — 01 / headline / source · time, for the home rail */
+  if (variant === "stack") {
+    return (
+      <div className="border-t border-border">
+        {items.map((item, i) => (
+          <button
+            key={item.label}
+            type="button"
+            onClick={() => onPick(item)}
+            className="group w-full text-left border-b border-border row-hover -mx-2 px-2 py-3.5"
+          >
+            <div className="flex items-start gap-3">
+              <span className="num-marker shrink-0 pt-[3px]">{String(i + 1).padStart(2, "0")}</span>
+              <span className="flex-1 min-w-0">
+                <span
+                  className="block text-[13.5px] leading-snug transition-colors group-hover:text-primary"
+                  style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#F5F0E8" }}
+                >
+                  {item.label}
+                </span>
+                <span className="mt-1.5 flex flex-wrap items-center gap-x-1.5">
+                  {item.source && <span className="kicker" style={{ color: "#A8906E" }}>{item.source}</span>}
+                  {item.source && <span className="kicker" style={{ opacity: 0.5 }}>·</span>}
+                  <span className="kicker" style={{ opacity: 0.65 }}>{item.category}</span>
+                  {item.publishedAgo && <span className="kicker" style={{ opacity: 0.5 }}>·</span>}
+                  {item.publishedAgo && <span className="kicker tabular" style={{ opacity: 0.7 }}>{item.publishedAgo}</span>}
+                </span>
+                {item.isSnippet && (
+                  <span className="block kicker mt-1" style={{ opacity: 0.45 }}>Excerpt only — full text unavailable</span>
+                )}
+              </span>
+              <ChevronRight
+                className="w-3.5 h-3.5 shrink-0 mt-1 opacity-0 transition-all group-hover:opacity-70 group-hover:translate-x-0.5"
+                style={{ color: "#C8B490" }}
+              />
+            </div>
+          </button>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="border-t border-border">
       {items.map((item) => {
@@ -376,7 +419,7 @@ function HeadlinesColumn({ items, loading, onPick }: {
                   {item.source && <span className="kicker opacity-50">·</span>}
                   {item.source && <span className="kicker" style={{ color: "#A8906E" }}>{item.source}</span>}
                   {item.publishedAgo && <span className="kicker opacity-50">·</span>}
-                  {item.publishedAgo && <span className="kicker opacity-70">{item.publishedAgo}</span>}
+                  {item.publishedAgo && <span className="kicker" style={{ opacity: 0.7 }}>{item.publishedAgo}</span>}
                 </span>
                 {item.isSnippet && (
                   <span className="hidden sm:block kicker mt-1 opacity-45">Excerpt only — full text unavailable</span>
@@ -898,14 +941,22 @@ export default function Dashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeView, currentResult]);
 
-  /* ─── Activity — real counts from the archive, typography not KPI cards ─── */
-  const activityCells = analyses
+  /* ─── Statistics — real totals from the archive: fingerprint sums plus verdict counts ─── */
+  const statCells: { label: string; value: number | null }[] = analyses
     ? [
-        { value: analyses.length, label: "Investigations", dek: "filed to the archive" },
-        { value: analyses.filter(a => a.verdict === "likely_real").length, label: "Credible", dek: "corroborated verdicts" },
-        { value: analyses.filter(a => a.verdict === "uncertain").length, label: "Uncertain", dek: "insufficient evidence" },
-        { value: analyses.filter(a => a.verdict === "likely_fake").length, label: "Misleading", dek: "contradicted verdicts" },
+        { label: "Investigations", value: analyses.length },
+        { label: "Claims checked", value: analyses.reduce((sum, a) => sum + (a.fingerprint?.claims ?? 0), 0) },
+        { label: "Sources found", value: analyses.reduce((sum, a) => sum + (a.fingerprint?.sources ?? 0), 0) },
+        { label: "Contradictions", value: analyses.reduce((sum, a) => sum + (a.fingerprint?.contradicted ?? 0), 0) },
       ]
+    : [
+        { label: "Investigations", value: null },
+        { label: "Claims checked", value: null },
+        { label: "Sources found", value: null },
+        { label: "Contradictions", value: null },
+      ];
+  const verdictTally = analyses
+    ? `${analyses.filter((a) => a.verdict === "likely_real").length} credible · ${analyses.filter((a) => a.verdict === "uncertain").length} uncertain · ${analyses.filter((a) => a.verdict === "likely_fake").length} misleading`
     : null;
 
   /* ─── Investigation masthead derivation — real content only ─── */
@@ -922,8 +973,11 @@ export default function Dashboard() {
   const todayLabel = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   const editionLabel = fmtFiled(Date.now());
 
-  /* ─── Archive row — a record in a newsroom archive ─── */
-  const renderArchiveRow = (analysis: any, i: number) => {
+  /* ─── Archive row — a record in a newsroom archive ───
+     variant "row"     → table record used by Past Investigations
+     variant "archive" → stacked entry used on the home page:
+                          01 / headline / source · date / verdict · confidence */
+  const renderArchiveRow = (analysis: any, i: number, variant: "row" | "archive" = "row") => {
     const avc = verdictConfig[(analysis.verdict as Verdict) ?? "uncertain"];
     // Legacy rows: a stored retrieval failure is NOT an investigation.
     const wasRetrievalFailure =
@@ -934,6 +988,53 @@ export default function Dashboard() {
       ? analysis.inputText
       : (analysis.inputText || "").trim().split(/\s+/).slice(0, 16).join(" ");
     const sourceLabel = analysis.inputType === "url" ? hostOf(analysis.inputText) : "Typed text";
+
+    if (variant === "archive") {
+      return (
+        <motion.div
+          key={analysis._id}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2, delay: Math.min(i, 8) * 0.03 }}
+          role="button"
+          tabIndex={0}
+          onClick={() => handleLoadFromHistory(analysis)}
+          onKeyDown={(e) => { if (e.key === "Enter") handleLoadFromHistory(analysis); }}
+          className="group cursor-pointer border-b border-border row-hover"
+        >
+          <div className="flex items-start gap-4 px-2 py-4">
+            <span className="num-marker shrink-0 pt-[3px]">{String(i + 1).padStart(2, "0")}</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-[14.5px] leading-snug break-words" style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#F5F0E8" }}>
+                {subject || "Untitled submission"}
+              </p>
+              <p className="mt-1.5 kicker" style={{ opacity: 0.65 }}>
+                {sourceLabel} <span style={{ opacity: 0.55 }}>·</span> {fmtFiled(analysis._creationTime)}
+              </p>
+              <p className="mt-1.5 kicker" style={{ color: statusColor }}>
+                {statusLabel.toUpperCase()}
+                {!wasRetrievalFailure && <span className="tabular"> · {analysis.confidence}%</span>}
+              </p>
+            </div>
+            <span className="shrink-0 flex items-center gap-1 pt-0.5">
+              <button
+                type="button"
+                aria-label="Remove from archive"
+                onClick={(e) => { e.stopPropagation(); handleDelete(analysis._id); }}
+                className="p-1.5 opacity-0 group-hover:opacity-70 transition-opacity"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+              <ChevronRight
+                className="w-3.5 h-3.5 opacity-0 group-hover:opacity-70 transition-opacity"
+                style={{ color: "#C8B490" }}
+              />
+            </span>
+          </div>
+        </motion.div>
+      );
+    }
+
     return (
       <motion.div
         key={analysis._id}
@@ -1133,20 +1234,20 @@ export default function Dashboard() {
                   )}
                 </AnimatePresence>
 
-                {/* ─── Hero ─── */}
+                {/* ─── Hero — the editorial introduction ─── */}
                 <section className="grid lg:grid-cols-[1.5fr_1fr] gap-10 lg:gap-14 items-start">
                   <div>
                     <div className="flex items-center gap-3">
-                      <span className="kicker shrink-0">Welcome back</span>
+                      <span className="kicker shrink-0">Veritas · The verification desk</span>
                       <span className="h-px flex-1" style={{ background: "#1E1E1E" }} />
                       <span className="kicker shrink-0 hidden sm:inline">{todayLabel}</span>
                     </div>
-                    <h1 className="mt-7 text-[28px] sm:text-[40px] lg:text-[50px]" style={{ lineHeight: 1.08 }}>
-                      <span className="block">Investigate the truth,</span>
-                      <span className="block">one claim at a time.</span>
+                    <h1 className="mt-7 text-[24px] sm:text-[33px] lg:text-[38px] uppercase" style={{ lineHeight: 1.12, letterSpacing: "0.01em" }}>
+                      <span className="block">Verify what you read.</span>
+                      <span className="block">Follow the evidence.</span>
                     </h1>
-                    <p className="mt-5 text-[13.5px] leading-relaxed text-muted-foreground max-w-md">
-                      Verify news, trace evidence, and understand the context behind the claim.
+                    <p className="mt-5 text-[13.5px] leading-relaxed text-muted-foreground max-w-lg">
+                      Veritas retrieves the original article, extracts its factual claims, and cross-checks each one against live independent coverage — reporting what the evidence supports, and saying so when it doesn't.
                     </p>
                     <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3">
                       <Button
@@ -1181,234 +1282,242 @@ export default function Dashboard() {
                   </motion.div>
                 </section>
 
-                {/* ─── 01 · Begin an investigation ─── */}
-                <section id="begin" className="report-sec mt-14 lg:mt-20">
-                  <SectionHead
-                    no="01"
-                    title="Begin an investigation"
-                    dek="Submit a URL or pasted text — Veritas retrieves live sources, extracts factual claims and cross-checks each one against independent coverage."
-                  />
+                {/* ─── The desk — workbench left, wire and ledger right ─── */}
+                <div className="mt-14 lg:mt-20 grid lg:grid-cols-[1.6fr_1fr] gap-y-14 lg:gap-y-0 items-start">
+                  <div className="min-w-0 lg:pr-12">
 
-                  {/* Mode + depth — underlined editorial tabs */}
-                  <div className="mt-4 flex flex-wrap items-center justify-between gap-y-1 border-b border-border">
-                    <div className="flex">
-                      {([["text", "Paste text"], ["url", "Paste url"]] as const).map(([mode, label]) => (
-                        <button
-                          key={mode}
-                          type="button"
-                          onClick={() => setInputType(mode)}
-                          className={`relative px-3 py-2.5 text-[10px] uppercase tracking-[0.16em] transition-colors ${
-                            inputType === mode ? "text-foreground" : "text-muted-foreground/50 hover:text-muted-foreground"
-                          }`}
-                        >
-                          {label}
-                          {inputType === mode && (
-                            <motion.span layoutId="mode-tab" className="absolute left-0 right-0 -bottom-px h-[1.5px]" style={{ background: "#C8B490" }} />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="flex items-center">
-                      <span className="kicker mr-3 hidden sm:inline" style={{ opacity: 0.5 }}>Depth</span>
-                      {(["quick", "standard", "deep"] as const).map((depth) => (
-                        <button
-                          key={depth}
-                          type="button"
-                          onClick={() => setAnalysisDepth(depth)}
-                          className={`relative px-3 py-2.5 text-[10px] uppercase tracking-[0.16em] transition-colors ${
-                            analysisDepth === depth ? "text-foreground" : "text-muted-foreground/45 hover:text-muted-foreground"
-                          }`}
-                        >
-                          {depth}
-                          {analysisDepth === depth && (
-                            <motion.span layoutId="depth-tab" className="absolute left-0 right-0 -bottom-px h-[1.5px]" style={{ background: "#A8906E" }} />
-                          )}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <p className="mt-2 text-[10.5px] text-muted-foreground">
-                    {analysisDepth === "quick" && "Fast scan — basic pattern matching and keyword detection."}
-                    {analysisDepth === "standard" && "Full analysis — NLP patterns, source checks, and claim verification."}
-                    {analysisDepth === "deep" && "Comprehensive — deep linguistic analysis, cross-referencing, and detailed reasoning."}
-                  </p>
+                    {/* ─── 01 · Begin an investigation ─── */}
+                    <section id="begin" className="report-sec">
+                      <SectionHead
+                        no="01"
+                        title="Begin an investigation"
+                        dek="Submit a URL or pasted text — Veritas retrieves live sources, extracts factual claims and cross-checks each one against independent coverage."
+                      />
 
-                  {/* Editor — one bordered instrument, not a floating card */}
-                  <div className="mt-4 border border-border" style={{ background: "#0D0D0D" }}>
-                    <Textarea
-                      ref={textareaRef}
-                      value={inputText}
-                      onChange={(e) => setInputText(e.target.value)}
-                      placeholder={inputType === "text" ? "Paste your news article, headline or text here..." : "Paste a news URL here..."}
-                      className="min-h-[170px] sm:min-h-[200px] border-0 bg-transparent resize-none focus-visible:ring-0 focus-visible:ring-offset-0 text-[13.5px] leading-relaxed placeholder:text-muted-foreground/40"
-                    />
-                    <div className="flex items-center justify-between gap-3 border-t border-border px-3 py-2">
-                      <span className="kicker tabular">
-                        {inputText.length > 0
-                          ? `${inputText.length.toLocaleString()} characters`
-                          : inputType === "url" ? "Awaiting article URL" : "Awaiting article text"}
-                      </span>
-                      <div className="flex items-center gap-1">
-                        <span className="kicker mr-2 hidden sm:inline" style={{ opacity: 0.5 }}>Ctrl + Enter</span>
-                        <button
-                          type="button"
-                          className="kicker px-2 py-1 transition-colors hover:text-foreground"
-                          onClick={() => navigator.clipboard.readText().then(t => { setInputText(t); toast.success("Pasted!"); }).catch(() => toast.error("Unable to read clipboard."))}
-                        >
-                          <span className="inline-flex items-center gap-1"><ClipboardPaste className="w-3 h-3" />Paste</span>
-                        </button>
-                        <button
-                          type="button"
-                          className="kicker px-2 py-1 transition-colors hover:text-foreground disabled:opacity-30"
-                          disabled={!inputText}
-                          onClick={() => setInputText("")}
-                        >
-                          Clear
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Actions — a rotating media-literacy note beside the single strong CTA */}
-                  <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
-                    <AnimatePresence mode="wait">
-                      <motion.div
-                        key={currentTip}
-                        initial={{ opacity: 0, y: -3 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 3 }}
-                        transition={{ duration: 0.3 }}
-                        className="flex items-start gap-2 max-w-md"
-                      >
-                        <Lightbulb className="w-3.5 h-3.5 mt-0.5 shrink-0" style={{ color: "#C4985A" }} />
-                        <p className="text-[11px] leading-relaxed text-muted-foreground italic">{mediaLiteracyTips[currentTip]}</p>
-                      </motion.div>
-                    </AnimatePresence>
-                    <Button
-                      onClick={handleAnalyze}
-                      disabled={isAnalyzing || !inputText.trim()}
-                      className="group shrink-0 h-11 px-7 gap-2 text-[10.5px] uppercase tracking-[0.16em] hover:opacity-90 disabled:opacity-40"
-                      style={{ background: "#C8B490", color: "#0A0A0A" }}
-                    >
-                      Analyze
-                      <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-                    </Button>
-                  </div>
-                </section>
-
-                {/* ─── 02 · Recent investigations ─── */}
-                <section className="mt-14 lg:mt-20">
-                  <SectionHead
-                    no="02"
-                    title="Recent investigations"
-                    dek="Every filed case — verdicts are generated from retrieved evidence, never from language alone."
-                    right={
-                      <button
-                        type="button"
-                        onClick={() => { setActiveView("history"); window.scrollTo({ top: 0 }); }}
-                        className="kicker ul-hover transition-colors hover:text-foreground"
-                      >
-                        View all →
-                      </button>
-                    }
-                  />
-                  {analyses === undefined ? (
-                    <div className="mt-4 space-y-3">
-                      {Array.from({ length: 3 }).map((_, i) => (
-                        <div key={i} className="flex items-center gap-4 py-3.5 border-b border-border animate-pulse">
-                          <div className="h-3 w-6" style={{ background: "#161616" }} />
-                          <div className="h-3 flex-1" style={{ background: "#141414" }} />
-                          <div className="h-3 w-24 hidden sm:block" style={{ background: "#161616" }} />
+                      {/* Mode + depth — underlined editorial tabs */}
+                      <div className="mt-4 flex flex-wrap items-center justify-between gap-y-1 border-b border-border">
+                        <div className="flex items-center">
+                          <button
+                            type="button"
+                            onClick={() => setInputType("url")}
+                            className={`relative px-3 py-2.5 text-[10px] uppercase tracking-[0.16em] transition-colors ${
+                              inputType === "url" ? "text-foreground" : "text-muted-foreground/50 hover:text-muted-foreground"
+                            }`}
+                          >
+                            Paste URL
+                            {inputType === "url" && (
+                              <motion.span layoutId="mode-tab" className="absolute left-0 right-0 -bottom-px h-[1.5px]" style={{ background: "#C8B490" }} />
+                            )}
+                          </button>
+                          <span className="kicker px-1.5" style={{ opacity: 0.4 }}>or</span>
+                          <button
+                            type="button"
+                            onClick={() => setInputType("text")}
+                            className={`relative px-3 py-2.5 text-[10px] uppercase tracking-[0.16em] transition-colors ${
+                              inputType === "text" ? "text-foreground" : "text-muted-foreground/50 hover:text-muted-foreground"
+                            }`}
+                          >
+                            Paste Text
+                            {inputType === "text" && (
+                              <motion.span layoutId="mode-tab" className="absolute left-0 right-0 -bottom-px h-[1.5px]" style={{ background: "#C8B490" }} />
+                            )}
+                          </button>
                         </div>
-                      ))}
-                    </div>
-                  ) : analyses.length === 0 ? (
-                    <div className="mt-6 border border-border px-6 py-10 text-center">
-                      <p className="text-lg" style={{ fontFamily: "'DM Serif Display', serif" }}>No investigations filed yet.</p>
-                      <p className="mt-2 text-[12px] text-muted-foreground max-w-sm mx-auto leading-relaxed">
-                        The archive fills as you verify — every verdict, source and confidence score is kept here.
+                        <div className="flex items-center">
+                          <span className="kicker mr-3 hidden sm:inline" style={{ opacity: 0.5 }}>Depth</span>
+                          {(["quick", "standard", "deep"] as const).map((depth) => (
+                            <button
+                              key={depth}
+                              type="button"
+                              onClick={() => setAnalysisDepth(depth)}
+                              className={`relative px-3 py-2.5 text-[10px] uppercase tracking-[0.16em] transition-colors ${
+                                analysisDepth === depth ? "text-foreground" : "text-muted-foreground/45 hover:text-muted-foreground"
+                              }`}
+                            >
+                              {depth}
+                              {analysisDepth === depth && (
+                                <motion.span layoutId="depth-tab" className="absolute left-0 right-0 -bottom-px h-[1.5px]" style={{ background: "#A8906E" }} />
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <p className="mt-2 text-[10.5px] text-muted-foreground">
+                        {analysisDepth === "quick" && "Fast scan — basic pattern matching and keyword detection."}
+                        {analysisDepth === "standard" && "Full analysis — NLP patterns, source checks, and claim verification."}
+                        {analysisDepth === "deep" && "Comprehensive — deep linguistic analysis, cross-referencing, and detailed reasoning."}
                       </p>
-                      <button
-                        type="button"
-                        onClick={() => goDesk(true)}
-                        className="mt-5 kicker ul-hover transition-colors"
-                        style={{ color: "#C8B490" }}
-                      >
-                        Begin your first investigation →
-                      </button>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="mt-3 hidden sm:flex items-center gap-4 px-2 pb-1.5 border-b border-border">
-                        <span className="kicker w-6" style={{ opacity: 0.55 }}>No.</span>
-                        <span className="kicker flex-1" style={{ opacity: 0.55 }}>Subject</span>
-                        <span className="kicker w-[6.5rem] shrink-0" style={{ opacity: 0.55 }}>Filed</span>
-                        <span className="kicker w-[8.5rem] shrink-0" style={{ opacity: 0.55 }}>Verdict</span>
-                        <span className="kicker w-10 shrink-0 text-right" style={{ opacity: 0.55 }}>Conf.</span>
-                        <span className="kicker w-[6.5rem] shrink-0 text-right" style={{ opacity: 0.55 }}>Source</span>
-                        <span className="w-12 shrink-0" />
-                      </div>
-                      {analyses.slice(0, 6).map((analysis, i) => renderArchiveRow(analysis, i))}
-                    </>
-                  )}
-                </section>
 
-                {/* ─── 03 · Activity ─── */}
-                <section className="mt-14 lg:mt-20">
-                  <SectionHead
-                    no="03"
-                    title="Activity"
-                    dek="Counts drawn from your archive — updated as investigations are filed."
-                  />
-                  <div className="mt-1 grid grid-cols-2 sm:grid-cols-4">
-                    {(activityCells ?? [
-                      { value: 0, label: "Investigations", dek: "loading archive" },
-                      { value: 0, label: "Credible", dek: "loading archive" },
-                      { value: 0, label: "Uncertain", dek: "loading archive" },
-                      { value: 0, label: "Misleading", dek: "loading archive" },
-                    ]).map((cell, i) => (
-                      <div
-                        key={cell.label}
-                        className={`px-4 py-5 sm:py-6 ${i % 2 === 1 ? "border-l border-border" : ""} ${i >= 2 ? "border-t border-border sm:border-t-0" : ""} ${i === 2 ? "sm:border-l sm:border-border" : ""}`}
-                      >
-                        <span className="block text-[36px] sm:text-[42px] leading-none tabular" style={{ fontFamily: "'DM Serif Display', serif", color: "#F5F0E8" }}>
-                          {activityCells ? <AnimatedNumber value={cell.value} /> : "—"}
-                        </span>
-                        <span className="block kicker mt-2.5">{cell.label}</span>
-                        <span className="block text-[10px] mt-0.5" style={{ color: "#A8A098", opacity: 0.55 }}>{cell.dek}</span>
+                      {/* Editor — one bordered instrument, not a floating card */}
+                      <div className="mt-4 border border-border" style={{ background: "#0D0D0D" }}>
+                        <Textarea
+                          ref={textareaRef}
+                          value={inputText}
+                          onChange={(e) => setInputText(e.target.value)}
+                          placeholder={inputType === "text" ? "Paste your news article, headline or text here..." : "Paste a news URL here..."}
+                          className="min-h-[170px] sm:min-h-[200px] border-0 bg-transparent resize-none focus-visible:ring-0 focus-visible:ring-offset-0 text-[13.5px] leading-relaxed placeholder:text-muted-foreground/40"
+                        />
+                        <div className="flex items-center justify-between gap-3 border-t border-border px-3 py-2">
+                          <span className="kicker tabular">
+                            {inputText.length > 0
+                              ? `${inputText.length.toLocaleString()} characters`
+                              : inputType === "url" ? "Awaiting article URL" : "Awaiting article text"}
+                          </span>
+                          <div className="flex items-center gap-1">
+                            <span className="kicker mr-2 hidden sm:inline" style={{ opacity: 0.5 }}>Ctrl + Enter</span>
+                            <button
+                              type="button"
+                              className="kicker px-2 py-1 transition-colors hover:text-foreground"
+                              onClick={() => navigator.clipboard.readText().then(t => { setInputText(t); toast.success("Pasted!"); }).catch(() => toast.error("Unable to read clipboard."))}
+                            >
+                              <span className="inline-flex items-center gap-1"><ClipboardPaste className="w-3 h-3" />Paste</span>
+                            </button>
+                            <button
+                              type="button"
+                              className="kicker px-2 py-1 transition-colors hover:text-foreground disabled:opacity-30"
+                              disabled={!inputText}
+                              onClick={() => setInputText("")}
+                            >
+                              Clear
+                            </button>
+                          </div>
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                </section>
 
-                {/* ─── 04 · Today's headlines ─── */}
-                <section className="mt-14 lg:mt-20">
-                  <SectionHead
-                    no="04"
-                    title="Today's headlines"
-                    dek={
-                      newsLoading
-                        ? "Retrieving live headlines from major wires…"
-                        : liveNews.length > 0
-                          ? "Live from major wires — click any headline to load it into the editor."
-                          : "Live feeds unavailable — showing sample articles instead."
-                    }
-                    right={
-                      <span className="inline-flex items-center gap-1.5 kicker">
-                        {liveNews.length > 0 && (
-                          <span className="w-1.5 h-1.5 rounded-full" style={{ background: STATUS.green, animation: "statusPulse 2.4s ease-in-out infinite" }} />
-                        )}
-                        {newsLoading ? "Retrieving" : liveNews.length > 0 ? "Live · 30 min" : "Offline"}
-                      </span>
-                    }
-                  />
-                  <div className="mt-3">
-                    <HeadlinesColumn items={displayItems} loading={newsLoading} onPick={pickHeadline} />
+                      {/* Actions — a rotating media-literacy note beside the single strong CTA */}
+                      <div className="mt-4 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
+                        <AnimatePresence mode="wait">
+                          <motion.div
+                            key={currentTip}
+                            initial={{ opacity: 0, y: -3 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 3 }}
+                            transition={{ duration: 0.3 }}
+                            className="flex items-start gap-2 max-w-md"
+                          >
+                            <Lightbulb className="w-3.5 h-3.5 mt-0.5 shrink-0" style={{ color: "#C4985A" }} />
+                            <p className="text-[11px] leading-relaxed text-muted-foreground italic">{mediaLiteracyTips[currentTip]}</p>
+                          </motion.div>
+                        </AnimatePresence>
+                        <Button
+                          onClick={handleAnalyze}
+                          disabled={isAnalyzing || !inputText.trim()}
+                          className="group shrink-0 h-11 px-7 gap-2 text-[10.5px] uppercase tracking-[0.16em] hover:opacity-90 disabled:opacity-40"
+                          style={{ background: "#C8B490", color: "#0A0A0A" }}
+                        >
+                          Analyze
+                          <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+                        </Button>
+                      </div>
+                    </section>
+
+                    {/* ─── 02 · Recent investigations — the archive ─── */}
+                    <section className="mt-14 lg:mt-20">
+                      <SectionHead
+                        no="02"
+                        title="Recent investigations"
+                        dek="Every filed case — verdicts are generated from retrieved evidence, never from language alone."
+                        right={
+                          <button
+                            type="button"
+                            onClick={() => { setActiveView("history"); window.scrollTo({ top: 0 }); }}
+                            className="kicker ul-hover transition-colors hover:text-foreground"
+                          >
+                            View all →
+                          </button>
+                        }
+                      />
+                      {analyses === undefined ? (
+                        <div className="mt-4 space-y-3">
+                          {Array.from({ length: 3 }).map((_, i) => (
+                            <div key={i} className="flex items-center gap-4 py-3.5 border-b border-border animate-pulse">
+                              <div className="h-3 w-6" style={{ background: "#161616" }} />
+                              <div className="h-3 flex-1" style={{ background: "#141414" }} />
+                              <div className="h-3 w-24 hidden sm:block" style={{ background: "#161616" }} />
+                            </div>
+                          ))}
+                        </div>
+                      ) : analyses.length === 0 ? (
+                        <div className="mt-6 border border-border px-6 py-10 text-center">
+                          <p className="text-lg" style={{ fontFamily: "'DM Serif Display', serif" }}>No investigations filed yet.</p>
+                          <p className="mt-2 text-[12px] text-muted-foreground max-w-sm mx-auto leading-relaxed">
+                            The archive fills as you verify — every verdict, source and confidence score is kept here.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => goDesk(true)}
+                            className="mt-5 kicker ul-hover transition-colors"
+                            style={{ color: "#C8B490" }}
+                          >
+                            Begin your first investigation →
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="mt-3 border-t border-border">
+                          {analyses.slice(0, 6).map((analysis, i) => renderArchiveRow(analysis, i, "archive"))}
+                        </div>
+                      )}
+                    </section>
                   </div>
-                  <p className="mt-3 kicker" style={{ opacity: 0.5 }}>
-                    Headlines refresh every 30 minutes · select one to investigate it
-                  </p>
-                </section>
+
+                  {/* ─── Right rail — the wire and the ledger ─── */}
+                  <div className="min-w-0 lg:border-l lg:border-border lg:pl-12">
+
+                    {/* ─── 03 · Today's headlines — a newsroom column ─── */}
+                    <section>
+                      <SectionHead
+                        no="03"
+                        title="Today's headlines"
+                        dek={
+                          newsLoading
+                            ? "Retrieving live headlines from major wires…"
+                            : liveNews.length > 0
+                              ? "Live from major wires — click any headline to load it into the editor."
+                              : "Live feeds unavailable — showing sample articles instead."
+                        }
+                        right={
+                          <span className="inline-flex items-center gap-1.5 kicker">
+                            {liveNews.length > 0 && (
+                              <span className="w-1.5 h-1.5 rounded-full" style={{ background: STATUS.green, animation: "statusPulse 2.4s ease-in-out infinite" }} />
+                            )}
+                            {newsLoading ? "Retrieving" : liveNews.length > 0 ? "Live · 30 min" : "Offline"}
+                          </span>
+                        }
+                      />
+                      <div className="mt-3">
+                        <HeadlinesColumn items={displayItems} loading={newsLoading} onPick={pickHeadline} variant="stack" />
+                      </div>
+                      <p className="mt-3 kicker" style={{ opacity: 0.5 }}>
+                        Headlines refresh every 30 minutes · select one to investigate it
+                      </p>
+                    </section>
+
+                    {/* ─── 04 · Statistics — typography and thin separators, never KPI cards ─── */}
+                    <section className="mt-12 lg:mt-16">
+                      <SectionHead
+                        no="04"
+                        title="Statistics"
+                        dek="Real totals from your archive, summed as investigations are filed."
+                      />
+                      <div className="mt-3 border-t border-border">
+                        {statCells.map((cell) => (
+                          <div key={cell.label} className="flex items-baseline justify-between gap-3 py-3 border-b border-border">
+                            <span className="kicker" style={{ opacity: 0.65 }}>{cell.label}</span>
+                            <span
+                              className="text-[18px] leading-none tabular shrink-0"
+                              style={{ fontFamily: "'JetBrains Mono', monospace", color: cell.value == null ? "#A8A098" : "#F5F0E8" }}
+                            >
+                              {cell.value == null ? "—" : <AnimatedNumber value={cell.value} />}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                      <p className="mt-3 kicker" style={{ opacity: 0.55 }}>
+                        {verdictTally ? `Verdict tally — ${verdictTally}` : "Counting the archive…"}
+                      </p>
+                    </section>
+                  </div>
+                </div>
               </motion.div>
             )}
 
