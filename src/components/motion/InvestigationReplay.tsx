@@ -105,36 +105,36 @@ export function InvestigationReplay({ analysis, retrievalFailed, failedUrl, fail
       {/* Controls — square hairline instruments, quiet against the document */}
       <div className="flex items-center gap-1.5 mb-4">
         <button type="button" onClick={reset} title="Restart replay"
-          className="w-7 h-7 flex items-center justify-center transition-colors hover:bg-[rgba(23,23,22,0.04)]"
-          style={{ border: "1px solid #D8D0C3", color: "#6F6A61" }}>
+          className="w-7 h-7 flex items-center justify-center transition-colors hover:bg-[rgba(241,240,234,0.04)]"
+          style={{ border: "1px solid #3A3B3E", color: "#A5A5A1" }}>
           <RotateCcw className="w-3 h-3" />
         </button>
         <button type="button" onClick={stepBack} disabled={currentStage === 0} title="Previous stage"
-          className="w-7 h-7 flex items-center justify-center transition-colors hover:bg-[rgba(23,23,22,0.04)] disabled:opacity-30"
-          style={{ border: "1px solid #D8D0C3", color: "#6F6A61" }}>
+          className="w-7 h-7 flex items-center justify-center transition-colors hover:bg-[rgba(241,240,234,0.04)] disabled:opacity-30"
+          style={{ border: "1px solid #3A3B3E", color: "#A5A5A1" }}>
           <SkipBack className="w-3 h-3" />
         </button>
         <button type="button" onClick={isPlaying ? pause : play} title={isPlaying ? "Pause replay" : "Play replay"}
           className="w-8 h-8 flex items-center justify-center transition-colors hover:opacity-85"
-          style={{ border: "1px solid #596451", color: "#596451" }}>
+          style={{ border: "1px solid #C9C3B7", color: "#C9C3B7" }}>
           {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
         </button>
         <button type="button" onClick={stepForward} disabled={currentStage >= stages.length - 1} title="Next stage"
-          className="w-7 h-7 flex items-center justify-center transition-colors hover:bg-[rgba(23,23,22,0.04)] disabled:opacity-30"
-          style={{ border: "1px solid #D8D0C3", color: "#6F6A61" }}>
+          className="w-7 h-7 flex items-center justify-center transition-colors hover:bg-[rgba(241,240,234,0.04)] disabled:opacity-30"
+          style={{ border: "1px solid #3A3B3E", color: "#A5A5A1" }}>
           <SkipForward className="w-3 h-3" />
         </button>
 
         {/* Progress — a single hairline rule, not a pill */}
-        <div className="flex-1 relative h-px ml-2" style={{ background: "#D8D0C3" }}>
+        <div className="flex-1 relative h-px ml-2" style={{ background: "#3A3B3E" }}>
           <motion.div
             animate={{ width: ((currentStage / (stages.length - 1)) * 100) + "%" }}
             transition={{ duration: 0.3 }}
             className="absolute top-0 left-0 h-px"
-            style={{ background: "#596451" }}
+            style={{ background: "#C9C3B7" }}
           />
         </div>
-        <span className="text-[9px] tracking-[0.14em] ml-2 tabular" style={{ fontFamily: "'JetBrains Mono', monospace", color: "#6F6A61" }}>
+        <span className="text-[9px] tracking-[0.14em] ml-2 tabular" style={{ fontFamily: "'JetBrains Mono', monospace", color: "#A5A5A1" }}>
           {String(currentStage + 1).padStart(2, "0")} / {String(stages.length).padStart(2, "0")}
         </span>
       </div>
@@ -151,8 +151,8 @@ export function InvestigationReplay({ analysis, retrievalFailed, failedUrl, fail
               key={stage.id}
               className="flex items-stretch gap-4 border-b border-border/70 transition-colors"
               style={{
-                background: isActive ? "rgba(89,100,81,0.045)" : undefined,
-                borderLeft: isActive ? "2px solid #596451" : "2px solid transparent",
+                background: isActive ? "rgba(201,195,183,0.045)" : undefined,
+                borderLeft: isActive ? "2px solid #C9C3B7" : "2px solid transparent",
                 paddingLeft: isActive ? 10 : 12,
                 paddingRight: 8,
                 opacity: isPending ? 0.45 : 1,
@@ -164,7 +164,7 @@ export function InvestigationReplay({ analysis, retrievalFailed, failedUrl, fail
                   className="w-7 shrink-0 text-center text-[9px] leading-none pt-3.5 tracking-[0.12em]"
                   style={{
                     fontFamily: "'JetBrains Mono', monospace",
-                    color: isActive ? "#596451" : isDone ? "#71836B" : "#6F6A61",
+                    color: isActive ? "#C9C3B7" : isDone ? "#8A9A82" : "#A5A5A1",
                     opacity: isPending ? 0.7 : 1,
                     fontVariantNumeric: "tabular-nums",
                   }}
@@ -173,12 +173,12 @@ export function InvestigationReplay({ analysis, retrievalFailed, failedUrl, fail
                 </span>
                 {i < stages.length - 1 && (
                   <div className="relative w-px flex-1 min-h-[18px]">
-                    <div className="absolute inset-0" style={{ background: "#D8D0C3" }} />
+                    <div className="absolute inset-0" style={{ background: "#3A3B3E" }} />
                     <motion.div
                       animate={{ height: isDone || isActive ? "100%" : "0%" }}
                       transition={{ duration: 0.4 }}
                       className="absolute top-0 left-0 w-full"
-                      style={{ background: "rgba(89,100,81,0.35)" }}
+                      style={{ background: "rgba(201,195,183,0.35)" }}
                     />
                   </div>
                 )}
@@ -195,21 +195,21 @@ export function InvestigationReplay({ analysis, retrievalFailed, failedUrl, fail
                     className="text-[9.5px] tracking-[0.18em] uppercase"
                     style={{
                       fontFamily: "'JetBrains Mono', monospace",
-                      color: isActive ? "#171716" : isDone ? "#6F6A61" : "#6F6A61",
+                      color: isActive ? "#F1F0EA" : isDone ? "#A5A5A1" : "#A5A5A1",
                       fontWeight: isActive ? 600 : 500,
                     }}
                   >
                     {stage.label}
                   </span>
                   <span className="shrink-0 flex items-center gap-1.5">
-                    {isDone && stage.occurred && <CheckCircle2 className="w-3 h-3" style={{ color: "#71836B" }} />}
+                    {isDone && stage.occurred && <CheckCircle2 className="w-3 h-3" style={{ color: "#8A9A82" }} />}
                     {isDone && !stage.occurred && (
-                      <span className="text-[8px] tracking-[0.16em] uppercase" style={{ fontFamily: "'JetBrains Mono', monospace", color: "#A9854D" }}>
+                      <span className="text-[8px] tracking-[0.16em] uppercase" style={{ fontFamily: "'JetBrains Mono', monospace", color: "#B0A183" }}>
                         not performed
                       </span>
                     )}
                     {isActive && (
-                      <span className="text-[8px] tracking-[0.16em] uppercase" style={{ fontFamily: "'JetBrains Mono', monospace", color: "#596451" }}>
+                      <span className="text-[8px] tracking-[0.16em] uppercase" style={{ fontFamily: "'JetBrains Mono', monospace", color: "#C9C3B7" }}>
                         current step
                       </span>
                     )}
@@ -218,7 +218,7 @@ export function InvestigationReplay({ analysis, retrievalFailed, failedUrl, fail
                 {(isActive || isDone) && (
                   <p
                     className="mt-1 text-[11px] leading-relaxed"
-                    style={{ color: isActive ? "#171716" : "#6F6A61", opacity: isDone && !isActive ? 0.8 : 1 }}
+                    style={{ color: isActive ? "#F1F0EA" : "#A5A5A1", opacity: isDone && !isActive ? 0.8 : 1 }}
                   >
                     {stage.detail}
                   </p>

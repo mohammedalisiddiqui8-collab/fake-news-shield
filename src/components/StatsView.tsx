@@ -3,20 +3,9 @@ import {
   PieChart,
   Pie,
   Cell,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
   ResponsiveContainer,
+  Tooltip,
 } from "recharts";
-import {
-  TrendingUp,
-  AlertTriangle,
-  CheckCircle2,
-  BarChart3,
-  ArrowUpRight,
-} from "lucide-react";
 
 interface Analysis {
   verdict: "likely_real" | "likely_fake" | "uncertain";
@@ -30,10 +19,11 @@ interface StatsViewProps {
   analyses: Analysis[];
 }
 
+/* Muted, printed semantics — three quiet tones, never a traffic light. */
 const COLORS = {
-  likely_real: "#596451",
-  uncertain: "#596451",
-  likely_fake: "#A86155",
+  likely_real: "#8A9A82",
+  uncertain: "#B0A183",
+  likely_fake: "#B08479",
 };
 
 const VERDICT_LABELS = {
@@ -47,18 +37,12 @@ export function StatsView({ analyses }: StatsViewProps) {
 
   const totalAnalyses = analyses.length;
   const verdictCounts = { likely_real: 0, uncertain: 0, likely_fake: 0 };
-  let totalRedFlags = 0;
-  let totalGreenFlags = 0;
 
   for (const a of analyses) {
     verdictCounts[a.verdict]++;
-    totalRedFlags += a.redFlags.length;
-    totalGreenFlags += a.greenFlags.length;
   }
 
-  const crediblePct = Math.round((verdictCounts.likely_real / totalAnalyses) * 1000) / 10;
-  const misleadingPct = Math.round((verdictCounts.likely_fake / totalAnalyses) * 1000) / 10;
-  const uncertainPct = Math.round((verdictCounts.uncertain / totalAnalyses) * 1000) / 10;
+  const pct = (n: number) => Math.round((n / totalAnalyses) * 1000) / 10;
 
   const pieData = (Object.keys(verdictCounts) as Array<keyof typeof verdictCounts>).map(
     (key) => ({ name: VERDICT_LABELS[key], value: verdictCounts[key], color: COLORS[key] }),
@@ -68,7 +52,6 @@ export function StatsView({ analyses }: StatsViewProps) {
   const flagCounts: Record<string, number> = {};
   for (const a of analyses) {
     for (const f of a.redFlags) {
-      // Extract first few words as category
       const cat = f.length > 30 ? f.slice(0, 30) + "..." : f;
       flagCounts[cat] = (flagCounts[cat] || 0) + 1;
     }
@@ -82,74 +65,62 @@ export function StatsView({ analyses }: StatsViewProps) {
       pct: Math.round((count / totalAnalyses) * 100),
     }));
 
-  const statCards = [
-    { label: "Total Articles Analyzed", value: totalAnalyses, icon: BarChart3, color: "#596451", trend: "+12%", trendUp: true },
-    { label: "Likely Credible", value: verdictCounts.likely_real, pct: `${crediblePct}%`, icon: CheckCircle2, color: "#596451", trend: `${crediblePct}%`, trendUp: true },
-    { label: "Likely Misleading", value: verdictCounts.likely_fake, pct: `${misleadingPct}%`, icon: AlertTriangle, color: "#A86155", trend: `${misleadingPct}%`, trendUp: false },
-    { label: "Uncertain", value: verdictCounts.uncertain, pct: `${uncertainPct}%`, icon: TrendingUp, color: "#596451", trend: `${uncertainPct}%`, trendUp: false },
+  /* One editorial strip: figures set in serif against a kicker, divided by hairlines. */
+  const statCells = [
+    { label: "Total articles analyzed", value: totalAnalyses, sub: "", color: "#C9C3B7" },
+    { label: "Likely credible", value: verdictCounts.likely_real, sub: `${pct(verdictCounts.likely_real)}%`, color: COLORS.likely_real },
+    { label: "Likely misleading", value: verdictCounts.likely_fake, sub: `${pct(verdictCounts.likely_fake)}%`, color: COLORS.likely_fake },
+    { label: "Uncertain", value: verdictCounts.uncertain, sub: `${pct(verdictCounts.uncertain)}%`, color: COLORS.uncertain },
   ];
 
   return (
-    <div className="space-y-5">
-      {/* Filter */}
-      <div className="flex items-center justify-between">
-        <div />
-        <div className="glass-card rounded-lg px-3 py-1.5 flex items-center gap-1.5">
-          <span className="text-[10px] text-muted-foreground">Last 30 Days</span>
-          <svg className="w-3 h-3 text-muted-foreground" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M3 5l3 3 3-3" /></svg>
-        </div>
-      </div>
-
-      {/* Stat cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {statCards.map((card, i) => (
+    <div>
+      {/* Figures — typography and rules, never KPI boxes */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 border-t border-b border-border">
+        {statCells.map((cell, i) => (
           <motion.div
-            key={card.label}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25, delay: i * 0.06 }}
-            className="glass-card rounded-lg p-4"
+            key={cell.label}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.4, delay: i * 0.05 }}
+            className={`py-6 sm:py-7 ${i % 2 === 1 ? "border-l border-border pl-5" : "pr-5"} ${i >= 2 ? "border-t border-border sm:border-t-0" : ""} ${i === 2 ? "sm:border-l sm:border-border sm:pl-5" : ""} ${i === 3 ? "sm:border-l sm:border-border sm:pl-5" : ""}`}
           >
-            <div className="flex items-center gap-1.5 mb-2">
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `${card.color}10` }}>
-                <card.icon className="w-3.5 h-3.5" style={{ color: card.color }} />
-              </div>
-              <span className="text-[10px] text-muted-foreground leading-tight">{card.label}</span>
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold" style={{ color: card.color, fontFamily: "'DM Serif Display', serif" }}>{card.value}</span>
-              <div className="flex items-center gap-0.5">
-                <ArrowUpRight className="w-2.5 h-2.5" style={{ color: card.trendUp ? "#596451" : "#A86155" }} />
-                <span className="text-[9px] font-medium" style={{ color: card.trendUp ? "#596451" : "#A86155" }}>{card.trend}</span>
-              </div>
-            </div>
+            <p
+              className="font-serif-editorial text-[32px] sm:text-[38px] leading-none tabular"
+              style={{ color: cell.color }}
+            >
+              {cell.value}
+            </p>
+            {cell.sub && <p className="kicker mt-2.5">{cell.sub} of archive</p>}
+            <p className="kicker mt-2.5" style={{ opacity: 0.65, letterSpacing: "0.16em" }}>{cell.label}</p>
           </motion.div>
         ))}
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* Distribution + warning signs — two quiet columns on one hairline field */}
+      <div className="mt-16 lg:mt-24 grid lg:grid-cols-2 gap-12 lg:gap-16">
         {pieData.length > 0 && (
           <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25, delay: 0.25 }}
-            className="glass-card rounded-lg p-5"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.15 }}
           >
-            <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-3">
-              Verdict Distribution
-            </h3>
-            <div className="flex items-center justify-center">
-              <ResponsiveContainer width={180} height={180}>
+            <div className="flex items-baseline justify-between gap-4 border-b border-border pb-2.5">
+              <h3 className="text-[17px] leading-none">Verdict distribution</h3>
+              <span className="kicker" style={{ opacity: 0.55 }}>{totalAnalyses} filed</span>
+            </div>
+            <div className="mt-7 flex items-center justify-center">
+              <ResponsiveContainer width={190} height={190}>
                 <PieChart>
                   <Pie
                     data={pieData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={50}
-                    outerRadius={72}
+                    innerRadius={62}
+                    outerRadius={86}
                     dataKey="value"
-                    stroke="none"
+                    stroke="#202124"
+                    strokeWidth={2}
                   >
                     {pieData.map((entry) => (
                       <Cell key={entry.name} fill={entry.color} />
@@ -157,21 +128,27 @@ export function StatsView({ analyses }: StatsViewProps) {
                   </Pie>
                   <Tooltip
                     contentStyle={{
-                      background: "#FFFCF6",
-                      border: "1px solid #D8D2C5",
-                      borderRadius: "6px",
+                      background: "#2B2D30",
+                      border: "1px solid #3A3B3E",
+                      borderRadius: "2px",
                       fontSize: "11px",
-                      color: "#1E2522",
+                      color: "#F1F0EA",
                     }}
                   />
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="flex flex-wrap justify-center gap-3 mt-2">
+            <div className="mt-7">
               {pieData.map((d) => (
-                <div key={d.name} className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full" style={{ background: d.color }} />
-                  <span className="text-[10px] text-muted-foreground">{d.name} ({d.value})</span>
+                <div key={d.name} className="flex items-center gap-3 py-2.5 border-b border-border/70">
+                  <span className="w-2 h-2 shrink-0" style={{ background: d.color }} />
+                  <span className="flex-1 text-[12.5px]" style={{ fontFamily: "'Source Serif 4', Georgia, serif" }}>
+                    {d.name}
+                  </span>
+                  <span className="font-mono text-[11px] tabular" style={{ color: d.color }}>{d.value}</span>
+                  <span className="kicker tabular w-12 text-right" style={{ opacity: 0.6 }}>
+                    {pct(d.value)}%
+                  </span>
                 </div>
               ))}
             </div>
@@ -180,28 +157,36 @@ export function StatsView({ analyses }: StatsViewProps) {
 
         {topFlags.length > 0 && (
           <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.25, delay: 0.3 }}
-            className="glass-card rounded-lg p-5"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.25 }}
           >
-            <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.15em] mb-3">
-              Top Warning Signs
-            </h3>
-            <div className="space-y-3">
+            <div className="flex items-baseline justify-between gap-4 border-b border-border pb-2.5">
+              <h3 className="text-[17px] leading-none">Top warning signs</h3>
+              <span className="kicker" style={{ opacity: 0.55 }}>Most frequent</span>
+            </div>
+            <div className="mt-2">
               {topFlags.map((flag, i) => (
-                <div key={i}>
-                  <div className="flex items-center justify-between text-[10px] mb-1">
-                    <span className="font-medium truncate mr-2">{flag.name}</span>
-                    <span className="text-muted-foreground shrink-0">{flag.pct}%</span>
+                <div key={i} className="py-4 border-b border-border/70">
+                  <div className="flex items-baseline justify-between gap-4 mb-2.5">
+                    <span className="num-marker shrink-0">{String(i + 1).padStart(2, "0")}</span>
+                    <span
+                      className="flex-1 text-[13.5px] leading-snug"
+                      style={{ fontFamily: "'Source Serif 4', Georgia, serif" }}
+                    >
+                      {flag.name}
+                    </span>
+                    <span className="font-mono text-[10px] tabular shrink-0" style={{ color: COLORS.likely_fake }}>
+                      {flag.pct}%
+                    </span>
                   </div>
-                  <div className="h-1.5 rounded-full bg-muted overflow-hidden">
+                  <div className="h-[2px] w-full" style={{ background: "#3A3B3E" }}>
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${flag.pct}%` }}
-                      transition={{ duration: 0.5, delay: 0.35 + i * 0.05 }}
-                      className="h-full rounded-full"
-                      style={{ background: "#A86155" }}
+                      transition={{ duration: 0.7, delay: 0.3 + i * 0.05 }}
+                      className="h-full"
+                      style={{ background: COLORS.likely_fake }}
                     />
                   </div>
                 </div>

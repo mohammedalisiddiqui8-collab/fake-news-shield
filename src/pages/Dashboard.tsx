@@ -75,11 +75,11 @@ interface AnalysisResult {
 
 /* ─── Status palette — the interface stays monochromatic until status needs meaning ─── */
 const STATUS = {
-  green: "#71836B",
-  amber: "#A9854D",
-  red: "#A86155",
-  gold: "#596451",
-  bronze: "#596451",
+  green: "#8A9A82",
+  amber: "#B0A183",
+  red: "#B08479",
+  gold: "#C9C3B7",
+  bronze: "#C9C3B7",
 } as const;
 
 const verdictStatus: Record<Verdict, string> = {
@@ -214,7 +214,7 @@ function ReportSection({ id, no, title, dek, aside, children }: {
   id: string; no: string; title: string; dek?: string; aside?: ReactNode; children: ReactNode;
 }) {
   return (
-    <section id={id} className="report-sec mt-14 lg:mt-24">
+    <section id={id} className="report-sec mt-20 lg:mt-32">
       <div className="flex items-start justify-between gap-6 border-b border-border pb-2.5">
         <div className="flex items-baseline gap-3 min-w-0">
           <span className="num-marker shrink-0">{no}</span>
@@ -253,11 +253,11 @@ function MetricBar({ label, value, color }: { label: string; value: number | nul
     <div className="py-2.5 border-b border-border/70 last:border-b-0">
       <div className="flex items-baseline justify-between gap-3 mb-1.5">
         <span className="kicker truncate">{label}</span>
-        <span className="font-mono text-[10px] tabular shrink-0" style={{ color: value == null ? "#6F6A61" : color }}>
+        <span className="font-mono text-[10px] tabular shrink-0" style={{ color: value == null ? "#A5A5A1" : color }}>
           {value == null ? "—" : `${value}%`}
         </span>
       </div>
-      <div className="h-[2px] w-full" style={{ background: "#D8D0C3" }}>
+      <div className="h-[2px] w-full" style={{ background: "#3A3B3E" }}>
         {value != null && (
           <motion.div
             initial={{ width: 0 }}
@@ -280,49 +280,49 @@ function EditorialPlate() {
   const rightLines = [88, 74, 92, 60, 84];
   return (
     <svg viewBox="0 0 320 400" className="w-full h-auto" fill="none" aria-hidden="true">
-      <rect x="6" y="6" width="308" height="388" stroke="#171716" strokeOpacity="0.16" />
-      <rect x="13" y="13" width="294" height="374" stroke="#171716" strokeOpacity="0.07" />
+      <rect x="6" y="6" width="308" height="388" stroke="#F1F0EA" strokeOpacity="0.16" />
+      <rect x="13" y="13" width="294" height="374" stroke="#F1F0EA" strokeOpacity="0.07" />
 
       {/* masthead */}
-      <text x="160" y="54" textAnchor="middle" fontFamily="'DM Serif Display', serif" fontSize="27" letterSpacing="7" fill="#171716" fillOpacity="0.85">VERITAS</text>
-      <text x="160" y="72" textAnchor="middle" fontFamily="'JetBrains Mono', monospace" fontSize="6.5" letterSpacing="3.4" fill="#6F6A61">TRUTH · EVIDENCE · CONTEXT</text>
-      <line x1="30" y1="84" x2="290" y2="84" stroke="#596451" strokeOpacity="0.55" />
-      <line x1="30" y1="87.5" x2="290" y2="87.5" stroke="#171716" strokeOpacity="0.16" />
+      <text x="160" y="54" textAnchor="middle" fontFamily="'DM Serif Display', serif" fontSize="27" letterSpacing="7" fill="#F1F0EA" fillOpacity="0.85">VERITAS</text>
+      <text x="160" y="72" textAnchor="middle" fontFamily="'JetBrains Mono', monospace" fontSize="6.5" letterSpacing="3.4" fill="#A5A5A1">TRUTH · EVIDENCE · CONTEXT</text>
+      <line x1="30" y1="84" x2="290" y2="84" stroke="#C9C3B7" strokeOpacity="0.55" />
+      <line x1="30" y1="87.5" x2="290" y2="87.5" stroke="#F1F0EA" strokeOpacity="0.16" />
 
       {/* deck headline */}
-      <rect x="30" y="102" width="212" height="8" fill="#171716" fillOpacity="0.5" />
-      <rect x="30" y="116" width="168" height="8" fill="#171716" fillOpacity="0.32" />
-      <text x="30" y="140" fontFamily="'JetBrains Mono', monospace" fontSize="6.5" letterSpacing="2.4" fill="#6F6A61">FILED BY THE VERIFICATION DESK</text>
-      <line x1="30" y1="150" x2="290" y2="150" stroke="#171716" strokeOpacity="0.12" />
+      <rect x="30" y="102" width="212" height="8" fill="#F1F0EA" fillOpacity="0.5" />
+      <rect x="30" y="116" width="168" height="8" fill="#F1F0EA" fillOpacity="0.32" />
+      <text x="30" y="140" fontFamily="'JetBrains Mono', monospace" fontSize="6.5" letterSpacing="2.4" fill="#A5A5A1">FILED BY THE VERIFICATION DESK</text>
+      <line x1="30" y1="150" x2="290" y2="150" stroke="#F1F0EA" strokeOpacity="0.12" />
 
       {/* two column measures */}
-      <line x1="160" y1="164" x2="160" y2="316" stroke="#171716" strokeOpacity="0.1" />
+      <line x1="160" y1="164" x2="160" y2="316" stroke="#F1F0EA" strokeOpacity="0.1" />
       {leftLines.map((w, i) => (
-        <rect key={`l${i}`} x="30" y={168 + i * 17} width={w * 1.6} height="4" fill="#171716" fillOpacity={0.16 + (i % 3) * 0.05} />
+        <rect key={`l${i}`} x="30" y={168 + i * 17} width={w * 1.6} height="4" fill="#F1F0EA" fillOpacity={0.16 + (i % 3) * 0.05} />
       ))}
       {rightLines.map((w, i) => (
-        <rect key={`r${i}`} x="172" y={168 + i * 17} width={w * 0.95} height="4" fill="#171716" fillOpacity={0.16 + (i % 2) * 0.05} />
+        <rect key={`r${i}`} x="172" y={168 + i * 17} width={w * 0.95} height="4" fill="#F1F0EA" fillOpacity={0.16 + (i % 2) * 0.05} />
       ))}
 
       {/* magnifier over the right column — investigation, not decoration */}
-      <circle cx="220" cy="262" r="38" fill="#F3EFE6" fillOpacity="0.85" stroke="#596451" strokeOpacity="0.75" strokeWidth="1.4" />
-      <line x1="247" y1="289" x2="272" y2="314" stroke="#596451" strokeOpacity="0.75" strokeWidth="3.5" strokeLinecap="round" />
+      <circle cx="220" cy="262" r="38" fill="#202124" fillOpacity="0.92" stroke="#C9C3B7" strokeOpacity="0.75" strokeWidth="1.4" />
+      <line x1="247" y1="289" x2="272" y2="314" stroke="#C9C3B7" strokeOpacity="0.75" strokeWidth="3.5" strokeLinecap="round" />
       {[246, 256, 266].map((y, i) => (
-        <rect key={`m${i}`} x="194" y={y} width={i === 1 ? 44 : 36} height="3.5" fill="#596451" fillOpacity={i === 1 ? 0.65 : 0.4} />
+        <rect key={`m${i}`} x="194" y={y} width={i === 1 ? 44 : 36} height="3.5" fill="#C9C3B7" fillOpacity={i === 1 ? 0.65 : 0.4} />
       ))}
 
       {/* seal */}
-      <circle cx="56" cy="344" r="20" stroke="#596451" strokeOpacity="0.5" />
-      <circle cx="56" cy="344" r="15" stroke="#596451" strokeOpacity="0.3" />
-      <text x="56" y="342" textAnchor="middle" fontFamily="'JetBrains Mono', monospace" fontSize="6" letterSpacing="1" fill="#596451" fillOpacity="0.8">EVERY</text>
-      <text x="56" y="351" textAnchor="middle" fontFamily="'JetBrains Mono', monospace" fontSize="6" letterSpacing="1" fill="#596451" fillOpacity="0.8">CLAIM</text>
+      <circle cx="56" cy="344" r="20" stroke="#C9C3B7" strokeOpacity="0.5" />
+      <circle cx="56" cy="344" r="15" stroke="#C9C3B7" strokeOpacity="0.3" />
+      <text x="56" y="342" textAnchor="middle" fontFamily="'JetBrains Mono', monospace" fontSize="6" letterSpacing="1" fill="#C9C3B7" fillOpacity="0.8">EVERY</text>
+      <text x="56" y="351" textAnchor="middle" fontFamily="'JetBrains Mono', monospace" fontSize="6" letterSpacing="1" fill="#C9C3B7" fillOpacity="0.8">CLAIM</text>
 
       {/* footer rules + dateline */}
-      <line x1="88" y1="336" x2="290" y2="336" stroke="#171716" strokeOpacity="0.12" />
-      <line x1="88" y1="344" x2="290" y2="344" stroke="#171716" strokeOpacity="0.12" />
-      <line x1="88" y1="352" x2="248" y2="352" stroke="#171716" strokeOpacity="0.12" />
-      <line x1="30" y1="372" x2="290" y2="372" stroke="#171716" strokeOpacity="0.16" />
-      <text x="160" y="384" textAnchor="middle" fontFamily="'JetBrains Mono', monospace" fontSize="6" letterSpacing="3" fill="#6F6A61">INDEPENDENT · EVIDENCE-LED · OPEN</text>
+      <line x1="88" y1="336" x2="290" y2="336" stroke="#F1F0EA" strokeOpacity="0.12" />
+      <line x1="88" y1="344" x2="290" y2="344" stroke="#F1F0EA" strokeOpacity="0.12" />
+      <line x1="88" y1="352" x2="248" y2="352" stroke="#F1F0EA" strokeOpacity="0.12" />
+      <line x1="30" y1="372" x2="290" y2="372" stroke="#F1F0EA" strokeOpacity="0.16" />
+      <text x="160" y="384" textAnchor="middle" fontFamily="'JetBrains Mono', monospace" fontSize="6" letterSpacing="3" fill="#A5A5A1">INDEPENDENT · EVIDENCE-LED · OPEN</text>
     </svg>
   );
 }
@@ -336,9 +336,9 @@ function HeadlinesColumn({ items, loading, onPick, variant = "table" }: {
       <div className="border-t border-border">
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="flex items-center gap-4 py-4 border-b border-border animate-pulse">
-            <div className="h-2 w-16 shrink-0" style={{ background: "#E4DED1" }} />
-            <div className="h-3 flex-1" style={{ background: "#E4DED1" }} />
-            <div className="h-2 w-20 shrink-0 hidden sm:block" style={{ background: "#E4DED1" }} />
+            <div className="h-2 w-16 shrink-0" style={{ background: "#2B2D30" }} />
+            <div className="h-3 flex-1" style={{ background: "#2B2D30" }} />
+            <div className="h-2 w-20 shrink-0 hidden sm:block" style={{ background: "#2B2D30" }} />
           </div>
         ))}
       </div>
@@ -361,12 +361,12 @@ function HeadlinesColumn({ items, loading, onPick, variant = "table" }: {
               <span className="flex-1 min-w-0">
                 <span
                   className="block text-[13.5px] leading-snug transition-colors group-hover:text-primary"
-                  style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#171716" }}
+                  style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#F1F0EA" }}
                 >
                   {item.label}
                 </span>
                 <span className="mt-1.5 flex flex-wrap items-center gap-x-1.5">
-                  {item.source && <span className="kicker" style={{ color: "#596451" }}>{item.source}</span>}
+                  {item.source && <span className="kicker" style={{ color: "#C9C3B7" }}>{item.source}</span>}
                   {item.source && <span className="kicker" style={{ opacity: 0.5 }}>·</span>}
                   <span className="kicker" style={{ opacity: 0.65 }}>{item.category}</span>
                   {item.publishedAgo && <span className="kicker" style={{ opacity: 0.5 }}>·</span>}
@@ -378,7 +378,7 @@ function HeadlinesColumn({ items, loading, onPick, variant = "table" }: {
               </span>
               <ChevronRight
                 className="w-3.5 h-3.5 shrink-0 mt-1 opacity-0 transition-all group-hover:opacity-70 group-hover:translate-x-0.5"
-                style={{ color: "#596451" }}
+                style={{ color: "#C9C3B7" }}
               />
             </div>
           </button>
@@ -410,14 +410,14 @@ function HeadlinesColumn({ items, loading, onPick, variant = "table" }: {
               <span className="flex-1 min-w-0">
                 <span
                   className="block text-[14px] leading-snug transition-colors group-hover:text-primary"
-                  style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#171716" }}
+                  style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#F1F0EA" }}
                 >
                   {item.label}
                 </span>
                 <span className="sm:hidden mt-1.5 flex flex-wrap items-center gap-x-2">
                   <span className="kicker">{item.category}</span>
                   {item.source && <span className="kicker opacity-50">·</span>}
-                  {item.source && <span className="kicker" style={{ color: "#596451" }}>{item.source}</span>}
+                  {item.source && <span className="kicker" style={{ color: "#C9C3B7" }}>{item.source}</span>}
                   {item.publishedAgo && <span className="kicker opacity-50">·</span>}
                   {item.publishedAgo && <span className="kicker" style={{ opacity: 0.7 }}>{item.publishedAgo}</span>}
                 </span>
@@ -426,12 +426,12 @@ function HeadlinesColumn({ items, loading, onPick, variant = "table" }: {
                 )}
               </span>
               <span className="hidden sm:flex items-center gap-3 w-[9.5rem] justify-end shrink-0">
-                <span className="kicker truncate" style={{ color: "#596451" }}>{item.source}</span>
+                <span className="kicker truncate" style={{ color: "#C9C3B7" }}>{item.source}</span>
                 <span className="kicker tabular opacity-60 shrink-0">{item.publishedAgo}</span>
               </span>
               <ChevronRight
                 className="hidden sm:block w-3.5 h-3.5 shrink-0 translate-y-0.5 opacity-0 transition-all group-hover:opacity-70 group-hover:translate-x-0.5"
-                style={{ color: "#596451" }}
+                style={{ color: "#C9C3B7" }}
               />
             </div>
           </button>
@@ -982,7 +982,7 @@ export default function Dashboard() {
     // Legacy rows: a stored retrieval failure is NOT an investigation.
     const wasRetrievalFailure =
       typeof analysis.summary === "string" && analysis.summary.startsWith("UNABLE TO RETRIEVE");
-    const statusColor = wasRetrievalFailure ? "#6F6A61" : (verdictStatus[analysis.verdict as Verdict] ?? "#6F6A61");
+    const statusColor = wasRetrievalFailure ? "#A5A5A1" : (verdictStatus[analysis.verdict as Verdict] ?? "#A5A5A1");
     const statusLabel = wasRetrievalFailure ? "Retrieval failed" : avc.label;
     const subject: string = analysis.inputType === "url"
       ? analysis.inputText
@@ -1005,7 +1005,7 @@ export default function Dashboard() {
           <div className="flex items-start gap-4 px-2 py-4">
             <span className="num-marker shrink-0 pt-[3px]">{String(i + 1).padStart(2, "0")}</span>
             <div className="flex-1 min-w-0">
-              <p className="text-[14.5px] leading-snug break-words" style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#171716" }}>
+              <p className="text-[14.5px] leading-snug break-words" style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#F1F0EA" }}>
                 {subject || "Untitled submission"}
               </p>
               <p className="mt-1.5 kicker" style={{ opacity: 0.65 }}>
@@ -1027,7 +1027,7 @@ export default function Dashboard() {
               </button>
               <ChevronRight
                 className="w-3.5 h-3.5 opacity-0 group-hover:opacity-70 transition-opacity"
-                style={{ color: "#596451" }}
+                style={{ color: "#C9C3B7" }}
               />
             </span>
           </div>
@@ -1050,7 +1050,7 @@ export default function Dashboard() {
         <div className="flex items-center gap-4 px-2 py-3.5">
           <span className="num-marker w-6 hidden sm:block opacity-70">{String(i + 1).padStart(2, "0")}</span>
           <div className="flex-1 min-w-0">
-            <p className="text-[13.5px] leading-snug truncate" style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#171716" }}>
+            <p className="text-[13.5px] leading-snug truncate" style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#F1F0EA" }}>
               {subject || "Untitled submission"}
             </p>
             <p className="sm:hidden mt-1.5 flex flex-wrap items-center gap-x-2">
@@ -1079,7 +1079,7 @@ export default function Dashboard() {
             </button>
             <ChevronRight
               className="w-3.5 h-3.5 opacity-0 group-hover:opacity-70 transition-opacity"
-              style={{ color: "#596451" }}
+              style={{ color: "#C9C3B7" }}
             />
           </span>
         </div>
@@ -1090,21 +1090,21 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* ─── Desktop: dark charcoal navigation rail — a publication index, not an admin panel ─── */}
-      <aside className="veritas-nav-surface hidden lg:flex fixed inset-y-0 left-0 z-40 w-56 flex-col" style={{ background: "#111211" }}>
+      <aside className="veritas-nav-surface hidden lg:flex fixed inset-y-0 left-0 z-40 w-56 flex-col" style={{ background: "#151618" }}>
         <div className="px-5 pt-7 pb-6">
           <button type="button" className="flex items-center gap-2.5" onClick={() => navigate("/")}>
-            <Shield className="w-4 h-4" style={{ color: "#71836B" }} />
-            <span className="text-[16px] uppercase tracking-[0.28em]" style={{ fontFamily: "'DM Serif Display', serif", color: "#F3EFE6" }}>
+            <Shield className="w-4 h-4" style={{ color: "#C9C3B7" }} />
+            <span className="text-[16px] uppercase tracking-[0.28em]" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F0EA" }}>
               Veritas
             </span>
           </button>
-          <p className="mt-2.5 kicker" style={{ fontSize: 8, letterSpacing: "0.3em", color: "#8E887B" }}>Truth · Evidence · Context</p>
+          <p className="mt-2.5 kicker" style={{ fontSize: 9, letterSpacing: "0.28em", color: "#7E7F83" }}>Truth · Evidence · Context</p>
         </div>
 
         <nav className="flex-1 px-4 overflow-y-auto">
           {navGroups.map((group) => (
             <div key={group.title} className="mb-6">
-              <p className="kicker px-1 mb-2" style={{ color: "#6E6A60" }}>{group.title}</p>
+              <p className="kicker px-1 mb-2" style={{ color: "#7E7F83" }}>{group.title}</p>
               <div>
                 {group.items.map((item) => {
                   const active = activeView === item.view && !item.action;
@@ -1119,15 +1119,15 @@ export default function Dashboard() {
                         item.disabled
                           ? "opacity-35 cursor-not-allowed"
                           : active
-                            ? "text-[#F3EFE6]"
-                            : "text-[#9C968A] hover:text-[#F3EFE6]"
+                            ? "text-[#F1F0EA]"
+                            : "text-[#A5A5A1] hover:text-[#F1F0EA]"
                       }`}
                     >
                       {active && (
                         <motion.span
                           layoutId="nav-active"
                           className="absolute left-0 top-0 bottom-0 w-px"
-                          style={{ background: "#71836B" }}
+                          style={{ background: "#C9C3B7" }}
                         />
                       )}
                       <item.icon className="w-3.5 h-3.5 shrink-0" />
@@ -1140,17 +1140,17 @@ export default function Dashboard() {
           ))}
         </nav>
 
-        <div className="px-5 py-4 flex items-end justify-between gap-2" style={{ borderTop: "1px solid rgba(243,239,230,0.12)" }}>
+        <div className="px-5 py-4 flex items-end justify-between gap-2" style={{ borderTop: "1px solid rgba(241,240,234,0.12)" }}>
           <div className="min-w-0">
-            <p className="kicker" style={{ fontSize: 8, color: "#6E6A60" }}>Edition</p>
-            <p className="kicker mt-1 tabular" style={{ fontSize: 8, color: "#B7B0A2" }}>{editionLabel}</p>
+            <p className="kicker" style={{ fontSize: 9, color: "#7E7F83" }}>Edition</p>
+            <p className="kicker mt-1 tabular" style={{ fontSize: 9, color: "#A5A5A1" }}>{editionLabel}</p>
           </div>
           <button
             type="button"
             title={theme === "dark" ? "Switch to light" : "Switch to dark"}
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="p-2 transition-colors hover:text-[#F3EFE6]"
-            style={{ border: "1px solid rgba(243,239,230,0.18)", color: "#9C968A" }}
+            className="p-2 transition-colors hover:text-[#F1F0EA]"
+            style={{ border: "1px solid rgba(241,240,234,0.18)", color: "#A5A5A1" }}
           >
             {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
           </button>
@@ -1158,15 +1158,15 @@ export default function Dashboard() {
       </aside>
 
       {/* ─── Mobile: compact charcoal header — same publication navigation, no vertical waste ─── */}
-      <header className="veritas-nav-surface lg:hidden sticky top-0 z-50" style={{ background: "#111211", borderBottom: "1px solid rgba(243,239,230,0.14)" }}>
+      <header className="veritas-nav-surface lg:hidden sticky top-0 z-50" style={{ background: "#151618", borderBottom: "1px solid rgba(241,240,234,0.14)" }}>
         <div className="h-12 pl-3 pr-2 flex items-center">
           <button type="button" className="flex items-center gap-2 pr-3 h-full shrink-0" onClick={() => navigate("/")}>
-            <Shield className="w-3.5 h-3.5" style={{ color: "#71836B" }} />
-            <span className="text-[13px] uppercase tracking-[0.24em]" style={{ fontFamily: "'DM Serif Display', serif", color: "#F3EFE6" }}>
+            <Shield className="w-3.5 h-3.5" style={{ color: "#C9C3B7" }} />
+            <span className="text-[13px] uppercase tracking-[0.24em]" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F0EA" }}>
               Veritas
             </span>
           </button>
-          <div className="flex-1 min-w-0 flex items-center justify-end gap-0.5 overflow-x-auto no-scrollbar pl-2" style={{ borderLeft: "1px solid rgba(243,239,230,0.14)" }}>
+          <div className="flex-1 min-w-0 flex items-center justify-end gap-0.5 overflow-x-auto no-scrollbar pl-2" style={{ borderLeft: "1px solid rgba(241,240,234,0.14)" }}>
             {allNavItems.map((item) => {
               const active = activeView === item.view && !item.action;
               return (
@@ -1178,9 +1178,9 @@ export default function Dashboard() {
                   aria-label={item.label}
                   onClick={() => goNav(item)}
                   className={`shrink-0 h-8 w-8 flex items-center justify-center transition-colors ${
-                    item.disabled ? "opacity-35" : active ? "text-[#F3EFE6]" : "text-[#9C968A]"
+                    item.disabled ? "opacity-35" : active ? "text-[#F1F0EA]" : "text-[#A5A5A1]"
                   }`}
-                  style={active ? { background: "rgba(243,239,230,0.08)" } : undefined}
+                  style={active ? { background: "rgba(241,240,234,0.08)" } : undefined}
                 >
                   <item.icon className="w-3.5 h-3.5" />
                 </button>
@@ -1192,7 +1192,7 @@ export default function Dashboard() {
 
       {/* ─── Main desk ─── */}
       <div className="lg:pl-56">
-        <main className="mx-auto max-w-5xl px-4 sm:px-7 lg:px-10 pt-6 lg:pt-12 pb-24">
+        <main className="mx-auto max-w-6xl px-5 sm:px-8 lg:px-12 pt-12 lg:pt-24 pb-32">
           <AnimatePresence mode="wait">
             {/* ═══════════════ HOME ═══════════════ */}
             {activeView === "home" && (
@@ -1206,11 +1206,11 @@ export default function Dashboard() {
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       className="fixed inset-0 z-[60] flex items-center justify-center px-6"
-                      style={{ background: "rgba(243,239,230,0.97)" }}
+                      style={{ background: "rgba(32,33,36,0.97)" }}
                     >
                       <div className="w-full max-w-sm">
-                        <div className="flex items-baseline justify-between border-b pb-1.5" style={{ borderColor: "rgba(23,23,22,0.55)" }}>
-                          <span className="kicker" style={{ color: "#171716", opacity: 0.9 }}>Veritas</span>
+                        <div className="flex items-baseline justify-between border-b pb-1.5" style={{ borderColor: "rgba(58,59,62,0.9)" }}>
+                          <span className="kicker" style={{ color: "#C9C3B7" }}>Veritas</span>
                           <span className="kicker">Verification in progress</span>
                         </div>
                         <div className="border-b border-border mt-[3px]" />
@@ -1221,13 +1221,13 @@ export default function Dashboard() {
                         <div className="mt-7">
                           <VerificationPipeline currentStep={pipelineStep} />
                         </div>
-                        <div className="mt-6 h-px w-full overflow-hidden" style={{ background: "#D8D0C3" }}>
+                        <div className="mt-6 h-px w-full overflow-hidden" style={{ background: "#3A3B3E" }}>
                           <motion.div
                             className="h-full"
                             initial={{ width: "4%" }}
                             animate={{ width: "96%" }}
                             transition={{ duration: 3.6, ease: "easeInOut" }}
-                            style={{ background: "#596451" }}
+                            style={{ background: "#C9C3B7" }}
                           />
                         </div>
                       </div>
@@ -1235,57 +1235,64 @@ export default function Dashboard() {
                   )}
                 </AnimatePresence>
 
-                {/* ─── Hero — the editorial introduction ─── */}
-                <section className="grid lg:grid-cols-[1.5fr_1fr] gap-10 lg:gap-14 items-start">
+                {/* ─── Hero — the opening of the desk, set like a front page ─── */}
+                <section className="grid lg:grid-cols-[1.65fr_0.75fr] gap-x-16 gap-y-16 items-start">
                   <div>
-                    <div className="flex items-center gap-3">
-                      <span className="kicker shrink-0">Fact-checking platform</span>
-                      <span className="h-px flex-1" style={{ background: "#D8D0C3" }} />
+                    <div className="flex items-center gap-4">
+                      <span className="kicker shrink-0" style={{ color: "#C9C3B7" }}>
+                        Veritas / Investigation desk
+                      </span>
+                      <span className="h-px flex-1" style={{ background: "#3A3B3E" }} />
                       <span className="kicker shrink-0 hidden sm:inline">{todayLabel}</span>
                     </div>
-                    <h1 className="mt-7 text-[24px] sm:text-[33px] lg:text-[38px] uppercase" style={{ lineHeight: 1.12, letterSpacing: "0.01em" }}>
+
+                    <h1 className="mt-12 sm:mt-16 font-serif-editorial text-[clamp(2.1rem,6vw,3.75rem)] leading-[1.05] text-[#F1F0EA]">
                       <span className="block">Verify what you read.</span>
-                      <span className="block">Follow the evidence.</span>
+                      <span className="block text-[#8E8E8A]">Follow the evidence.</span>
                     </h1>
-                    <p className="mt-5 text-[13.5px] leading-relaxed text-muted-foreground max-w-lg">
+
+                    <p className="mt-9 text-[14px] leading-[1.75] text-muted-foreground max-w-[46ch]">
                       Veritas helps you cut through misinformation with real sources, transparent analysis, and clear context.
                     </p>
-                    <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-3">
+
+                    <div className="mt-11 flex flex-wrap items-center gap-x-8 gap-y-4">
                       <Button
                         onClick={() => goDesk(true)}
-                        className="group h-10 px-5 gap-2 text-[10.5px] uppercase tracking-[0.16em] hover:opacity-90"
-                        style={{ background: "#596451", color: "#F3EFE6" }}
+                        className="group h-11 px-7 gap-2.5 text-[10.5px] uppercase tracking-[0.18em] transition-opacity duration-300 hover:opacity-80"
+                        style={{ background: "#C9C3B7", color: "#151618" }}
                       >
                         Begin an investigation
-                        <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+                        <ArrowRight className="w-3.5 h-3.5 transition-transform duration-500 group-hover:translate-x-1" />
                       </Button>
                       <button
                         type="button"
                         onClick={() => { setActiveView("methodology"); window.scrollTo({ top: 0 }); }}
-                        className="kicker ul-hover pb-0.5 transition-colors hover:text-foreground"
+                        className="kicker ul-hover pb-1 transition-colors hover:text-foreground"
                       >
                         How Veritas works →
                       </button>
                     </div>
-                    <div className="mt-8 pt-4 border-t border-border flex flex-wrap gap-x-6 gap-y-1.5">
+
+                    <div className="mt-14 pt-5 border-t border-border flex flex-wrap gap-x-8 gap-y-2">
                       <span className="kicker">Live source retrieval</span>
                       <span className="kicker">Claim-level cross-check</span>
                       <span className="kicker">Evidence-first verdicts</span>
                     </div>
                   </div>
+
                   <motion.div
-                    initial={{ opacity: 0, y: 12 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5, delay: 0.15 }}
-                    className="hidden sm:block max-w-[290px] lg:max-w-none mx-auto lg:mx-0 w-full"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.9, delay: 0.2 }}
+                    className="hidden lg:block w-full max-w-[240px] justify-self-end"
                   >
                     <EditorialPlate />
-                    <p className="mt-3 kicker text-center" style={{ opacity: 0.55 }}>Fig. 01 — The verification desk</p>
+                    <p className="mt-4 kicker" style={{ opacity: 0.5 }}>Fig. 01 — The verification desk</p>
                   </motion.div>
                 </section>
 
                 {/* ─── The desk — workbench left, wire and ledger right ─── */}
-                <div className="mt-14 lg:mt-20 grid lg:grid-cols-[1.6fr_1fr] gap-y-14 lg:gap-y-0 items-start">
+                <div className="mt-24 lg:mt-36 grid lg:grid-cols-[1.6fr_1fr] gap-y-20 lg:gap-y-0 items-start">
                   <div className="min-w-0 lg:pr-12">
 
                     {/* ─── 01 · Begin an investigation ─── */}
@@ -1308,7 +1315,7 @@ export default function Dashboard() {
                           >
                             Paste URL
                             {inputType === "url" && (
-                              <motion.span layoutId="mode-tab" className="absolute left-0 right-0 -bottom-px h-[1.5px]" style={{ background: "#596451" }} />
+                              <motion.span layoutId="mode-tab" className="absolute left-0 right-0 -bottom-px h-[1.5px]" style={{ background: "#C9C3B7" }} />
                             )}
                           </button>
                           <span className="kicker px-1.5" style={{ opacity: 0.4 }}>or</span>
@@ -1321,7 +1328,7 @@ export default function Dashboard() {
                           >
                             Paste Text
                             {inputType === "text" && (
-                              <motion.span layoutId="mode-tab" className="absolute left-0 right-0 -bottom-px h-[1.5px]" style={{ background: "#596451" }} />
+                              <motion.span layoutId="mode-tab" className="absolute left-0 right-0 -bottom-px h-[1.5px]" style={{ background: "#C9C3B7" }} />
                             )}
                           </button>
                         </div>
@@ -1338,7 +1345,7 @@ export default function Dashboard() {
                             >
                               {depth}
                               {analysisDepth === depth && (
-                                <motion.span layoutId="depth-tab" className="absolute left-0 right-0 -bottom-px h-[1.5px]" style={{ background: "#596451" }} />
+                                <motion.span layoutId="depth-tab" className="absolute left-0 right-0 -bottom-px h-[1.5px]" style={{ background: "#C9C3B7" }} />
                               )}
                             </button>
                           ))}
@@ -1351,7 +1358,7 @@ export default function Dashboard() {
                       </p>
 
                       {/* Editor — one bordered instrument, not a floating card */}
-                      <div className="mt-4 border border-border" style={{ background: "#FBF9F3" }}>
+                      <div className="mt-4 border border-border" style={{ background: "#252629" }}>
                         <Textarea
                           ref={textareaRef}
                           value={inputText}
@@ -1397,7 +1404,7 @@ export default function Dashboard() {
                             transition={{ duration: 0.3 }}
                             className="flex items-start gap-2 max-w-md"
                           >
-                            <Lightbulb className="w-3.5 h-3.5 mt-0.5 shrink-0" style={{ color: "#A9854D" }} />
+                            <Lightbulb className="w-3.5 h-3.5 mt-0.5 shrink-0" style={{ color: "#B0A183" }} />
                             <p className="text-[11px] leading-relaxed text-muted-foreground italic">{mediaLiteracyTips[currentTip]}</p>
                           </motion.div>
                         </AnimatePresence>
@@ -1405,7 +1412,7 @@ export default function Dashboard() {
                           onClick={handleAnalyze}
                           disabled={isAnalyzing || !inputText.trim()}
                           className="group shrink-0 h-11 px-7 gap-2 text-[10.5px] uppercase tracking-[0.16em] hover:opacity-90 disabled:opacity-40"
-                          style={{ background: "#596451", color: "#F3EFE6" }}
+                          style={{ background: "#C9C3B7", color: "#151618" }}
                         >
                           Analyze
                           <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
@@ -1414,32 +1421,36 @@ export default function Dashboard() {
                     </section>
 
                     {/* ─── 02 · Veritas at a glance — one horizontal strip, thin vertical rules ─── */}
-                    <section className="mt-12 lg:mt-16">
+                    <section className="mt-20 lg:mt-28">
                       <SectionHead
                         no="02"
                         title="Veritas at a glance"
                         dek="Real totals from your archive, summed as investigations are filed."
                       />
-                      <div className="mt-5 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
+                      <div className="mt-7 grid grid-cols-2 sm:grid-cols-4 border-t border-b border-border">
                         {statCells.map((cell, i) => (
                           <div
                             key={cell.label}
-                            className={`py-4 sm:py-5 ${["pr-4", "px-4 border-l border-border", "pr-4 border-t border-border sm:border-t-0 sm:border-l sm:border-border sm:px-4 lg:border-t lg:border-l-0 lg:pl-0 lg:pr-4 xl:border-t-0 xl:border-l xl:pl-4", "px-4 border-l border-t border-border sm:border-t-0 lg:border-t xl:border-t-0"][i]}`}
+                            className={`py-7 sm:py-8 ${
+                              i % 2 !== 0 ? "border-l border-border pl-5" : "pr-5"
+                            } ${i >= 2 ? "border-t border-border sm:border-t-0" : ""} ${
+                              i === 2 ? "sm:border-l sm:border-border sm:pl-5" : ""
+                            } ${i === 3 ? "sm:border-l sm:border-border sm:pl-5" : ""}`}
                           >
                             <p
-                              className="text-[30px] sm:text-[34px] leading-none tabular"
-                              style={{ fontFamily: "'DM Serif Display', serif", color: cell.value == null ? "#6F6A61" : "#171716" }}
+                              className="font-serif-editorial text-[30px] sm:text-[36px] leading-none tabular"
+                              style={{ color: cell.value == null ? "#6F7074" : "#F1F0EA" }}
                             >
                               {cell.value == null ? "—" : <AnimatedNumber value={cell.value} />}
                             </p>
-                            <p className="kicker mt-2.5" style={{ opacity: 0.7, letterSpacing: "0.14em" }}>{cell.label}</p>
+                            <p className="kicker mt-3.5" style={{ opacity: 0.65, letterSpacing: "0.16em" }}>{cell.label}</p>
                           </div>
                         ))}
                       </div>
                     </section>
 
                     {/* ─── 03 · Recent investigations — the archive ─── */}
-                    <section className="mt-14 lg:mt-20">
+                    <section className="mt-20 lg:mt-28">
                       <SectionHead
                         no="03"
                         title="Recent investigations"
@@ -1458,9 +1469,9 @@ export default function Dashboard() {
                         <div className="mt-4 space-y-3">
                           {Array.from({ length: 3 }).map((_, i) => (
                             <div key={i} className="flex items-center gap-4 py-3.5 border-b border-border animate-pulse">
-                              <div className="h-3 w-6" style={{ background: "#E4DED1" }} />
-                              <div className="h-3 flex-1" style={{ background: "#E4DED1" }} />
-                              <div className="h-3 w-24 hidden sm:block" style={{ background: "#E4DED1" }} />
+                              <div className="h-3 w-6" style={{ background: "#2B2D30" }} />
+                              <div className="h-3 flex-1" style={{ background: "#2B2D30" }} />
+                              <div className="h-3 w-24 hidden sm:block" style={{ background: "#2B2D30" }} />
                             </div>
                           ))}
                         </div>
@@ -1474,7 +1485,7 @@ export default function Dashboard() {
                             type="button"
                             onClick={() => goDesk(true)}
                             className="mt-5 kicker ul-hover transition-colors"
-                            style={{ color: "#596451" }}
+                            style={{ color: "#C9C3B7" }}
                           >
                             Begin your first investigation →
                           </button>
@@ -1520,7 +1531,7 @@ export default function Dashboard() {
                     </section>
 
                     {/* ─── 05 · Activity — a quiet record of the archive ─── */}
-                    <section className="mt-12 lg:mt-16">
+                    <section className="mt-20 lg:mt-28">
                       <SectionHead
                         no="05"
                         title="Activity"
@@ -1539,7 +1550,7 @@ export default function Dashboard() {
                             </span>
                             <span
                               className="text-[15px] leading-none tabular shrink-0"
-                              style={{ fontFamily: "'JetBrains Mono', monospace", color: row.value == null ? "#6F6A61" : "#171716" }}
+                              style={{ fontFamily: "'JetBrains Mono', monospace", color: row.value == null ? "#A5A5A1" : "#F1F0EA" }}
                             >
                               {row.value == null ? "—" : <AnimatedNumber value={row.value} />}
                             </span>
@@ -1561,13 +1572,13 @@ export default function Dashboard() {
             {/* ═══════════════ DAILY HEADLINES ═══════════════ */}
             {activeView === "headlines" && (
               <motion.div key="headlines" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
-                <div className="flex items-baseline justify-between gap-4 border-b pb-2" style={{ borderColor: "rgba(23,23,22,0.6)" }}>
-                  <span className="kicker" style={{ color: "#171716", opacity: 0.9 }}>The wire</span>
+                <div className="flex items-baseline justify-between gap-4 border-b pb-2" style={{ borderColor: "rgba(58,59,62,0.9)" }}>
+                  <span className="kicker" style={{ color: "#C9C3B7" }}>The wire</span>
                   <span className="kicker hidden sm:inline">{todayLabel}</span>
                 </div>
                 <div className="border-b border-border mt-[3px]" />
-                <h1 className="mt-6 text-3xl sm:text-[40px]">Today's Headlines</h1>
-                <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground max-w-xl">
+                <h1 className="mt-10 font-serif-editorial text-[clamp(1.9rem,5.5vw,2.75rem)] leading-[1.08]">Today's Headlines</h1>
+                <p className="mt-6 text-[13.5px] leading-[1.75] text-muted-foreground max-w-[58ch]">
                   Current stories retrieved live from major news wires. Select any headline to load it into the editor and investigate it.
                 </p>
                 <div className="mt-8">
@@ -1586,13 +1597,13 @@ export default function Dashboard() {
             {/* ═══════════════ PAST INVESTIGATIONS ═══════════════ */}
             {activeView === "history" && (
               <motion.div key="history" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
-                <div className="flex items-baseline justify-between gap-4 border-b pb-2" style={{ borderColor: "rgba(23,23,22,0.6)" }}>
-                  <span className="kicker" style={{ color: "#171716", opacity: 0.9 }}>Archive</span>
+                <div className="flex items-baseline justify-between gap-4 border-b pb-2" style={{ borderColor: "rgba(58,59,62,0.9)" }}>
+                  <span className="kicker" style={{ color: "#C9C3B7" }}>Archive</span>
                   <span className="kicker hidden sm:inline">{analyses ? `${analyses.length} filed` : "Loading…"}</span>
                 </div>
                 <div className="border-b border-border mt-[3px]" />
-                <h1 className="mt-6 text-3xl sm:text-[40px]">Past Investigations</h1>
-                <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground max-w-xl">
+                <h1 className="mt-10 font-serif-editorial text-[clamp(1.9rem,5.5vw,2.75rem)] leading-[1.08]">Past Investigations</h1>
+                <p className="mt-6 text-[13.5px] leading-[1.75] text-muted-foreground max-w-[58ch]">
                   Every investigation you have filed, most recent first. Select a record to reopen its full report.
                 </p>
 
@@ -1600,9 +1611,9 @@ export default function Dashboard() {
                   <div className="mt-8 space-y-3">
                     {Array.from({ length: 4 }).map((_, i) => (
                       <div key={i} className="flex items-center gap-4 py-3.5 border-b border-border animate-pulse">
-                        <div className="h-3 w-6" style={{ background: "#E4DED1" }} />
-                        <div className="h-3 flex-1" style={{ background: "#E4DED1" }} />
-                        <div className="h-3 w-24 hidden sm:block" style={{ background: "#E4DED1" }} />
+                        <div className="h-3 w-6" style={{ background: "#2B2D30" }} />
+                        <div className="h-3 flex-1" style={{ background: "#2B2D30" }} />
+                        <div className="h-3 w-24 hidden sm:block" style={{ background: "#2B2D30" }} />
                       </div>
                     ))}
                   </div>
@@ -1615,7 +1626,7 @@ export default function Dashboard() {
                     <Button
                       onClick={() => goDesk(true)}
                       className="mt-5 h-9 px-5 text-[10.5px] uppercase tracking-[0.16em] hover:opacity-90"
-                      style={{ background: "#596451", color: "#F3EFE6" }}
+                      style={{ background: "#C9C3B7", color: "#151618" }}
                     >
                       Begin an investigation
                     </Button>
@@ -1640,16 +1651,16 @@ export default function Dashboard() {
             {/* ═══════════════ COMPARE ARTICLES ═══════════════ */}
             {activeView === "compare" && (
               <motion.div key="compare" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
-                <div className="flex items-baseline justify-between gap-4 border-b pb-2" style={{ borderColor: "rgba(23,23,22,0.6)" }}>
-                  <span className="kicker" style={{ color: "#171716", opacity: 0.9 }}>Comparison desk</span>
+                <div className="flex items-baseline justify-between gap-4 border-b pb-2" style={{ borderColor: "rgba(58,59,62,0.9)" }}>
+                  <span className="kicker" style={{ color: "#C9C3B7" }}>Comparison desk</span>
                   <span className="kicker hidden sm:inline">Two articles · one method</span>
                 </div>
                 <div className="border-b border-border mt-[3px]" />
-                <h1 className="mt-6 text-3xl sm:text-[40px]">Compare Articles</h1>
-                <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground max-w-xl">
+                <h1 className="mt-10 font-serif-editorial text-[clamp(1.9rem,5.5vw,2.75rem)] leading-[1.08]">Compare Articles</h1>
+                <p className="mt-6 text-[13.5px] leading-[1.75] text-muted-foreground max-w-[58ch]">
                   Run two texts through the full pipeline, then compare shared claims, contradictions, framing and the figures each one reports.
                 </p>
-                <div className="mt-8">
+                <div className="mt-12 lg:mt-16">
                   <CompareArticles onCompare={handleCompare} />
                 </div>
               </motion.div>
@@ -1658,12 +1669,12 @@ export default function Dashboard() {
             {/* ═══════════════ SETTINGS ═══════════════ */}
             {activeView === "settings" && (
               <motion.div key="settings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
-                <div className="flex items-baseline justify-between gap-4 border-b pb-2" style={{ borderColor: "rgba(23,23,22,0.6)" }}>
-                  <span className="kicker" style={{ color: "#171716", opacity: 0.9 }}>Settings</span>
+                <div className="flex items-baseline justify-between gap-4 border-b pb-2" style={{ borderColor: "rgba(58,59,62,0.9)" }}>
+                  <span className="kicker" style={{ color: "#C9C3B7" }}>Settings</span>
                   <span className="kicker hidden sm:inline">{editionLabel}</span>
                 </div>
                 <div className="border-b border-border mt-[3px]" />
-                <h1 className="mt-6 text-3xl sm:text-[40px]">Settings</h1>
+                <h1 className="mt-10 font-serif-editorial text-[clamp(1.9rem,5.5vw,2.75rem)] leading-[1.08]">Settings</h1>
 
                 {/* Appearance */}
                 <section className="mt-10">
@@ -1677,7 +1688,7 @@ export default function Dashboard() {
                         className={`inline-flex items-center gap-2 h-9 px-4 border text-[10px] uppercase tracking-[0.16em] transition-colors ${
                           theme === mode ? "border-foreground/40 text-foreground" : "border-border text-muted-foreground hover:text-foreground"
                         }`}
-                        style={theme === mode ? { background: "rgba(89,100,81,0.07)" } : undefined}
+                        style={theme === mode ? { background: "rgba(201,195,183,0.07)" } : undefined}
                       >
                         {mode === "light" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
                         {mode}
@@ -1698,7 +1709,7 @@ export default function Dashboard() {
                         className={`h-9 px-4 border text-[10px] uppercase tracking-[0.16em] transition-colors ${
                           analysisDepth === depth ? "border-foreground/40 text-foreground" : "border-border text-muted-foreground hover:text-foreground"
                         }`}
-                        style={analysisDepth === depth ? { background: "rgba(89,100,81,0.07)" } : undefined}
+                        style={analysisDepth === depth ? { background: "rgba(201,195,183,0.07)" } : undefined}
                       >
                         {depth}
                       </button>
@@ -1723,7 +1734,7 @@ export default function Dashboard() {
                         navigate("/");
                       }}
                       className="inline-flex items-center gap-1.5 h-8 px-3 border text-[10px] uppercase tracking-[0.14em] transition-colors"
-                      style={{ borderColor: "rgba(168,97,85,0.4)", color: STATUS.red }}
+                      style={{ borderColor: "rgba(176,132,121,0.4)", color: STATUS.red }}
                     >
                       <LogOut className="w-3 h-3" />
                       Sign out
@@ -1751,20 +1762,20 @@ export default function Dashboard() {
             {/* ═══════════════ STATISTICS ═══════════════ */}
             {activeView === "stats" && (
               <motion.div key="stats" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
-                <div className="flex items-baseline justify-between gap-4 border-b pb-2" style={{ borderColor: "rgba(23,23,22,0.6)" }}>
-                  <span className="kicker" style={{ color: "#171716", opacity: 0.9 }}>Statistics</span>
+                <div className="flex items-baseline justify-between gap-4 border-b pb-2" style={{ borderColor: "rgba(58,59,62,0.9)" }}>
+                  <span className="kicker" style={{ color: "#C9C3B7" }}>Statistics</span>
                   <span className="kicker hidden sm:inline">{analyses ? `${analyses.length} records` : "Loading…"}</span>
                 </div>
                 <div className="border-b border-border mt-[3px]" />
-                <h1 className="mt-6 text-3xl sm:text-[40px]">The Bigger Picture</h1>
-                <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground max-w-xl">
+                <h1 className="mt-10 font-serif-editorial text-[clamp(1.9rem,5.5vw,2.75rem)] leading-[1.08]">The Bigger Picture</h1>
+                <p className="mt-6 text-[13.5px] leading-[1.75] text-muted-foreground max-w-[58ch]">
                   Trends, patterns and insights drawn from everything you have analyzed.
                 </p>
-                <div className="mt-8">
+                <div className="mt-12 lg:mt-16">
                   {!analyses ? (
                     <div className="space-y-3">
                       {Array.from({ length: 3 }).map((_, i) => (
-                        <div key={i} className="h-16 border-b border-border animate-pulse" style={{ background: "#ECE7DB" }} />
+                        <div key={i} className="h-16 border-b border-border animate-pulse" style={{ background: "#252629" }} />
                       ))}
                     </div>
                   ) : analyses.length === 0 ? (
@@ -1774,7 +1785,7 @@ export default function Dashboard() {
                       <Button
                         onClick={() => goDesk(true)}
                         className="mt-5 h-9 px-5 text-[10.5px] uppercase tracking-[0.16em] hover:opacity-90"
-                        style={{ background: "#596451", color: "#F3EFE6" }}
+                        style={{ background: "#C9C3B7", color: "#151618" }}
                       >
                         Begin an investigation
                       </Button>
@@ -1789,16 +1800,16 @@ export default function Dashboard() {
             {/* ═══════════════ METHODOLOGY ═══════════════ */}
             {activeView === "methodology" && (
               <motion.div key="methodology" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
-                <div className="flex items-baseline justify-between gap-4 border-b pb-2" style={{ borderColor: "rgba(23,23,22,0.6)" }}>
-                  <span className="kicker" style={{ color: "#171716", opacity: 0.9 }}>Methodology</span>
+                <div className="flex items-baseline justify-between gap-4 border-b pb-2" style={{ borderColor: "rgba(58,59,62,0.9)" }}>
+                  <span className="kicker" style={{ color: "#C9C3B7" }}>Methodology</span>
                   <span className="kicker hidden sm:inline">How we know what we know</span>
                 </div>
                 <div className="border-b border-border mt-[3px]" />
-                <h1 className="mt-6 text-3xl sm:text-[40px]">How Veritas Works</h1>
-                <p className="mt-3 text-[13px] leading-relaxed text-muted-foreground max-w-xl">
+                <h1 className="mt-10 font-serif-editorial text-[clamp(1.9rem,5.5vw,2.75rem)] leading-[1.08]">How Veritas Works</h1>
+                <p className="mt-6 text-[13.5px] leading-[1.75] text-muted-foreground max-w-[58ch]">
                   A detailed look at the fact-checking process behind every analysis — retrieval, claim extraction, cross-checking and honest confidence.
                 </p>
-                <div className="mt-8">
+                <div className="mt-12 lg:mt-16">
                   <MethodologyView />
                 </div>
               </motion.div>
@@ -1842,7 +1853,7 @@ export default function Dashboard() {
                                 }`}
                               >
                                 {active && (
-                                  <motion.span layoutId="toc-active" className="absolute left-0 top-0 bottom-0 w-px" style={{ background: "#596451" }} />
+                                  <motion.span layoutId="toc-active" className="absolute left-0 top-0 bottom-0 w-px" style={{ background: "#C9C3B7" }} />
                                 )}
                                 <span className="num-marker shrink-0" style={{ opacity: active ? 1 : 0.55 }}>{secNo(s.id)}</span>
                                 <span className="text-[11.5px] leading-tight">{s.label}</span>
@@ -1862,18 +1873,23 @@ export default function Dashboard() {
 
                       {/* Masthead */}
                       <header>
-                        <div className="flex items-baseline justify-between gap-4 border-b pb-1.5" style={{ borderColor: "rgba(23,23,22,0.6)" }}>
-                          <span className="kicker" style={{ color: "#171716", opacity: 0.9 }}>Veritas</span>
+                        <div className="flex items-baseline justify-between gap-4 border-b pb-1.5" style={{ borderColor: "rgba(58,59,62,0.9)" }}>
+                          <span className="kicker" style={{ color: "#C9C3B7" }}>Veritas</span>
                           <span className="kicker">
                             Filed {filedLabel} · Status <span style={{ color: STATUS.green }}>Complete</span>
                           </span>
                         </div>
                         <div className="border-b border-border mt-[3px]" />
-                        <p className="kicker mt-4" style={{ color: "#596451" }}>Investigation</p>
-                        <h1 className="mt-3 text-[23px] sm:text-[30px] lg:text-[35px] max-w-3xl break-words" style={{ lineHeight: 1.2 }}>
+
+                        <p className="kicker mt-10" style={{ color: "#C9C3B7" }}>
+                          Investigation / {secNo("verdict")}
+                        </p>
+
+                        <h1 className="mt-5 font-serif-editorial text-[clamp(1.65rem,5.2vw,2.9rem)] leading-[1.12] max-w-4xl text-balance break-words">
                           {reportHeadline}
                         </h1>
-                        <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
+
+                        <div className="mt-8 pt-5 border-t border-border flex flex-wrap items-center justify-between gap-4">
                           <p className="kicker">{sourceMetaLine}</p>
                           <div className="flex items-center gap-2">
                             <ActionBtn icon={ArrowLeft} onClick={() => goDesk(true)}>New analysis</ActionBtn>
@@ -1884,7 +1900,7 @@ export default function Dashboard() {
                       </header>
 
                       {/* ─── Verdict — typography-led, no gauges ─── */}
-                      <section id="verdict" className="report-sec mt-12 lg:mt-16">
+                      <section id="verdict" className="report-sec mt-20 lg:mt-28">
                         <div className="flex items-baseline justify-between gap-4">
                           <span className="kicker">Assessment</span>
                           <span className="kicker tabular" style={{ opacity: 0.6 }}>
@@ -1892,15 +1908,21 @@ export default function Dashboard() {
                           </span>
                         </div>
 
-                        <div className="mt-5 flex flex-col xl:flex-row xl:items-end gap-6 xl:gap-12">
+                        <div className="mt-8 flex flex-col xl:flex-row xl:items-end gap-8 xl:gap-16">
                           <div className="shrink-0">
-                            <h2 className="text-[34px] sm:text-[44px] lg:text-[50px] leading-none" style={{ color: vc.accentColor }}>{vc.label}</h2>
-                            <p className="mt-3 font-mono text-[11px] tracking-[0.2em] tabular" style={{ color: vc.accentColor }}>
-                              {currentResult.confidence}% CONFIDENCE
+                            <h2
+                              className="font-serif-editorial text-[clamp(2.4rem,9vw,4.25rem)] leading-[0.98] tracking-[-0.01em]"
+                              style={{ color: vc.accentColor }}
+                            >
+                              {vc.label}
+                            </h2>
+                            <p className="mt-4 font-mono text-[12px] tracking-[0.24em] tabular" style={{ color: vc.accentColor }}>
+                              {currentResult.confidence}%
+                              <span className="ml-2 text-[#6F7074] tracking-[0.2em]">CONFIDENCE</span>
                             </p>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-[14px] leading-relaxed" style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#171716" }}>
+                            <p className="text-[14px] leading-relaxed" style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#F1F0EA" }}>
                               {currentResult.summary}
                             </p>
                             <p className="mt-2.5 text-[11px] leading-relaxed text-muted-foreground">{vc.description}</p>
@@ -1908,7 +1930,7 @@ export default function Dashboard() {
                         </div>
 
                         {/* Confidence rule */}
-                        <div className="mt-6 h-[3px] w-full" style={{ background: "#D8D0C3" }}>
+                        <div className="mt-6 h-[3px] w-full" style={{ background: "#3A3B3E" }}>
                           <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${currentResult.confidence}%` }}
@@ -1931,7 +1953,7 @@ export default function Dashboard() {
                               className={`px-4 py-3.5 ${i % 2 === 1 ? "border-l border-border" : ""} ${i >= 2 ? "border-t border-border sm:border-t-0" : ""} ${i === 2 ? "sm:border-l sm:border-border" : ""}`}
                             >
                               <span className="kicker block" style={{ opacity: 0.6 }}>{label}</span>
-                              <span className="block mt-1.5 text-[15px] tabular" style={{ fontFamily: "'JetBrains Mono', monospace", color: "#171716" }}>{value}</span>
+                              <span className="block mt-1.5 text-[15px] tabular" style={{ fontFamily: "'JetBrains Mono', monospace", color: "#F1F0EA" }}>{value}</span>
                             </div>
                           ))}
                         </div>
@@ -1952,8 +1974,8 @@ export default function Dashboard() {
                                     className="w-full flex items-center gap-4 py-3 text-left"
                                     onClick={() => setCredFactor(isOpen ? null : item.key)}
                                   >
-                                    <span className="kicker w-32 sm:w-44 shrink-0" style={isOpen ? { color: "#171716" } : undefined}>{item.label}</span>
-                                    <span className="flex-1 h-[3px]" style={{ background: "#D8D0C3" }}>
+                                    <span className="kicker w-32 sm:w-44 shrink-0" style={isOpen ? { color: "#F1F0EA" } : undefined}>{item.label}</span>
+                                    <span className="flex-1 h-[3px]" style={{ background: "#3A3B3E" }}>
                                       {item.score != null && (
                                         <motion.span
                                           className="block h-full"
@@ -1966,7 +1988,7 @@ export default function Dashboard() {
                                     </span>
                                     <span
                                       className="w-10 text-right text-[10px] tabular shrink-0"
-                                      style={{ fontFamily: "'JetBrains Mono', monospace", color: item.score == null ? "#6F6A61" : "#596451" }}
+                                      style={{ fontFamily: "'JetBrains Mono', monospace", color: item.score == null ? "#A5A5A1" : "#C9C3B7" }}
                                     >
                                       {item.score == null ? "n/a" : `${item.score}%`}
                                     </span>
@@ -2000,7 +2022,7 @@ export default function Dashboard() {
                             }
                             detail={<p className="text-[12px] leading-relaxed text-muted-foreground">{currentResult.reasoning}</p>}
                             triggerLabel="Read the full reasoning"
-                            accentColor="#596451"
+                            accentColor="#C9C3B7"
                           />
                         </div>
                       </section>
@@ -2128,7 +2150,7 @@ export default function Dashboard() {
                                     <span
                                       key={kw}
                                       className="text-[9.5px] px-2 py-0.5 border"
-                                      style={{ borderColor: "rgba(168,97,85,0.35)", color: "#A86155", background: "rgba(168,97,85,0.07)" }}
+                                      style={{ borderColor: "rgba(176,132,121,0.35)", color: "#B08479", background: "rgba(176,132,121,0.07)" }}
                                     >
                                       {kw}
                                     </span>

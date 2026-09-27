@@ -37,21 +37,21 @@ const verdictDisplay: Record<
 > = {
   likely_real: {
     icon: CheckCircle2,
-    color: "#596451",
+    color: "#C9C3B7",
     label: "CREDIBLE",
-    bg: "rgba(89,100,81,0.08)",
+    bg: "rgba(201,195,183,0.08)",
   },
   likely_fake: {
     icon: XCircle,
-    color: "#A86155",
+    color: "#B08479",
     label: "MISLEADING",
-    bg: "rgba(168,97,85,0.08)",
+    bg: "rgba(176,132,121,0.08)",
   },
   uncertain: {
     icon: AlertTriangle,
-    color: "#8A6A45",
+    color: "#B0A183",
     label: "UNCERTAIN",
-    bg: "rgba(138,106,69,0.08)",
+    bg: "rgba(176,161,131,0.08)",
   },
 };
 
@@ -65,17 +65,17 @@ export function CaseFiles({ cases, onSelect, onDelete }: CaseFilesProps) {
       <div className="py-10 text-center">
         <div
           className="w-12 h-12 rounded-sm flex items-center justify-center mx-auto mb-3"
-          style={{ background: "rgba(89,100,81,0.06)", border: "1px solid #D8D0C3" }}
+          style={{ background: "rgba(201,195,183,0.06)", border: "1px solid #3A3B3E" }}
         >
-          <Shield className="w-5 h-5" style={{ color: "#596451" }} />
+          <Shield className="w-5 h-5" style={{ color: "#C9C3B7" }} />
         </div>
         <h3
           className="text-sm font-semibold mb-1"
-          style={{ fontFamily: "'DM Serif Display', serif", color: "#171716" }}
+          style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F0EA" }}
         >
           No case files
         </h3>
-        <p className="text-[10px]" style={{ color: "#6F6A61" }}>
+        <p className="text-[11px]" style={{ color: "#A5A5A1" }}>
           Start analyzing to create your first investigation case.
         </p>
       </div>
@@ -96,7 +96,7 @@ export function CaseFiles({ cases, onSelect, onDelete }: CaseFilesProps) {
             transition={{ duration: 0.2, delay: i * 0.04 }}
             className="group cursor-pointer transition-all duration-200 hover:bg-white/[0.015]"
             style={{
-              borderBottom: "1px solid #D8D0C3",
+              borderBottom: "1px solid #3A3B3E",
             }}
             onClick={() => onSelect(caseFile)}
           >
@@ -114,22 +114,22 @@ export function CaseFiles({ cases, onSelect, onDelete }: CaseFilesProps) {
                 {/* Case ID */}
                 <div className="flex items-center gap-2 mb-0.5">
                   <span
-                    className="text-[8px] font-bold tracking-[0.2em]"
+                    className="text-[9.5px] font-bold tracking-[0.2em]"
                     style={{
                       fontFamily: "'JetBrains Mono', monospace",
-                      color: "#8A6A45",
+                      color: "#B0A183",
                     }}
                   >
                     {caseFile.caseNumber}
                   </span>
                   <span
-                    className="text-[7px] font-bold tracking-wider px-1.5 py-0.5"
+                    className="text-[9.5px] font-bold tracking-wider px-1.5 py-0.5"
                     style={{ color: vc.color, background: `${vc.color}15`, borderRadius: "1px" }}
                   >
                     {vc.label}
                   </span>
                   <span
-                    className="text-[8px] font-bold"
+                    className="text-[9.5px] font-bold"
                     style={{
                       fontFamily: "'JetBrains Mono', monospace",
                       color: vc.color,
@@ -141,8 +141,8 @@ export function CaseFiles({ cases, onSelect, onDelete }: CaseFilesProps) {
 
                 {/* Summary */}
                 <p
-                  className="text-[10px] leading-relaxed line-clamp-1"
-                  style={{ color: "#6F6A61" }}
+                  className="text-[11px] leading-relaxed line-clamp-1"
+                  style={{ color: "#A5A5A1" }}
                 >
                   {caseFile.summary}
                 </p>
@@ -150,28 +150,28 @@ export function CaseFiles({ cases, onSelect, onDelete }: CaseFilesProps) {
                 {/* Metadata row */}
                 <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                   <div className="flex items-center gap-1">
-                    <Clock className="w-2.5 h-2.5" style={{ color: "#6F6A61", opacity: 0.4 }} />
+                    <Clock className="w-2.5 h-2.5" style={{ color: "#A5A5A1", opacity: 0.4 }} />
                     <span
-                      className="text-[8px]"
-                      style={{ color: "#6F6A61", opacity: 0.5 }}
+                      className="text-[9.5px]"
+                      style={{ color: "#A5A5A1", opacity: 0.5 }}
                     >
                       {caseFile.analyzedAt}
                     </span>
                   </div>
                   {caseFile.source && caseFile.source !== "N/A" && (
                     <div className="flex items-center gap-1">
-                      <Globe className="w-2.5 h-2.5" style={{ color: "#6F6A61", opacity: 0.4 }} />
+                      <Globe className="w-2.5 h-2.5" style={{ color: "#A5A5A1", opacity: 0.4 }} />
                       <span
-                        className="text-[8px]"
-                        style={{ color: "#6F6A61", opacity: 0.5 }}
+                        className="text-[9.5px]"
+                        style={{ color: "#A5A5A1", opacity: 0.5 }}
                       >
                         {caseFile.source}
                       </span>
                     </div>
                   )}
                   <span
-                    className="text-[7px] px-1.5 py-0.5"
-                    style={{ color: "#6F6A61", opacity: 0.4, border: "1px solid #D8D0C3", borderRadius: "1px" }}
+                    className="text-[9.5px] px-1.5 py-0.5"
+                    style={{ color: "#A5A5A1", opacity: 0.4, border: "1px solid #3A3B3E", borderRadius: "1px" }}
                   >
                     {caseFile.type}
                   </span>
@@ -188,11 +188,11 @@ export function CaseFiles({ cases, onSelect, onDelete }: CaseFilesProps) {
                     onDelete(caseFile.id);
                   }}
                 >
-                  <Trash2 className="w-3 h-3" style={{ color: "#6F6A61" }} />
+                  <Trash2 className="w-3 h-3" style={{ color: "#A5A5A1" }} />
                 </button>
                 <ChevronRight
                   className="w-3.5 h-3.5 transition-colors"
-                  style={{ color: "#6F6A61" }}
+                  style={{ color: "#A5A5A1" }}
                 />
               </div>
             </div>

@@ -54,19 +54,19 @@ export function SourceProfile({ profile }: SourceProfileProps) {
             initial={{ opacity: 0, y: 6 }}
             animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
             transition={{ delay: i * 0.05, duration: 0.3 }}
-            className="p-2.5 rounded-sm"
-            style={{ background: "#F3EFE6", border: "1px solid #D8D0C3" }}
+            className="p-2.5"
+            style={{ background: "#252629", border: "1px solid #3A3B3E" }}
           >
             <div className="flex items-center gap-1.5 mb-1">
               <item.icon
                 className="w-2.5 h-2.5"
-                style={{ color: "#596451", opacity: 0.6 }}
+                style={{ color: "#C9C3B7", opacity: 0.6 }}
               />
               <span
                 className="text-[7px] font-bold tracking-[0.15em]"
                 style={{
                   fontFamily: "'JetBrains Mono', monospace",
-                  color: "#6F6A61",
+                  color: "#A5A5A1",
                 }}
               >
                 {item.label}
@@ -75,7 +75,7 @@ export function SourceProfile({ profile }: SourceProfileProps) {
             <span
               className="text-[10px] font-semibold block leading-snug"
               style={{
-                color: item.value === "NOT AVAILABLE" ? "#6F6A61" : "#171716",
+                color: item.value === "NOT AVAILABLE" ? "#A5A5A1" : "#F1F0EA",
                 opacity: item.value === "NOT AVAILABLE" ? 0.5 : 1,
                 fontStyle: item.value === "NOT AVAILABLE" ? "italic" : "normal",
               }}
@@ -90,7 +90,7 @@ export function SourceProfile({ profile }: SourceProfileProps) {
       <div>
         <p
           className="text-[8px] font-bold tracking-[0.15em] uppercase mb-2"
-          style={{ color: "#596451" }}
+          style={{ color: "#C9C3B7" }}
         >
           Source Signals
         </p>
@@ -101,24 +101,24 @@ export function SourceProfile({ profile }: SourceProfileProps) {
               initial={{ opacity: 0, x: -4 }}
               animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: -4 }}
               transition={{ delay: 0.2 + i * 0.04, duration: 0.25 }}
-              className="flex items-center gap-2 py-1.5 px-2.5 rounded-sm"
-              style={{ background: "#F3EFE6" }}
+              className="flex items-center gap-2 py-1.5 px-2.5"
+              style={{ background: "#252629" }}
             >
               {signal.available ? (
                 <CheckCircle2
                   className="w-2.5 h-2.5 shrink-0"
-                  style={{ color: "#596451" }}
+                  style={{ color: "#C9C3B7" }}
                 />
               ) : (
                 <HelpCircle
                   className="w-2.5 h-2.5 shrink-0"
-                  style={{ color: "#6F6A61", opacity: 0.4 }}
+                  style={{ color: "#A5A5A1", opacity: 0.4 }}
                 />
               )}
               <span
                 className="text-[9px]"
                 style={{
-                  color: signal.available ? "#6F6A61" : "#6F6A61",
+                  color: signal.available ? "#A5A5A1" : "#A5A5A1",
                   opacity: signal.available ? 1 : 0.5,
                 }}
               >
@@ -134,7 +134,7 @@ export function SourceProfile({ profile }: SourceProfileProps) {
         <div>
           <p
             className="text-[8px] font-bold tracking-[0.15em] uppercase mb-2"
-            style={{ color: "#596451" }}
+            style={{ color: "#C9C3B7" }}
           >
             Available Evidence
           </p>
@@ -149,11 +149,11 @@ export function SourceProfile({ profile }: SourceProfileProps) {
               >
                 <span
                   className="w-1 h-1 rounded-full mt-1.5 shrink-0"
-                  style={{ background: "#596451" }}
+                  style={{ background: "#C9C3B7" }}
                 />
                 <span
                   className="text-[10px] leading-relaxed"
-                  style={{ color: "#6F6A61" }}
+                  style={{ color: "#A5A5A1" }}
                 >
                   {evidence}
                 </span>

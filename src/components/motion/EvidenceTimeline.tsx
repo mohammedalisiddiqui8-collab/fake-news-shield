@@ -32,37 +32,37 @@ const eventConfig: Record<
 > = {
   claim_identified: {
     icon: FileSearch,
-    color: "#596451",
+    color: "#C9C3B7",
     label: "CLAIM IDENTIFIED",
   },
   source_found: {
     icon: Search,
-    color: "#596451",
+    color: "#C9C3B7",
     label: "SOURCE FOUND",
   },
   source_searched: {
     icon: Search,
-    color: "#596451",
+    color: "#C9C3B7",
     label: "SOURCE SEARCH",
   },
   corroboration: {
     icon: CheckCircle2,
-    color: "#71836B",
+    color: "#8A9A82",
     label: "CORROBORATION",
   },
   contradiction: {
     icon: XCircle,
-    color: "#A86155",
+    color: "#B08479",
     label: "CONTRADICTION",
   },
   linguistic_analysis: {
     icon: Brain,
-    color: "#6F6A61",
+    color: "#A5A5A1",
     label: "LINGUISTIC ANALYSIS",
   },
   assessment: {
     icon: Shield,
-    color: "#A9854D",
+    color: "#B0A183",
     label: "ASSESSMENT",
   },
 };
@@ -79,7 +79,7 @@ export function EvidenceTimeline({ events }: EvidenceTimelineProps) {
   if (events.length === 0) {
     return (
       <div className="py-6 text-center">
-        <p className="text-[10px]" style={{ color: "#6F6A61" }}>
+        <p className="text-[10px]" style={{ color: "#A5A5A1" }}>
           Insufficient evidence to construct a timeline.
         </p>
       </div>
@@ -112,7 +112,7 @@ export function EvidenceTimeline({ events }: EvidenceTimelineProps) {
 
               {!isLast && (
                 <div className="relative w-px flex-1 min-h-[26px]">
-                  <div className="absolute inset-0" style={{ background: "#D8D0C3" }} />
+                  <div className="absolute inset-0" style={{ background: "#3A3B3E" }} />
                   <motion.div
                     initial={{ height: 0 }}
                     animate={inView ? { height: "100%" } : { height: 0 }}
@@ -152,7 +152,7 @@ export function EvidenceTimeline({ events }: EvidenceTimelineProps) {
                 {event.timestamp && (
                   <span
                     className="text-[8px] tracking-[0.14em] tabular shrink-0 uppercase"
-                    style={{ fontFamily: "'JetBrains Mono', monospace", color: "#6F6A61", opacity: 0.7 }}
+                    style={{ fontFamily: "'JetBrains Mono', monospace", color: "#A5A5A1", opacity: 0.7 }}
                   >
                     {event.timestamp}
                   </span>
@@ -161,19 +161,19 @@ export function EvidenceTimeline({ events }: EvidenceTimelineProps) {
 
               <p
                 className="mt-2 text-[13px] leading-snug"
-                style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#171716" }}
+                style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#F1F0EA" }}
               >
                 {event.title}
               </p>
 
-              <p className="mt-1 text-[11px] leading-relaxed" style={{ color: "#6F6A61" }}>
+              <p className="mt-1 text-[11px] leading-relaxed" style={{ color: "#A5A5A1" }}>
                 {event.detail}
               </p>
 
               {event.source && (
                 <p className="mt-1.5 text-[9px] tracking-[0.14em] uppercase" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-                  <span style={{ color: "#6F6A61", opacity: 0.75 }}>Source · </span>
-                  <span style={{ color: "#596451" }}>{event.source}</span>
+                  <span style={{ color: "#A5A5A1", opacity: 0.75 }}>Source · </span>
+                  <span style={{ color: "#C9C3B7" }}>{event.source}</span>
                 </p>
               )}
             </motion.div>

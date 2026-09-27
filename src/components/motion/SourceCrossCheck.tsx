@@ -28,19 +28,19 @@ function domainOf(url?: string): string | null {
 }
 
 const relConfig: Record<string, { label: string; icon: typeof CheckCircle2; color: string; bg: string }> = {
-  supports: { label: "SUPPORTS", icon: CheckCircle2, color: "#71836B", bg: "rgba(113,131,107,0.07)" },
-  contradicts: { label: "CONTRADICTS", icon: AlertTriangle, color: "#A86155", bg: "rgba(168,97,85,0.07)" },
-  partial: { label: "PARTIAL", icon: HelpCircle, color: "#A9854D", bg: "rgba(169,133,77,0.07)" },
-  does_not_address: { label: "DOES NOT ADDRESS", icon: HelpCircle, color: "#6F6A61", bg: "rgba(23,23,22,0.05)" },
-  unverified: { label: "UNVERIFIED", icon: HelpCircle, color: "#6F6A61", bg: "rgba(23,23,22,0.05)" },
-  insufficient: { label: "INSUFFICIENT", icon: HelpCircle, color: "#6F6A61", bg: "rgba(23,23,22,0.05)" },
+  supports: { label: "SUPPORTS", icon: CheckCircle2, color: "#8A9A82", bg: "rgba(138,154,130,0.07)" },
+  contradicts: { label: "CONTRADICTS", icon: AlertTriangle, color: "#B08479", bg: "rgba(176,132,121,0.07)" },
+  partial: { label: "PARTIAL", icon: HelpCircle, color: "#B0A183", bg: "rgba(176,161,131,0.07)" },
+  does_not_address: { label: "DOES NOT ADDRESS", icon: HelpCircle, color: "#A5A5A1", bg: "rgba(241,240,234,0.05)" },
+  unverified: { label: "UNVERIFIED", icon: HelpCircle, color: "#A5A5A1", bg: "rgba(241,240,234,0.05)" },
+  insufficient: { label: "INSUFFICIENT", icon: HelpCircle, color: "#A5A5A1", bg: "rgba(241,240,234,0.05)" },
 };
 
 const claimStatusConfig: Record<string, { label: string; color: string }> = {
-  supported: { label: "CORROBORATED", color: "#71836B" },
-  contradicted: { label: "CONTRADICTED", color: "#A86155" },
-  uncertain: { label: "UNCERTAIN", color: "#A9854D" },
-  needs_verification: { label: "UNVERIFIED", color: "#6F6A61" },
+  supported: { label: "CORROBORATED", color: "#8A9A82" },
+  contradicted: { label: "CONTRADICTED", color: "#B08479" },
+  uncertain: { label: "UNCERTAIN", color: "#B0A183" },
+  needs_verification: { label: "UNVERIFIED", color: "#A5A5A1" },
 };
 
 /**
@@ -83,17 +83,17 @@ export function SourceCrossCheck({ crossCheck, claims }: {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center flex-wrap gap-x-3 gap-y-1">
                     {statusBadge && (
-                      <span className="text-[8.5px] font-semibold tracking-[0.14em]" style={{ color: statusBadge.color }}>
+                      <span className="text-[9.5px] font-semibold tracking-[0.14em]" style={{ color: statusBadge.color }}>
                         {statusBadge.label}
                       </span>
                     )}
                     {supports > 0 && (
-                      <span className="text-[8.5px] font-semibold tracking-[0.14em]" style={{ color: "#71836B" }}>
+                      <span className="text-[9.5px] font-semibold tracking-[0.14em]" style={{ color: "#8A9A82" }}>
                         {supports} SUPPORT{supports > 1 ? "S" : ""}
                       </span>
                     )}
                     {contradicts > 0 && (
-                      <span className="text-[8.5px] font-semibold tracking-[0.14em]" style={{ color: "#A86155" }}>
+                      <span className="text-[9.5px] font-semibold tracking-[0.14em]" style={{ color: "#B08479" }}>
                         {contradicts} CONTRADICT{contradicts > 1 ? "S" : ""}
                       </span>
                     )}
@@ -107,7 +107,7 @@ export function SourceCrossCheck({ crossCheck, claims }: {
                   </div>
                   <p
                     className="mt-1.5 text-[13px] leading-snug"
-                    style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#171716" }}
+                    style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#F1F0EA" }}
                   >
                     {claim.claimText}
                   </p>
@@ -120,7 +120,7 @@ export function SourceCrossCheck({ crossCheck, claims }: {
                   transition={{ duration: 0.2 }}
                   className="shrink-0 mt-1"
                 >
-                  <ChevronDown className="w-3.5 h-3.5" style={{ color: "#6F6A61" }} />
+                  <ChevronDown className="w-3.5 h-3.5" style={{ color: "#A5A5A1" }} />
                 </motion.span>
               </div>
             </button>
@@ -152,7 +152,7 @@ export function SourceCrossCheck({ crossCheck, claims }: {
                                   <span className="num-marker shrink-0" style={{ opacity: 0.65 }}>
                                     {String(si + 1).padStart(2, "0")}
                                   </span>
-                                  <span className="text-[12px] font-medium truncate" style={{ color: "#171716" }}>
+                                  <span className="text-[12px] font-medium truncate" style={{ color: "#F1F0EA" }}>
                                     {src.name}
                                   </span>
                                   {dom && dom !== src.name && (
@@ -169,11 +169,11 @@ export function SourceCrossCheck({ crossCheck, claims }: {
                               </div>
                               <p
                                 className="mt-1.5 text-[12px] leading-snug"
-                                style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#171716" }}
+                                style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#F1F0EA" }}
                               >
                                 {src.headline}
                               </p>
-                              <p className="mt-1 text-[10.5px] leading-relaxed" style={{ color: "#6F6A61" }}>
+                              <p className="mt-1 text-[10.5px] leading-relaxed" style={{ color: "#A5A5A1" }}>
                                 {src.excerpt}
                               </p>
                               <div className="mt-1.5 flex items-center gap-4">
@@ -183,7 +183,7 @@ export function SourceCrossCheck({ crossCheck, claims }: {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="inline-flex items-center gap-1 kicker ul-hover transition-colors hover:text-foreground"
-                                    style={{ color: "#596451" }}
+                                    style={{ color: "#C9C3B7" }}
                                   >
                                     <ExternalLink className="w-2.5 h-2.5" />
                                     Open source

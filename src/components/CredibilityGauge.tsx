@@ -8,16 +8,16 @@ interface CredibilityGaugeProps {
 
 const verdictColors: Record<string, { stroke: string; track: string }> = {
   likely_real: {
-    stroke: "#174A45",
-    track: "#E8E3D8",
+    stroke: "#3A3B3E",
+    track: "#A5A5A1",
   },
   uncertain: {
-    stroke: "#B8873A",
-    track: "#E8E3D8",
+    stroke: "#B0A183",
+    track: "#A5A5A1",
   },
   likely_fake: {
-    stroke: "#B34A3C",
-    track: "#E8E3D8",
+    stroke: "#B08479",
+    track: "#A5A5A1",
   },
 };
 

@@ -167,55 +167,32 @@ function getStepDetail(
 export function EvidenceChain(props: EvidenceChainProps) {
   const [expandedStep, setExpandedStep] = useState<string | null>(null);
 
-  // ── RETRIEVAL FAILED: the investigation never ran — show only the stop
-  // point and mark every real stage as not executed. ──
+  /* ── RETRIEVAL FAILED: the investigation never ran. Show the stop point
+     on the same timeline, with every real stage marked as not executed. ── */
   if (props.retrievalFailed) {
     return (
-      <div className="space-y-0">
-        <div
-          className="w-full flex items-center gap-3 py-2.5"
-          style={{ borderBottom: "1px solid #D8D0C3" }}
-        >
-          <div
-            className="w-6 h-6 rounded-sm flex items-center justify-center shrink-0"
-            style={{ background: "rgba(168,97,85,0.08)", border: "1px solid rgba(168,97,85,0.3)" }}
-          >
-            <AlertTriangle className="w-3 h-3" style={{ color: "#A86155" }} />
-          </div>
-          <span
-            className="text-[9px] font-bold tracking-[0.2em] flex-1 text-left"
-            style={{ color: "#A86155" }}
-          >
-            INPUT → RETRIEVAL FAILED
+      <div className="border-t border-border">
+        <div className="flex items-center gap-4 py-4">
+          <span className="num-marker shrink-0" style={{ color: "#B08479" }}>00</span>
+          <span className="kicker flex-1" style={{ color: "#B08479" }}>
+            Input → retrieval failed
           </span>
+          <AlertTriangle className="w-3.5 h-3.5 shrink-0" style={{ color: "#B08479" }} />
         </div>
-        <div className="py-2 pl-9 pr-4">
-          <p className="text-[10px] leading-relaxed" style={{ color: "#6F6A61" }}>
-            Reason: {props.failureReason || "URL could not be accessed or article content could not be retrieved."} The investigation stopped here — claim extraction, source search, evidence collection, cross-checking, framing analysis, confidence calculation and verdict generation were not executed.
-          </p>
-        </div>
-        {chainSteps.map((step) => (
+        <p className="pb-5 pl-9 sm:pl-12 text-[12px] leading-[1.75] text-muted-foreground max-w-2xl">
+          Reason: {props.failureReason || "URL could not be accessed or article content could not be retrieved."}{" "}
+          The investigation stopped here — claim extraction, source search, evidence collection,
+          cross-checking, framing analysis, confidence calculation and verdict generation were not executed.
+        </p>
+        {chainSteps.map((step, i) => (
           <div
             key={step.key}
-            className="w-full flex items-center gap-3 py-2.5 opacity-40"
-            style={{ borderBottom: "1px solid #D8D0C3" }}
+            className="flex items-center gap-4 py-4 border-t border-border/60 opacity-40"
             aria-disabled="true"
           >
-            <div
-              className="w-6 h-6 rounded-sm flex items-center justify-center shrink-0"
-              style={{ background: "#ECE7DB", border: "1px solid #D8D0C3" }}
-            >
-              <step.icon className="w-3 h-3" style={{ color: "#6F6A61" }} />
-            </div>
-            <span
-              className="text-[9px] font-bold tracking-[0.2em] flex-1 text-left"
-              style={{ color: "#6F6A61" }}
-            >
-              {step.label}
-            </span>
-            <span className="text-[8px] mr-1" style={{ color: "#6F6A61" }}>
-              NOT EXECUTED
-            </span>
+            <span className="num-marker shrink-0">{String(i + 1).padStart(2, "0")}</span>
+            <span className="kicker flex-1">{step.label}</span>
+            <span className="kicker shrink-0" style={{ opacity: 0.7 }}>Not executed</span>
           </div>
         ))}
       </div>
@@ -223,125 +200,118 @@ export function EvidenceChain(props: EvidenceChainProps) {
   }
 
   return (
-    <div className="space-y-0">
+    <ol className="relative">
+      {/* One hairline spine running the length of the chain */}
+      <span
+        className="absolute left-[15px] top-3 bottom-3 w-px sm:left-[17px]"
+        style={{ background: "#3A3B3E" }}
+        aria-hidden="true"
+      />
+
       {chainSteps.map((step, i) => {
         const detail = getStepDetail(step.key, props);
         const isExpanded = expandedStep === step.key;
+        const isLast = i === chainSteps.length - 1;
 
         return (
-          <div key={step.key}>
-            {/* Step header */}
+          <li key={step.key} className="relative">
             <button
               type="button"
-              className="w-full flex items-center gap-3 py-2.5 cursor-pointer transition-colors hover:bg-[rgba(23,23,22,0.025)]"
-              style={{
-                borderBottom: "1px solid #D8D0C3",
-              }}
-              onClick={() =>
-                setExpandedStep(isExpanded ? null : step.key)
-              }
+              onClick={() => setExpandedStep(isExpanded ? null : step.key)}
+              aria-expanded={isExpanded}
+              className="group relative flex w-full items-center gap-4 py-5 text-left transition-colors duration-300 hover:bg-[rgba(241,240,234,0.02)]"
             >
-              <div
-                className="w-6 h-6 rounded-sm flex items-center justify-center shrink-0"
-                style={{
-                  background: isExpanded
-                    ? "rgba(89,100,81,0.08)"
-                    : "#ECE7DB",
-                  border: `1px solid ${isExpanded ? "rgba(89,100,81,0.2)" : "#D8D0C3"}`,
-                }}
-              >
-                <step.icon
-                  className="w-3 h-3"
+              <span className="relative z-10 shrink-0">
+                <span
+                  className="flex h-[31px] w-[31px] items-center justify-center text-[9px] tabular transition-colors duration-300 sm:h-[35px] sm:w-[35px]"
                   style={{
-                    color: isExpanded ? "#596451" : "#6F6A61",
+                    background: isExpanded ? "#C9C3B7" : "#202124",
+                    border: `1px solid ${isExpanded ? "#C9C3B7" : "#3A3B3E"}`,
+                    color: isExpanded ? "#151618" : "#A5A5A1",
                   }}
-                />
-              </div>
-              <span
-                className="text-[9px] font-bold tracking-[0.2em] flex-1 text-left"
-                style={{
-                  color: isExpanded ? "#171716" : "#6F6A61",
-                }}
-              >
-                {step.label}
+                >
+                  {String(i + 1).padStart(2, "0")}
+                </span>
               </span>
-              <span
-                className="text-[8px] mr-1"
-                style={{ color: "#6F6A61", opacity: 0.5 }}
-              >
-                {String(i + 1).padStart(2, "0")}
+
+              <span className="flex-1 min-w-0">
+                <span
+                  className="block font-serif-editorial text-[16px] sm:text-[18px] leading-tight transition-colors duration-300"
+                  style={{ color: isExpanded ? "#F1F0EA" : "#CFCEC8" }}
+                >
+                  {step.label}
+                </span>
+                <span className="kicker mt-1.5 block" style={{ opacity: 0.5 }}>
+                  {detail.title}
+                </span>
               </span>
-              <motion.div
+
+              <motion.span
                 animate={{ rotate: isExpanded ? 180 : 0 }}
-                transition={{ duration: 0.2 }}
+                transition={{ duration: 0.25 }}
+                className="shrink-0"
               >
-                <ChevronDown
-                  className="w-3 h-3"
-                  style={{ color: "#6F6A61" }}
-                />
-              </motion.div>
+                <ChevronDown className="w-3.5 h-3.5" style={{ color: "#6F7074" }} />
+              </motion.span>
             </button>
 
-            {/* Expanded content */}
             <AnimatePresence>
               {isExpanded && (
                 <motion.div
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                  transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
                   className="overflow-hidden"
                 >
-                  <div className="py-3 pl-9 pr-4">
-                    <p
-                      className="text-[9px] font-semibold uppercase tracking-[0.12em] mb-2"
-                      style={{ color: "#596451" }}
-                    >
-                      {detail.title}
-                    </p>
-                    <div className="space-y-1.5">
-                      {detail.items.map((item, j) => (
-                        <motion.div
-                          key={j}
-                          initial={{ opacity: 0, x: -4 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ delay: j * 0.05, duration: 0.2 }}
-                          className="flex items-start gap-2"
-                        >
-                          <span
-                            className="w-1 h-1 rounded-full mt-1.5 shrink-0"
-                            style={{
-                              background:
-                                item.includes("Insufficient") ||
-                                item.includes("unavailable") ||
-                                item.includes("NO INDEPENDENT") ||
-                                item.includes("No retrieved") ||
-                                item.includes("No named source") ||
-                                item.includes("No factual claims") ||
-                                item.includes("No claims") ||
-                                item.includes("concerns") ||
-                                item.includes("gaps") ||
-                                item.includes("No verifiable")
-                                  ? "#A86155"
-                                  : "#596451",
-                            }}
-                          />
-                          <span
-                            className="text-[10px] leading-relaxed"
-                            style={{ color: "#6F6A61" }}
+                  <div className="pb-7 pl-[47px] sm:pl-[55px] pr-2">
+                    <ul className="space-y-2.5 max-w-2xl">
+                      {detail.items.map((item, j) => {
+                        const negative =
+                          item.includes("Insufficient") ||
+                          item.includes("unavailable") ||
+                          item.includes("NO INDEPENDENT") ||
+                          item.includes("No retrieved") ||
+                          item.includes("No named source") ||
+                          item.includes("No factual claims") ||
+                          item.includes("No claims") ||
+                          item.includes("concerns") ||
+                          item.includes("gaps") ||
+                          item.includes("No verifiable");
+                        return (
+                          <motion.li
+                            key={j}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: j * 0.05, duration: 0.25 }}
+                            className="flex items-start gap-3"
                           >
-                            {item}
-                          </span>
-                        </motion.div>
-                      ))}
-                    </div>
+                            <span
+                              className="mt-[7px] h-px w-3 shrink-0"
+                              style={{ background: negative ? "#B08479" : "#5C5D61" }}
+                            />
+                            <span
+                              className="text-[12.5px] leading-[1.7]"
+                              style={{
+                                fontFamily: "'Source Serif 4', Georgia, serif",
+                                color: negative ? "#D8C6C1" : "#A5A5A1",
+                              }}
+                            >
+                              {item}
+                            </span>
+                          </motion.li>
+                        );
+                      })}
+                    </ul>
                   </div>
                 </motion.div>
               )}
             </AnimatePresence>
-          </div>
+
+            {!isExpanded && !isLast && <span className="block h-px w-full" style={{ background: "transparent" }} />}
+          </li>
         );
       })}
-    </div>
+    </ol>
   );
 }

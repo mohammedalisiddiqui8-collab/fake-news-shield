@@ -8,9 +8,9 @@ export interface FramingSignal {
 }
 
 const sevConfig: Record<string, { color: string; icon: typeof AlertTriangle }> = {
-  high: { color: "#A86155", icon: AlertTriangle },
-  medium: { color: "#596451", icon: Eye },
-  low: { color: "#6F6A61", icon: Info },
+  high: { color: "#B08479", icon: AlertTriangle },
+  medium: { color: "#C9C3B7", icon: Eye },
+  low: { color: "#A5A5A1", icon: Info },
 };
 
 /**
@@ -47,7 +47,7 @@ export function FramingSignals({ signals }: { signals: FramingSignal[] }) {
                   {signal.severity}
                 </span>
               </div>
-              <p className="mt-1 text-[11.5px] leading-relaxed" style={{ color: "#6F6A61" }}>
+              <p className="mt-1 text-[11.5px] leading-relaxed" style={{ color: "#A5A5A1" }}>
                 {signal.description}
               </p>
             </div>

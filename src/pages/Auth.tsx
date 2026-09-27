@@ -110,39 +110,32 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
   };
 
   return (
-    <div className="min-h-screen gradient-bg flex flex-col">
-      {/* Floating orbs */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-        <div className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full bg-primary/8 blur-[100px] animate-float" />
-        <div className="absolute top-1/3 -right-32 w-[400px] h-[400px] rounded-full bg-chart-2/8 blur-[80px] animate-float-delay" />
-      </div>
-
+    <div className="min-h-screen flex flex-col bg-background">
       {/* Auth Content */}
       <div className="flex-1 flex items-center justify-center px-6">
         <motion.div
-          initial={{ opacity: 0, y: 20, scale: 0.98 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-[400px]"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+          className="w-full max-w-[420px]"
         >
-          <Card className="glass-strong border-white/40 shadow-lg shadow-primary/5">
+          <div className="flex items-center gap-4 mb-10">
+            <span className="kicker shrink-0" style={{ color: "#C9C3B7" }}>Veritas</span>
+            <span className="h-px flex-1" style={{ background: "#3A3B3E" }} />
+          </div>
+          <Card className="rounded-none border border-border bg-transparent shadow-none gap-0 py-0">
             {step === "signIn" ? (
               <>
-                <CardHeader className="text-center pt-8">
-                  <div className="flex justify-center mb-2">
-                    <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center mb-2">
-                      <Shield className="w-7 h-7 text-primary-foreground" />
-                    </div>
-                  </div>
-                  <CardTitle className="text-xl font-bold">
-                    Welcome Back
+                <CardHeader className="pt-10 px-6">
+                  <CardTitle className="font-serif-editorial text-[26px] font-normal leading-tight tracking-[-0.01em]">
+                    Sign in to the desk
                   </CardTitle>
                   <CardDescription>
                     Sign in to continue analyzing content
                   </CardDescription>
                 </CardHeader>
                 <form onSubmit={handleEmailSubmit}>
-                  <CardContent className="px-6">
+                  <CardContent className="px-6 pb-2">
                     <div className="relative flex items-center gap-2">
                       <div className="relative flex-1">
                         <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -150,7 +143,7 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
                           name="email"
                           placeholder="name@example.com"
                           type="email"
-                          className="pl-9 glass-input border-white/40"
+                          className="pl-9 bg-transparent"
                           disabled={isLoading}
                           required
                         />
@@ -159,7 +152,7 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
                         type="submit"
                         variant="outline"
                         size="icon"
-                        className="cursor-pointer glass border-white/40 hover:bg-primary/5"
+                        className="cursor-pointer rounded-none bg-transparent hover:bg-accent/5"
                         disabled={isLoading}
                       >
                         {isLoading ? (
@@ -170,7 +163,7 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
                       </Button>
                     </div>
                     {error && (
-                      <p className="mt-2 text-sm text-red-500">{error}</p>
+                      <p className="mt-3 text-[12px]" style={{ color: "#B08479" }}>{error}</p>
                     )}
 
                     <div className="mt-5">
@@ -179,7 +172,7 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
                           <span className="w-full border-t border-border/50" />
                         </div>
                         <div className="relative flex justify-center text-xs uppercase">
-                          <span className="glass px-3 py-0.5 text-muted-foreground rounded-full">
+                          <span className="px-3 py-0.5 kicker" style={{ background: "#202124" }}>
                             Or
                           </span>
                         </div>
@@ -188,7 +181,7 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
                       <Button
                         type="button"
                         variant="outline"
-                        className="cursor-pointer w-full mt-4 glass border-white/40 hover:bg-primary/5 gap-2"
+                        className="cursor-pointer w-full mt-4 rounded-none h-11 bg-transparent text-[10.5px] uppercase tracking-[0.18em] hover:bg-accent/5 gap-2"
                         onClick={handleGuestLogin}
                         disabled={isLoading}
                       >
@@ -201,14 +194,9 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
               </>
             ) : (
               <>
-                <CardHeader className="text-center pt-8">
-                  <div className="flex justify-center mb-2">
-                    <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center mb-2">
-                      <Shield className="w-7 h-7 text-primary-foreground" />
-                    </div>
-                  </div>
-                  <CardTitle className="text-xl font-bold">
-                    Check Your Email
+                <CardHeader className="pt-10 px-6">
+                  <CardTitle className="font-serif-editorial text-[26px] font-normal leading-tight tracking-[-0.01em]">
+                    Check your email
                   </CardTitle>
                   <CardDescription>
                     We've sent a code to{" "}
@@ -245,7 +233,7 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
                       </InputOTP>
                     </div>
                     {error && (
-                      <p className="mt-2 text-sm text-red-500 text-center">
+                      <p className="mt-3 text-[12px] text-center" style={{ color: "#B08479" }}>
                         {error}
                       </p>
                     )}
@@ -260,10 +248,10 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
                       </Button>
                     </p>
                   </CardContent>
-                  <CardFooter className="flex-col gap-2 px-6 pb-6">
+                  <CardFooter className="flex-col gap-3 px-6 pb-10">
                     <Button
                       type="submit"
-                      className="cursor-pointer w-full bg-primary text-primary-foreground gap-2"
+                      className="cursor-pointer w-full rounded-none h-11 bg-primary text-primary-foreground gap-2 text-[10.5px] uppercase tracking-[0.18em]"
                       disabled={isLoading || otp.length !== 6}
                     >
                       {isLoading ? (
@@ -292,6 +280,10 @@ function Auth({ redirectAfterAuth }: AuthProps = {}) {
               </>
             )}
           </Card>
+
+          <p className="kicker mt-10" style={{ opacity: 0.45 }}>
+            Evidence before certainty
+          </p>
         </motion.div>
       </div>
     </div>

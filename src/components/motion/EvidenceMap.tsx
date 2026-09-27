@@ -23,15 +23,15 @@ interface EvidenceMapProps {
 }
 
 function statusColor(status?: string) {
-  if (status === "supported") return "#71836B";
-  if (status === "contradicted") return "#A86155";
-  return "#6F6A61";
+  if (status === "supported") return "#8A9A82";
+  if (status === "contradicted") return "#B08479";
+  return "#A5A5A1";
 }
 
 function StatusIcon({ status }: { status?: string }) {
-  if (status === "supported") return <CheckCircle2 className="w-3 h-3" style={{ color: "#71836B" }} />;
-  if (status === "contradicted") return <AlertTriangle className="w-3 h-3" style={{ color: "#A86155" }} />;
-  return <HelpCircle className="w-3 h-3" style={{ color: "#6F6A61" }} />;
+  if (status === "supported") return <CheckCircle2 className="w-3 h-3" style={{ color: "#8A9A82" }} />;
+  if (status === "contradicted") return <AlertTriangle className="w-3 h-3" style={{ color: "#B08479" }} />;
+  return <HelpCircle className="w-3 h-3" style={{ color: "#A5A5A1" }} />;
 }
 
 export function EvidenceMap({ articleTitle, claims, verdict, confidence }: EvidenceMapProps) {
@@ -60,15 +60,15 @@ export function EvidenceMap({ articleTitle, claims, verdict, confidence }: Evide
     return (
       <div key={node.id}>
         <button type="button"
-          className="flex items-center gap-2 w-full text-left py-1.5 px-2 cursor-pointer transition-all duration-150 hover:bg-[#D8D0C3]/40"
-          style={{ paddingLeft: depth * 16 + 8, background: isSelected ? "rgba(89,100,81,0.06)" : undefined }}
+          className="flex items-center gap-2 w-full text-left py-1.5 px-2 cursor-pointer transition-all duration-150 hover:bg-[#3A3B3E]/40"
+          style={{ paddingLeft: depth * 16 + 8, background: isSelected ? "rgba(201,195,183,0.06)" : undefined }}
           onClick={() => setSelectedNode(isSelected ? null : node.id)}>
-          {depth > 0 && <div className="w-3 h-px" style={{ background: "#D8D0C3" }} />}
-          {hasChildren && <ChevronDown className="w-2.5 h-2.5 shrink-0" style={{ color: "#6F6A61", transform: isSelected ? "rotate(90deg)" : "none", transition: "transform 0.2s" }} />}
+          {depth > 0 && <div className="w-3 h-px" style={{ background: "#3A3B3E" }} />}
+          {hasChildren && <ChevronDown className="w-2.5 h-2.5 shrink-0" style={{ color: "#A5A5A1", transform: isSelected ? "rotate(90deg)" : "none", transition: "transform 0.2s" }} />}
           <StatusIcon status={node.status} />
           <span className="text-[10px] font-semibold truncate" style={{ color: statusColor(node.status) }}>{node.label}</span>
-          {node.type === "article" && <FileText className="w-2.5 h-2.5 shrink-0 ml-auto" style={{ color: "#596451" }} />}
-          {node.type === "source" && <Link2 className="w-2.5 h-2.5 shrink-0 ml-auto" style={{ color: "#6F6A61", opacity: 0.5 }} />}
+          {node.type === "article" && <FileText className="w-2.5 h-2.5 shrink-0 ml-auto" style={{ color: "#C9C3B7" }} />}
+          {node.type === "source" && <Link2 className="w-2.5 h-2.5 shrink-0 ml-auto" style={{ color: "#A5A5A1", opacity: 0.5 }} />}
         </button>
         <AnimatePresence>
           {isSelected && hasChildren && (

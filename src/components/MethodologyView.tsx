@@ -1,81 +1,99 @@
 import { motion } from "framer-motion";
-import { Search, Brain, BarChart3, Shield } from "lucide-react";
 
 const steps = [
   {
     num: 1,
     title: "Text Processing",
     description: "We clean and structure the input text using NLP techniques.",
-    icon: Search,
   },
   {
     num: 2,
     title: "Multi-Layer Analysis",
     description: "We check for linguistic patterns, source credibility, logical consistency and more.",
-    icon: Brain,
   },
   {
     num: 3,
     title: "Risk Scoring",
     description: "Our model assigns a credibility score based on multiple factors.",
-    icon: BarChart3,
   },
   {
     num: 4,
     title: "Final Verdict",
     description: "You get a clear, easy-to-understand result with detailed insights.",
-    icon: Shield,
   },
 ];
 
 export function MethodologyView() {
   return (
-    <div className="space-y-5">
+    <div>
       {/* Header */}
       <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="text-center mb-2"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="flex items-center gap-4"
       >
-        <span className="text-[10px] font-semibold uppercase tracking-[0.3em]" style={{ color: "#596451" }}>Our Approach</span>
-        <h2 className="mt-2 text-2xl sm:text-3xl tracking-tight" style={{ fontFamily: "'DM Serif Display', serif", color: "#F3EFE6" }}>How Veritas Works</h2>
-        <p className="mt-2 text-xs max-w-md mx-auto" style={{ color: "#6F6A61" }}>We combine advanced AI with proven fact-checking methodologies to give you reliable results.</p>
+        <span className="kicker" style={{ color: "#C9C3B7" }}>Our approach</span>
+        <span className="h-px flex-1" style={{ background: "#3A3B3E" }} />
       </motion.div>
 
-      {/* Steps */}
-      <div className="max-w-lg mx-auto space-y-4">
+      <h2
+        className="mt-8 font-serif-editorial text-[clamp(1.8rem,5vw,2.6rem)] leading-[1.08]"
+        style={{ color: "#F1F0EA" }}
+      >
+        How Veritas Works
+      </h2>
+      <p className="mt-5 text-[13.5px] leading-[1.75] text-muted-foreground max-w-[52ch]">
+        We combine advanced AI with proven fact-checking methodologies to give you reliable results.
+      </p>
+
+      {/* Steps — a numbered method, set on a single vertical rule */}
+      <div className="mt-14 lg:mt-20 max-w-3xl">
         {steps.map((step, i) => (
           <motion.div
             key={step.num}
-            initial={{ opacity: 0, x: -12 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3, delay: i * 0.1 }}
-            className="flex items-start gap-4 rounded border p-4"
-            style={{ background: "#F1F2EE", borderColor: "#D8D0C3" }}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, delay: i * 0.07 }}
+            className="relative flex gap-5 sm:gap-8 pb-10 sm:pb-14 last:pb-0"
           >
-            <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 mt-0.5" style={{ background: "#596451", color: "#F1F2EE" }}>
-              <span className="text-sm font-bold">{step.num}</span>
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold mb-0.5" style={{ fontFamily: "'DM Serif Display', serif", color: "#F3EFE6" }}>{step.title}</h3>
-              <p className="text-xs leading-relaxed" style={{ color: "#6F6A61" }}>{step.description}</p>
+            {/* The rule continues through every step but the last */}
+            {i < steps.length - 1 && (
+              <span
+                className="absolute left-[13px] top-8 bottom-0 w-px sm:left-[15px]"
+                style={{ background: "#3A3B3E" }}
+                aria-hidden="true"
+              />
+            )}
+
+            <span className="relative z-10 shrink-0 w-[27px] sm:w-[31px] text-center num-marker pt-[5px]">
+              {String(step.num).padStart(2, "0")}
+            </span>
+
+            <div className="min-w-0 pt-0.5">
+              <h3
+                className="font-serif-editorial text-[19px] sm:text-[22px] leading-tight"
+                style={{ color: "#F1F0EA" }}
+              >
+                {step.title}
+              </h3>
+              <p className="mt-2.5 text-[13px] leading-[1.7] text-muted-foreground max-w-[54ch]">
+                {step.description}
+              </p>
             </div>
           </motion.div>
         ))}
       </div>
 
-      {/* Quote */}
-      <motion.div
+      {/* Closing note — set as a line in the margin, not a card */}
+      <motion.p
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        className="rounded border p-4 text-center"
-        style={{ background: "#F1F2EE", borderColor: "#D8D0C3" }}
+        transition={{ delay: 0.5, duration: 0.6 }}
+        className="mt-14 lg:mt-20 pt-6 border-t border-border font-serif-editorial italic text-[15px] text-muted-foreground max-w-[46ch]"
       >
-        <p className="text-xs italic" style={{ fontFamily: "'DM Serif Display', serif", color: "#6F6A61" }}>
-          &ldquo;Better information leads to better decisions.&rdquo;
-        </p>
-      </motion.div>
+        &ldquo;Better information leads to better decisions.&rdquo;
+      </motion.p>
     </div>
   );
 }
