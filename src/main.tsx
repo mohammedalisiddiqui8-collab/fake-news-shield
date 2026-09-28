@@ -13,7 +13,8 @@ import "./index.css";
 
 // Lazy load route components for better code splitting
 const Landing = lazy(() => import("./pages/Landing.tsx"));
-const Dashboard = lazy(() => import("./pages/Dashboard.tsx"));
+const Dashboard = lazy(() => import("./pages/Desk.tsx"));
+const Analysis = lazy(() => import("./pages/Dashboard.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
 // Simple loading fallback for route transitions
@@ -115,10 +116,16 @@ function AppRoutes() {
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<PageTransition><Landing /></PageTransition>} />
         {/* No authentication screen exists — /auth simply enters the desk. */}
-        <Route path="/auth" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/auth" element={<Navigate to="/desk" replace />} />
+        {/* PAGE 2 — the investigation desk: how Veritas investigates */}
         <Route
-          path="/dashboard"
+          path="/desk"
           element={<PageTransition><Dashboard /></PageTransition>}
+        />
+        {/* PAGE 3 — the working analysis page: run an investigation and read its report */}
+        <Route
+          path="/analysis"
+          element={<PageTransition><Analysis /></PageTransition>}
         />
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
       </Routes>

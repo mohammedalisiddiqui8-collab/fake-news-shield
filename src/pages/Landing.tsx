@@ -101,7 +101,7 @@ export default function Landing() {
           >
           <motion.button
             type="button"
-            onClick={() => navigate("/dashboard")}
+            onClick={() => navigate("/desk")}
             className="group flex flex-col items-center gap-4"
             initial="rest"
             whileHover="hover"

@@ -33,11 +33,6 @@ import { WhatChanged } from "@/components/motion/WhatChanged";
 import { InvestigationReplay } from "@/components/motion/InvestigationReplay";
 import { RetrievalFailedState } from "@/components/motion/RetrievalFailedState";
 import { SourceTrail } from "@/components/motion/SourceTrail";
-import { ChapterMarker } from "@/components/chapters/ChapterMarker";
-import { TraceChapter } from "@/components/chapters/TraceChapter";
-import { PatternsChapter } from "@/components/chapters/PatternsChapter";
-import { ScrutinyChapter } from "@/components/chapters/ScrutinyChapter";
-import { FrameworkChapter } from "@/components/chapters/FrameworkChapter";
 import { getLiveNews, FALLBACK_SAMPLES, getCategoryIconComponent, type LiveArticle } from "@/lib/news";
 import { deriveSourceCounts } from "@/lib/investigationStats";
 
@@ -127,54 +122,6 @@ const sampleTexts = FALLBACK_SAMPLES;
 /* ─── Page 02 · The four chapters of the desk ──────────────────────────
    TRACE / PATTERNS / SCRUTINY / FRAMEWORK — each a different composition,
    each explaining what the system actually does. ───────────────────────── */
-
-/* Signature used by ChapterMarker and SectionHead — the desk dateline */
-const deskSignature: { no: string; title: string; standfirst: string; aside?: string }[] = [
-  {
-    no: "01",
-    title: "Trace",
-    standfirst:
-      "Every investigation follows the same path: the article is taken in, the checkable statements are isolated, independent coverage is retrieved for each one, and the verdict is built from what was found — never from how the article sounds.",
-  },
-  {
-    no: "02",
-    title: "Patterns",
-    standfirst:
-      "Alongside the fact-check, Veritas reads how the article is written. These signals describe presentation — they are reported, but they are not proof of anything.",
-  },
-  {
-    no: "03",
-    title: "Scrutiny",
-    standfirst:
-      "One claim, followed the whole way through the system — from the sentence as filed to the assessment that the evidence supports.",
-  },
-  {
-    no: "04",
-    title: "Framework",
-    standfirst:
-      "What runs underneath the interface: retrieval, claim extraction, source retrieval, external evidence, cross-checking, language signals and credibility assessment. Nothing more, nothing invented.",
-  },
-];
-
-/* Derive the live language-signal percentages PATTERNS displays, straight from
-   the engine's categoryBreakdown (score / maxScore) — no invented figures. */
-function patternValuesFor(breakdown?: CategoryBreakdown[]): Record<string, number | null> {
-  const pct = (name: string): number | null => {
-    const c = breakdown?.find((x) => x.category === name);
-    return c && c.maxScore > 0 ? Math.round((c.score / c.maxScore) * 100) : null;
-  };
-  return {
-    sensationalism: pct("Sensationalism"),
-    clickbait: pct("Clickbait"),
-    fear: pct("Fear-Mongering"),
-    conspiracy: pct("Conspiracy"),
-    anonymous: pct("Anonymous Sourcing"),
-    attribution: pct("Attribution Language"),
-    temporal: pct("Temporal Specificity"),
-    balanced: pct("Balanced Language"),
-    structure: pct("Journalistic Structure"),
-  };
-}
 
 /* ─── Unified sample item type ─── */
 interface SampleItem {
@@ -497,7 +444,7 @@ function HeadlinesColumn({ items, loading, onPick, variant = "table" }: {
   );
 }
 
-type NavItemDef = { id: string; label: string; icon: typeof Home; view: ViewType; action?: "begin"; disabled?: boolean };
+type NavItemDef = { id: string; label: string; icon: typeof Home; view: ViewType; action?: "begin" | "desk"; disabled?: boolean };
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -906,8 +853,9 @@ export default function Dashboard() {
     {
       title: "Desk",
       items: [
-        { id: "home", label: "Home", icon: Home, view: "home" },
-        { id: "new", label: "New Analysis", icon: PenLine, view: "home", action: "begin" },
+        { id: "home", label: "New Analysis", icon: Home, view: "home" },
+        { id: "desk", label: "Investigation Desk", icon: BookOpen, view: "home", action: "desk" },
+        { id: "new", label: "Focus the editor", icon: PenLine, view: "home", action: "begin" },
         { id: "headlines", label: "Daily Headlines", icon: Newspaper, view: "headlines" },
         { id: "history", label: "Past Investigations", icon: Clock, view: "history" },
         { id: "compare", label: "Compare Articles", icon: ArrowLeftRight, view: "compare" },
@@ -919,7 +867,7 @@ export default function Dashboard() {
       items: [
         { id: "investigation", label: "Investigation", icon: FileText, view: "result", disabled: !currentResult },
         { id: "stats", label: "Statistics", icon: BarChart3, view: "stats" },
-        { id: "methodology", label: "Methodology", icon: BookOpen, view: "methodology" },
+        { id: "methodology", label: "How Veritas works", icon: BookOpen, view: "home", action: "desk" },
       ],
     },
   ];
@@ -937,6 +885,7 @@ export default function Dashboard() {
   const goNav = (item: NavItemDef) => {
     if (item.disabled) return;
     if (item.action === "begin") { goDesk(true); return; }
+    if (item.action === "desk") { navigate("/desk"); window.scrollTo({ top: 0 }); return; }
     setActiveView(item.view);
     window.scrollTo({ top: 0 });
   };
@@ -1031,10 +980,6 @@ export default function Dashboard() {
     : "";
   const todayLabel = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   const editionLabel = fmtFiled(Date.now());
-  /* Live percentages for the PATTERNS chapter — real category scores from the
-     most recent filed investigation, or "—" for every signal when none exists. */
-  const latestBreakdown: CategoryBreakdown[] | undefined =
-    analyses && analyses.length > 0 ? analyses[0].categoryBreakdown ?? undefined : undefined;
 
   /* ─── Archive row — a record in a newsroom archive ───
      variant "row"     → table record used by Past Investigations
@@ -1303,7 +1248,7 @@ export default function Dashboard() {
                   <div>
                     <div className="flex items-center gap-4">
                       <span className="kicker shrink-0" style={{ color: "#C9C3B7" }}>
-                        Veritas / Investigation desk
+                        Veritas / Analysis
                       </span>
                       <span className="h-px flex-1" style={{ background: "#3A3B3E" }} />
                       <span className="kicker shrink-0 hidden sm:inline">{todayLabel}</span>
@@ -1312,6 +1257,7 @@ export default function Dashboard() {
                     <h1 className="mt-12 sm:mt-16 font-serif-editorial text-[clamp(2.1rem,6vw,3.75rem)] leading-[1.05] text-[#F1F0EA]">
                       <span className="block">Verify what you read.</span>
                       <span className="block text-[#8E8E8A]">Follow the evidence.</span>
+                      {/* The desk is the working page; the method lives on the Investigation Desk */}
                     </h1>
 
                     <p className="mt-9 text-[14px] leading-[1.75] text-muted-foreground max-w-[46ch]">
@@ -1329,7 +1275,7 @@ export default function Dashboard() {
                       </Button>
                       <button
                         type="button"
-                        onClick={() => { setActiveView("methodology"); window.scrollTo({ top: 0 }); }}
+                        onClick={() => { navigate("/desk"); window.scrollTo({ top: 0 }); }}
                         className="kicker ul-hover pb-1 transition-colors hover:text-foreground"
                       >
                         How Veritas works →
@@ -1340,21 +1286,6 @@ export default function Dashboard() {
                       <span className="kicker">Live source retrieval</span>
                       <span className="kicker">Claim-level cross-check</span>
                       <span className="kicker">Evidence-first verdicts</span>
-                    </div>
-
-                    {/* The four chapters, named before they open */}
-                    <div className="mt-12 hidden gap-x-6 border-t border-border pt-4 sm:grid sm:grid-cols-4">
-                      {deskSignature.map((ch) => (
-                        <button
-                          key={ch.no}
-                          type="button"
-                          onClick={() => document.getElementById(`chapter-${ch.title.toLowerCase()}`)?.scrollIntoView({ behavior: "smooth", block: "start" })}
-                          className="group flex items-baseline gap-2.5 text-left"
-                        >
-                          <span className="num-marker transition-colors group-hover:text-[#C9C3B7]">{ch.no}</span>
-                          <span className="kicker transition-colors group-hover:text-foreground">{ch.title}</span>
-                        </button>
-                      ))}
                     </div>
                   </div>
 
@@ -1369,15 +1300,9 @@ export default function Dashboard() {
                   </motion.div>
                 </section>
 
-                {/* ═════ CHAPTER 01 · TRACE — the trail, and the desk that runs it ═════ */}
-                <div className="mt-28 lg:mt-40">
-                  <ChapterMarker no={deskSignature[0].no} title={deskSignature[0].title} standfirst={deskSignature[0].standfirst}>
-                    <TraceChapter />
-                  </ChapterMarker>
-
-                  {/* The workbench sits inside the chapter — pick an article, run it */}
-                  <div className="mt-20 lg:mt-28 grid lg:grid-cols-[1.6fr_1fr] gap-y-20 lg:gap-y-0 items-start">
-                    <div className="min-w-0 lg:pr-12">
+                {/* ─── The desk — workbench left, wire and ledger right ─── */}
+                <div className="mt-24 lg:mt-36 grid lg:grid-cols-[1.6fr_1fr] gap-y-20 lg:gap-y-0 items-start">
+                  <div className="min-w-0 lg:pr-12">
 
                     {/* ─── 01 · Begin an investigation ─── */}
                     <section id="begin" className="report-sec">
@@ -1648,29 +1573,7 @@ export default function Dashboard() {
                         </div>
                       </div>
                     </section>
-                    </div>{/* end right-rail inner wrapper */}
-                  </div>{/* end chapter-01 two-column grid */}
-                </div>{/* end CHAPTER 01 · TRACE */}
-
-                {/* ═════ CHAPTER 02 · PATTERNS — the linguistic signal system ═════ */}
-                <div className="mt-28 lg:mt-40">
-                  <ChapterMarker no={deskSignature[1].no} title={deskSignature[1].title} standfirst={deskSignature[1].standfirst}>
-                    <PatternsChapter values={patternValuesFor(latestBreakdown)} />
-                  </ChapterMarker>
-                </div>
-
-                {/* ═════ CHAPTER 03 · SCRUTINY — one claim, followed all the way ═════ */}
-                <div className="mt-28 lg:mt-40">
-                  <ChapterMarker no={deskSignature[2].no} title={deskSignature[2].title} standfirst={deskSignature[2].standfirst}>
-                    <ScrutinyChapter />
-                  </ChapterMarker>
-                </div>
-
-                {/* ═════ CHAPTER 04 · FRAMEWORK — what runs underneath ═════ */}
-                <div className="mt-28 lg:mt-40">
-                  <ChapterMarker no={deskSignature[3].no} title={deskSignature[3].title} standfirst={deskSignature[3].standfirst}>
-                    <FrameworkChapter />
-                  </ChapterMarker>
+                  </div>
                 </div>
               </motion.div>
             )}
