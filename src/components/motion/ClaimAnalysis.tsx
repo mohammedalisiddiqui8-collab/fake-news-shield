@@ -66,6 +66,7 @@ export function ClaimAnalysis({ claims }: ClaimAnalysisProps) {
             {/* Claim header — number, status, quotation, confidence */}
             <button
               type="button"
+              aria-expanded={isExpanded}
               className="w-full cursor-pointer text-left py-6 transition-colors hover:bg-[rgba(241,240,234,0.018)]"
               onClick={() => setExpandedId(isExpanded ? null : claim.id)}
             >
@@ -118,17 +119,32 @@ export function ClaimAnalysis({ claims }: ClaimAnalysisProps) {
               </div>
             </button>
 
-            {/* Expanded evidence — indented document block */}
-            <AnimatePresence>
+            {/* Expanded evidence — indented document block, revealed with a
+                small status flourish: the verdict chip re-affirms itself as
+                the evidence opens, so the state change is felt, not just seen */}
+            <AnimatePresence initial={false}>
               {isExpanded && (
                 <motion.div
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                  transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
                   className="overflow-hidden"
                 >
-                  <div className="px-1 pb-7 pt-1 sm:pl-10 space-y-5">
+                  <div className="px-1 pb-7 pt-2 sm:pl-10 space-y-5">
+                    <motion.span
+                      className="block"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                    >
+                      <span
+                        className="kicker"
+                        style={{ color: config.color, border: `1px solid ${config.color}55`, padding: "3px 8px" }}
+                      >
+                        {config.label} · {claim.confidence}% CONFIDENCE
+                      </span>
+                    </motion.span>
                     <div>
                       <p className="kicker" style={{ color: "#C9C3B7" }}>Evidence</p>
                       <p

@@ -19,7 +19,6 @@ import { StatsView } from "@/components/StatsView";
 import { MethodologyView } from "@/components/MethodologyView";
 import { VerificationPipeline } from "@/components/motion/VerificationPipeline";
 import { ExpandableClaim } from "@/components/motion/ExpandableClaim";
-import { MorphingPanel } from "@/components/motion/MorphingPanel";
 import { EvidenceChain } from "@/components/motion/EvidenceChain";
 import { ClaimAnalysis, type Claim } from "@/components/motion/ClaimAnalysis";
 import { EvidenceTimeline, type TimelineEvent } from "@/components/motion/EvidenceTimeline";
@@ -33,6 +32,12 @@ import { FreshnessIndicator, type FreshnessItem } from "@/components/motion/Fres
 import { WhatChanged } from "@/components/motion/WhatChanged";
 import { InvestigationReplay } from "@/components/motion/InvestigationReplay";
 import { RetrievalFailedState } from "@/components/motion/RetrievalFailedState";
+import { SourceTrail } from "@/components/motion/SourceTrail";
+import { ChapterMarker } from "@/components/chapters/ChapterMarker";
+import { TraceChapter } from "@/components/chapters/TraceChapter";
+import { PatternsChapter } from "@/components/chapters/PatternsChapter";
+import { ScrutinyChapter } from "@/components/chapters/ScrutinyChapter";
+import { FrameworkChapter } from "@/components/chapters/FrameworkChapter";
 import { getLiveNews, FALLBACK_SAMPLES, getCategoryIconComponent, type LiveArticle } from "@/lib/news";
 import { deriveSourceCounts } from "@/lib/investigationStats";
 
@@ -118,6 +123,58 @@ function signalLabelFor(flag: string): string {
 
 /* ─── Static sample fallback — used only when live headlines cannot be fetched ─── */
 const sampleTexts = FALLBACK_SAMPLES;
+
+/* ─── Page 02 · The four chapters of the desk ──────────────────────────
+   TRACE / PATTERNS / SCRUTINY / FRAMEWORK — each a different composition,
+   each explaining what the system actually does. ───────────────────────── */
+
+/* Signature used by ChapterMarker and SectionHead — the desk dateline */
+const deskSignature: { no: string; title: string; standfirst: string; aside?: string }[] = [
+  {
+    no: "01",
+    title: "Trace",
+    standfirst:
+      "Every investigation follows the same path: the article is taken in, the checkable statements are isolated, independent coverage is retrieved for each one, and the verdict is built from what was found — never from how the article sounds.",
+  },
+  {
+    no: "02",
+    title: "Patterns",
+    standfirst:
+      "Alongside the fact-check, Veritas reads how the article is written. These signals describe presentation — they are reported, but they are not proof of anything.",
+  },
+  {
+    no: "03",
+    title: "Scrutiny",
+    standfirst:
+      "One claim, followed the whole way through the system — from the sentence as filed to the assessment that the evidence supports.",
+  },
+  {
+    no: "04",
+    title: "Framework",
+    standfirst:
+      "What runs underneath the interface: retrieval, claim extraction, source retrieval, external evidence, cross-checking, language signals and credibility assessment. Nothing more, nothing invented.",
+  },
+];
+
+/* Derive the live language-signal percentages PATTERNS displays, straight from
+   the engine's categoryBreakdown (score / maxScore) — no invented figures. */
+function patternValuesFor(breakdown?: CategoryBreakdown[]): Record<string, number | null> {
+  const pct = (name: string): number | null => {
+    const c = breakdown?.find((x) => x.category === name);
+    return c && c.maxScore > 0 ? Math.round((c.score / c.maxScore) * 100) : null;
+  };
+  return {
+    sensationalism: pct("Sensationalism"),
+    clickbait: pct("Clickbait"),
+    fear: pct("Fear-Mongering"),
+    conspiracy: pct("Conspiracy"),
+    anonymous: pct("Anonymous Sourcing"),
+    attribution: pct("Attribution Language"),
+    temporal: pct("Temporal Specificity"),
+    balanced: pct("Balanced Language"),
+    structure: pct("Journalistic Structure"),
+  };
+}
 
 /* ─── Unified sample item type ─── */
 interface SampleItem {
@@ -891,24 +948,28 @@ export default function Dashboard() {
   };
 
   /* ─── Report contents — single source of truth for rail + numbering ─── */
-  const reportSections: Array<{ id: string; label: string }> =
+  const reportSections: Array<{ id: string; label: string; group?: string }> =
     currentResult && !currentResult.retrievalFailed
       ? [
+          /* ── The primary investigation: 01 → 05 ── */
           { id: "verdict", label: "Verdict" },
-          ...(currentResult.claims && currentResult.claims.length > 0 ? [{ id: "claims", label: "Claim analysis" }] : []),
-          ...(currentResult.crossCheck && currentResult.crossCheck.length > 0 ? [{ id: "crosscheck", label: "Source cross-check" }] : []),
-          { id: "chain", label: "Evidence chain" },
-          { id: "map", label: "Evidence map" },
-          ...(currentResult.evidenceTimeline && currentResult.evidenceTimeline.length > 0 ? [{ id: "timeline", label: "Timeline" }] : []),
-          { id: "language", label: "Language analysis" },
-          ...(currentResult.framingSignals ? [{ id: "framing", label: "Framing signals" }] : []),
-          ...(currentResult.sourceProfile ? [{ id: "sourceprofile", label: "Source profile" }] : []),
-          ...(currentResult.freshness ? [{ id: "freshness", label: "Freshness" }] : []),
-          ...(currentResult.fingerprint ? [{ id: "fingerprint", label: "Fingerprint" }] : []),
-          { id: "replay", label: "Investigation replay" },
-          { id: "whatchanged", label: "What changed?" },
-          { id: "compare", label: "Compare articles" },
-          { id: "content", label: "Analyzed content" },
+          ...(currentResult.claims && currentResult.claims.length > 0 ? [{ id: "claims", label: "Claims" }] : []),
+          { id: "chain", label: "Evidence" },
+          ...(currentResult.crossCheck && currentResult.crossCheck.length > 0 ? [{ id: "crosscheck", label: "Cross-check" }] : []),
+          { id: "reasoning", label: "Reasoning" },
+          /* ── Supplementary: how it is written, never whether it is true ── */
+          { id: "language", label: "Language analysis", group: "Language" },
+          ...(currentResult.framingSignals ? [{ id: "framing", label: "Framing signals", group: "Language" }] : []),
+          /* ── Context around the article ── */
+          ...(currentResult.sourceProfile ? [{ id: "sourceprofile", label: "Source profile", group: "Context" }] : []),
+          ...(currentResult.freshness ? [{ id: "freshness", label: "Freshness", group: "Context" }] : []),
+          ...(currentResult.fingerprint ? [{ id: "fingerprint", label: "Fingerprint", group: "Context" }] : []),
+          /* ── Process and tools ── */
+          ...(currentResult.evidenceTimeline && currentResult.evidenceTimeline.length > 0 ? [{ id: "timeline", label: "Timeline", group: "Process" }] : []),
+          { id: "replay", label: "Investigation replay", group: "Process" },
+          { id: "whatchanged", label: "What changed?", group: "Process" },
+          { id: "compare", label: "Compare articles", group: "Process" },
+          { id: "content", label: "Analyzed content", group: "Process" },
         ]
       : [];
 
@@ -970,6 +1031,10 @@ export default function Dashboard() {
     : "";
   const todayLabel = new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
   const editionLabel = fmtFiled(Date.now());
+  /* Live percentages for the PATTERNS chapter — real category scores from the
+     most recent filed investigation, or "—" for every signal when none exists. */
+  const latestBreakdown: CategoryBreakdown[] | undefined =
+    analyses && analyses.length > 0 ? analyses[0].categoryBreakdown ?? undefined : undefined;
 
   /* ─── Archive row — a record in a newsroom archive ───
      variant "row"     → table record used by Past Investigations
@@ -1276,6 +1341,21 @@ export default function Dashboard() {
                       <span className="kicker">Claim-level cross-check</span>
                       <span className="kicker">Evidence-first verdicts</span>
                     </div>
+
+                    {/* The four chapters, named before they open */}
+                    <div className="mt-12 hidden gap-x-6 border-t border-border pt-4 sm:grid sm:grid-cols-4">
+                      {deskSignature.map((ch) => (
+                        <button
+                          key={ch.no}
+                          type="button"
+                          onClick={() => document.getElementById(`chapter-${ch.title.toLowerCase()}`)?.scrollIntoView({ behavior: "smooth", block: "start" })}
+                          className="group flex items-baseline gap-2.5 text-left"
+                        >
+                          <span className="num-marker transition-colors group-hover:text-[#C9C3B7]">{ch.no}</span>
+                          <span className="kicker transition-colors group-hover:text-foreground">{ch.title}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   <motion.div
@@ -1289,9 +1369,15 @@ export default function Dashboard() {
                   </motion.div>
                 </section>
 
-                {/* ─── The desk — workbench left, wire and ledger right ─── */}
-                <div className="mt-24 lg:mt-36 grid lg:grid-cols-[1.6fr_1fr] gap-y-20 lg:gap-y-0 items-start">
-                  <div className="min-w-0 lg:pr-12">
+                {/* ═════ CHAPTER 01 · TRACE — the trail, and the desk that runs it ═════ */}
+                <div className="mt-28 lg:mt-40">
+                  <ChapterMarker no={deskSignature[0].no} title={deskSignature[0].title} standfirst={deskSignature[0].standfirst}>
+                    <TraceChapter />
+                  </ChapterMarker>
+
+                  {/* The workbench sits inside the chapter — pick an article, run it */}
+                  <div className="mt-20 lg:mt-28 grid lg:grid-cols-[1.6fr_1fr] gap-y-20 lg:gap-y-0 items-start">
+                    <div className="min-w-0 lg:pr-12">
 
                     {/* ─── 01 · Begin an investigation ─── */}
                     <section id="begin" className="report-sec">
@@ -1502,7 +1588,7 @@ export default function Dashboard() {
                     {/* ─── 03 · Today's headlines — a newsroom column ─── */}
                     <section>
                       <SectionHead
-                        no="04"
+                        no="02"
                         title="Today's headlines"
                         dek={
                           newsLoading
@@ -1531,7 +1617,7 @@ export default function Dashboard() {
                     {/* ─── 05 · Activity — a quiet record of the archive ─── */}
                     <section className="mt-20 lg:mt-28">
                       <SectionHead
-                        no="05"
+                        no="03"
                         title="Activity"
                         dek="A quiet record of what this desk has filed."
                       />
@@ -1562,7 +1648,29 @@ export default function Dashboard() {
                         </div>
                       </div>
                     </section>
-                  </div>
+                    </div>{/* end right-rail inner wrapper */}
+                  </div>{/* end chapter-01 two-column grid */}
+                </div>{/* end CHAPTER 01 · TRACE */}
+
+                {/* ═════ CHAPTER 02 · PATTERNS — the linguistic signal system ═════ */}
+                <div className="mt-28 lg:mt-40">
+                  <ChapterMarker no={deskSignature[1].no} title={deskSignature[1].title} standfirst={deskSignature[1].standfirst}>
+                    <PatternsChapter values={patternValuesFor(latestBreakdown)} />
+                  </ChapterMarker>
+                </div>
+
+                {/* ═════ CHAPTER 03 · SCRUTINY — one claim, followed all the way ═════ */}
+                <div className="mt-28 lg:mt-40">
+                  <ChapterMarker no={deskSignature[2].no} title={deskSignature[2].title} standfirst={deskSignature[2].standfirst}>
+                    <ScrutinyChapter />
+                  </ChapterMarker>
+                </div>
+
+                {/* ═════ CHAPTER 04 · FRAMEWORK — what runs underneath ═════ */}
+                <div className="mt-28 lg:mt-40">
+                  <ChapterMarker no={deskSignature[3].no} title={deskSignature[3].title} standfirst={deskSignature[3].standfirst}>
+                    <FrameworkChapter />
+                  </ChapterMarker>
                 </div>
               </motion.div>
             )}
@@ -1831,23 +1939,28 @@ export default function Dashboard() {
                         </button>
                         <p className="kicker mt-7 mb-2.5" style={{ opacity: 0.5 }}>Contents</p>
                         <nav className="border-l border-border">
-                          {reportSections.map((s) => {
+                          {reportSections.map((s, si) => {
                             const active = resultTab === s.id;
+                            const showGroup = s.group && s.group !== reportSections[si - 1]?.group;
                             return (
-                              <button
-                                key={s.id}
-                                type="button"
-                                onClick={() => goToSection(s.id)}
-                                className={`relative w-full flex items-baseline gap-2.5 py-[5px] pl-3 pr-2 text-left transition-colors ${
-                                  active ? "text-foreground" : "text-muted-foreground hover:text-foreground"
-                                }`}
-                              >
-                                {active && (
-                                  <motion.span layoutId="toc-active" className="absolute left-0 top-0 bottom-0 w-px" style={{ background: "#C9C3B7" }} />
+                              <div key={s.id}>
+                                {showGroup && (
+                                  <p className="kicker mt-4 mb-1 pl-3" style={{ fontSize: 8.5, opacity: 0.45 }}>{s.group}</p>
                                 )}
-                                <span className="num-marker shrink-0" style={{ opacity: active ? 1 : 0.55 }}>{secNo(s.id)}</span>
-                                <span className="text-[11.5px] leading-tight">{s.label}</span>
-                              </button>
+                                <button
+                                  type="button"
+                                  onClick={() => goToSection(s.id)}
+                                  className={`relative w-full flex items-baseline gap-2.5 py-[5px] pl-3 pr-2 text-left transition-colors ${
+                                    active ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                                  }`}
+                                >
+                                  {active && (
+                                    <motion.span layoutId="toc-active" className="absolute left-0 top-0 bottom-0 w-px" style={{ background: "#C9C3B7" }} />
+                                  )}
+                                  <span className="num-marker shrink-0" style={{ opacity: active ? 1 : 0.55 }}>{secNo(s.id)}</span>
+                                  <span className="text-[11.5px] leading-tight">{s.label}</span>
+                                </button>
+                              </div>
                             );
                           })}
                         </nav>
@@ -1872,7 +1985,7 @@ export default function Dashboard() {
                         <div className="border-b border-border mt-[3px]" />
 
                         <p className="kicker mt-10" style={{ color: "#C9C3B7" }}>
-                          Investigation / {secNo("verdict")}
+                          Investigation
                         </p>
 
                         <h1 className="mt-5 font-serif-editorial text-[clamp(1.65rem,5.2vw,2.9rem)] leading-[1.12] max-w-4xl text-balance break-words">
@@ -1892,7 +2005,10 @@ export default function Dashboard() {
                       {/* ─── Verdict — typography-led, no gauges ─── */}
                       <section id="verdict" className="report-sec mt-20 lg:mt-28">
                         <div className="flex items-baseline justify-between gap-4">
-                          <span className="kicker">Assessment</span>
+                          <span className="flex items-baseline gap-3">
+                            <span className="num-marker">01</span>
+                            <span className="kicker" style={{ color: "#F1F0EA" }}>Verdict</span>
+                          </span>
                           <span className="kicker tabular" style={{ opacity: 0.6 }}>
                             {currentResult.redFlags.length} warning · {currentResult.greenFlags.length} positive signals
                           </span>
@@ -2002,19 +2118,6 @@ export default function Dashboard() {
                           </div>
                         )}
 
-                        {/* Full reasoning on demand */}
-                        <div className="mt-7">
-                          <MorphingPanel
-                            preview={
-                              <p className="text-[11.5px] leading-relaxed text-muted-foreground">
-                                The complete reasoning behind this verdict — how retrieved evidence, claim consistency and language signals were weighed.
-                              </p>
-                            }
-                            detail={<p className="text-[12px] leading-relaxed text-muted-foreground">{currentResult.reasoning}</p>}
-                            triggerLabel="Read the full reasoning"
-                            accentColor="#C9C3B7"
-                          />
-                        </div>
                       </section>
 
                       {/* ─── 01 · Claim analysis ─── */}
@@ -2022,7 +2125,7 @@ export default function Dashboard() {
                         <ReportSection
                           id="claims"
                           no={secNo("claims")}
-                          title="Claim analysis"
+                          title="Claims"
                           dek={`${currentResult.claims.length} factual claims extracted — each one cross-checked against retrieved independent coverage. Language and structural observations are reported separately as signals, never as claims.`}
                           aside={
                             <span className="kicker tabular">
@@ -2034,29 +2137,12 @@ export default function Dashboard() {
                         </ReportSection>
                       )}
 
-                      {/* ─── 02 · Source cross-check ─── */}
-                      {currentResult.crossCheck && currentResult.crossCheck.length > 0 && (
-                        <ReportSection
-                          id="crosscheck"
-                          no={secNo("crosscheck")}
-                          title="Source cross-check"
-                          dek={`${currentResult.crossCheck.length} claims cross-referenced against independent external sources retrieved during live cross-checking.`}
-                          aside={
-                            <span className="kicker tabular">
-                              {evidenceStats?.uniqueRetrieved ?? 0} unique · {evidenceStats?.claimSourceRefs ?? 0} refs
-                            </span>
-                          }
-                        >
-                          <SourceCrossCheck crossCheck={currentResult.crossCheck} claims={currentResult.claims ?? []} />
-                        </ReportSection>
-                      )}
-
-                      {/* ─── 03 · Evidence chain ─── */}
+                      {/* ─── 03 · Evidence ─── */}
                       <ReportSection
                         id="chain"
                         no={secNo("chain")}
-                        title="Evidence chain"
-                        dek="How Veritas reached this verdict — every stage derived from this single investigation result."
+                        title="Evidence"
+                        dek="What the investigation retrieved and read — every figure derived from this single result, never estimated."
                       >
                         <EvidenceChain
                           verdict={currentResult.verdict}
@@ -2081,14 +2167,47 @@ export default function Dashboard() {
                         />
                       </ReportSection>
 
-                      {/* ─── 04 · Evidence map ─── */}
+                      {/* ─── 04 · Cross-check ─── */}
+                      {currentResult.crossCheck && currentResult.crossCheck.length > 0 && (
+                        <ReportSection
+                          id="crosscheck"
+                          no={secNo("crosscheck")}
+                          title="Cross-check"
+                          dek={`${currentResult.crossCheck.length} claims cross-referenced against independent external sources retrieved during live cross-checking — each source states whether it supports or contradicts the claim.`}
+                          aside={
+                            <span className="kicker tabular">
+                              {evidenceStats?.uniqueRetrieved ?? 0} unique · {evidenceStats?.claimSourceRefs ?? 0} refs
+                            </span>
+                          }
+                        >
+                          <SourceCrossCheck crossCheck={currentResult.crossCheck} claims={currentResult.claims ?? []} />
+                          <div className="mt-10">
+                            <p className="kicker mb-4" style={{ opacity: 0.55 }}>Source trail — where every source came from</p>
+                            <SourceTrail
+                              sources={(currentResult.crossCheck ?? []).flatMap((c) =>
+                                c.sources.map((src) => ({ ...src, claimId: c.claimId, claimText: c.claimText })),
+                              )}
+                            />
+                          </div>
+                        </ReportSection>
+                      )}
+
+                      {/* ─── 05 · Reasoning ─── */}
                       <ReportSection
-                        id="map"
-                        no={secNo("map")}
-                        title="Evidence map"
-                        dek="The investigation as a tree — claim → sources → evidence → cross-check → verdict."
+                        id="reasoning"
+                        no={secNo("reasoning")}
+                        title="Reasoning"
+                        dek="How the evidence produced this assessment — the full reasoning, and the claim-to-source map behind it."
                       >
-                        <EvidenceMap
+                        <p
+                          className="max-w-[74ch] text-[13.5px] leading-[1.85]"
+                          style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#F1F0EA" }}
+                        >
+                          {currentResult.reasoning}
+                        </p>
+                        <div className="mt-10">
+                          <p className="kicker mb-4" style={{ opacity: 0.55 }}>Claim → evidence → verdict</p>
+                          <EvidenceMap
                           articleTitle={(currentResult.extractedText || inputText).slice(0, 80)}
                           claims={(currentResult.claims || []).map(c => ({
                             id: c.id,
@@ -2101,9 +2220,10 @@ export default function Dashboard() {
                           verdict={currentResult.verdict}
                           confidence={currentResult.confidence}
                         />
+                        </div>
                       </ReportSection>
 
-                      {/* ─── 05 · Evidence timeline ─── */}
+                      {/* ─── Evidence timeline ─── */}
                       {currentResult.evidenceTimeline && currentResult.evidenceTimeline.length > 0 && (
                         <ReportSection
                           id="timeline"
@@ -2124,6 +2244,17 @@ export default function Dashboard() {
                         dek="How the text is written — reported separately from whether it is true."
                         aside={<span className="kicker" style={{ color: STATUS.amber }}>Linguistic signal ≠ truth</span>}
                       >
+                        {/* The separation, stated before anything is measured */}
+                        <div
+                          className="mb-9 border px-4 py-3.5"
+                          style={{ borderColor: "rgba(176,161,131,0.3)", background: "rgba(176,161,131,0.05)" }}
+                        >
+                          <p className="kicker" style={{ color: "#B0A183" }}>Language signal</p>
+                          <p className="mt-1.5 text-[11.5px] leading-relaxed text-muted-foreground max-w-[74ch]">
+                            Language analysis is supplementary and is NOT proof that content is true. Verdicts are
+                            produced only from factual claims cross-checked against retrieved independent evidence.
+                          </p>
+                        </div>
                         <div className="grid lg:grid-cols-2 gap-x-10 gap-y-8">
                           <div>
                             <p className="kicker mb-2" style={{ opacity: 0.55 }}>Linguistic profile</p>

@@ -129,7 +129,7 @@ export function InvestigationReplay({ analysis, retrievalFailed, failedUrl, fail
         <div className="flex-1 relative h-px ml-2" style={{ background: "#3A3B3E" }}>
           <motion.div
             animate={{ width: ((currentStage / (stages.length - 1)) * 100) + "%" }}
-            transition={{ duration: 0.3 }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
             className="absolute top-0 left-0 h-px"
             style={{ background: "#C9C3B7" }}
           />
@@ -139,7 +139,7 @@ export function InvestigationReplay({ analysis, retrievalFailed, failedUrl, fail
         </span>
       </div>
 
-      {/* Document-reader stage list — numbered entries, current step obvious */}
+      {/* Chronological stage list — the active step carries one sliding marker */}
       <div className="border-t border-border">
         {stages.map((stage, i) => {
           const isActive = i === currentStage;
@@ -149,17 +149,30 @@ export function InvestigationReplay({ analysis, retrievalFailed, failedUrl, fail
           return (
             <div
               key={stage.id}
-              className="flex items-stretch gap-4 border-b border-border/70 transition-colors"
-              style={{
-                background: isActive ? "rgba(201,195,183,0.045)" : undefined,
-                borderLeft: isActive ? "2px solid #C9C3B7" : "2px solid transparent",
-                paddingLeft: isActive ? 10 : 12,
-                paddingRight: 8,
-                opacity: isPending ? 0.45 : 1,
-              }}
+              className="relative flex items-stretch gap-4 border-b border-border/70"
+              style={{ opacity: isPending ? 0.45 : 1 }}
             >
+              {/* The active-step indicator — one marker shared across rows,
+                  so it glides to the current stage instead of blinking in */}
+              {isActive && (
+                <motion.span
+                  layoutId="replay-active"
+                  className="absolute left-0 top-0 bottom-0 w-[2px]"
+                  style={{ background: "#C9C3B7" }}
+                  transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                />
+              )}
+              {isActive && (
+                <motion.span
+                  layoutId="replay-active-bg"
+                  className="absolute inset-0"
+                  style={{ background: "rgba(201,195,183,0.045)" }}
+                  transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                />
+              )}
+
               {/* Numbered marker + rule to the next stage */}
-              <div className="flex flex-col items-center">
+              <div className="relative flex flex-col items-center pl-3">
                 <span
                   className="w-7 shrink-0 text-center text-[9px] leading-none pt-3.5 tracking-[0.12em]"
                   style={{
@@ -176,7 +189,7 @@ export function InvestigationReplay({ analysis, retrievalFailed, failedUrl, fail
                     <div className="absolute inset-0" style={{ background: "#3A3B3E" }} />
                     <motion.div
                       animate={{ height: isDone || isActive ? "100%" : "0%" }}
-                      transition={{ duration: 0.4 }}
+                      transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
                       className="absolute top-0 left-0 w-full"
                       style={{ background: "rgba(201,195,183,0.35)" }}
                     />
@@ -188,18 +201,24 @@ export function InvestigationReplay({ analysis, retrievalFailed, failedUrl, fail
               <motion.div
                 animate={{ opacity: isPending ? 0.7 : 1 }}
                 transition={{ duration: 0.3 }}
-                className="flex-1 min-w-0 py-3"
+                className="relative flex-1 min-w-0 py-3 pr-2"
               >
                 <div className="flex items-baseline justify-between gap-3">
-                  <span
-                    className="text-[9.5px] tracking-[0.18em] uppercase"
-                    style={{
-                      fontFamily: "'JetBrains Mono', monospace",
-                      color: isActive ? "#F1F0EA" : isDone ? "#A5A5A1" : "#A5A5A1",
-                      fontWeight: isActive ? 600 : 500,
-                    }}
-                  >
-                    {stage.label}
+                  <span className="flex items-baseline gap-2.5 min-w-0">
+                    <stage.icon
+                      className="w-3.5 h-3.5 shrink-0 self-center"
+                      style={{ color: isActive ? "#C9C3B7" : "#6F7074" }}
+                    />
+                    <span
+                      className="text-[9.5px] tracking-[0.18em] uppercase"
+                      style={{
+                        fontFamily: "'JetBrains Mono', monospace",
+                        color: isActive ? "#F1F0EA" : "#A5A5A1",
+                        fontWeight: isActive ? 600 : 500,
+                      }}
+                    >
+                      {stage.label}
+                    </span>
                   </span>
                   <span className="shrink-0 flex items-center gap-1.5">
                     {isDone && stage.occurred && <CheckCircle2 className="w-3 h-3" style={{ color: "#8A9A82" }} />}

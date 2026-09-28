@@ -156,7 +156,7 @@ export function PatternsChapter({
                         {/* A tick whose weight follows the measured value, when there is one */}
                         <span className="relative block h-[9px] w-9 shrink-0">
                           <span className="absolute left-0 right-0 top-1/2 h-px -translate-y-1/2" style={{ background: "#3A3B3E" }} />
-                          {typeof v === "number" && (
+                          {typeof v === "number" && v > 0 && (
                             <motion.span
                               className="absolute top-1/2 h-px -translate-y-1/2"
                               style={{ background: tone, opacity: 0.85 }}

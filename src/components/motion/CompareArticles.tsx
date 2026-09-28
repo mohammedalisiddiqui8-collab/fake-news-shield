@@ -73,17 +73,24 @@ export function CompareArticles({ onCompare }: CompareArticlesProps) {
 
   return (
     <div>
-      {/* Input section */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+      {/* Input section — a research workspace: ARTICLE A vs ARTICLE B */}
+      <div className="relative grid grid-cols-1 sm:grid-cols-2 gap-x-14 gap-y-8 mb-4">
+        {/* The between — "vs." on a hairline, the workspace's centre line */}
+        <div className="pointer-events-none absolute inset-y-8 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-3 sm:flex">
+          <span className="h-6 w-px" style={{ background: "#3A3B3E" }} />
+          <span className="kicker" style={{ color: "#6F7074" }}>vs.</span>
+          <span className="h-6 w-px" style={{ background: "#3A3B3E" }} />
+        </div>
         {/* Article A */}
         <div>
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-baseline gap-2.5 mb-2">
             <span
-              className="text-[9.5px] font-bold tracking-[0.2em]"
-              style={{ fontFamily: "'JetBrains Mono', monospace", color: "#C9C3B7" }}
+              className="text-[13px] leading-none tracking-[0.08em]"
+              style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F0EA" }}
             >
               ARTICLE A
             </span>
+            <span className="kicker" style={{ opacity: 0.5 }}>Subject of comparison</span>
             <div className="flex gap-1">
               {(["text", "url"] as const).map((t) => (
                 <button
@@ -116,13 +123,14 @@ export function CompareArticles({ onCompare }: CompareArticlesProps) {
 
         {/* Article B */}
         <div>
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-baseline gap-2.5 mb-2">
             <span
-              className="text-[9.5px] font-bold tracking-[0.2em]"
-              style={{ fontFamily: "'JetBrains Mono', monospace", color: "#B0A183" }}
+              className="text-[13px] leading-none tracking-[0.08em]"
+              style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F0EA" }}
             >
               ARTICLE B
             </span>
+            <span className="kicker" style={{ opacity: 0.5 }}>Subject of comparison</span>
             <div className="flex gap-1">
               {(["text", "url"] as const).map((t) => (
                 <button
@@ -159,12 +167,12 @@ export function CompareArticles({ onCompare }: CompareArticlesProps) {
         <Button
           variant="ghost"
           size="sm"
-          className="cursor-pointer gap-1.5 text-[10px] h-8"
+          className="cursor-pointer gap-1.5 text-[10px] uppercase tracking-[0.16em] h-9 px-5 transition-opacity hover:opacity-90 disabled:opacity-40"
           disabled={isComparing || !textA.trim() || !textB.trim()}
           onClick={handleCompare}
           style={{
             background: isComparing ? "rgba(201,195,183,0.06)" : "#C9C3B7",
-            color: "#F1F0EA",
+            color: "#151618",
             border: "none",
           }}
         >
