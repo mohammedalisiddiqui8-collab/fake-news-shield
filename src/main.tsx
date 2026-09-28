@@ -127,6 +127,8 @@ function AppRoutes() {
           path="/analysis"
           element={<PageTransition><Analysis /></PageTransition>}
         />
+        {/* The analysis page moved from /dashboard to /analysis — old links land here. */}
+        <Route path="/dashboard" element={<Navigate to="/analysis" replace />} />
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
       </Routes>
     </AnimatePresence>
