@@ -4,7 +4,6 @@ import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useNavigate } from "react-router";
 import { useTheme } from "@/components/ThemeProvider";
-import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import {
   Shield, Search, Clock, Home, CheckCircle2, AlertTriangle,
@@ -12,7 +11,7 @@ import {
   ArrowLeft, ClipboardPaste, BookOpen, ArrowLeftRight,
   Sun, Moon, Download, Share2, Lightbulb, Target, ArrowRight, Globe,
   Landmark, FlaskConical, Thermometer, Newspaper, TrendingUp,
-  PenLine, Settings, LogOut,
+  PenLine, Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -446,7 +445,6 @@ type NavItemDef = { id: string; label: string; icon: typeof Home; view: ViewType
 export default function Dashboard() {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
-  const { signOut } = useAuth();
   const analyses = useQuery(api.analyses.listByUser);
   const createAnalysis = useMutation(api.analyses.create);
   const deleteAnalysis = useMutation(api.analyses.remove);
@@ -1722,24 +1720,16 @@ export default function Dashboard() {
                   </p>
                 </section>
 
-                {/* Session */}
+                {/* Free to use — no account exists to manage */}
                 <section className="mt-12">
-                  <SectionHead no="03" title="Session" dek="Your investigations are stored privately against your account." />
+                  <SectionHead no="03" title="Free to use" dek="Veritas has no accounts. There is nothing to sign up for, nothing to sign in to, and no feature held back." />
                   <div className="mt-4 flex flex-wrap items-center gap-3">
                     <ActionBtn icon={ArrowLeft} onClick={() => navigate("/")}>Return to the front page</ActionBtn>
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        try { await signOut(); } catch { /* signed out anyway */ }
-                        navigate("/");
-                      }}
-                      className="inline-flex items-center gap-1.5 h-8 px-3 border text-[10px] uppercase tracking-[0.14em] transition-colors"
-                      style={{ borderColor: "rgba(176,132,121,0.4)", color: STATUS.red }}
-                    >
-                      <LogOut className="w-3 h-3" />
-                      Sign out
-                    </button>
                   </div>
+                  <p className="mt-4 text-[11.5px] leading-relaxed text-muted-foreground max-w-[62ch]">
+                    Open Veritas, paste an article, and the report is yours. Investigations are filed to this
+                    session&rsquo;s archive so you can reopen them later &mdash; no email address, no password, no account.
+                  </p>
                 </section>
 
                 {/* About */}

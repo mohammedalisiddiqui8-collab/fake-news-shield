@@ -1,19 +1,18 @@
 import '@vly-ai/integrations';
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { Toaster } from "@/components/ui/sonner";
-import { RequireAuth } from "@/components/RequireAuth";
+import { useGuestSession } from "@/hooks/use-guest-session";
 import { VlyToolbar } from "../vly-toolbar-readonly.tsx";
 import { ConvexAuthProvider } from "@convex-dev/auth/react";
 import { ConvexReactClient } from "convex/react";
 import React, { StrictMode, useEffect, lazy, Suspense } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Route, Routes, useLocation } from "react-router";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router";
 import { motion, AnimatePresence } from "framer-motion";
 import "./index.css";
 
 // Lazy load route components for better code splitting
 const Landing = lazy(() => import("./pages/Landing.tsx"));
-const AuthPage = lazy(() => import("./pages/Auth.tsx"));
 const Dashboard = lazy(() => import("./pages/Dashboard.tsx"));
 const NotFound = lazy(() => import("./pages/NotFound.tsx"));
 
@@ -98,6 +97,16 @@ function PageTransition({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * Veritas is free to use. There is no login, no sign-up and no account
+ * prompt — this silently provisions the anonymous session the backend uses to
+ * file investigations, and never gates rendering behind it.
+ */
+function GuestSession({ children }: { children: React.ReactNode }) {
+  useGuestSession();
+  return <>{children}</>;
+}
+
 /** Inner router — must live inside BrowserRouter so useLocation works. */
 function AppRoutes() {
   const location = useLocation();
@@ -105,10 +114,8 @@ function AppRoutes() {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<PageTransition><Landing /></PageTransition>} />
-        <Route
-          path="/auth"
-          element={<PageTransition><AuthPage redirectAfterAuth="/dashboard" /></PageTransition>}
-        />
+        {/* No authentication screen exists — /auth simply enters the desk. */}
+        <Route path="/auth" element={<Navigate to="/dashboard" replace />} />
         <Route
           path="/dashboard"
           element={<PageTransition><Dashboard /></PageTransition>}
@@ -150,6 +157,7 @@ createRoot(document.getElementById("root")!).render(
         <VlyToolbar />
       </ToolbarErrorBoundary>
       <ConvexAuthProvider client={convex}>
+        <GuestSession>
         <ThemeProvider>
         <BrowserRouter>
           <RouteSyncer />
@@ -159,6 +167,7 @@ createRoot(document.getElementById("root")!).render(
         </BrowserRouter>
         <Toaster />
         </ThemeProvider>
+        </GuestSession>
       </ConvexAuthProvider>
     </RootErrorBoundary>
   </StrictMode>,

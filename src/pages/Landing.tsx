@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router";
+import { VerificationGlyph } from "@/components/VerificationGlyph";
 
 /* ─── PAGE 01 · Title page ──────────────────────────────────────────────
-   A quiet opening frame: near-black, one wordmark, one small line that
-   changes. Nothing competes with the title. ─────────────────────────────── */
+   Three things only: the name, one small line that changes, and the way in.
+   No eyebrow headings, no account links, no competing furniture. ──────────── */
 
 const OPENING_QUOTES = [
   "Truth deserves evidence.",
@@ -21,7 +22,7 @@ function OpeningQuote() {
   useEffect(() => {
     const t = setInterval(() => {
       setIndex((p) => (p + 1) % OPENING_QUOTES.length);
-    }, 4200);
+    }, 4600);
     return () => clearInterval(t);
   }, []);
 
@@ -31,11 +32,11 @@ function OpeningQuote() {
       <AnimatePresence mode="wait">
         <motion.p
           key={index}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.85, ease: EASE }}
-          className="absolute inset-0 text-center text-[10px] font-light uppercase tracking-[0.34em] text-[#A5A5A1] sm:text-[11px]"
+          initial={{ opacity: 0, y: 3 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -3 }}
+          transition={{ duration: 0.9, ease: EASE }}
+          className="absolute inset-0 text-center font-serif-editorial text-[13px] italic leading-none tracking-[0.06em] text-[#A5A5A1] sm:text-[15px]"
         >
           {OPENING_QUOTES[index]}
         </motion.p>
@@ -52,7 +53,7 @@ export default function Landing() {
       {/* ── Top rule ── */}
       <div className="h-px w-full bg-[#2A2B2E]" />
 
-      {/* ── Minimal navigation ── */}
+      {/* ── Minimal navigation — the name, nothing else ── */}
       <header className="flex shrink-0 items-center justify-between px-6 py-6 sm:px-10 sm:py-8">
         <button
           onClick={() => navigate("/")}
@@ -66,55 +67,83 @@ export default function Landing() {
             Veritas
           </span>
         </button>
-
-        <button
-          onClick={() => navigate("/auth")}
-          className="ul-hover text-[10px] font-light uppercase tracking-[0.28em] text-[#A5A5A1] transition-colors duration-500 hover:text-[#F1F0EA]"
-        >
-          Sign in
-        </button>
       </header>
 
       {/* ── Centred composition ── */}
-      <main className="relative flex flex-1 flex-col items-center justify-center px-6 py-20 sm:px-10">
+      <main className="relative flex flex-1 flex-col items-center justify-center px-6 py-16 sm:px-10">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1.2, ease: EASE }}
           className="flex w-full max-w-3xl flex-col items-center"
         >
-          <p className="kicker mb-10 text-[#5C5D61] sm:mb-14">
-            Fact-checking desk
-          </p>
+          {/* The mark — one quiet trace, secondary to the wordmark */}
+          <div className="mb-12 sm:mb-16">
+            <VerificationGlyph size={46} />
+          </div>
 
           <h1 className="text-center font-serif-editorial text-[clamp(2.6rem,13vw,7.5rem)] leading-[0.95] tracking-[0.16em] text-[#F1F0EA] sm:tracking-[0.22em]">
             VERITAS
           </h1>
 
-          <div className="mt-9 h-px w-14 bg-[#3A3B3E] sm:mt-12" />
+          <div className="mt-8 h-px w-14 bg-[#3A3B3E] sm:mt-11" />
 
-          <div className="mt-9 w-full max-w-sm sm:mt-11">
+          <div className="mt-8 w-full max-w-sm sm:mt-10">
             <OpeningQuote />
           </div>
+
+          {/* ── The way in: an editorial entrance, not a SaaS button ── */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1, delay: 0.35, ease: EASE }}
+            className="mt-16 sm:mt-24"
+          >
+          <motion.button
+            type="button"
+            onClick={() => navigate("/dashboard")}
+            className="group flex flex-col items-center gap-4"
+            initial="rest"
+            whileHover="hover"
+            whileTap={{ scale: 0.995 }}
+          >
+            <span className="relative block overflow-hidden pb-2">
+              <motion.span
+                className="block font-serif-editorial text-[clamp(1.35rem,4.6vw,2.4rem)] leading-none tracking-[0.2em] text-[#F1F0EA] transition-colors duration-500 group-hover:text-white"
+                variants={{ rest: { y: 0 }, hover: { y: -2 } }}
+                transition={{ duration: 0.4, ease: EASE }}
+              >
+                ENTER VERITAS
+              </motion.span>
+              {/* The rule draws itself out from the left on hover */}
+              <motion.span
+                className="absolute bottom-0 left-0 block h-px w-full origin-left"
+                style={{ background: "#C9C3B7" }}
+                initial={{ scaleX: 0.28 }}
+                animate={{ scaleX: 1 }}
+                transition={{ duration: 1.1, delay: 0.6, ease: EASE }}
+              />
+              <motion.span
+                className="absolute bottom-0 left-0 block h-px w-full origin-left"
+                style={{ background: "#F1F0EA" }}
+                variants={{ rest: { scaleX: 0 }, hover: { scaleX: 1 } }}
+                transition={{ duration: 0.7, ease: EASE }}
+              />
+            </span>
+
+            {/* The arrow steps forward and settles */}
+            <motion.span
+              className="flex items-center gap-3 text-[#A5A5A1] transition-colors duration-500 group-hover:text-[#F1F0EA]"
+              variants={{ rest: { x: 0 }, hover: { x: 7 } }}
+              transition={{ duration: 0.45, ease: EASE }}
+            >
+              <span className="h-px w-6 bg-current opacity-40" />
+              <span className="block text-[15px] leading-none">→</span>
+            </motion.span>
+          </motion.button>
+          </motion.div>
         </motion.div>
       </main>
-
-      {/* ── Entering the product ── */}
-      <footer className="flex shrink-0 flex-col gap-6 px-6 pb-10 pt-6 sm:flex-row sm:items-center sm:justify-between sm:px-10 sm:pb-12">
-        <p className="kicker text-[#4E4F53]">
-          Independent verification
-        </p>
-
-        <button
-          onClick={() => navigate("/dashboard")}
-          className="group flex items-center gap-3 self-start text-[11px] font-light uppercase tracking-[0.28em] text-[#A5A5A1] transition-colors duration-500 hover:text-[#F1F0EA] sm:self-auto"
-        >
-          <span className="ul-hover">Enter Veritas</span>
-          <span className="inline-block transition-transform duration-500 ease-out group-hover:translate-x-1">
-            →
-          </span>
-        </button>
-      </footer>
 
       <div className="h-px w-full bg-[#2A2B2E]" />
     </div>
