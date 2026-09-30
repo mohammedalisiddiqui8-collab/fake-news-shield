@@ -1,8 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
-import IntroAtmosphere from "@/components/IntroAtmosphere";
-import { VerificationGlyph } from "@/components/VerificationGlyph";
+import IntroScene from "@/components/IntroScene";
 
 /* ─── PAGE 01 · Title page ────────────────────────────────────────────
    Four things only: the name, the rule beneath it, one small line that
@@ -17,6 +16,8 @@ const OPENING_QUOTES = [
 ];
 
 const EASE = [0.22, 1, 0.36, 1] as const;
+
+const quoted = (s: string) => `\u201C${s}\u201D`;
 
 /**
  * The rotating line — a quiet crossfade. The current line softens out
@@ -45,9 +46,9 @@ function OpeningQuote() {
           animate={{ opacity: 1, filter: "blur(0px)" }}
           exit={{ opacity: 0, filter: reduce ? "blur(0px)" : "blur(5px)" }}
           transition={{ duration: reduce ? 0.35 : 0.52, ease: "easeInOut" }}
-          className="whitespace-nowrap text-center font-serif-editorial text-[13px] italic leading-none tracking-[0.08em] text-[#F1F0EA] sm:text-[15px]"
+          className="whitespace-nowrap text-center font-serif-editorial text-[14px] italic leading-none tracking-[0.06em] text-[#D8D4CB] sm:text-[16px]"
         >
-          {OPENING_QUOTES[index]}
+          {quoted(OPENING_QUOTES[index])}
         </motion.p>
       </AnimatePresence>
     </div>
@@ -59,9 +60,9 @@ export default function Landing() {
 
   return (
     <div className="veritas-night relative flex min-h-screen flex-col overflow-hidden bg-background text-foreground">
-      {/* ── The atmosphere — panels in depth, scan line, clock. Behind ──
+      {/* ── The scene — one continuous cinematic environment. Behind ──
           everything, inert to input; the page above it stays untouched. */}
-      <IntroAtmosphere />
+      <IntroScene />
 
       {/* ── Top rule ── */}
       <div className="relative z-10 h-px w-full bg-[#2A2B2E]" />
@@ -84,20 +85,14 @@ export default function Landing() {
 
       {/* ── Centred composition ── */}
       <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 py-16 sm:px-10">
-        {/* The opening is staged: mark → masthead → primary rule → secondary
-            rule → quote → way in. The whole sequence settles in about a
-            second — quick enough to feel set, slow enough to feel placed. */}
+        {/* The opening is staged: masthead → quote → way in. The whole
+            sequence settles in about a second — quick enough to feel set,
+            slow enough to feel placed. */}
         <motion.div
           initial="rest"
           animate="in"
           className="flex w-full max-w-3xl flex-col items-center"
         >
-          {/* The mark — one quiet trace, secondary to the wordmark. The extra
-              air below it is masthead spacing: the name sits in silence. */}
-          <motion.div className="mb-16 sm:mb-24" variants={{ rest: { opacity: 0 }, in: { opacity: 1 } }} transition={{ duration: 0.4, ease: EASE }}>
-            <VerificationGlyph size={46} />
-          </motion.div>
-
           {/* The masthead — the strongest element on the page. Generous
               tracking reads as a publication name, not a headline. */}
           <motion.h1
@@ -108,22 +103,7 @@ export default function Landing() {
             VERITAS
           </motion.h1>
 
-          {/* The rules beneath the name — the primary line draws left to
-              right, the tiny secondary rule follows it */}
-          <motion.div
-            className="mt-8 h-px w-14 origin-left sm:mt-11"
-            style={{ background: "#C9C3B7" }}
-            variants={{ rest: { scaleX: 0 }, in: { scaleX: 1 } }}
-            transition={{ duration: 0.32, ease: EASE, delay: 0.42 }}
-          />
-          <motion.div
-            className="mt-[3px] h-px w-8 origin-left"
-            style={{ background: "#3A3B3E" }}
-            variants={{ rest: { scaleX: 0 }, in: { scaleX: 1 } }}
-            transition={{ duration: 0.26, ease: EASE, delay: 0.56 }}
-          />
-
-          {/* The quote — the examined claim, in ivory. */}
+          {/* The quote — the examined claim, in soft ivory. */}
           <motion.div
             className="relative mt-9 flex w-full justify-center sm:mt-12"
             variants={{ rest: { opacity: 0 }, in: { opacity: 1 } }}
@@ -141,12 +121,12 @@ export default function Landing() {
             <motion.button
               type="button"
               onClick={() => navigate("/desk")}
+              whileHover={{ y: -1 }}
               whileTap={{ scale: 0.985 }}
-              className="ctrl-frame group h-12 px-8 sm:h-[52px] sm:px-10 text-[10.5px] sm:text-[11.5px]"
-              data-primary="true"
+              className="group flex items-center gap-2.5 rounded-full border border-[#C9C3B7]/40 bg-black/25 px-8 py-3.5 text-[10.5px] uppercase tracking-[0.28em] text-[#F1F0EA] backdrop-blur-sm transition-colors duration-500 hover:border-[#C9C3B7]/75 hover:bg-[#151410]/60 sm:px-10 sm:text-[11px]"
             >
               Enter Veritas
-              <span className="block text-[14px] leading-none transition-transform duration-300 ease-out group-hover:translate-x-[5px]">
+              <span className="block text-[13px] leading-none transition-transform duration-300 ease-out group-hover:translate-x-[4px]">
                 →
               </span>
             </motion.button>
