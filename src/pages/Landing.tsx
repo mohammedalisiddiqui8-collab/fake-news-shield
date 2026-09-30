@@ -124,7 +124,7 @@ export default function Landing() {
           onClick={() => navigate("/desk")}
           whileHover={{ y: -1 }}
           whileTap={{ scale: 0.985 }}
-          className="group absolute left-1/2 top-[59.5%] flex -translate-x-1/2 -translate-y-1/2 items-center gap-2.5 rounded-full border border-[#C9C3B7]/40 bg-black/25 px-7 py-3 text-[11px] uppercase tracking-[0.26em] text-[#F1F0EA] backdrop-blur-sm transition-colors duration-500 hover:border-[#C9C3B7]/75 hover:bg-[#151410]/60 landscape:top-[63%] landscape:px-9 landscape:py-3.5 landscape:text-[12px]"
+          className="group absolute left-1/2 top-[62.5%] flex -translate-x-1/2 -translate-y-1/2 items-center gap-2.5 rounded-full border border-[#C9C3B7]/40 bg-black/25 px-7 py-3 text-[11px] uppercase tracking-[0.26em] text-[#F1F0EA] backdrop-blur-sm transition-colors duration-500 hover:border-[#C9C3B7]/75 hover:bg-[#151410]/60 landscape:top-[66%] landscape:px-9 landscape:py-3.5 landscape:text-[12px]"
         >
           Enter Veritas
           <span className="block text-[13px] leading-none transition-transform duration-300 ease-out group-hover:translate-x-[4px]">
