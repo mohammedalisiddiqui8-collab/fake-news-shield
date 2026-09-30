@@ -1,11 +1,7 @@
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { VerificationGlyph } from "@/components/VerificationGlyph";
-
-/* The scene is three.js — kept out of the entry chunk and mounted only
-   when WebGL is available. It never blocks the composition beneath it. */
-const HeroScene = lazy(() => import("@/components/HeroScene"));
 
 /* ─── PAGE 01 · Title page ────────────────────────────────────────────
    Four things only: the name, the rule beneath it, one small line that
@@ -32,7 +28,8 @@ function OpeningQuote() {
   const [shown, setShown] = useState(OPENING_QUOTES[0].length);
   const [showCaret, setShowCaret] = useState(false);
   const [leaving, setLeaving] = useState(false);
-  const reduce = typeof window !== "undefined" &&
+  const reduce =
+    typeof window !== "undefined" &&
     window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
   useEffect(() => {
@@ -79,13 +76,13 @@ function OpeningQuote() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5, ease: EASE }}
-            className="absolute inset-0 text-center font-serif-editorial text-[11.5px] italic leading-none tracking-[0.08em] text-[#8E8E8A] sm:text-[13px]"
+            className="absolute inset-0 text-center font-serif-editorial text-[11.5px] italic leading-none tracking-[0.08em] text-[#F1F0EA] sm:text-[13px]"
           >
             {quote}
           </motion.p>
         </AnimatePresence>
       ) : (
-        <p className="absolute inset-0 text-center font-serif-editorial text-[11.5px] italic leading-none tracking-[0.08em] text-[#8E8E8A] sm:text-[13px]">
+        <p className="absolute inset-0 text-center font-serif-editorial text-[11.5px] italic leading-none tracking-[0.08em] text-[#F1F0EA] sm:text-[13px]">
           <span style={{ opacity: leaving ? 0 : 1, transition: "opacity 0.55s ease" }}>
             {text}
           </span>
@@ -105,22 +102,9 @@ function OpeningQuote() {
 
 export default function Landing() {
   const navigate = useNavigate();
-  const quoteAnchorRef = useRef<HTMLDivElement>(null);
-  const [sceneReady, setSceneReady] = useState(true);
 
   return (
     <div className="veritas-night relative flex min-h-screen flex-col overflow-hidden bg-background text-foreground">
-      {/* ── The cube field — the environment around the title page ── */}
-      {sceneReady && (
-        <Suspense fallback={null}>
-          <HeroScene
-            anchorRef={quoteAnchorRef}
-            quotes={OPENING_QUOTES}
-            onUnavailable={() => setSceneReady(false)}
-          />
-        </Suspense>
-      )}
-
       {/* ── Top rule ── */}
       <div className="h-px w-full bg-[#2A2B2E]" />
 
@@ -181,24 +165,16 @@ export default function Landing() {
             transition={{ duration: 0.26, ease: EASE, delay: 0.56 }}
           />
 
-          {/* The quote — the examined claim, in crimson. The scene draws it
-              and flows energy out of and back into its letterforms; the same
-              slot, the same footprint. The legacy typesetter line below only
-              shows if WebGL is unavailable, and the lines stay readable to
-              screen readers either way. */}
+          {/* The quote — the examined claim, in ivory. The typesetter line
+              is the only animation in this slot. */}
           <motion.div
             className="relative mt-9 flex w-full justify-center sm:mt-12"
             variants={{ rest: { opacity: 0 }, in: { opacity: 1 } }}
             transition={{ duration: 0.4, ease: EASE, delay: 0.7 }}
           >
-            <div ref={quoteAnchorRef} className="relative h-6 w-full max-w-xs sm:max-w-sm">
-              <span className="sr-only">{OPENING_QUOTES.join(" ")}</span>
+            <div aria-hidden="true">
+              <OpeningQuote />
             </div>
-            {!sceneReady && (
-              <div aria-hidden="true">
-                <OpeningQuote />
-              </div>
-            )}
           </motion.div>
 
           {/* ── The way in: a framed control, quiet until touched ── */}
