@@ -1,6 +1,23 @@
 /* ─── Google Fonts ─── */
 @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap');
 
+/* ─── Masthead face — Aveline ───
+   Aveline (Latinotype) is the display face reserved for the VERITAS wordmark
+   and major editorial display. It is a licensed commercial family — not on
+   Google Fonts or Fontsource — so no webfont file ships with the project.
+   `.font-masthead` lists it first and falls back to Libre Baskerville, which
+   keeps the masthead correct today and upgrades automatically the moment the
+   licensed files exist. To activate Aveline, place the licensed woff2 in
+   `src/fonts/` and uncomment:
+@font-face {
+  font-family: 'Aveline';
+  src: url('./fonts/Aveline-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+*/
+
 @import "tailwindcss";
 @import "tw-animate-css";
 @custom-variant dark (&:is(.dark *));
@@ -172,10 +189,12 @@
     font-weight: 400;
     letter-spacing: -0.005em;
   }
-  /* The masthead face — the wordmark reads as a publication, not a logo:
-     Libre Baskerville's bookish forms sit at home in the editorial system. */
+  /* The masthead face — the wordmark reads as a publication, not a logo.
+     Aveline leads the chain (see the commented @font-face at the top of this
+     file); Libre Baskerville carries the masthead until those files are
+     added. Everything set in `.font-masthead` upgrades together. */
   .font-masthead {
-    font-family: 'Libre Baskerville', 'DM Serif Display', Georgia, serif;
+    font-family: 'Aveline', 'Libre Baskerville', 'DM Serif Display', Georgia, serif;
     font-weight: 400;
   }
   code, .font-mono { font-family: 'JetBrains Mono', monospace; }

@@ -3,9 +3,10 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router";
 import { VerificationGlyph } from "@/components/VerificationGlyph";
 
-/* ─── PAGE 01 · Title page ──────────────────────────────────────────────
-   Four things only: the name, the rule beneath it, one line that changes,
-   and the framed way in. The masthead is set in Libre Baskerville. ─────── */
+/* ─── PAGE 01 · Title page ────────────────────────────────────────────
+   Four things only: the name, the rule beneath it, one small line that
+   changes, and the framed way in. The masthead is set in the Aveline
+   chain (.font-masthead); everything else stays in the sans. ─────────── */
 
 const OPENING_QUOTES = [
   "Truth deserves evidence.",
@@ -74,13 +75,13 @@ function OpeningQuote() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5, ease: EASE }}
-            className="absolute inset-0 text-center font-serif-editorial text-[13px] italic leading-none tracking-[0.06em] text-[#A5A5A1] sm:text-[15px]"
+            className="absolute inset-0 text-center font-serif-editorial text-[11.5px] italic leading-none tracking-[0.08em] text-[#8E8E8A] sm:text-[13px]"
           >
             {quote}
           </motion.p>
         </AnimatePresence>
       ) : (
-        <p className="absolute inset-0 text-center font-serif-editorial text-[13px] italic leading-none tracking-[0.06em] text-[#A5A5A1] sm:text-[15px]">
+        <p className="absolute inset-0 text-center font-serif-editorial text-[11.5px] italic leading-none tracking-[0.08em] text-[#8E8E8A] sm:text-[13px]">
           <span style={{ opacity: leaving ? 0 : 1, transition: "opacity 0.55s ease" }}>
             {text}
           </span>
@@ -132,14 +133,16 @@ export default function Landing() {
           animate="in"
           className="flex w-full max-w-3xl flex-col items-center"
         >
-          {/* The mark — one quiet trace, secondary to the wordmark */}
-          <motion.div className="mb-10 sm:mb-14" variants={{ rest: { opacity: 0 }, in: { opacity: 1 } }} transition={{ duration: 0.4, ease: EASE }}>
+          {/* The mark — one quiet trace, secondary to the wordmark. The extra
+              air below it is masthead spacing: the name sits in silence. */}
+          <motion.div className="mb-16 sm:mb-24" variants={{ rest: { opacity: 0 }, in: { opacity: 1 } }} transition={{ duration: 0.4, ease: EASE }}>
             <VerificationGlyph size={46} />
           </motion.div>
 
-          {/* The masthead */}
+          {/* The masthead — the strongest element on the page. Generous
+              tracking reads as a publication name, not a headline. */}
           <motion.h1
-            className="text-center font-masthead text-[clamp(2.5rem,12vw,7rem)] leading-[0.95] tracking-[0.16em] text-[#F1F0EA] sm:tracking-[0.22em]"
+            className="text-center font-masthead text-[clamp(2.8rem,12.5vw,7.5rem)] leading-[0.95] tracking-[0.14em] text-[#F1F0EA] sm:tracking-[0.2em]"
             variants={{ rest: { opacity: 0, y: 6 }, in: { opacity: 1, y: 0 } }}
             transition={{ duration: 0.55, ease: EASE, delay: 0.08 }}
           >
@@ -161,9 +164,10 @@ export default function Landing() {
             transition={{ duration: 0.26, ease: EASE, delay: 0.56 }}
           />
 
-          {/* The quote — appears once the rules are set */}
+          {/* The quote — deliberately a supporting line: smaller, greyer and
+              more air above it, so the wordmark stays the loudest element */}
           <motion.div
-            className="mt-7 w-full max-w-sm sm:mt-8"
+            className="mt-9 w-full max-w-xs sm:mt-12"
             variants={{ rest: { opacity: 0 }, in: { opacity: 1 } }}
             transition={{ duration: 0.4, ease: EASE, delay: 0.7 }}
           >
@@ -180,7 +184,7 @@ export default function Landing() {
               type="button"
               onClick={() => navigate("/desk")}
               whileTap={{ scale: 0.985 }}
-              className="ctrl-frame group h-12 px-8 sm:h-[52px] sm:px-10 text-[11px] sm:text-[12px]"
+              className="ctrl-frame group h-12 px-8 sm:h-[52px] sm:px-10 text-[10.5px] sm:text-[11.5px]"
               data-primary="true"
             >
               Enter Veritas

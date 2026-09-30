@@ -2,9 +2,10 @@ import type { ReactNode } from "react";
 import { motion } from "framer-motion";
 
 /**
- * The marker that opens each chapter of the desk: a number, a rule, a title
- * and a standfirst. Chapters are separated by a wide margin so each one reads
- * as a new part of the publication rather than a block on a dashboard.
+ * The marker that opens each chapter of the desk: a folio number, a title
+ * set in the masthead face, and a one-sentence standfirst. Chapters are
+ * separated by a wide margin so each one reads as a new part of the
+ * publication rather than a block on a dashboard.
  */
 
 const EASE = [0.22, 1, 0.36, 1] as const;
@@ -30,14 +31,10 @@ export function ChapterMarker({
         viewport={{ once: true, margin: "-10% 0px -10% 0px" }}
         transition={{ duration: 0.7, ease: EASE }}
       >
-        {/* ── Number / title / rule ── */}
+        {/* ── Folio number / rule / aside ── */}
         <div className="flex items-center gap-4 sm:gap-6">
-          <span className="num-marker shrink-0">{no}</span>
-          <span
-            className="shrink-0 text-[clamp(1.5rem,4.2vw,2.35rem)] leading-none tracking-[0.06em]"
-            style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F0EA" }}
-          >
-            {title}
+          <span className="kicker shrink-0" style={{ color: "#C9C3B7" }}>
+            {no}
           </span>
           <motion.span
             className="h-px flex-1 origin-left"
@@ -50,8 +47,13 @@ export function ChapterMarker({
           {aside && <div className="hidden shrink-0 sm:block">{aside}</div>}
         </div>
 
+        {/* ── Title — masthead face, the loudest line in the chapter ── */}
+        <h2 className="mt-5 font-masthead text-[clamp(1.9rem,5vw,3rem)] leading-none tracking-[0.03em] text-[#F1F0EA]">
+          {title}
+        </h2>
+
         <p
-          className="mt-6 text-[14px] leading-[1.8] text-muted-foreground max-w-[60ch]"
+          className="mt-5 max-w-[58ch] text-[14px] leading-[1.8] text-muted-foreground"
           style={{ fontFamily: "'Source Serif 4', Georgia, serif" }}
         >
           {standfirst}

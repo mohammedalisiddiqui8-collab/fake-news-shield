@@ -11,6 +11,26 @@ import { motion, useReducedMotion, useScroll, useSpring } from "framer-motion";
 
 const EASE = [0.22, 1, 0.36, 1] as const;
 
+/* Station states — the row reads through colour and one pixel of travel.
+   "quiet" is every row that is not the one being read; the open row keeps
+   full ink. Reduced motion: colours still settle, travel does not. */
+const rowVariants = {
+  closed: { opacity: 1 },
+  hover: { opacity: 1 },
+  open: { opacity: 1 },
+  quiet: { opacity: 0.6 },
+};
+const numVariants = {
+  closed: { color: "#6F7074" },
+  hover: { color: "#8E8E8A" },
+  open: { color: "#F1F0EA" },
+};
+const labelVariants = {
+  closed: { color: "#C9C3B7", y: 0 },
+  hover: { color: "#F1F0EA", y: 0 },
+  open: { color: "#F1F0EA", y: -1 },
+};
+
 export interface TraceStation {
   no: string;
   label: string;
@@ -105,43 +125,46 @@ export function TraceChapter() {
               transition={{ duration: 0.5, delay: i * 0.07, ease: EASE }}
               className="relative"
             >
-              <button
+              <motion.button
                 type="button"
                 onClick={() => setOpen(isOpen ? null : station.no)}
-                className="group flex w-full items-baseline gap-5 py-5 text-left sm:gap-7"
+                className="flex w-full items-baseline gap-5 py-5 text-left sm:gap-7"
+                variants={rowVariants}
+                animate={isOpen ? "open" : open !== null ? "quiet" : "closed"}
+                whileHover={isOpen ? undefined : "hover"}
               >
                 {/* Station marker on the spine */}
                 <span className="relative hidden w-[15px] shrink-0 self-center sm:block">
                   <motion.span
                     className="absolute left-1/2 top-1/2 block h-[7px] w-[7px] -translate-x-1/2 -translate-y-1/2"
-                    style={{
-                      background: isOpen ? "#C9C3B7" : "#202124",
-                      border: "1px solid #6F7074",
+                    style={{ border: "1px solid #6F7074", background: "#202124" }}
+                    initial={false}
+                    animate={{
+                      borderColor: isOpen ? "#C9C3B7" : "#6F7074",
+                      backgroundColor: isOpen ? "#C9C3B7" : "#202124",
+                      scale: isOpen ? 1.2 : 1,
                     }}
-                    animate={{ borderColor: isOpen ? "#C9C3B7" : "#6F7074" }}
-                    transition={{ duration: 0.3 }}
+                    transition={{ duration: 0.3, ease: EASE }}
                   />
                 </span>
 
-                <span
-                  className="num-marker w-7 shrink-0 transition-colors duration-300 sm:w-8"
-                  style={{ color: isOpen ? "#C9C3B7" : "#6F7074" }}
-                >
+                <motion.span className="num-marker w-7 shrink-0 sm:w-8" variants={numVariants}>
                   {station.no}
-                </span>
+                </motion.span>
 
                 <span className="flex-1 min-w-0">
                   <span className="flex flex-wrap items-baseline gap-x-3">
-                    <span
-                      className="text-[19px] sm:text-[22px] leading-none tracking-[0.02em] transition-colors duration-300"
-                      style={{
-                        fontFamily: "'DM Serif Display', serif",
-                        color: isOpen ? "#F1F0EA" : "#C9C3B7",
-                      }}
+                    <motion.span
+                      className="text-[19px] sm:text-[22px] leading-none tracking-[0.02em]"
+                      style={{ fontFamily: "'DM Serif Display', serif" }}
+                      variants={labelVariants}
                     >
                       {station.label}
-                    </span>
-                    <span className="kicker" style={{ opacity: 0.55 }}>
+                    </motion.span>
+                    <span
+                      className="kicker transition-opacity duration-300"
+                      style={{ opacity: isOpen ? 0.85 : 0.55 }}
+                    >
                       {station.verb}
                     </span>
                   </span>
@@ -157,7 +180,7 @@ export function TraceChapter() {
                     transition={{ duration: 0.45, ease: EASE }}
                   />
                 </span>
-              </button>
+              </motion.button>
 
               <motion.div
                 initial={false}
@@ -165,12 +188,15 @@ export function TraceChapter() {
                 transition={{ duration: 0.45, ease: EASE }}
                 className="overflow-hidden"
               >
-                <p
+                <motion.p
                   className="pb-7 pl-12 pr-4 text-[12.5px] leading-[1.8] text-muted-foreground max-w-[62ch] sm:pl-16"
                   style={{ fontFamily: "'Source Serif 4', Georgia, serif" }}
+                  initial={false}
+                  animate={{ opacity: isOpen ? 1 : 0, y: isOpen ? 0 : -6 }}
+                  transition={{ duration: 0.45, ease: EASE, delay: isOpen ? 0.08 : 0 }}
                 >
                   {station.detail}
-                </p>
+                </motion.p>
               </motion.div>
 
               {/* Hairline between stations */}
