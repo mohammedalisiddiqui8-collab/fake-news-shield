@@ -19,7 +19,7 @@ export default function Landing() {
         src="/veritas-hero.png"
         alt=""
         aria-hidden="true"
-        className="absolute inset-0 h-full w-full object-contain"
+        className="absolute inset-0 h-full w-full object-contain [@media(min-aspect-ratio:1/1)]:object-cover"
       />
 
       {/* ── Top rule ── */}
