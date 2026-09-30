@@ -19,7 +19,7 @@ export default function Landing() {
           overlay, filter, gradient or effect on top: the photograph is
           the visual, exactly as provided. ── */}
       <picture className="absolute inset-0 block">
-        <source media="(orientation: portrait)" srcSet="/veritas-hero-9x16.png" />
+        <source media="(orientation: portrait)" srcSet="/1790790680751_edit_352265298383536.png" />
         <img
           src="/veritas-hero.png"
           alt=""
