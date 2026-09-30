@@ -25,7 +25,7 @@ const EASE = [0.22, 1, 0.36, 1] as const;
  */
 function OpeningQuote() {
   const [index, setIndex] = useState(0);
-  const [shown, setShown] = useState(OPENING_QUOTES[0].length);
+  const [shown, setShown] = useState(0);
   const [showCaret, setShowCaret] = useState(false);
   const [leaving, setLeaving] = useState(false);
   const reduce =
@@ -38,32 +38,38 @@ function OpeningQuote() {
       return () => clearInterval(t);
     }
 
-    let timers: ReturnType<typeof setTimeout>[] = [];
     const quote = OPENING_QUOTES[index];
-    const full = shown >= quote.length;
+    const timers: ReturnType<typeof setTimeout>[] = [];
 
-    if (full) {
-      // The line rests; the caret shows briefly, then the line leaves.
-      setShowCaret(true);
-      const t1 = setTimeout(() => setLeaving(true), 3400);
-      const t2 = setTimeout(() => {
+    if (leaving) {
+      // The fade runs first (0.55s); then the next line resets to empty
+      // and is set in fresh — so every quote gets its own reveal.
+      const t = setTimeout(() => {
         setLeaving(false);
         setShowCaret(false);
+        setShown(0);
         setIndex((p) => (p + 1) % OPENING_QUOTES.length);
-      }, 4000);
-      timers = [t1, t2];
-    } else if (!leaving) {
+      }, 600);
+      timers.push(t);
+    } else if (shown < quote.length) {
       // Setting the line: eased steps, a little faster than typewriter.
       const step = shown < 4 ? 60 : shown < 12 ? 34 : 26;
       const t = setTimeout(() => setShown((s) => s + 1), step);
-      timers = [t];
+      timers.push(t);
+    } else {
+      // The line rests; the caret shows briefly, then the line leaves.
+      setShowCaret(true);
+      const t = setTimeout(() => setLeaving(true), 2600);
+      timers.push(t);
     }
 
     return () => timers.forEach(clearTimeout);
   }, [index, shown, leaving, reduce]);
 
   const quote = OPENING_QUOTES[index];
-  const text = leaving ? "" : quote.slice(0, shown);
+  // The glyphs stay mounted while fading — the leave is a real fade,
+  // not a swap to an empty string.
+  const text = quote.slice(0, shown);
 
   return (
     /* Reserved height so the frame never jumps while the line changes. */
@@ -76,19 +82,19 @@ function OpeningQuote() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.5, ease: EASE }}
-            className="absolute inset-0 text-center font-serif-editorial text-[11.5px] italic leading-none tracking-[0.08em] text-[#F1F0EA] sm:text-[13px]"
+            className="absolute inset-0 whitespace-nowrap text-center font-serif-editorial text-[13px] italic leading-none tracking-[0.08em] text-[#F1F0EA] sm:text-[15px]"
           >
             {quote}
           </motion.p>
         </AnimatePresence>
       ) : (
-        <p className="absolute inset-0 text-center font-serif-editorial text-[11.5px] italic leading-none tracking-[0.08em] text-[#F1F0EA] sm:text-[13px]">
+        <p className="absolute inset-0 whitespace-nowrap text-center font-serif-editorial text-[13px] italic leading-none tracking-[0.08em] text-[#F1F0EA] sm:text-[15px]">
           <span style={{ opacity: leaving ? 0 : 1, transition: "opacity 0.55s ease" }}>
             {text}
           </span>
           {showCaret && !leaving && (
             <motion.span
-              className="ml-1 inline-block h-[11px] w-px translate-y-[1.5px] sm:h-[13px]"
+              className="ml-1 inline-block h-[13px] w-px translate-y-[1.5px] sm:h-[15px]"
               style={{ background: "#6F7074" }}
               animate={{ opacity: [0, 1, 0, 1, 0] }}
               transition={{ duration: 1.4, times: [0, 0.25, 0.5, 0.75, 1], ease: "linear" }}
@@ -165,16 +171,13 @@ export default function Landing() {
             transition={{ duration: 0.26, ease: EASE, delay: 0.56 }}
           />
 
-          {/* The quote — the examined claim, in ivory. The typesetter line
-              is the only animation in this slot. */}
+          {/* The quote — the examined claim, in ivory. */}
           <motion.div
             className="relative mt-9 flex w-full justify-center sm:mt-12"
             variants={{ rest: { opacity: 0 }, in: { opacity: 1 } }}
             transition={{ duration: 0.4, ease: EASE, delay: 0.7 }}
           >
-            <div aria-hidden="true">
-              <OpeningQuote />
-            </div>
+            <OpeningQuote />
           </motion.div>
 
           {/* ── The way in: a framed control, quiet until touched ── */}
