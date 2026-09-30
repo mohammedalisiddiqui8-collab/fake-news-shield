@@ -12,23 +12,15 @@ export default function Landing() {
 
   return (
     <div className="veritas-night relative flex min-h-screen flex-col overflow-hidden bg-background text-foreground">
-      {/* ── The scene — the supplied reference image, placed as large as
-          it can go without cutting the wordmark. On a portrait screen
-          the frame is held to 4:5 so the picture fills most of the
-          display and only the outermost edges are trimmed; on a
-          landscape screen it goes full-bleed. No overlay, filter,
-          gradient or effect on top: the photograph is the visual,
-          exactly as provided. ── */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="relative aspect-[4/5] w-full [@media(min-aspect-ratio:1/1)]:aspect-auto [@media(min-aspect-ratio:1/1)]:h-full">
-          <img
-            src="/veritas-hero.png"
-            alt=""
-            aria-hidden="true"
-            className="h-full w-full object-cover"
-          />
-        </div>
-      </div>
+      {/* ── The scene — the supplied reference image, full-bleed on every
+          screen size. No overlay, filter, gradient or effect on top:
+          the photograph is the visual, exactly as provided. ── */}
+      <img
+        src="/veritas-hero.png"
+        alt=""
+        aria-hidden="true"
+        className="absolute inset-0 h-full w-full object-cover"
+      />
 
       {/* ── Top rule ── */}
       <div className="relative z-10 h-px w-full bg-[#2A2B2E]" />
