@@ -12,15 +12,21 @@ export default function Landing() {
 
   return (
     <div className="veritas-night relative flex min-h-screen flex-col overflow-hidden bg-background text-foreground">
-      {/* ── The scene — the supplied reference image, full-bleed on every
-          screen size. No overlay, filter, gradient or effect on top:
-          the photograph is the visual, exactly as provided. ── */}
-      <img
-        src="/veritas-hero.png"
-        alt=""
-        aria-hidden="true"
-        className="absolute inset-0 h-full w-full object-cover"
-      />
+      {/* ── The scene — the supplied reference artwork, full-bleed on every
+          screen. Two crops of the same picture serve the two shapes: a
+          portrait phone gets the 9:16 re-frame, anything landscape
+          gets the 16:9 original, so neither loses the wordmark. No
+          overlay, filter, gradient or effect on top: the photograph is
+          the visual, exactly as provided. ── */}
+      <picture className="absolute inset-0 block">
+        <source media="(orientation: portrait)" srcSet="/veritas-hero-9x16.png" />
+        <img
+          src="/veritas-hero.png"
+          alt=""
+          aria-hidden="true"
+          className="h-full w-full object-cover"
+        />
+      </picture>
 
       {/* ── Top rule ── */}
       <div className="relative z-10 h-px w-full bg-[#2A2B2E]" />
