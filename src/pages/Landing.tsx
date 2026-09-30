@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
+import IntroAtmosphere from "@/components/IntroAtmosphere";
 import { VerificationGlyph } from "@/components/VerificationGlyph";
 
 /* ─── PAGE 01 · Title page ────────────────────────────────────────────
@@ -18,90 +19,37 @@ const OPENING_QUOTES = [
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 /**
- * The rotating line — a typesetter, not a terminal.
- * The current line softens out, the next one is set in a short reveal
- * (a few characters at a time, eased rather than uniform), then a caret
- * rule blinks twice and stops. Reduced motion: simple crossfades.
+ * The rotating line — a quiet crossfade. The current line softens out
+ * (fade + a breath of blur), the next settles in. ~520ms per phase,
+ * nothing mechanical. One line, always ivory. Reduced motion: the same
+ * swap without the blur.
  */
 function OpeningQuote() {
   const [index, setIndex] = useState(0);
-  const [shown, setShown] = useState(0);
-  const [showCaret, setShowCaret] = useState(false);
-  const [leaving, setLeaving] = useState(false);
   const reduce =
     typeof window !== "undefined" &&
     window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 
   useEffect(() => {
-    if (reduce) {
-      const t = setInterval(() => setIndex((p) => (p + 1) % OPENING_QUOTES.length), 4600);
-      return () => clearInterval(t);
-    }
-
-    const quote = OPENING_QUOTES[index];
-    const timers: ReturnType<typeof setTimeout>[] = [];
-
-    if (leaving) {
-      // The fade runs first (0.55s); then the next line resets to empty
-      // and is set in fresh — so every quote gets its own reveal.
-      const t = setTimeout(() => {
-        setLeaving(false);
-        setShowCaret(false);
-        setShown(0);
-        setIndex((p) => (p + 1) % OPENING_QUOTES.length);
-      }, 600);
-      timers.push(t);
-    } else if (shown < quote.length) {
-      // Setting the line: eased steps, a little faster than typewriter.
-      const step = shown < 4 ? 60 : shown < 12 ? 34 : 26;
-      const t = setTimeout(() => setShown((s) => s + 1), step);
-      timers.push(t);
-    } else {
-      // The line rests; the caret shows briefly, then the line leaves.
-      setShowCaret(true);
-      const t = setTimeout(() => setLeaving(true), 2600);
-      timers.push(t);
-    }
-
-    return () => timers.forEach(clearTimeout);
-  }, [index, shown, leaving, reduce]);
-
-  const quote = OPENING_QUOTES[index];
-  // The glyphs stay mounted while fading — the leave is a real fade,
-  // not a swap to an empty string.
-  const text = quote.slice(0, shown);
+    const t = setInterval(() => setIndex((p) => (p + 1) % OPENING_QUOTES.length), 4200);
+    return () => clearInterval(t);
+  }, []);
 
   return (
     /* Reserved height so the frame never jumps while the line changes. */
-    <div className="relative h-6 w-full" aria-live="polite">
-      {reduce ? (
-        <AnimatePresence mode="wait">
-          <motion.p
-            key={index}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5, ease: EASE }}
-            className="absolute inset-0 whitespace-nowrap text-center font-serif-editorial text-[13px] italic leading-none tracking-[0.08em] text-[#F1F0EA] sm:text-[15px]"
-          >
-            {quote}
-          </motion.p>
-        </AnimatePresence>
-      ) : (
-        <p className="absolute inset-0 whitespace-nowrap text-center font-serif-editorial text-[13px] italic leading-none tracking-[0.08em] text-[#F1F0EA] sm:text-[15px]">
-          <span style={{ opacity: leaving ? 0 : 1, transition: "opacity 0.55s ease" }}>
-            {text}
-          </span>
-          {showCaret && !leaving && (
-            <motion.span
-              className="ml-1 inline-block h-[13px] w-px translate-y-[1.5px] sm:h-[15px]"
-              style={{ background: "#6F7074" }}
-              animate={{ opacity: [0, 1, 0, 1, 0] }}
-              transition={{ duration: 1.4, times: [0, 0.25, 0.5, 0.75, 1], ease: "linear" }}
-            />
-          )}
-        </p>
-      )}
+    <div className="relative flex h-6 w-full items-center justify-center" aria-live="polite">
+      <AnimatePresence mode="wait">
+        <motion.p
+          key={index}
+          initial={{ opacity: 0, filter: reduce ? "blur(0px)" : "blur(5px)" }}
+          animate={{ opacity: 1, filter: "blur(0px)" }}
+          exit={{ opacity: 0, filter: reduce ? "blur(0px)" : "blur(5px)" }}
+          transition={{ duration: reduce ? 0.35 : 0.52, ease: "easeInOut" }}
+          className="whitespace-nowrap text-center font-serif-editorial text-[13px] italic leading-none tracking-[0.08em] text-[#F1F0EA] sm:text-[15px]"
+        >
+          {OPENING_QUOTES[index]}
+        </motion.p>
+      </AnimatePresence>
     </div>
   );
 }
@@ -111,11 +59,15 @@ export default function Landing() {
 
   return (
     <div className="veritas-night relative flex min-h-screen flex-col overflow-hidden bg-background text-foreground">
+      {/* ── The atmosphere — panels in depth, scan line, clock. Behind ──
+          everything, inert to input; the page above it stays untouched. */}
+      <IntroAtmosphere />
+
       {/* ── Top rule ── */}
-      <div className="h-px w-full bg-[#2A2B2E]" />
+      <div className="relative z-10 h-px w-full bg-[#2A2B2E]" />
 
       {/* ── Minimal navigation — the name, nothing else ── */}
-      <header className="flex shrink-0 items-center justify-between px-6 py-6 sm:px-10 sm:py-8">
+      <header className="relative z-10 flex shrink-0 items-center justify-between px-6 py-6 sm:px-10 sm:py-8">
         <button
           onClick={() => navigate("/")}
           className="group flex items-baseline gap-3"
@@ -131,7 +83,7 @@ export default function Landing() {
       </header>
 
       {/* ── Centred composition ── */}
-      <main className="relative flex flex-1 flex-col items-center justify-center px-6 py-16 sm:px-10">
+      <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 py-16 sm:px-10">
         {/* The opening is staged: mark → masthead → primary rule → secondary
             rule → quote → way in. The whole sequence settles in about a
             second — quick enough to feel set, slow enough to feel placed. */}
@@ -202,7 +154,7 @@ export default function Landing() {
         </motion.div>
       </main>
 
-      <div className="h-px w-full bg-[#2A2B2E]" />
+      <div className="relative z-10 h-px w-full bg-[#2A2B2E]" />
     </div>
   );
 }
