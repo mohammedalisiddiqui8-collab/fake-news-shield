@@ -48,10 +48,19 @@ export default function Landing() {
       </header>
 
       {/* ── Centred composition ──
-           Intentionally empty: the wordmark, the opening line and the
-           way in all live inside the reference image itself. Nothing is
-           drawn on top of it. */}
-      <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 py-16 sm:px-10" />
+           The wordmark, the opening line and the way in all live inside
+           the reference image itself, so nothing is drawn on top of it.
+           The one thing a photograph cannot do is respond to a tap, so
+           the pill's position carries an invisible button: no pixels of
+           its own, it only makes the baked-in control work. */}
+      <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 py-16 sm:px-10">
+        <button
+          type="button"
+          onClick={() => navigate("/desk")}
+          aria-label="Enter Veritas"
+          className="absolute left-1/2 top-[57%] h-[9%] w-[38%] -translate-x-1/2 -translate-y-1/2 cursor-pointer bg-transparent [@media(min-aspect-ratio:1/1)]:top-[61%] [@media(min-aspect-ratio:1/1)]:h-[8%]"
+        />
+      </main>
 
       <div className="relative z-10 h-px w-full bg-[#2A2B2E]" />
     </div>
