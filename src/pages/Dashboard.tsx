@@ -204,11 +204,46 @@ function SectionHead({ no, title, dek, right }: {
       <div className="flex items-baseline gap-3 min-w-0">
         <span className="num-marker shrink-0">{no}</span>
         <div className="min-w-0">
-          <h2 className="text-[19px] leading-none">{title}</h2>
+          <h2 className="font-masthead text-[19px] leading-none">{title}</h2>
           {dek && <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">{dek}</p>}
         </div>
       </div>
       {right && <div className="shrink-0 pb-0.5">{right}</div>}
+    </div>
+  );
+}
+
+/* ─── Circular confidence — a thin ring set to the real figure ───
+   The arc is the actual confidence value from the investigation; it fills
+   once, monochrome, when the result loads. No colour coding lives here —
+   the verdict carries the colour, the ring carries the number. ─── */
+function ConfidenceRing({ value, delay = 0.35 }: { value: number; delay?: number }) {
+  const R = 34;
+  const C = 2 * Math.PI * R;
+  return (
+    <div className="relative inline-flex shrink-0 items-center justify-center" role="img" aria-label={`Confidence ${value}%`}>
+      <svg width="86" height="86" viewBox="0 0 86 86" fill="none">
+        <circle cx="43" cy="43" r={R} stroke="#3A3B3E" strokeWidth="2" />
+        <motion.circle
+          cx="43"
+          cy="43"
+          r={R}
+          stroke="#F1F0EA"
+          strokeWidth="2"
+          strokeLinecap="butt"
+          transform="rotate(-90 43 43)"
+          strokeDasharray={C}
+          initial={{ strokeDashoffset: C }}
+          animate={{ strokeDashoffset: C * (1 - Math.max(0, Math.min(100, value)) / 100) }}
+          transition={{ duration: 1.2, delay, ease: [0.22, 1, 0.36, 1] }}
+        />
+      </svg>
+      <span className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-[19px] leading-none tabular" style={{ fontFamily: "'JetBrains Mono', monospace", color: "#F1F0EA" }}>
+          {value}%
+        </span>
+        <span className="mt-1 kicker" style={{ fontSize: "7.5px", letterSpacing: "0.22em", opacity: 0.7 }}>Confidence</span>
+      </span>
     </div>
   );
 }
@@ -462,6 +497,7 @@ export default function Dashboard() {
   const [currentTip, setCurrentTip] = useState(0);
   const [pipelineStep, setPipelineStep] = useState(-1);
   const [resultTab, setResultTab] = useState("verdict");
+  const [reasoningOpen, setReasoningOpen] = useState(false);
   const [analysisDepth, setAnalysisDepth] = useState<"quick" | "standard" | "deep">("standard");
   const [credFactor, setCredFactor] = useState<string | null>(null);
   const [liveNews, setLiveNews] = useState<LiveArticle[]>([]);
@@ -1265,14 +1301,15 @@ export default function Dashboard() {
                     </p>
 
                     <div className="mt-11 flex flex-wrap items-center gap-x-8 gap-y-4">
-                      <Button
+                      <button
+                        type="button"
                         onClick={() => goDesk(true)}
-                        className="group h-11 px-7 gap-2.5 text-[10.5px] uppercase tracking-[0.18em] transition-opacity duration-300 hover:opacity-80"
-                        style={{ background: "#C9C3B7", color: "#151618" }}
+                        className="ctrl-frame group h-11 px-6 text-[10.5px]"
+                        data-primary="true"
                       >
                         Begin an investigation
-                        <ArrowRight className="w-3.5 h-3.5 transition-transform duration-500 group-hover:translate-x-1" />
-                      </Button>
+                        <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-1" />
+                      </button>
                       <button
                         type="button"
                         onClick={() => { navigate("/desk"); window.scrollTo({ top: 0 }); }}
@@ -1309,7 +1346,7 @@ export default function Dashboard() {
                       <SectionHead
                         no="01"
                         title="New analysis"
-                        dek="Submit a URL or pasted text — Veritas retrieves live sources, extracts factual claims and cross-checks each one against independent coverage."
+                        dek="Paste a URL or article text — the desk retrieves, extracts and cross-checks."
                       />
 
                       {/* Mode + depth — underlined editorial tabs */}
@@ -1392,7 +1429,7 @@ export default function Dashboard() {
                             </button>
                             <button
                               type="button"
-                              className="kicker px-2 py-1 transition-colors hover:text-foreground disabled:opacity-30"
+                              className="ctrl-frame h-7 px-3 text-[9px] disabled:opacity-30"
                               disabled={!inputText}
                               onClick={() => setInputText("")}
                             >
@@ -1417,19 +1454,22 @@ export default function Dashboard() {
                             <p className="text-[11px] leading-relaxed text-muted-foreground italic">{mediaLiteracyTips[currentTip]}</p>
                           </motion.div>
                         </AnimatePresence>
-                        <Button
+                        <button
+                          type="button"
                           onClick={handleAnalyze}
                           disabled={isAnalyzing || !inputText.trim()}
-                          className="group shrink-0 h-11 px-7 gap-2 text-[10.5px] uppercase tracking-[0.16em] hover:opacity-90 disabled:opacity-40"
-                          style={{ background: "#C9C3B7", color: "#151618" }}
+                          className="ctrl-frame group shrink-0 h-11 px-7 text-[10.5px]"
+                          data-primary="true"
                         >
                           Analyze
-                          <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
-                        </Button>
+                          <ArrowRight className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
+                        </button>
                       </div>
                     </section>
 
-                    {/* ─── 02 · Veritas at a glance — one horizontal strip, thin vertical rules ─── */}
+                    {/* ─── 02 · Veritas at a glance — one horizontal strip, thin vertical rules.
+                            It only appears once the archive holds real investigations. ─── */}
+                    {analyses !== undefined && analyses.length > 0 && (
                     <section className="mt-20 lg:mt-28">
                       <SectionHead
                         no="02"
@@ -1457,63 +1497,12 @@ export default function Dashboard() {
                         ))}
                       </div>
                     </section>
+                    )}
 
-                    {/* ─── 03 · Recent investigations — the archive ─── */}
+                    {/* ─── 03 · Today's headlines — a newsroom column ─── */}
                     <section className="mt-20 lg:mt-28">
                       <SectionHead
                         no="03"
-                        title="Recent investigations"
-                        dek="Every filed case — verdicts are generated from retrieved evidence, never from language alone."
-                        right={
-                          <button
-                            type="button"
-                            onClick={() => { setActiveView("history"); window.scrollTo({ top: 0 }); }}
-                            className="kicker ul-hover transition-colors hover:text-foreground"
-                          >
-                            View all →
-                          </button>
-                        }
-                      />
-                      {analyses === undefined ? (
-                        <div className="mt-4 space-y-3">
-                          {Array.from({ length: 3 }).map((_, i) => (
-                            <div key={i} className="flex items-center gap-4 py-3.5 border-b border-border animate-pulse">
-                              <div className="h-3 w-6" style={{ background: "#2B2D30" }} />
-                              <div className="h-3 flex-1" style={{ background: "#2B2D30" }} />
-                              <div className="h-3 w-24 hidden sm:block" style={{ background: "#2B2D30" }} />
-                            </div>
-                          ))}
-                        </div>
-                      ) : analyses.length === 0 ? (
-                        <div className="mt-6 border border-border px-6 py-10 text-center">
-                          <p className="text-lg" style={{ fontFamily: "'DM Serif Display', serif" }}>No investigations filed yet.</p>
-                          <p className="mt-2 text-[12px] text-muted-foreground max-w-sm mx-auto leading-relaxed">
-                            The archive fills as you verify — every verdict, source and confidence score is kept here.
-                          </p>
-                          <button
-                            type="button"
-                            onClick={() => goDesk(true)}
-                            className="mt-5 kicker ul-hover transition-colors"
-                            style={{ color: "#C9C3B7" }}
-                          >
-                            Begin your first investigation →
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="mt-3 border-t border-border">
-                          {analyses.slice(0, 6).map((analysis, i) => renderArchiveRow(analysis, i, "archive"))}
-                        </div>
-                      )}
-                    </section>
-                  </div>
-
-                  {/* ─── Right rail — the wire and the ledger ─── */}
-                  <div className="min-w-0 lg:border-l lg:border-border lg:pl-12">
-
-                    {/* ─── 03 · Today's headlines — a newsroom column ─── */}
-                    <section>
-                      <SectionHead
-                        no="02"
                         title="Today's headlines"
                         dek={
                           newsLoading
@@ -1539,10 +1528,62 @@ export default function Dashboard() {
                       </p>
                     </section>
 
+                    {/* ─── 03 · Recent investigations — the archive ─── */}
+                    <section className="mt-20 lg:mt-28">
+                      <SectionHead
+                        no="04"
+                        title="Recent investigations"
+                        dek="Every filed case — verdicts from retrieved evidence, never language alone."
+                        right={
+                          <button
+                            type="button"
+                            onClick={() => { setActiveView("history"); window.scrollTo({ top: 0 }); }}
+                            className="ctrl-frame h-7 px-3 text-[9px]"
+                          >
+                            View all
+                          </button>
+                        }
+                      />
+                      {analyses === undefined ? (
+                        <div className="mt-4 space-y-3">
+                          {Array.from({ length: 3 }).map((_, i) => (
+                            <div key={i} className="flex items-center gap-4 py-3.5 border-b border-border animate-pulse">
+                              <div className="h-3 w-6" style={{ background: "#2B2D30" }} />
+                              <div className="h-3 flex-1" style={{ background: "#2B2D30" }} />
+                              <div className="h-3 w-24 hidden sm:block" style={{ background: "#2B2D30" }} />
+                            </div>
+                          ))}
+                        </div>
+                      ) : analyses.length === 0 ? (
+                        <div className="mt-6 border border-border px-6 py-10 text-center">
+                          <p className="text-lg" style={{ fontFamily: "'DM Serif Display', serif" }}>No investigations filed yet.</p>
+                          <p className="mt-2 text-[12px] text-muted-foreground max-w-sm mx-auto leading-relaxed">
+                            The archive fills as you verify — every verdict, source and confidence score is kept here.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={() => goDesk(true)}
+                            className="ctrl-frame mt-6 h-10 px-6 text-[10px]"
+                            data-primary="true"
+                          >
+                            Begin your first investigation
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="mt-3 border-t border-border">
+                          {analyses.slice(0, 6).map((analysis, i) => renderArchiveRow(analysis, i, "archive"))}
+                        </div>
+                      )}
+                    </section>
+                  </div>
+
+                  {/* ─── Right rail — the wire and the ledger ─── */}
+                  <div className="min-w-0 lg:border-l lg:border-border lg:pl-12">
+
                     {/* ─── 05 · Activity — a quiet record of the archive ─── */}
                     <section className="mt-20 lg:mt-28">
                       <SectionHead
-                        no="03"
+                        no="05"
                         title="Activity"
                         dek="A quiet record of what this desk has filed."
                       />
@@ -1925,10 +1966,9 @@ export default function Dashboard() {
                             >
                               {vc.label}
                             </h2>
-                            <p className="mt-4 font-mono text-[12px] tracking-[0.24em] tabular" style={{ color: vc.accentColor }}>
-                              {currentResult.confidence}%
-                              <span className="ml-2 text-[#6F7074] tracking-[0.2em]">CONFIDENCE</span>
-                            </p>
+                            <div className="mt-4">
+                              <ConfidenceRing value={currentResult.confidence} />
+                            </div>
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-[14px] leading-relaxed" style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#F1F0EA" }}>
@@ -2029,7 +2069,7 @@ export default function Dashboard() {
                           id="claims"
                           no={secNo("claims")}
                           title="Claims"
-                          dek={`${currentResult.claims.length} factual claims extracted — each one cross-checked against retrieved independent coverage. Language and structural observations are reported separately as signals, never as claims.`}
+                          dek={`${currentResult.claims.length} factual claims extracted — each cross-checked against retrieved coverage.`}
                           aside={
                             <span className="kicker tabular">
                               {evidenceStats?.supported ?? 0} supported · {evidenceStats?.contradicted ?? 0} contradicted
@@ -2045,7 +2085,7 @@ export default function Dashboard() {
                         id="chain"
                         no={secNo("chain")}
                         title="Evidence"
-                        dek="What the investigation retrieved and read — every figure derived from this single result, never estimated."
+                        dek="What the investigation retrieved and read — every figure from this single result."
                       >
                         <EvidenceChain
                           verdict={currentResult.verdict}
@@ -2076,7 +2116,7 @@ export default function Dashboard() {
                           id="crosscheck"
                           no={secNo("crosscheck")}
                           title="Cross-check"
-                          dek={`${currentResult.crossCheck.length} claims cross-referenced against independent external sources retrieved during live cross-checking — each source states whether it supports or contradicts the claim.`}
+                          dek={`${currentResult.crossCheck.length} claims cross-referenced against independent sources retrieved live.`}
                           aside={
                             <span className="kicker tabular">
                               {evidenceStats?.uniqueRetrieved ?? 0} unique · {evidenceStats?.claimSourceRefs ?? 0} refs
@@ -2100,14 +2140,37 @@ export default function Dashboard() {
                         id="reasoning"
                         no={secNo("reasoning")}
                         title="Reasoning"
-                        dek="How the evidence produced this assessment — the full reasoning, and the claim-to-source map behind it."
+                        dek="How the evidence produced this assessment."
                       >
-                        <p
-                          className="max-w-[74ch] text-[13.5px] leading-[1.85]"
-                          style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#F1F0EA" }}
+                        {/* The full reasoning — a click away, not a wall */}
+                        <AnimatePresence initial={false}>
+                          {reasoningOpen && (
+                            <motion.div
+                              key="reasoning-body"
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: "auto", opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+                              className="overflow-hidden"
+                            >
+                              <p
+                                className="max-w-[74ch] text-[13.5px] leading-[1.85]"
+                                style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#F1F0EA" }}
+                              >
+                                {currentResult.reasoning}
+                              </p>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                        <button
+                          type="button"
+                          onClick={() => setReasoningOpen(!reasoningOpen)}
+                          className="ctrl-frame mt-5 h-9 px-5 text-[10px]"
+                          style={{ color: "#C9C3B7" }}
                         >
-                          {currentResult.reasoning}
-                        </p>
+                          {reasoningOpen ? "Hide reasoning" : "View reasoning"}
+                          <span className="text-[13px] leading-none">{reasoningOpen ? "↑" : "→"}</span>
+                        </button>
                         <div className="mt-10">
                           <p className="kicker mb-4" style={{ opacity: 0.55 }}>Claim → evidence → verdict</p>
                           <EvidenceMap

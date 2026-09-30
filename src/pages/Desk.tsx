@@ -23,28 +23,28 @@ const CHAPTERS = [
     no: "01",
     title: "Trace",
     standfirst:
-      "Every investigation follows the same path: the article is taken in, the checkable statements are isolated, independent coverage is retrieved for each one, and the verdict is built from what was found — never from how the article sounds.",
+      "Follow each claim from the article to the evidence behind the verdict.",
     body: <TraceChapter />,
   },
   {
     no: "02",
     title: "Patterns",
     standfirst:
-      "Alongside the fact-check, Veritas reads how the article is written. These signals describe presentation — they are reported, but they are not proof of anything.",
+      "How the article is written — reported as signals, never treated as proof.",
     body: <PatternsChapter values={{}} />,
   },
   {
     no: "03",
     title: "Scrutiny",
     standfirst:
-      "One claim, followed the whole way through the system — from the sentence as filed to the assessment that the evidence supports.",
+      "One claim, followed through the complete verification process.",
     body: <ScrutinyChapter />,
   },
   {
     no: "04",
     title: "Framework",
     standfirst:
-      "What runs underneath the interface: retrieval, claim extraction, source retrieval, external evidence, cross-checking, language signals and credibility assessment. Nothing more, nothing invented.",
+      "The pipeline beneath every investigation — the system as it actually runs.",
     body: <FrameworkChapter />,
   },
 ];
@@ -75,10 +75,7 @@ export default function Desk() {
             <span className="font-mono text-[10px] tracking-[0.3em] text-[#6F7074] transition-colors duration-500 group-hover:text-[#C9C3B7]">
               V/
             </span>
-            <span
-              className="text-[14px] uppercase tracking-[0.28em] text-[#F1F0EA] transition-colors duration-500 group-hover:text-white"
-              style={{ fontFamily: "'DM Serif Display', serif" }}
-            >
+            <span className="font-masthead text-[14px] uppercase tracking-[0.28em] text-[#F1F0EA] transition-colors duration-500 group-hover:text-white">
               Veritas
             </span>
           </button>
@@ -119,10 +116,8 @@ export default function Desk() {
             <span className="block text-[#8E8E8A]">Four systems. One method.</span>
           </h1>
 
-          <p className="mt-8 max-w-[58ch] text-[14px] leading-[1.75] text-muted-foreground">
-            Veritas retrieves the original article, extracts the factual claims, searches live independent
-            coverage and cross-checks each claim against what was found. This page explains each system in
-            turn — when you are ready to run an investigation, the desk is one step away.
+          <p className="mt-8 max-w-[52ch] text-[14px] leading-[1.75] text-muted-foreground">
+            Retrieve, extract, cross-check, assess. Each system is shown below exactly as it runs.
           </p>
 
           <AnimatePresence>
@@ -136,19 +131,12 @@ export default function Desk() {
                 <button
                   type="button"
                   onClick={() => navigate("/analysis")}
-                  className="group inline-flex flex-col items-start gap-2.5"
+                  className="ctrl-frame group h-12 px-8 text-[11px] sm:text-[12px]"
+                  data-primary="true"
                 >
-                  <span className="inline-flex items-baseline gap-3">
-                    <span className="font-serif-editorial text-[clamp(1.15rem,3.4vw,1.7rem)] tracking-[0.12em] text-[#F1F0EA] transition-colors duration-300 group-hover:text-white">
-                      BEGIN AN INVESTIGATION
-                    </span>
-                    <span className="text-[15px] leading-none text-[#A5A5A1] transition-all duration-300 group-hover:translate-x-1 group-hover:text-[#F1F0EA]">
-                      →
-                    </span>
-                  </span>
-                  <span className="h-px w-full max-w-[340px] origin-left bg-[#3A3B3E] transition-colors duration-500 group-hover:bg-[#C9C3B7]" />
-                  <span className="kicker" style={{ opacity: 0.55 }}>
-                    Paste a URL or article text on the Analysis page
+                  Begin an investigation
+                  <span className="block text-[14px] leading-none transition-transform duration-300 ease-out group-hover:translate-x-[5px]">
+                    →
                   </span>
                 </button>
               </motion.div>
@@ -172,16 +160,15 @@ export default function Desk() {
           <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="kicker" style={{ color: "#C9C3B7" }}>Ready when you are</p>
-              <p className="mt-3 max-w-[52ch] text-[13.5px] leading-[1.75] text-muted-foreground">
-                The method above runs exactly as described on every investigation. File one and the full
-                report — verdict, claims, evidence and reasoning — is yours.
+              <p className="mt-3 max-w-[46ch] text-[13.5px] leading-[1.75] text-muted-foreground">
+                File an investigation and the full report — verdict, claims, evidence, reasoning — is yours.
               </p>
             </div>
             <button
               type="button"
               onClick={() => navigate("/analysis")}
-              className="group inline-flex items-center gap-2.5 border px-6 py-3 text-[10.5px] uppercase tracking-[0.18em] transition-all duration-300 hover:border-[#C9C3B7]"
-              style={{ borderColor: "#3A3B3E", background: "#C9C3B7", color: "#151618" }}
+              className="ctrl-frame group h-11 px-6 text-[10.5px]"
+              data-primary="true"
             >
               Begin an investigation
               <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-1" />

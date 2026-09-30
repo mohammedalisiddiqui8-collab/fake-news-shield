@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 
 /**
  * CHAPTER 04 · FRAMEWORK
@@ -94,6 +94,9 @@ function Node({
   // The pipeline is read top to bottom: each stage appears in sequence and
   // the connecting rule is drawn from its node to the next as the chapter
   // scrolls into view — the diagram assembles itself in process order.
+  // Each stage's explanation stays collapsed until selected — the diagram
+  // reads in seconds, the detail is one click away.
+  const [open, setOpen] = useState(false);
   return (
     <motion.li
       initial={{ opacity: 0, y: 8 }}
@@ -125,14 +128,37 @@ function Node({
       <p className="text-[14px] leading-none tracking-[0.02em]" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F0EA" }}>
         {node.label}
       </p>
-      <p
-        className="mt-2.5 text-[12px] leading-[1.75] text-muted-foreground max-w-[58ch]"
-        style={{ fontFamily: "'Source Serif 4', Georgia, serif" }}
-      >
-        {node.detail}
-      </p>
-      <p className="kicker mt-2.5" style={{ color: tone, opacity: 0.8 }}>
-        → {node.output}
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            key="detail"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.35, ease: EASE }}
+            className="overflow-hidden"
+          >
+            <p
+              className="pt-2.5 text-[12px] leading-[1.75] text-muted-foreground max-w-[58ch]"
+              style={{ fontFamily: "'Source Serif 4', Georgia, serif" }}
+            >
+              {node.detail}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      <p className="kicker mt-2.5 flex items-center gap-2" style={{ color: tone, opacity: 0.8 }}>
+        <span>→ {node.output}</span>
+        <button
+          type="button"
+          aria-expanded={open}
+          aria-label={`${open ? "Hide" : "Show"} detail for ${node.label}`}
+          onClick={() => setOpen(!open)}
+          className="transition-opacity hover:opacity-100"
+          style={{ opacity: 0.55, color: "#C9C3B7" }}
+        >
+          {open ? "−" : "+"}
+        </button>
       </p>
     </motion.li>
   );

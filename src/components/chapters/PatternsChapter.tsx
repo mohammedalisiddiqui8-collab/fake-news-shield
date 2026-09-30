@@ -16,8 +16,8 @@ import { motion } from "framer-motion";
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 /** Left = measured presence, right = the caution it implies. */
-const AXIS_LEFT = "Observed in the text";
-const AXIS_RIGHT = "Not proof of truth";
+const AXIS_LEFT = "Observed";
+const AXIS_RIGHT = "Not proof";
 
 export interface PatternSignal {
   key: string;
@@ -34,14 +34,14 @@ export const PATTERN_SIGNALS: PatternSignal[] = [
   {
     key: "sensationalism",
     name: "Sensationalism",
-    reads: "Language pushed past what the reporting supports — loaded nouns, escalating claims, exclamation where none is warranted.",
+    reads: "Language pushed past what the reporting supports — loaded nouns, escalating claims.",
     weight: "Raises the warning load. Carried into the assessment as a signal only.",
     pole: "caution",
   },
   {
     key: "clickbait",
     name: "Clickbait",
-    reads: "Headline framing that promises more than the article delivers, withholding the decisive part of the claim.",
+    reads: "Headline framing that promises more than the article delivers.",
     weight: "Marked as a presentation signal. It never adds or removes corroboration.",
     pole: "caution",
   },
@@ -55,35 +55,35 @@ export const PATTERN_SIGNALS: PatternSignal[] = [
   {
     key: "conspiracy",
     name: "Conspiracy language",
-    reads: "Assertion of a hidden cause presented without a source that could be checked.",
+    reads: "A hidden cause asserted without a source that could be checked.",
     weight: "Flagged. An unsourced assertion is treated as unverified, not as false.",
     pole: "caution",
   },
   {
     key: "anonymous",
     name: "Anonymous sourcing",
-    reads: "Claims resting on unnamed or unattributable sources, which cannot be followed up.",
+    reads: "Claims resting on unnamed sources, which cannot be followed up.",
     weight: "Recorded in source metadata. Weakens corroboration; does not decide it.",
     pole: "caution",
   },
   {
     key: "attribution",
     name: "Attribution",
-    reads: "Named sources, quoted officials, linked documents — assertions that can be traced to a person or record.",
+    reads: "Named sources, quoted officials, linked documents — assertions that can be traced.",
     weight: "Strengthens the trail. Still not evidence until a claim is cross-checked.",
     pole: "balance",
   },
   {
     key: "temporal",
     name: "Temporal specificity",
-    reads: "Concrete dates, times and durations instead of vague recency claims like 'recently'.",
+    reads: "Concrete dates, times and durations instead of vague recency claims.",
     weight: "Improves checkability: a dated claim can be tested against a dated record.",
     pole: "balance",
   },
   {
     key: "balanced",
     name: "Balanced language",
-    reads: "Multiple perspectives, hedged or attributed framing, and claims scaled to what is known.",
+    reads: "Multiple perspectives and claims scaled to what is known.",
     weight: "Recorded as a positive signal — a marker of care, not a guarantee of accuracy.",
     pole: "balance",
   },
@@ -106,6 +106,7 @@ export function PatternsChapter({
   const signal = PATTERN_SIGNALS[active];
   const value = values?.[signal.key];
   const hasValue = typeof value === "number";
+  const isMeasured = Object.values(values ?? {}).some((v) => typeof v === "number");
 
   return (
     <div>
@@ -199,8 +200,8 @@ export function PatternsChapter({
         })}
       </div>
 
-      {/* ── The reading panel — one signal at a time ── */}
-      <div className="mt-12 border-t border-border pt-6">
+      {/* ── The reading — one line for the selected signal ── */}
+      <div className="mt-10 border-t border-border pt-5">
         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
           <span
             className="text-[15px] leading-none tracking-[0.04em]"
@@ -215,40 +216,28 @@ export function PatternsChapter({
             {signal.pole === "caution" ? "Warning signal" : "Positive signal"}
           </span>
           <span className="kicker tabular ml-auto" style={{ opacity: 0.5 }}>
-            {hasValue ? `${value}% of this analysis` : "Not measured for this analysis"}
+            {hasValue ? `${value}% of this analysis` : isMeasured ? "Not detected" : "Not measured"}
           </span>
         </div>
 
-        <div className="mt-5 grid gap-x-14 gap-y-6 sm:grid-cols-2">
-          <div>
-            <p className="kicker mb-2" style={{ opacity: 0.5 }}>What it reads</p>
-            <p
-              className="text-[12.5px] leading-[1.8] text-muted-foreground"
-              style={{ fontFamily: "'Source Serif 4', Georgia, serif" }}
-            >
-              {signal.reads}
-            </p>
-          </div>
-          <div>
-            <p className="kicker mb-2" style={{ opacity: 0.5 }}>What it is worth</p>
-            <p
-              className="text-[12.5px] leading-[1.8] text-muted-foreground"
-              style={{ fontFamily: "'Source Serif 4', Georgia, serif" }}
-            >
-              {signal.weight}
-            </p>
-          </div>
-        </div>
+        <p
+          className="mt-4 max-w-[64ch] text-[13px] leading-[1.7]"
+          style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#A5A5A1" }}
+        >
+          {signal.reads} {signal.weight}
+        </p>
       </div>
 
-      {/* ── The distinction, stated once and plainly ── */}
-      <div className="mt-10 flex flex-col gap-2 border-t border-border pt-5 sm:flex-row sm:items-baseline sm:gap-4">
-        <span className="kicker shrink-0" style={{ color: "#B0A183" }}>
-          Language patterns are not proof
+      {/* ── The disclaimer — small, bordered, impossible to miss ── */}
+      <div
+        className="mt-9 inline-flex max-w-full flex-col gap-1.5 border px-4 py-3"
+        style={{ borderColor: "rgba(176,161,131,0.4)", background: "rgba(176,161,131,0.05)" }}
+      >
+        <span className="kicker" style={{ color: "#B0A183", fontSize: "9.5px" }}>
+          Language patterns are not proof of truth
         </span>
-        <p className="text-[12px] leading-[1.75] text-muted-foreground max-w-[68ch]">
-          Veritas measures how an article is written and reports it as a signal. A verdict is only ever
-          produced from factual claims cross-checked against retrieved independent coverage.
+        <p className="text-[11px] leading-relaxed text-muted-foreground">
+          A verdict is produced only from factual claims cross-checked against retrieved coverage.
         </p>
       </div>
     </div>

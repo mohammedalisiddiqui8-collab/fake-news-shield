@@ -1,5 +1,5 @@
 /* ─── Google Fonts ─── */
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap');
 
 @import "tailwindcss";
 @import "tw-animate-css";
@@ -172,6 +172,12 @@
     font-weight: 400;
     letter-spacing: -0.005em;
   }
+  /* The masthead face — the wordmark reads as a publication, not a logo:
+     Libre Baskerville's bookish forms sit at home in the editorial system. */
+  .font-masthead {
+    font-family: 'Libre Baskerville', 'DM Serif Display', Georgia, serif;
+    font-weight: 400;
+  }
   code, .font-mono { font-family: 'JetBrains Mono', monospace; }
 }
 
@@ -220,6 +226,36 @@
   /* Hairline row hover — newsroom archive feel */
   .row-hover { transition: background-color 0.24s ease; }
   .row-hover:hover { background-color: rgba(241, 240, 234, 0.035); }
+
+  /* ─── Framed functional control — a control, not a pill ───
+     Thin border, flat charcoal, readable uppercase; brightens on hover
+     exactly the way the rest of the hairline system does. */
+  .ctrl-frame {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.625rem;
+    border: 1px solid #3A3B3E;
+    background: transparent;
+    color: #F1F0EA;
+    font-family: 'JetBrains Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
+  }
+  .ctrl-frame:hover:not(:disabled) {
+    border-color: rgba(201, 195, 183, 0.75);
+    background: rgba(201, 195, 183, 0.05);
+  }
+  .ctrl-frame:active:not(:disabled) { transform: translateY(1px); }
+  .ctrl-frame:disabled { opacity: 0.4; cursor: not-allowed; }
+  .ctrl-frame[data-primary="true"] {
+    border-color: rgba(201, 195, 183, 0.55);
+  }
+  .ctrl-frame[data-primary="true"]:hover:not(:disabled) {
+    border-color: #C9C3B7;
+    background: rgba(201, 195, 183, 0.09);
+  }
   /* Horizontal strips (mobile nav) without a visible scrollbar */
   .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
   .no-scrollbar::-webkit-scrollbar { display: none; }

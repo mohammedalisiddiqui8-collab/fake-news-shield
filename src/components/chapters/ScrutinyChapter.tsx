@@ -102,7 +102,9 @@ export const SCRUTINY_STAGES: ScrutinyStage[] = [
 ];
 
 export function ScrutinyChapter() {
-  const [active, setActive] = useState(4);
+  // Nothing is open on arrival: the path itself is the message, and a case
+  // file only appears when a stage is selected.
+  const [active, setActive] = useState<number | null>(null);
 
   return (
     <div>
@@ -122,8 +124,8 @@ export function ScrutinyChapter() {
 
         <ol>
         {SCRUTINY_STAGES.map((s, i) => {
-          const isActive = i === active;
-          const isDone = i < active;
+          const isActive = active !== null && i === active;
+          const isDone = active !== null && i < active;
           const StageIcon = s.icon;
           const isLast = i === SCRUTINY_STAGES.length - 1;
 
