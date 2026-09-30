@@ -69,7 +69,7 @@ export default function Landing() {
           gets the 9:16 re-frame, anything landscape gets the 16:9
           original, so neither loses the masthead. ── */}
       <picture className="absolute inset-0 block">
-        <source media="(orientation: portrait)" srcSet="/1790790680751_edit_358157209464778.png" />
+        <source media="(orientation: portrait)" srcSet="/1790790680751_edit_358901019924703.png" />
         <img
           src="/veritas-hero.png"
           alt=""
@@ -109,12 +109,13 @@ export default function Landing() {
           <OpeningQuote />
         </div>
 
-        {/* Covers the pill drawn into the artwork. The backdrop there is
-            measured at rgb(12,12,10) portrait and rgb(8,8,7) landscape,
-            so the fill is the colour already there. */}
+        {/* The portrait artwork no longer carries the pill, so nothing
+            covers it there. The 16:9 landscape crop still does, and its
+            backdrop is measured at rgb(8,8,7) — flat enough that the
+            fill is simply the colour already there. */}
         <div
           aria-hidden="true"
-          className="absolute left-1/2 top-[54.2%] h-[4.8%] w-[30%] -translate-x-1/2 bg-[#0C0C0A] landscape:top-[57.6%] landscape:h-[4.9%] landscape:w-[34%] landscape:bg-[#080807]"
+          className="absolute left-1/2 top-[57.6%] hidden h-[4.9%] w-[34%] -translate-x-1/2 bg-[#080807] landscape:block"
         />
 
         {/* ── The way in ── */}
