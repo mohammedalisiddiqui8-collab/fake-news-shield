@@ -181,10 +181,11 @@ export default function Landing() {
             transition={{ duration: 0.26, ease: EASE, delay: 0.56 }}
           />
 
-          {/* The quote — the examined claim, in crimson. The scene dissolves
-              it into particles and reforms the next line; the same slot, the
-              same footprint. The legacy typesetter line stays mounted as the
-              no-WebGL fallback, and the lines remain readable to readers. */}
+          {/* The quote — the examined claim, in crimson. The scene draws it
+              and flows energy out of and back into its letterforms; the same
+              slot, the same footprint. The legacy typesetter line below only
+              shows if WebGL is unavailable, and the lines stay readable to
+              screen readers either way. */}
           <motion.div
             className="relative mt-9 flex w-full justify-center sm:mt-12"
             variants={{ rest: { opacity: 0 }, in: { opacity: 1 } }}
@@ -193,9 +194,11 @@ export default function Landing() {
             <div ref={quoteAnchorRef} className="relative h-6 w-full max-w-xs sm:max-w-sm">
               <span className="sr-only">{OPENING_QUOTES.join(" ")}</span>
             </div>
-            <div style={{ display: "none" }} aria-hidden="true">
-              <OpeningQuote />
-            </div>
+            {!sceneReady && (
+              <div aria-hidden="true">
+                <OpeningQuote />
+              </div>
+            )}
           </motion.div>
 
           {/* ── The way in: a framed control, quiet until touched ── */}
