@@ -1,7 +1,11 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useNavigate } from "react-router";
 import { VerificationGlyph } from "@/components/VerificationGlyph";
+
+/* The scene is three.js — kept out of the entry chunk and mounted only
+   when WebGL is available. It never blocks the composition beneath it. */
+const HeroScene = lazy(() => import("@/components/HeroScene"));
 
 /* ─── PAGE 01 · Title page ────────────────────────────────────────────
    Four things only: the name, the rule beneath it, one small line that
@@ -101,9 +105,22 @@ function OpeningQuote() {
 
 export default function Landing() {
   const navigate = useNavigate();
+  const quoteAnchorRef = useRef<HTMLDivElement>(null);
+  const [sceneReady, setSceneReady] = useState(true);
 
   return (
     <div className="veritas-night relative flex min-h-screen flex-col overflow-hidden bg-background text-foreground">
+      {/* ── The cube field — the environment around the title page ── */}
+      {sceneReady && (
+        <Suspense fallback={null}>
+          <HeroScene
+            anchorRef={quoteAnchorRef}
+            quotes={OPENING_QUOTES}
+            onUnavailable={() => setSceneReady(false)}
+          />
+        </Suspense>
+      )}
+
       {/* ── Top rule ── */}
       <div className="h-px w-full bg-[#2A2B2E]" />
 
@@ -164,14 +181,21 @@ export default function Landing() {
             transition={{ duration: 0.26, ease: EASE, delay: 0.56 }}
           />
 
-          {/* The quote — deliberately a supporting line: smaller, greyer and
-              more air above it, so the wordmark stays the loudest element */}
+          {/* The quote — the examined claim, in crimson. The scene dissolves
+              it into particles and reforms the next line; the same slot, the
+              same footprint. The legacy typesetter line stays mounted as the
+              no-WebGL fallback, and the lines remain readable to readers. */}
           <motion.div
-            className="mt-9 w-full max-w-xs sm:mt-12"
+            className="relative mt-9 flex w-full justify-center sm:mt-12"
             variants={{ rest: { opacity: 0 }, in: { opacity: 1 } }}
             transition={{ duration: 0.4, ease: EASE, delay: 0.7 }}
           >
-            <OpeningQuote />
+            <div ref={quoteAnchorRef} className="relative h-6 w-full max-w-xs sm:max-w-sm">
+              <span className="sr-only">{OPENING_QUOTES.join(" ")}</span>
+            </div>
+            <div style={{ display: "none" }} aria-hidden="true">
+              <OpeningQuote />
+            </div>
           </motion.div>
 
           {/* ── The way in: a framed control, quiet until touched ── */}

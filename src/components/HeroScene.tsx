@@ -1,382 +1,607 @@
-"use client";
-import { useRef, useEffect } from "react";
+import { useEffect, useRef, type RefObject } from "react";
 import * as THREE from "three";
 
-/* ─── LOCKED PALETTE ─── */
-const P = {
-  bg: "#151618",text:"#F1F0EA",secondary:"#A5A5A1",sage:"#C9C3B7",verified:"#C9C3B7",warning:"#B08479",gold:"#C9C3B7",border:"#2A2B2E",surface:"#151618",
-};
+/* ─── HERO CUBE FIELD + QUOTE TRANSFORMATION ────────────────────────────
+   A cinematic environment for the title page: a suspended field of very
+   small luminous blue cubes drifting through genuine 3D space, and the
+   crimson quote beneath VERITAS that periodically dissolves into particles,
+   disperses into the cube field, and reforms as the next line.
 
-/* ─── Panel Data ─── */
-const PANELS = [
-  // Main article — left, prominent
-  {
-    lines: [
-      { text: "THE DAILY CHRONICLE", size: 6, weight: 600, color: P.secondary, y: 0 },
-      { text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", size: 3, color: P.border, y: 10 },
-      { text: "Scientists Confirm New Species", size: 12, weight: 700, color: P.text, y: 22 },
-      { text: "in Deep Ocean Expedition", size: 12, weight: 700, color: P.text, y: 38 },
-      { text: "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", size: 3, color: P.border, y: 52 },
-      { text: "Marine biologists from the University of", size: 6, color: P.secondary, y: 64 },
-      { text: "Oxford identified a previously unknown", size: 6, color: P.secondary, y: 74 },
-      { text: "deep-sea species at 8,200 meters depth.", size: 6, color: P.secondary, y: 84 },
-      { text: "Lead researcher Dr. Sarah Chen published", size: 6, color: P.secondary, y: 94 },
-      { text: "findings in Nature, March 2025.", size: 6, color: P.secondary, y: 104 },
-    ],
-    w: 3.0, h: 2.2, x: -1.8, y: 0.2, z: 0, rot: 0.04,
-  },
-  // Credibility score — right, overlapping
-  {
-    lines: [
-      { text: "CREDIBILITY SCORE", size: 6, weight: 500, color: P.secondary, y: 0 },
-      { text: "92", size: 44, weight: 700, color: P.verified, y: 22 },
-      { text: "LIKELY CREDIBLE", size: 8, weight: 600, color: P.verified, y: 76 },
-      { text: "━━━━━━━━━━━━━━━━━━━", size: 3, color: P.border, y: 90 },
-      { text: "Named sources: verified", size: 5, color: P.verified, y: 102 },
-      { text: "Citations: confirmed", size: 5, color: P.verified, y: 114 },
-      { text: "Balance: adequate", size: 5, color: P.verified, y: 126 },
-    ],
-    w: 1.6, h: 1.8, x: 1.8, y: 0.6, z: -0.3, rot: -0.03,
-  },
-  // Fake article — back right
-  {
-    lines: [
-      { text: "EXPOSED!!!", size: 10, weight: 700, color: P.warning, y: 0 },
-      { text: "Secret Cure Hidden", size: 9, weight: 600, color: P.text, y: 16 },
-      { text: "by Big Pharma", size: 9, weight: 600, color: P.text, y: 30 },
-      { text: "━━━━━━━━━━━━━━━━━━━", size: 3, color: P.border, y: 44 },
-      { text: "Anonymous insider 'Dr. Truth'", size: 5, color: P.secondary, y: 56 },
-      { text: "reveals in viral post that a", size: 5, color: P.secondary, y: 66 },
-      { text: "simple mixture can cure ALL", size: 5, color: P.secondary, y: 76 },
-      { text: "diseases!!!", size: 5, weight: 600, color: P.warning, y: 86 },
-    ],
-    w: 2.0, h: 1.6, x: 3.0, y: -0.5, z: -0.9, rot: -0.08,
-  },
-  // Source verification
-  {
-    lines: [
-      { text: "SOURCE VERIFICATION", size: 6, weight: 500, color: P.gold, y: 0 },
-      { text: "━━━━━━━━━━━━━━━━━━━━━━━━", size: 3, color: P.border, y: 12 },
-      { text: "University of Oxford", size: 7, weight: 500, color: P.text, y: 24 },
-      { text: "✓ Verified institution", size: 5, color: P.verified, y: 38 },
-      { text: "Nature — Peer-reviewed", size: 7, weight: 500, color: P.text, y: 54 },
-      { text: "✓ Confirmed publication", size: 5, color: P.verified, y: 68 },
-      { text: "Dr. Sarah Chen", size: 7, weight: 500, color: P.text, y: 84 },
-      { text: "✓ Named researcher", size: 5, color: P.verified, y: 98 },
-    ],
-    w: 1.7, h: 1.5, x: 0.2, y: -1.4, z: -0.5, rot: 0.02,
-  },
-  // Red flags
-  {
-    lines: [
-      { text: "RED FLAGS", size: 6, weight: 500, color: P.warning, y: 0 },
-      { text: "02 DETECTED", size: 7, weight: 600, color: P.warning, y: 14 },
-      { text: "━━━━━━━━━━━━━━━━━━━", size: 3, color: P.border, y: 28 },
-      { text: "✗ Anonymous sourcing", size: 5, color: P.warning, y: 40 },
-      { text: "✗ No verifiable citations", size: 5, color: P.warning, y: 52 },
-    ],
-    w: 1.4, h: 1.0, x: 2.6, y: 1.8, z: -0.6, rot: 0.05,
-  },
-  // Language analysis
-  {
-    lines: [
-      { text: "LANGUAGE ANALYSIS", size: 6, weight: 500, color: P.sage, y: 0 },
-      { text: "━━━━━━━━━━━━━━━━━━━━", size: 3, color: P.border, y: 12 },
-      { text: "Tone: Professional", size: 5, color: P.secondary, y: 24 },
-      { text: "Sensationalism: Low", size: 5, color: P.secondary, y: 36 },
-      { text: "Emotional appeals: None", size: 5, color: P.secondary, y: 48 },
-      { text: "ALL CAPS: No", size: 5, color: P.verified, y: 60 },
-    ],
-    w: 1.4, h: 1.2, x: -3.2, y: -0.6, z: -0.7, rot: 0.06,
-  },
-];
+   Everything is original to Veritas — the reference point is the *principle*
+   of a digital identity breaking apart and reconstructing, not any scene.
 
-/* ─── Evidence connections ─── */
-const LINES = [
-  { from: 0, to: 1, color: P.verified },
-  { from: 0, to: 3, color: P.gold },
-  { from: 2, to: 4, color: P.warning },
-  { from: 0, to: 5, color: P.sage },
-];
+   Performance: two InstancedMeshes (ambient field + quote particles), no
+   postprocessing — glow is additive halo sprites. Counts are device-classed,
+   the loop pauses when the tab is hidden, and prefers-reduced-motion gets a
+   static field with a plain crossfading quote. ─────────────────────────── */
 
-function createPanelTexture(panel: typeof PANELS[0]): THREE.CanvasTexture {
-  const scale = 2;
-  const pw = panel.w * 100 * scale;
-  const ph = panel.h * 100 * scale;
-  const canvas = document.createElement("canvas");
-  canvas.width = pw;
-  canvas.height = ph;
-  const ctx = canvas.getContext("2d")!;
-  ctx.scale(scale, scale);
-  const w = panel.w * 100;
-  const h = panel.h * 100;
+/* The lines live with the page — the scene only transforms whatever it is given. */
 
-  // Background
-  ctx.fillStyle = P.surface;
-  ctx.fillRect(0, 0, w, h);
+/* Crimson — the examined claim. Deep, restrained, never neon. */
+const RED = { core: "#A84742", bright: "#C4574F", halo: "#7E2E2A" };
+/* Blue — the digital environment. Electric toward deep, on the ivory-dark canvas. */
+const FIELD_BG = 0x151618;
 
-  // Border
-  ctx.strokeStyle = P.border;
-  ctx.lineWidth = 0.5;
-  ctx.strokeRect(3, 3, w - 6, h - 6);
+const EASE_OUT = (p: number) => 1 - Math.pow(1 - p, 3);
+const EASE_IN = (p: number) => p * p;
+const clamp01 = (p: number) => (p < 0 ? 0 : p > 1 ? 1 : p);
 
-  // Top accent line
-  ctx.fillStyle = P.sage + "40";
-  ctx.fillRect(3, 3, w - 6, 1);
-
-  // Text
-  panel.lines.forEach((line) => {
-    ctx.font = `${line.weight || 400} ${line.size}px 'Inter', sans-serif`;
-    ctx.fillStyle = line.color;
-    ctx.textBaseline = "top";
-    ctx.fillText(line.text, 12, 18 + line.y);
-  });
-
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.needsUpdate = true;
+function makeHaloTexture(hex: string): THREE.CanvasTexture {
+  const c = document.createElement("canvas");
+  c.width = c.height = 128;
+  const ctx = c.getContext("2d")!;
+  const g = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+  g.addColorStop(0, hex + "AA");
+  g.addColorStop(0.45, hex + "33");
+  g.addColorStop(1, hex + "00");
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 128, 128);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
 }
 
-function createSealTexture(): THREE.CanvasTexture {
-  const scale = 2;
-  const size = 180 * scale;
-  const canvas = document.createElement("canvas");
-  canvas.width = size;
-  canvas.height = size;
-  const ctx = canvas.getContext("2d")!;
-  ctx.scale(scale, scale);
-
-  const cx = 90, cy = 90, r = 70;
-
-  // Outer ring
-  ctx.strokeStyle = P.sage + "50";
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.arc(cx, cy, r, 0, Math.PI * 2);
-  ctx.stroke();
-
-  // Inner ring
-  ctx.strokeStyle = P.sage + "25";
-  ctx.lineWidth = 0.5;
-  ctx.beginPath();
-  ctx.arc(cx, cy, r - 8, 0, Math.PI * 2);
-  ctx.stroke();
-
-  // VERITAS text around circle
-  ctx.font = "500 6px 'Inter', sans-serif";
-  ctx.fillStyle = P.sage + "70";
-  ctx.textAlign = "center";
-  const txt = "· VERIFIED · VERITAS · ";
-  const step = (Math.PI * 2) / txt.length;
-  for (let i = 0; i < txt.length; i++) {
-    const a = -Math.PI / 2 + i * step;
-    ctx.save();
-    ctx.translate(cx + Math.cos(a) * (r - 16), cy + Math.sin(a) * (r - 16));
-    ctx.rotate(a + Math.PI / 2);
-    ctx.fillText(txt[i], 0, 0);
-    ctx.restore();
-  }
-
-  // Checkmark
-  ctx.strokeStyle = P.sage;
-  ctx.lineWidth = 2;
-  ctx.lineCap = "round";
-  ctx.beginPath();
-  ctx.moveTo(cx - 10, cy);
-  ctx.lineTo(cx - 3, cy + 8);
-  ctx.lineTo(cx + 12, cy - 8);
-  ctx.stroke();
-
-  // VERITAS below
-  ctx.font = "600 8px 'Inter', sans-serif";
-  ctx.fillStyle = P.sage;
-  ctx.textAlign = "center";
-  ctx.fillText("VERITAS", cx, cy + r - 5);
-
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.needsUpdate = true;
-  return tex;
+interface QuoteSample {
+  points: Float32Array; // x,y per point, in offscreen-canvas px, origin at text centre
+  count: number;
+  tex: THREE.CanvasTexture | null;
+  aspect: number; // width / height of the drawn text box
+  widthPx: number;
+  heightPx: number;
 }
 
-export default function HeroScene() {
+export default function HeroScene({
+  anchorRef,
+  quotes,
+  onUnavailable,
+}: {
+  anchorRef: RefObject<HTMLDivElement | null>;
+  quotes: string[];
+  onUnavailable?: () => void;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const stateRef = useRef<{
-    renderer: THREE.WebGLRenderer;
-    panelMeshes: THREE.Mesh[];
-    sealMesh: THREE.Mesh;
-    scanPlane: THREE.Mesh;
-    camera: THREE.PerspectiveCamera;
-    mouse: THREE.Vector2;
-    targetMouse: THREE.Vector2;
-    clock: THREE.Clock;
-    raf: number;
-  } | null>(null);
 
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
 
-    const w = container.clientWidth;
-    const h = container.clientHeight;
+    /* ── Device class ── */
+    const reduceMotion =
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const isSmall =
+      typeof window !== "undefined" &&
+      window.matchMedia?.("(max-width: 768px)").matches;
+    const FIELD_COUNT = reduceMotion ? 220 : isSmall ? 380 : 920;
+    const QUOTE_CAP = reduceMotion ? 0 : isSmall ? 360 : 620;
 
-    const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(0x0A0A0A, 0.05);
-
-    const camera = new THREE.PerspectiveCamera(45, w / h, 0.1, 100);
-    camera.position.set(0, 0, 7);
-
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setSize(w, h);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    /* ── WebGL guard ── */
+    let renderer: THREE.WebGLRenderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ antialias: !isSmall, alpha: true, powerPreference: "high-performance" });
+    } catch {
+      onUnavailable?.();
+      return;
+    }
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, isSmall ? 1.75 : 2));
     renderer.setClearColor(0x000000, 0);
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(renderer.domElement);
 
-    // Lighting
-    scene.add(new THREE.AmbientLight(0xffffff, 0.1));
-    const key = new THREE.DirectionalLight(0xF1F2EE, 0.4);
-    key.position.set(4, 6, 5);
-    key.castShadow = true;
-    scene.add(key);
-    const fill = new THREE.PointLight(0x607568, 0.15, 20);
-    fill.position.set(-5, 2, 4);
-    scene.add(fill);
-    const rim = new THREE.PointLight(0xA58B5B, 0.08, 15);
-    rim.position.set(5, -4, -3);
-    scene.add(rim);
+    const scene = new THREE.Scene();
+    scene.fog = new THREE.FogExp2(FIELD_BG, 0.062);
 
-    // Panels
-    const panelMeshes: THREE.Mesh[] = [];
-    PANELS.forEach((p) => {
-      const tex = createPanelTexture(p);
-      const geo = new THREE.PlaneGeometry(p.w, p.h);
-      const mat = new THREE.MeshStandardMaterial({
-        map: tex, transparent: true, opacity: 0.96,
-        side: THREE.DoubleSide, roughness: 0.9, metalness: 0.05,
-      });
-      const mesh = new THREE.Mesh(geo, mat);
-      mesh.position.set(p.x, p.y, p.z);
-      mesh.rotation.set(0, 0, p.rot);
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
-      mesh.userData = { bx: p.x, by: p.y, bz: p.z, br: p.rot, i: panelMeshes.length };
-      scene.add(mesh);
-      panelMeshes.push(mesh);
-    });
+    const vw = () => container.clientWidth || 1;
+    const vh = () => container.clientHeight || 1;
+    const camera = new THREE.PerspectiveCamera(42, vw() / vh(), 0.1, 60);
+    camera.position.set(0, 0, 7.2);
 
-    // Seal
-    const sealTex = createSealTexture();
-    const sealMesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(1.0, 1.0),
-      new THREE.MeshStandardMaterial({
-        map: sealTex, transparent: true, opacity: 0.8,
-        side: THREE.DoubleSide, roughness: 0.4, metalness: 0.5,
-      })
-    );
-    sealMesh.position.set(0, 0.3, 0.4);
-    scene.add(sealMesh);
+    /* ── The ambient cube field — suspended in real depth, never a plane.
+          A central corridor stays clear so VERITAS and the quote breathe. ── */
+    const fieldGeo = new THREE.BoxGeometry(1, 1, 1);
+    const fieldMat = new THREE.MeshBasicMaterial({ toneMapped: false });
+    const field = new THREE.InstancedMesh(fieldGeo, fieldMat, FIELD_COUNT);
+    field.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    field.renderOrder = 1;
+    scene.add(field);
 
-    // Scan line — muted sage
-    const scanPlane = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.01, 3.2),
-      new THREE.MeshBasicMaterial({ color: new THREE.Color(P.sage), transparent: true, opacity: 0.25, side: THREE.DoubleSide })
-    );
-    scanPlane.position.z = 0.3;
-    scene.add(scanPlane);
+    interface Cube {
+      x: number; y: number; z: number;
+      size: number;
+      ax: number; ay: number; az: number;   // drift amplitudes
+      wx: number; wy: number; wz: number;   // drift speeds
+      px: number; py: number; pz: number;   // drift phases
+      rz: number; rSpeed: number;           // slow tumble
+      breatheA: number; breatheW: number;   // occasional toward/away camera
+      base: THREE.Color;
+    }
+    const cubes: Cube[] = [];
+    {
+      const color = new THREE.Color();
+      let guard = 0;
+      while (cubes.length < FIELD_COUNT && guard++ < FIELD_COUNT * 40) {
+        // Spherical shell around the composition, biased outward
+        const r = 2.1 + Math.pow(Math.random(), 0.62) * 7.4;
+        const theta = Math.random() * Math.PI * 2;
+        const phi = Math.acos(2 * Math.random() - 1);
+        const x = r * Math.sin(phi) * Math.cos(theta);
+        const y = r * Math.sin(phi) * Math.sin(theta) * 0.72; // gently flattened, not a plane
+        const z = r * Math.cos(phi) * 0.62 + (Math.random() - 0.4) * 1.6;
+        if (z > 2.6) continue;
+        // Keep the central typography corridor clean
+        if (Math.abs(z) < 1.3 && Math.abs(x) < 2.5 && Math.abs(y) < 1.75) continue;
 
-    // Evidence lines
-    LINES.forEach((l) => {
-      const from = PANELS[l.from];
-      const to = PANELS[l.to];
-      const mid = new THREE.Vector3(
-        (from.x + to.x) / 2, (from.y + to.y) / 2,
-        Math.max(from.z, to.z) + 0.25
-      );
-      const curve = new THREE.QuadraticBezierCurve3(
-        new THREE.Vector3(from.x, from.y, from.z), mid,
-        new THREE.Vector3(to.x, to.y, to.z)
-      );
-      const geo = new THREE.BufferGeometry().setFromPoints(curve.getPoints(32));
-      const mat = new THREE.LineBasicMaterial({
-        color: new THREE.Color(l.color), transparent: true, opacity: 0.14,
-      });
-      scene.add(new THREE.Line(geo, mat));
-    });
-
-    // Mouse
-    const mouse = new THREE.Vector2(0, 0);
-    const targetMouse = new THREE.Vector2(0, 0);
-    const clock = new THREE.Clock();
-
-    const onMouse = (e: MouseEvent) => {
-      targetMouse.x = (e.clientX / window.innerWidth) * 2 - 1;
-      targetMouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
-    };
-    const onTouch = (e: TouchEvent) => {
-      const t = e.touches[0];
-      if (t) {
-        targetMouse.x = (t.clientX / window.innerWidth) * 2 - 1;
-        targetMouse.y = -(t.clientY / window.innerHeight) * 2 + 1;
+        const depth = clamp01((9.5 - r) / 9.5);
+        color.setHSL(0.585 + Math.random() * 0.05, 0.65 + Math.random() * 0.3, 0.34 + depth * 0.34);
+        cubes.push({
+          x, y, z,
+          size: 0.024 + Math.pow(Math.random(), 2.2) * 0.062 + (Math.random() < 0.04 ? 0.03 : 0),
+          ax: 0.06 + Math.random() * 0.38,
+          ay: 0.05 + Math.random() * 0.3,
+          az: 0.04 + Math.random() * 0.26,
+          wx: 0.05 + Math.random() * 0.3,
+          wy: 0.05 + Math.random() * 0.3,
+          wz: 0.05 + Math.random() * 0.28,
+          px: Math.random() * Math.PI * 2,
+          py: Math.random() * Math.PI * 2,
+          pz: Math.random() * Math.PI * 2,
+          rz: Math.random() * Math.PI,
+          rSpeed: (Math.random() < 0.5 ? -1 : 1) * (0.08 + Math.random() * 0.5),
+          breatheA: Math.random() < 0.14 ? 0.1 + Math.random() * 0.22 : 0,
+          breatheW: 0.06 + Math.random() * 0.12,
+          base: color.clone(),
+        });
+        field.setColorAt(cubes.length - 1, color);
       }
+      field.count = cubes.length;
+      if (field.instanceColor) field.instanceColor.needsUpdate = true;
+    }
+
+    /* ── Quote particles — one instanced pool reused for dissolve + formation ── */
+    const quoteGeo = new THREE.BoxGeometry(1, 1, 1);
+    const quoteMat = new THREE.MeshBasicMaterial({ toneMapped: false, transparent: true, opacity: 0.95, depthWrite: false });
+    const quoteMesh = new THREE.InstancedMesh(quoteGeo, quoteMat, Math.max(QUOTE_CAP, 1));
+    quoteMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    quoteMesh.renderOrder = 2;
+    quoteMesh.count = 0;
+    scene.add(quoteMesh);
+
+    interface QP {
+      sx: number; sy: number; sz: number;  // start
+      tx: number; ty: number; tz: number;  // target
+      delay: number; dur: number; size: number;
+      cx: number; cy: number; cz: number;  // curl, keeps paths off straight lines
+      seed: number;
+      rx: number; ry: number; spin: number;
+      col: THREE.Color;
+    }
+    const quoteParticles: QP[] = [];
+
+    /* ── Sparks — the dissolved quote absorbed into the blue field ── */
+    const SPARKS = isSmall ? 8 : 16;
+    const sparkMesh = new THREE.InstancedMesh(quoteGeo, new THREE.MeshBasicMaterial({ toneMapped: false, transparent: true, opacity: 0.9, depthWrite: false }), SPARKS);
+    sparkMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    sparkMesh.renderOrder = 2;
+    sparkMesh.count = 0;
+    scene.add(sparkMesh);
+    const sparks = Array.from({ length: SPARKS }, () => ({
+      sx: 0, sy: 0, sz: 0, tx: 0, ty: 0, tz: 0, t: 1, dur: 1.4, size: 0.03,
+    }));
+
+    /* ── Halos — restrained additive glow, no postprocessing ── */
+    const blueHalo = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: makeHaloTexture("#2E4C78"), transparent: true, opacity: 0.05,
+      blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
+    }));
+    blueHalo.scale.set(9, 9, 1);
+    blueHalo.renderOrder = 0;
+    scene.add(blueHalo);
+
+    const redHalo = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: makeHaloTexture(RED.halo), transparent: true, opacity: 0,
+      blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false,
+    }));
+    redHalo.renderOrder = 0;
+    scene.add(redHalo);
+
+    /* ── The quote itself — drawn crisp on a canvas texture, aligned to the
+          layout slot measured from the DOM anchor. ── */
+    const off = document.createElement("canvas");
+    const octx = off.getContext("2d", { willReadFrequently: true })!;
+    const textMat = new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false, toneMapped: false });
+    const textPlane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), textMat);
+    textPlane.renderOrder = 3;
+    scene.add(textPlane);
+
+    let sample: QuoteSample = { points: new Float32Array(0), count: 0, tex: null, aspect: 1, widthPx: 1, heightPx: 1 };
+    let quoteIndex = 0;
+
+    function drawQuote(text: string): QuoteSample {
+      const fontPx = 32;
+      off.width = 8;
+      off.height = 52; // reset also clears state
+      octx.font = `italic 400 ${fontPx}px "Source Serif 4", Georgia, serif`;
+      type LS = { letterSpacing?: string };
+      try { (octx as unknown as LS).letterSpacing = "0.06em"; } catch { /* older canvas */ }
+      const w = Math.min(1400, Math.ceil(octx.measureText(text).width) + 12);
+      off.width = w;
+      octx.font = `italic 400 ${fontPx}px "Source Serif 4", Georgia, serif`;
+      try { (octx as unknown as LS).letterSpacing = "0.06em"; } catch { /* older canvas */ }
+      octx.textBaseline = "middle";
+      octx.fillStyle = RED.core;
+      octx.fillText(text, 6, off.height / 2);
+
+      const tex = new THREE.CanvasTexture(off);
+      tex.colorSpace = THREE.SRGBColorSpace;
+      tex.needsUpdate = true;
+
+      const pts: number[] = [];
+      if (QUOTE_CAP > 0) {
+        const img = octx.getImageData(0, 0, w, off.height).data;
+        const step = 2;
+        for (let y = 0; y < off.height; y += step) {
+          for (let x = 0; x < w; x += step) {
+            if (img[(y * w + x) * 4 + 3] > 120) pts.push(x - w / 2, y - off.height / 2);
+          }
+        }
+      }
+      // Thin to the cap if the line sampled dense
+      let points = new Float32Array(pts);
+      if (points.length / 2 > QUOTE_CAP) {
+        const stride = Math.ceil(points.length / 2 / QUOTE_CAP);
+        const thinned: number[] = [];
+        for (let i = 0; i < points.length / 2; i += stride) thinned.push(points[i * 2], points[i * 2 + 1]);
+        points = new Float32Array(thinned);
+      }
+      return { points, count: points.length / 2, tex, aspect: w / off.height, widthPx: w, heightPx: off.height };
+    }
+
+    /* ── Anchor mapping — screen slot → world coordinates at z = 0 ── */
+    let anchorRect: DOMRect | null = null;
+    let worldPerPx = 0.01;
+    const refreshAnchor = () => {
+      const el = anchorRef.current;
+      anchorRect = el && el.getBoundingClientRect().width > 0 ? el.getBoundingClientRect() : null;
+      const halfH = Math.tan((camera.fov * Math.PI) / 360) * camera.position.z;
+      worldPerPx = (2 * halfH) / vh();
     };
-    window.addEventListener("mousemove", onMouse, { passive: true });
-    window.addEventListener("touchmove", onTouch, { passive: true });
+    const textWorldSize = () => {
+      if (!anchorRect) return { w: 0, h: 0, k: 0.3 };
+      const desiredPx = Math.max(11, Math.min(16, Math.round(anchorRect.height * 0.58)));
+      const k = desiredPx / 32;
+      return { w: sample.widthPx * k * worldPerPx, h: sample.heightPx * k * worldPerPx, k };
+    };
+
+    /* ── Phase machine: HOLD → dissolve → absorb gap → form → HOLD ── */
+    const T_HOLD = reduceMotion ? 4.6 : 3.2;
+    const T_OUT = reduceMotion ? 0.55 : 0.85;
+    const T_GAP = reduceMotion ? 0 : 0.35;
+    const T_IN = reduceMotion ? 0.55 : 1.35;
+    type Phase = "hold" | "out" | "gap" | "in";
+    let phase: Phase = "hold";
+    let phaseT = 0;
+
+    function spawnDissolve() {
+      quoteParticles.length = 0;
+      if (!anchorRect || sample.count === 0) return;
+      const { w, h, k } = textWorldSize();
+      const s0 = Math.max(0.012, 2.1 * worldPerPx * (k / 0.3));
+      for (let i = 0; i < sample.count; i++) {
+        const px = sample.points[i * 2] * k * worldPerPx;
+        const py = -sample.points[i * 2 + 1] * k * worldPerPx;
+        const dx = px / (w * 0.5 || 1) + (Math.random() - 0.5) * 0.9;
+        const dy = py / (h * 0.5 || 1) + (Math.random() - 0.5) * 0.9;
+        const len = Math.hypot(dx, dy) || 1;
+        const spread = 0.9 + Math.random() * 1.7;
+        const sweep = (px / (w * 0.5 || 1) + 1) / 2;
+        quoteParticles.push({
+          sx: px, sy: py, sz: 0,
+          tx: px + (dx / len) * spread,
+          ty: py + (dy / len) * spread,
+          tz: (Math.random() - 0.5) * 2.4,
+          delay: (1 - sweep) * 0.4 + Math.random() * 0.28,
+          dur: 0.55 + Math.random() * 0.4,
+          size: s0 * (0.7 + Math.random() * 0.6),
+          cx: (Math.random() - 0.5) * 0.5,
+          cy: (Math.random() - 0.5) * 0.5,
+          cz: (Math.random() - 0.5) * 0.4,
+          seed: Math.random() * Math.PI * 2,
+          rx: Math.random() * Math.PI,
+          ry: Math.random() * Math.PI,
+          spin: 2 + Math.random() * 4,
+          col: new THREE.Color(RED.core).lerp(new THREE.Color(RED.bright), Math.random() * 0.7),
+        });
+      }
+      quoteMesh.count = Math.min(quoteParticles.length, QUOTE_CAP);
+      for (let i = 0; i < quoteMesh.count; i++) quoteMesh.setColorAt(i, quoteParticles[i].col);
+      if (quoteMesh.instanceColor) quoteMesh.instanceColor.needsUpdate = true;
+    }
+
+    function spawnFormation() {
+      quoteParticles.length = 0;
+      if (!anchorRect || sample.count === 0) return;
+      const { w, h, k } = textWorldSize();
+      const s0 = Math.max(0.012, 2.1 * worldPerPx * (k / 0.3));
+      let minX = Infinity, maxX = -Infinity;
+      for (let i = 0; i < sample.count; i++) {
+        const px = sample.points[i * 2] * k * worldPerPx;
+        if (px < minX) minX = px;
+        if (px > maxX) maxX = px;
+      }
+      for (let i = 0; i < sample.count; i++) {
+        const px = sample.points[i * 2] * k * worldPerPx;
+        const py = -sample.points[i * 2 + 1] * k * worldPerPx;
+        // Converge from the surrounding space — a quarter arrive from the cube field itself
+        let ox: number, oy: number, oz: number;
+        if (Math.random() < 0.25) {
+          const c = cubes[(Math.random() * cubes.length) | 0];
+          ox = c.x * 0.55; oy = c.y * 0.55; oz = c.z * 0.55;
+        } else {
+          const a = Math.random() * Math.PI * 2;
+          const r = 0.9 + Math.random() * 1.7;
+          ox = Math.cos(a) * r;
+          oy = Math.sin(a) * r * 0.6;
+          oz = (Math.random() - 0.35) * 2.6;
+        }
+        const sweep = (px - minX) / (maxX - minX || 1);
+        quoteParticles.push({
+          sx: ox, sy: oy, sz: oz,
+          tx: px, ty: py, tz: 0,
+          delay: sweep * 0.5 + Math.random() * 0.24,
+          dur: 0.7 + Math.random() * 0.5,
+          size: s0 * (0.7 + Math.random() * 0.6),
+          cx: (Math.random() - 0.5) * 0.7,
+          cy: (Math.random() - 0.5) * 0.5,
+          cz: (Math.random() - 0.5) * 0.5,
+          seed: Math.random() * Math.PI * 2,
+          rx: Math.random() * Math.PI,
+          ry: Math.random() * Math.PI,
+          spin: 2 + Math.random() * 4,
+          col: new THREE.Color(RED.bright).lerp(new THREE.Color(RED.core), Math.random() * 0.6),
+        });
+      }
+      quoteMesh.count = Math.min(quoteParticles.length, QUOTE_CAP);
+      for (let i = 0; i < quoteMesh.count; i++) quoteMesh.setColorAt(i, quoteParticles[i].col);
+      if (quoteMesh.instanceColor) quoteMesh.instanceColor.needsUpdate = true;
+    }
+
+    function spawnSparks() {
+      if (!anchorRect) return;
+      const { w } = textWorldSize();
+      for (const s of sparks) {
+        s.sx = (Math.random() - 0.5) * w;
+        s.sy = (Math.random() - 0.5) * 0.18;
+        s.sz = (Math.random() - 0.5) * 0.4;
+        const a = Math.random() * Math.PI * 2;
+        const r = 2.4 + Math.random() * 3.4;
+        s.tx = Math.cos(a) * r;
+        s.ty = Math.sin(a) * r * 0.6;
+        s.tz = -1.2 - Math.random() * 3.4;
+        s.t = 0;
+        s.dur = 1.1 + Math.random() * 0.6;
+        s.size = 0.018 + Math.random() * 0.02;
+      }
+      sparkMesh.count = SPARKS;
+      const c = new THREE.Color(RED.bright);
+      for (let i = 0; i < SPARKS; i++) sparkMesh.setColorAt(i, c);
+      if (sparkMesh.instanceColor) sparkMesh.instanceColor.needsUpdate = true;
+    }
+
+    const dummy = new THREE.Object3D();
+
+    /* Reduced motion: the field is composed once and left still — the same
+       suspended depth, none of the travel. */
+    if (reduceMotion) {
+      for (let i = 0; i < cubes.length; i++) {
+        const c = cubes[i];
+        dummy.position.set(c.x, c.y, c.z);
+        dummy.rotation.set(c.rz, c.rz * 0.7, c.rz);
+        dummy.scale.setScalar(c.size);
+        dummy.updateMatrix();
+        field.setMatrixAt(i, dummy.matrix);
+      }
+      field.instanceMatrix.needsUpdate = true;
+    }
+
+    /* ── Input — gentle parallax, fine pointers only ── */
+    const fine = typeof window !== "undefined" && window.matchMedia?.("(pointer: fine)").matches;
+    const mouse = { x: 0, y: 0 };
+    const onMouse = (e: MouseEvent) => {
+      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -((e.clientY / window.innerHeight) * 2 - 1);
+    };
+    if (fine && !reduceMotion) window.addEventListener("mousemove", onMouse, { passive: true });
 
     const onResize = () => {
-      const w2 = container.clientWidth;
-      const h2 = container.clientHeight;
-      camera.aspect = w2 / h2;
+      camera.aspect = vw() / vh();
       camera.updateProjectionMatrix();
-      renderer.setSize(w2, h2);
+      renderer.setSize(vw(), vh());
+      refreshAnchor();
     };
     window.addEventListener("resize", onResize);
+    onResize();
 
+    // Draw immediately with whatever serif is loaded — the webfont redraw
+    // below only re-measures once it actually lands.
+    sample = drawQuote(quotes[0]);
+    textMat.map = sample.tex;
+    textMat.needsUpdate = true;
+
+    // Webfont may land after mount — re-measure once ready
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(() => {
+        sample = drawQuote(quotes[quoteIndex]);
+        textMat.map = sample.tex;
+        textMat.needsUpdate = true;
+        refreshAnchor();
+      }).catch(() => {});
+    }
+
+    /* ── Loop ── */
+    const clock = new THREE.Clock();
+    let t = 0;
     let raf = 0;
+    let running = true;
+
+    const onVisibility = () => {
+      running = !document.hidden;
+      if (running) clock.getDelta();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+
     const animate = () => {
       raf = requestAnimationFrame(animate);
-      const t = clock.getElapsedTime();
+      if (!running) return;
+      const dt = Math.min(clock.getDelta(), 0.05);
+      t += dt;
 
-      mouse.x += (targetMouse.x - mouse.x) * 0.03;
-      mouse.y += (targetMouse.y - mouse.y) * 0.03;
+      /* Camera — slow autonomous drift + restrained pointer parallax */
+      const driftX = reduceMotion ? 0 : Math.sin(t * 0.07) * 0.05;
+      const driftY = reduceMotion ? 0 : Math.cos(t * 0.055) * 0.04;
+      camera.position.x += (mouse.x * 0.14 + driftX - camera.position.x) * 0.045;
+      camera.position.y += (mouse.y * 0.09 + driftY - camera.position.y) * 0.045;
+      camera.lookAt(0, 0, 0);
 
-      camera.position.x = mouse.x * 0.5;
-      camera.position.y = mouse.y * 0.3;
-      camera.lookAt(0, 0, -1);
+      /* The field — multi-directional drift, slow tumble, occasional z breathing */
+      if (!reduceMotion) {
+        for (let i = 0; i < cubes.length; i++) {
+        const c = cubes[i];
+        const breathe = c.breatheA ? Math.sin(t * c.breatheW + c.px) * c.breatheA : 0;
+        dummy.position.set(
+          c.x + Math.sin(t * c.wx + c.px) * c.ax,
+          c.y + Math.cos(t * c.wy + c.py) * c.ay,
+          c.z + Math.sin(t * c.wz + c.pz) * c.az + breathe,
+        );
+        dummy.rotation.set(c.rz + t * c.rSpeed * 0.4, c.rz * 0.7 + t * c.rSpeed * 0.6, c.rz);
+        dummy.scale.setScalar(c.size);
+        dummy.updateMatrix();
+        field.setMatrixAt(i, dummy.matrix);
+      }        field.instanceMatrix.needsUpdate = true;
+      }
 
-      // Panel parallax — closer panels move more
-      panelMeshes.forEach((m) => {
-        const u = m.userData;
-        const d = (u.bz + 2) * 0.4;
-        m.position.x = u.bx + mouse.x * 0.1 * d;
-        m.position.y = u.by + mouse.y * 0.06 * d + Math.sin(t * 0.2 + u.i * 1.5) * 0.02;
-        m.rotation.y = mouse.x * 0.01 * d;
-        m.rotation.x = mouse.y * 0.008 * d;
-      });
+      /* Phase machine */
+      phaseT += dt;
+      if (phase === "hold" && phaseT >= T_HOLD) {
+        phase = "out"; phaseT = 0;
+        if (!reduceMotion) spawnDissolve();
+      } else if (phase === "out" && phaseT >= T_OUT) {
+        phase = "gap"; phaseT = 0;
+        if (!reduceMotion) spawnSparks();
+        quoteIndex = (quoteIndex + 1) % quotes.length;
+        sample = drawQuote(quotes[quoteIndex]);
+        textMat.map = sample.tex;
+        textMat.needsUpdate = true;
+      } else if (phase === "gap" && phaseT >= T_GAP) {
+        phase = "in"; phaseT = 0;
+        if (!reduceMotion) spawnFormation();
+      } else if (phase === "in" && phaseT >= T_IN) {
+        phase = "hold"; phaseT = 0;
+      }
 
-      // Seal
-      sealMesh.rotation.z = t * 0.08;
-      sealMesh.position.y = 0.3 + Math.sin(t * 0.35) * 0.03;
+      /* Quote sprite + halo */
+      if (anchorRect) {
+        const { w, h } = textWorldSize();
+        const cx = anchorRect.left + anchorRect.width / 2;
+        const cy = anchorRect.top + anchorRect.height / 2;
+        const halfH = Math.tan((camera.fov * Math.PI) / 360) * camera.position.z;
+        const wx = ((cx / vw()) * 2 - 1) * halfH * camera.aspect;
+        const wy = -(((cy / vh()) * 2 - 1)) * halfH;
+        textPlane.position.set(wx, wy, 0.001);
+        textPlane.scale.set(Math.max(w, 0.001), Math.max(h, 0.001), 1);
+        redHalo.position.set(wx, wy, -0.2);
+        redHalo.scale.set(3.2, 1.6, 1);
+      }
+      if (phase === "hold") {
+        // No texture yet (font pipeline hiccup) — hold invisible rather than
+        // show an untextured quad.
+        const target = textMat.map ? 1 : 0;
+        textMat.opacity += (target - textMat.opacity) * Math.min(1, dt * 6);
+        redHalo.material.opacity += (0 - redHalo.material.opacity) * Math.min(1, dt * 3);
+      } else if (phase === "out") {
+        const p = phaseT / T_OUT;
+        textMat.opacity = reduceMotion ? 1 - clamp01(p / 0.9) : 1 - clamp01(p / 0.28);
+        redHalo.material.opacity = 0.12 * Math.sin(Math.min(1, p) * Math.PI);
+      } else if (phase === "gap") {
+        textMat.opacity = 0;
+        redHalo.material.opacity += (0 - redHalo.material.opacity) * Math.min(1, dt * 4);
+      } else if (phase === "in") {
+        const p = phaseT / T_IN;
+        textMat.opacity = clamp01((p - 0.55) / 0.4);
+        redHalo.material.opacity = 0.09 * Math.sin(clamp01(p) * Math.PI);
+      }
+      blueHalo.material.opacity = 0.045 + Math.sin(t * 0.23) * 0.012 + redHalo.material.opacity * 0.15;
 
-      // Scanner — smooth sweep
-      scanPlane.position.x = -4.5 + ((t * 0.35) % 9);
-      scanPlane.material.opacity = 0.12 + Math.sin(t * 1.5) * 0.08;
+      /* Quote particles — dissolve outward, or converge into letterforms */
+      if (quoteMesh.count > 0) {
+        const forming = phase === "in";
+        for (let i = 0; i < quoteMesh.count; i++) {
+          const q = quoteParticles[i];
+          const p = clamp01((phaseT - q.delay) / q.dur);
+          const e = forming ? EASE_OUT(p) : EASE_IN(p);
+          const curl = Math.sin(p * Math.PI * 2 + q.seed);
+          dummy.position.set(
+            q.sx + (q.tx - q.sx) * e + curl * q.cx,
+            q.sy + (q.ty - q.sy) * e + curl * q.cy,
+            q.sz + (q.tz - q.sz) * e + curl * q.cz,
+          );
+          const fade = forming ? 0.25 + 0.75 * Math.sin(clamp01(p) * Math.PI * 0.5) : 1 - p * 0.75;
+          const shimmer = phase === "hold" ? 0.45 + Math.sin(t * 2 + q.seed) * 0.08 : fade;
+          dummy.scale.setScalar(Math.max(0.0001, q.size * shimmer));
+          dummy.rotation.set(q.rx + t * q.spin * (1 - e), q.ry - t * q.spin * 0.7 * (1 - e), q.seed);
+          dummy.updateMatrix();
+          quoteMesh.setMatrixAt(i, dummy.matrix);
+        }
+        quoteMesh.instanceMatrix.needsUpdate = true;
+        quoteMat.opacity = phase === "hold" ? 0.5 : 0.95;
+      }
+
+      /* Sparks — absorbed into the field */
+      if (sparkMesh.count > 0) {
+        let alive = 0;
+        for (let i = 0; i < SPARKS; i++) {
+          const s = sparks[i];
+          if (s.t < 1) s.t = Math.min(1, s.t + dt / s.dur);
+          if (s.t < 1) alive++;
+          const e = EASE_OUT(s.t);
+          dummy.position.set(
+            s.sx + (s.tx - s.sx) * e + Math.sin(s.t * 9 + i) * 0.06,
+            s.sy + (s.ty - s.sy) * e,
+            s.sz + (s.tz - s.sz) * e,
+          );
+          dummy.scale.setScalar(Math.max(0.0001, s.size * (1 - s.t)));
+          dummy.rotation.set(i * 1.3 + t * 3, i * 0.7, 0);
+          dummy.updateMatrix();
+          sparkMesh.setMatrixAt(i, dummy.matrix);
+        }
+        sparkMesh.instanceMatrix.needsUpdate = true;
+        if (alive === 0) sparkMesh.count = 0;
+      }
 
       renderer.render(scene, camera);
     };
-
-    stateRef.current = { renderer, panelMeshes, sealMesh, scanPlane, camera, mouse, targetMouse, clock, raf: 0 };
     animate();
 
     return () => {
       cancelAnimationFrame(raf);
-      window.removeEventListener("mousemove", onMouse);
-      window.removeEventListener("touchmove", onTouch);
+      document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("resize", onResize);
+      if (fine) window.removeEventListener("mousemove", onMouse);
+      const disposeMat = (m: THREE.Material & { map?: THREE.Texture }) => {
+        m.map?.dispose();
+        m.dispose();
+      };
+      scene.traverse((obj) => {
+        const mesh = obj as THREE.Mesh;
+        mesh.geometry?.dispose();
+        const mat = mesh.material as (THREE.Material & { map?: THREE.Texture }) | (THREE.Material & { map?: THREE.Texture })[] | undefined;
+        if (Array.isArray(mat)) mat.forEach(disposeMat);
+        else if (mat) disposeMat(mat);
+      });
       renderer.dispose();
       if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
     };
+    // anchorRef and onUnavailable are stable per mount; the scene owns one loop
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return <div ref={containerRef} className="absolute inset-0 z-0" style={{ touchAction: "none" }} />;
+  return <div ref={containerRef} className="pointer-events-none absolute inset-0 z-0" aria-hidden="true" />;
 }
