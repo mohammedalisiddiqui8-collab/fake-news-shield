@@ -7,6 +7,7 @@ import { TraceChapter, TRACE_STATIONS } from "@/components/chapters/TraceChapter
 import { PatternsChapter } from "@/components/chapters/PatternsChapter";
 import { ScrutinyChapter } from "@/components/chapters/ScrutinyChapter";
 import { FrameworkChapter } from "@/components/chapters/FrameworkChapter";
+import HeroAtmosphere from "@/components/HeroAtmosphere";
 
 /**
  * PAGE 02 · THE INVESTIGATION DESK — "How does Veritas investigate?"
@@ -119,7 +120,9 @@ export default function Desk() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="relative min-h-screen bg-background text-foreground">
+      {/* ── Atmosphere — the title page's artwork, held far back ── */}
+      <HeroAtmosphere strength="desk" />
       {/* ── Masthead — the publication header: back to the title page, forward to the desk work ── */}
       <header
         className="sticky top-0 z-40 border-b"
@@ -155,7 +158,7 @@ export default function Desk() {
       </header>
 
       {/* ── Opening of the desk — folio line, directive, then straight into the work ── */}
-      <main className="mx-auto max-w-6xl px-5 pb-32 pt-12 sm:px-8 lg:px-12 lg:pt-16">
+      <main className="relative z-10 mx-auto max-w-6xl px-5 pb-32 pt-12 sm:px-8 lg:px-12 lg:pt-16">
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}

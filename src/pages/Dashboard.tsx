@@ -30,6 +30,7 @@ import { EvidenceMap } from "@/components/motion/EvidenceMap";
 import { FramingSignals, type FramingSignal } from "@/components/motion/FramingSignals";
 import { FreshnessIndicator, type FreshnessItem } from "@/components/motion/FreshnessIndicator";
 import { WhatChanged } from "@/components/motion/WhatChanged";
+import HeroAtmosphere from "@/components/HeroAtmosphere";
 import { InvestigationReplay } from "@/components/motion/InvestigationReplay";
 import { RetrievalFailedState } from "@/components/motion/RetrievalFailedState";
 import { SourceTrail } from "@/components/motion/SourceTrail";
@@ -1132,7 +1133,9 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="relative min-h-screen bg-background text-foreground">
+      {/* ── Atmosphere — the title page's artwork, held further back ── */}
+      <HeroAtmosphere strength="analysis" />
       {/* ─── Desktop: dark charcoal navigation rail — a publication index, not an admin panel ─── */}
       <aside className="veritas-nav-surface hidden lg:flex fixed inset-y-0 left-0 z-40 w-56 flex-col" style={{ background: "#151618" }}>
         <div className="px-5 pt-7 pb-6">
@@ -1235,7 +1238,7 @@ export default function Dashboard() {
       </header>
 
       {/* ─── Main desk ─── */}
-      <div className="lg:pl-56">
+      <div className="relative z-10 lg:pl-56">
         <main className="mx-auto max-w-6xl px-5 sm:px-8 lg:px-12 pt-12 lg:pt-24 pb-32">
           <AnimatePresence mode="wait">
             {/* ═══════════════ HOME ═══════════════ */}
