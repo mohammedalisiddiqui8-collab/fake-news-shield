@@ -1,14 +1,11 @@
-import { motion } from "framer-motion";
 import { useNavigate } from "react-router";
 
 /* ─── PAGE 01 · Title page ────────────────────────────────────────────
    The scene is the supplied reference image, placed full-bleed and
    left exactly as provided — no overlay, filter or effect on top of it.
-   Its own artwork already carries the masthead and the opening line, so
-   the live layer above it is reduced to what the image cannot do: the
-   header and the working way in. ────────────────────────────────────── */
-
-const EASE = [0.22, 1, 0.36, 1] as const;
+   Its own artwork already carries the masthead, the opening line and the
+   "ENTER VERITAS" pill, so none of those are drawn again here — only the
+   header survives as a live layer. ─────────────────────────────────── */
 
 export default function Landing() {
   const navigate = useNavigate();
@@ -44,34 +41,11 @@ export default function Landing() {
         </button>
       </header>
 
-      {/* ── Centred composition ── */}
-      <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 py-16 sm:px-10">
-        {/* The way in, staged as before — quick enough to feel set, slow
-            enough to feel placed. */}
-        <motion.div
-          initial="rest"
-          animate="in"
-          className="flex w-full max-w-3xl flex-col items-center">
-          {/* ── The way in: a framed control, quiet until touched ── */}
-          <motion.div
-            variants={{ rest: { opacity: 0, y: 4 }, in: { opacity: 1, y: 0 } }}
-            transition={{ duration: 0.45, ease: EASE, delay: 0.84 }}
-          >
-            <motion.button
-              type="button"
-              onClick={() => navigate("/desk")}
-              whileHover={{ y: -1 }}
-              whileTap={{ scale: 0.985 }}
-              className="group flex items-center gap-2.5 rounded-full border border-[#C9C3B7]/40 bg-black/25 px-8 py-3.5 text-[10.5px] uppercase tracking-[0.28em] text-[#F1F0EA] backdrop-blur-sm transition-colors duration-500 hover:border-[#C9C3B7]/75 hover:bg-[#151410]/60 sm:px-10 sm:text-[11px]"
-            >
-              Enter Veritas
-              <span className="block text-[13px] leading-none transition-transform duration-300 ease-out group-hover:translate-x-[4px]">
-                →
-              </span>
-            </motion.button>
-          </motion.div>
-        </motion.div>
-      </main>
+      {/* ── Centred composition ──
+           Intentionally empty: the wordmark, the opening line and the
+           way in all live inside the reference image itself. Nothing is
+           drawn on top of it. */}
+      <main className="relative z-10 flex flex-1 flex-col items-center justify-center px-6 py-16 sm:px-10" />
 
       <div className="relative z-10 h-px w-full bg-[#2A2B2E]" />
     </div>
