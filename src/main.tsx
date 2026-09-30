@@ -8,7 +8,7 @@ import { ConvexReactClient } from "convex/react";
 import React, { StrictMode, useEffect, lazy, Suspense } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, MotionConfig } from "framer-motion";
 import "./index.css";
 
 // Lazy load route components for better code splitting
@@ -108,6 +108,16 @@ function GuestSession({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+/**
+ * One animation-system level "policy": honour the OS reduced-motion setting
+ * once, globally. Framer resolves every transition instantly when the user
+ * asks for less motion; the CSS layer (src/index.css) covers plain-CSS
+ * animations. No visual behaviour is changed for other users.
+ */
+function ReducedMotionPolicy({ children }: { children: React.ReactNode }) {
+  return <MotionConfig reducedMotion="user">{children}</MotionConfig>;
+}
+
 /** Inner router — must live inside BrowserRouter so useLocation works. */
 function AppRoutes() {
   const location = useLocation();
@@ -171,7 +181,9 @@ createRoot(document.getElementById("root")!).render(
         <BrowserRouter>
           <RouteSyncer />
           <Suspense fallback={<RouteLoading />}>
-            <AppRoutes />
+            <ReducedMotionPolicy>
+              <AppRoutes />
+            </ReducedMotionPolicy>
           </Suspense>
         </BrowserRouter>
         <Toaster />

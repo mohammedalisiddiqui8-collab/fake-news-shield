@@ -91,21 +91,36 @@ function Node({
   i: number;
   tone?: string;
 }) {
+  // The pipeline is read top to bottom: each stage appears in sequence and
+  // the connecting rule is drawn from its node to the next as the chapter
+  // scrolls into view — the diagram assembles itself in process order.
   return (
     <motion.li
-      initial={{ opacity: 0, x: -6 }}
-      whileInView={{ opacity: 1, x: 0 }}
-      viewport={{ once: true, margin: "-8%" }}
-      transition={{ duration: 0.45, delay: i * 0.06, ease: EASE }}
+      initial={{ opacity: 0, y: 8 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-6% 0px -6% 0px" }}
+      transition={{ duration: 0.5, delay: i * 0.12, ease: EASE }}
       className="relative pb-8 pl-7 last:pb-0"
     >
       {/* The track spine and its node */}
-      <span
+      <motion.span
         className="absolute left-0 top-[5px] block h-[7px] w-[7px]"
         style={{ background: "#202124", border: `1px solid ${tone}` }}
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        viewport={{ once: true, margin: "-6% 0px -6% 0px" }}
+        transition={{ duration: 0.4, delay: i * 0.12, ease: EASE }}
         aria-hidden="true"
       />
-      <span className="absolute left-[3px] top-[16px] bottom-[-8px] w-px" style={{ background: "#3A3B3E" }} aria-hidden="true" />
+      <motion.span
+        className="absolute left-[3px] top-[16px] bottom-[-8px] w-px origin-top"
+        style={{ background: "#3A3B3E" }}
+        initial={{ scaleY: 0 }}
+        whileInView={{ scaleY: 1 }}
+        viewport={{ once: true, margin: "-6% 0px -6% 0px" }}
+        transition={{ duration: 0.5, delay: 0.06 + i * 0.12, ease: EASE }}
+        aria-hidden="true"
+      />
 
       <p className="text-[14px] leading-none tracking-[0.02em]" style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F0EA" }}>
         {node.label}

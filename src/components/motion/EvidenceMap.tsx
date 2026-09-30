@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useState } from "react";import { motion } from "framer-motion";
 
 /**
  * The investigation as a diagram — what supports a claim, what contradicts
@@ -67,6 +66,28 @@ export function EvidenceMap({
   const verdictColor =
     verdict === "likely_real" ? "#8A9A82" : verdict === "likely_fake" ? "#B08479" : "#B0A183";
 
+  // While one claim is open it holds the reader's attention: every other
+  // claim quiets down so its connections read clearly. No claim is ever
+  // removed — the whole map stays visible.
+  const focusing = openId !== null;
+
+  // No investigation data — an honest empty state, never a filled-in one.
+  if (!claims || claims.length === 0) {
+    return (
+      <div className="border border-border/70 px-5 py-8">
+        <p className="kicker" style={{ opacity: 0.5 }}>Evidence map</p>
+        <p
+          className="mt-3 text-[13px] leading-[1.8] text-muted-foreground"
+          style={{ fontFamily: "'Source Serif 4', Georgia, serif" }}
+        >
+          No claims were extracted for this investigation, so there is nothing to map. Run an
+          investigation on an article and the claim → source connections appear here, drawn from
+          what was actually retrieved.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div>
       {/* ── Column headers — a research drawer, not a tree widget ── */}
@@ -81,7 +102,13 @@ export function EvidenceMap({
         {claims.map((claim, ci) => {
           const isOpen = openId === claim.id;
           return (
-            <div key={claim.id} className="border-b border-border">
+            <motion.div
+              key={claim.id}
+              className="border-b border-border"
+              initial={false}
+              animate={{ opacity: focusing && !isOpen ? 0.45 : 1 }}
+              transition={{ duration: 0.4, ease: EASE }}
+            >
               {/* ── Claim row ── */}
               <button
                 type="button"
@@ -186,7 +213,7 @@ export function EvidenceMap({
                   )}
                 </div>
               </motion.div>
-            </div>
+            </motion.div>
           );
         })}
       </div>

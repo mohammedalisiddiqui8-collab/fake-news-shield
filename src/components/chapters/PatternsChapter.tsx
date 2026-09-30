@@ -148,13 +148,16 @@ export function PatternsChapter({
                     <li key={s.key} className="border-b border-border/60">
                       <button
                         type="button"
+                        aria-pressed={isActive}
                         onMouseEnter={() => setActive(i)}
                         onFocus={() => setActive(i)}
                         onClick={() => setActive(i)}
-                        className="group flex w-full items-center gap-3 py-2.5 text-left"
+                        className="group flex w-full items-center gap-3 py-2.5 text-left min-h-[36px]"
                       >
-                        {/* A tick whose weight follows the measured value, when there is one */}
-                        <span className="relative block h-[9px] w-9 shrink-0">
+                        {/* A compact signal bar whose weight follows the measured
+                            value, when there is one — it breathes up to full
+                            weight when its signal is selected */}
+                        <span className="relative block h-[9px] w-9 shrink-0 overflow-visible">
                           <span className="absolute left-0 right-0 top-1/2 h-px -translate-y-1/2" style={{ background: "#3A3B3E" }} />
                           {typeof v === "number" && v > 0 && (
                             <motion.span
@@ -163,13 +166,20 @@ export function PatternsChapter({
                               initial={{ width: 0 }}
                               whileInView={{ width: `${Math.max(6, Math.min(100, v))}%` }}
                               viewport={{ once: true, margin: "-6%" }}
-                              transition={{ duration: 0.9, delay: 0.15 + i * 0.05, ease: EASE }}
+                              animate={{ scaleY: isActive ? 2.5 : 1 }}
+                              transition={{
+                                scaleY: { type: "spring", stiffness: 300, damping: 22 },
+                                width: { duration: 0.9, delay: 0.15 + i * 0.05, ease: EASE },
+                              }}
                             />
                           )}
                         </span>
                         <span
-                          className="flex-1 text-[12.5px] tracking-[0.01em] transition-colors duration-300"
-                          style={{ color: isActive ? "#F1F0EA" : "#A5A5A1" }}
+                          className="flex-1 text-[12.5px] tracking-[0.01em] transition-all duration-300"
+                          style={{
+                            color: isActive ? "#F1F0EA" : "#A5A5A1",
+                            transform: isActive ? "translateX(2px)" : "translateX(0)",
+                          }}
                         >
                           {s.name}
                         </span>

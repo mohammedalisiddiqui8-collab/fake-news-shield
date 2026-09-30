@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useRef, useState } from "react";
+import { motion, useReducedMotion, useScroll, useSpring } from "framer-motion";
 
 /**
  * CHAPTER 01 · TRACE
@@ -66,16 +66,30 @@ export const TRACE_STATIONS: TraceStation[] = [
 export function TraceChapter() {
   const [open, setOpen] = useState<string | null>(null);
 
+  // The spine is drawn by the reader's own scroll: it fills as the chapter
+  // enters the viewport and completes by the time the stations are centred —
+  // the investigation advances only as far as the page has been read.
+  const pathRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: pathRef,
+    offset: ["start 0.92", "start 0.28"],
+  });
+  const drawn = useSpring(scrollYProgress, {
+    stiffness: 90,
+    damping: 26,
+    mass: 0.4,
+  });
+  // Readers who ask the system to minimise motion get the finished spine
+  // immediately — the information is identical, it simply does not travel.
+  const reduceMotion = useReducedMotion();
+
   return (
-    <div className="relative">
-      {/* The spine — one hairline that draws itself down the chapter */}
+    <div className="relative" ref={pathRef}>
+      {/* The spine — one hairline that draws itself down the chapter as it
+          is scrolled; framer resolves it instantly under reduced motion */}
       <motion.span
-        className="absolute left-[7px] top-2 bottom-2 w-px origin-top hidden sm:block"
-        style={{ background: "#3A3B3E" }}
-        initial={{ scaleY: 0 }}
-        whileInView={{ scaleY: 1 }}
-        viewport={{ once: true, margin: "-12% 0px -12% 0px" }}
-        transition={{ duration: 1.6, ease: EASE }}
+        className="absolute left-[7px] top-2 bottom-2 w-px hidden origin-top sm:block"
+        style={{ background: "#C9C3B7", opacity: 0.55, scaleY: reduceMotion ? 1 : drawn }}
         aria-hidden="true"
       />
 

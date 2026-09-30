@@ -273,6 +273,25 @@
 
 ::selection { background: rgba(201, 195, 183, 0.2); color: #F1F0EA; }
 
+/* ─── Reduced motion — the investigation is still fully readable without it ───
+   Kills decorative/scroll-linked movement for users who ask the system to
+   minimise motion: transitions and keyframe animations resolve instantly to
+   their final state. State changes (colour, selected markers) still occur —
+   they simply stop travelling. */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  /* Framer-motion respects this media query automatically; this rule covers
+     the plain-CSS paths (ul-hover, row-hover, statusPulse, marquee, etc.). */
+}
+
 html { scroll-behavior: smooth; }
 
 .tiptap { outline: none; }

@@ -235,12 +235,15 @@ export function InvestigationReplay({ analysis, retrievalFailed, failedUrl, fail
                   </span>
                 </div>
                 {(isActive || isDone) && (
-                  <p
+                  <motion.p
+                    initial={{ opacity: 0, y: 3 }}
+                    animate={{ opacity: isDone && !isActive ? 0.8 : 1, y: 0 }}
+                    transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
                     className="mt-1 text-[11px] leading-relaxed"
-                    style={{ color: isActive ? "#F1F0EA" : "#A5A5A1", opacity: isDone && !isActive ? 0.8 : 1 }}
+                    style={{ color: isActive ? "#F1F0EA" : "#A5A5A1" }}
                   >
                     {stage.detail}
-                  </p>
+                  </motion.p>
                 )}
               </motion.div>
             </div>
