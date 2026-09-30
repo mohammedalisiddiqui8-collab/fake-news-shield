@@ -16,7 +16,7 @@ export default function Landing() {
           untouched. No overlay, filter, gradient or effect on top: the
           photograph is the visual, exactly as provided. ── */}
       <img
-        src="/veritas-hero.jpg"
+        src="/veritas-hero.png"
         alt=""
         aria-hidden="true"
         className="absolute inset-0 h-full w-full object-cover"
@@ -28,9 +28,9 @@ export default function Landing() {
       {/* ── Minimal navigation — the name, nothing else ── */}
       <header className="relative z-10 flex shrink-0 items-center justify-between px-6 py-6 sm:px-10 sm:py-8">
         <button
-          onClick={() => navigate("/")}
+          onClick={() => navigate("/desk")}
           className="group flex items-baseline gap-3"
-          aria-label="Veritas — title page"
+          aria-label="Veritas — go to the desk"
         >
           <span className="font-mono text-[10px] tracking-[0.3em] text-[#6F7074] transition-colors duration-500 group-hover:text-[#C9C3B7]">
             V/
