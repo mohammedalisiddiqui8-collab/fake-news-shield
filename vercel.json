@@ -1,5 +1,5 @@
 {
-  "buildCommand": "VITE_CONVEX_URL=https://curious-swan-122.convex.cloud vite build",
+  "buildCommand": "export VITE_CONVEX_URL=https://curious-swan-122.convex.cloud && tsc -b && vite build",
   "outputDirectory": "dist",
   "framework": "vite",
   "rewrites": [

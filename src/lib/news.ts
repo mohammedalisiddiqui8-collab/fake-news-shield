@@ -5,7 +5,8 @@
  * - Sorts by publication time (newest first)
  * - Tracks snippet vs full-text availability
  * - Caches results for 30 minutes
- * - Falls back to static samples on any error
+ * - Never substitutes sample/demo articles: on failure the caller shows an
+ *   empty state so "Today's Headlines" only ever contains live articles.
  */
 
 export interface LiveArticle {
@@ -20,53 +21,6 @@ export interface LiveArticle {
   /** Whether the article text is a genuine excerpt or just the RSS <description> snippet. */
   isSnippet: boolean;
 }
-
-interface SampleArticle {
-  label: string;
-  text: string;
-  type: "real" | "fake";
-  category: string;
-}
-
-/* ─── Static fallback (unchanged from original) ─── */
-export const FALLBACK_SAMPLES: SampleArticle[] = [
-  {
-    label: "Scientists Discover New Species",
-    text: "In a groundbreaking discovery, a team of marine biologists from the University of Oxford has identified a previously unknown deep-sea species in the Mariana Trench. The creature, dubbed 'Abyssalus luminaris,' was found at a depth of 8,200 meters during a three-month expedition funded by the National Science Foundation. Lead researcher Dr. Sarah Chen published the findings in the journal Nature on March 15, 2025, noting the species' bioluminescent properties were unlike anything documented before. The discovery was independently verified by teams from MIT and the Woods Hole Oceanographic Institution.",
-    type: "real",
-    category: "Science",
-  },
-  {
-    label: "Miracle Cure Hidden by Big Pharma",
-    text: "EXPOSED!!! A secret natural cure for ALL diseases has been kept hidden by the corrupt pharmaceutical industry for DECADES!!! An anonymous insider known only as 'Dr. Truth' revealed in a viral Telegram post that a simple mixture of turmeric, apple cider vinegar, and lemon juice can cure cancer, diabetes, AND heart disease!!! The government doesn't want you to know this because they make BILLIONS from keeping you sick!!! Studies PROVE this works but the mainstream media won't report it because they're all PAID OFF!!! Share this before they delete it!!!",
-    type: "fake",
-    category: "Health",
-  },
-  {
-    label: "Market Rate Report",
-    text: "The Federal Reserve held interest rates steady at 5.25-5.50% during its January 2025 meeting, as widely anticipated by economists. Fed Chair Jerome Powell stated in the post-meeting press conference that while inflation has decreased from its 2022 peak of 9.1% to approximately 2.9%, the committee needs 'more confidence' that inflation is sustainably moving toward the 2% target before considering cuts. Markets reacted modestly, with the S&P 500 closing 0.3% lower. Analysts at Goldman Sachs and JPMorgan continue to project the first rate cut in June.",
-    type: "real",
-    category: "Finance",
-  },
-  {
-    label: "Political Conspiracy Post",
-    text: "WAKE UP SHEEPLE!!! The deep state doesn't want you to know that the 2024 election was completely STOLEN by globalist elites!!! Anonymous sources confirm that George Soros paid millions to rig the voting machines!!! The mainstream media is covering it all up because they're controlled by the new world order!!! Do your own research before they censor this!!! Share before they delete it!!! The truth is OUT THERE but the corrupt politicians don't want you to see it!!!",
-    type: "fake",
-    category: "Politics",
-  },
-  {
-    label: "Climate Change Report",
-    text: "A comprehensive study published in the journal Science on February 12, 2025, has found that global sea levels rose by 4.5 millimeters in 2024, the fastest annual increase ever recorded. The research, conducted by scientists at NASA's Goddard Institute for Space Studies and the University of Copenhagen, analyzed satellite data from 2015 to 2024. Lead author Dr. Michael Torres stated that the findings 'confirm the accelerating trend predicted by climate models.' The study notes that while some skeptics question the methodology, the results have been independently verified.",
-    type: "real",
-    category: "Environment",
-  },
-  {
-    label: "Celebrity Health Rumor",
-    text: "SHOCKING!!! Famous Hollywood star secretly DEAD but government hiding it from public!!! Sources say the celebrity was assassinated because they knew too much about big pharma's secret experiments!!! Friends are being threatened to stay silent!!! The deep state doesn't want you to know the truth!!! Wake up people!!! This is bigger than any conspiracy you've ever seen!!! The mainstream media won't report it because they're all controlled by the elite!!! Share this before they delete it!!!",
-    type: "fake",
-    category: "Entertainment",
-  },
-];
 
 /* ─── RSS feed sources by category ─── */
 const CATEGORY_FEEDS: Record<string, { url: string; name: string }[]> = {

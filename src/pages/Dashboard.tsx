@@ -34,7 +34,7 @@ import HeroAtmosphere from "@/components/HeroAtmosphere";
 import { InvestigationReplay } from "@/components/motion/InvestigationReplay";
 import { RetrievalFailedState } from "@/components/motion/RetrievalFailedState";
 import { SourceTrail } from "@/components/motion/SourceTrail";
-import { getLiveNews, FALLBACK_SAMPLES, getCategoryIconComponent, type LiveArticle } from "@/lib/news";
+import { getLiveNews, getCategoryIconComponent, type LiveArticle } from "@/lib/news";
 import { deriveSourceCounts } from "@/lib/investigationStats";
 
 /* ─── Types ─── */
@@ -116,9 +116,6 @@ function signalLabelFor(flag: string): string {
   if (/language|wording|sensational|clickbait|emotional|caps|emoji|fear|conspiracy|urgency|sharing|tone|sourcing|certainty|superlative|anonymous|balanc/i.test(flag)) return "LINGUISTIC SIGNAL";
   return "LANGUAGE SIGNAL";
 }
-
-/* ─── Static sample fallback — used only when live headlines cannot be fetched ─── */
-const sampleTexts = FALLBACK_SAMPLES;
 
 /* ─── Page 02 · The four chapters of the desk ──────────────────────────
    TRACE / PATTERNS / SCRUTINY / FRAMEWORK — each a different composition,
@@ -384,6 +381,19 @@ function HeadlinesColumn({ items, loading, onPick, variant = "table" }: {
     );
   }
 
+  /* No live articles were retrieved — say so plainly. Sample articles are
+     never shown in place of today's news. */
+  if (items.length === 0) {
+    return (
+      <div className="border-t border-border py-10 text-center">
+        <p className="kicker" style={{ color: "#C9C3B7" }}>LIVE HEADLINES UNAVAILABLE</p>
+        <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
+          Unable to retrieve current headlines. Try again later.
+        </p>
+      </div>
+    );
+  }
+
   /* Stacked newsroom column — 01 / headline / source · time, for the home rail */
   if (variant === "stack") {
     return (
@@ -511,40 +521,25 @@ export default function Dashboard() {
     let cancelled = false;
     getLiveNews()
       .then((articles) => { if (!cancelled) setLiveNews(articles); })
-      .catch(() => { /* fallback will be used */ })
+      .catch(() => { /* no live articles — the empty state is shown instead */ })
       .finally(() => { if (!cancelled) setNewsLoading(false); });
     return () => { cancelled = true; };
   }, []);
 
-  /* ─── Build display items: live articles first, then static fallback to fill up to 6 ─── */
-  const displayItems: SampleItem[] = (() => {
-    const liveItems: SampleItem[] = liveNews.slice(0, 6).map((article) => ({
-      label: article.title,
-      text: article.fullText,
-      type: "real" as const,
-      category: article.category,
-      source: article.sourceName,
-      publishedAt: article.publishedAt,
-      publishedAgo: article.publishedAgo,
-      sourceUrl: article.sourceUrl,
-      isSnippet: article.isSnippet,
-    }));
-    // Static samples are used ONLY when no live headlines could be fetched —
-    // they are never mixed into "Today's Headlines".
-    if (liveItems.length === 0) {
-      const needed = 6 - liveItems.length;
-      const filler = sampleTexts.slice(0, needed);
-      liveItems.push(
-        ...filler.map((s) => ({
-          label: s.label,
-          text: s.text,
-          type: s.type as "real" | "fake",
-          category: s.category,
-        }))
-      );
-    }
-    return liveItems;
-  })();
+  /* ─── Today's Headlines shows ONLY successfully retrieved live articles.
+     Sample/demo articles are never substituted — when the live fetch fails
+     the list is empty and the column renders its unavailable state. ─── */
+  const displayItems: SampleItem[] = liveNews.slice(0, 6).map((article) => ({
+    label: article.title,
+    text: article.fullText,
+    type: "real" as const,
+    category: article.category,
+    source: article.sourceName,
+    publishedAt: article.publishedAt,
+    publishedAgo: article.publishedAgo,
+    sourceUrl: article.sourceUrl,
+    isSnippet: article.isSnippet,
+  }));
 
   useEffect(() => {
     const interval = setInterval(() => setCurrentTip(t => (t + 1) % mediaLiteracyTips.length), 7000);
@@ -1512,7 +1507,7 @@ export default function Dashboard() {
                             ? "Retrieving live headlines from major wires…"
                             : liveNews.length > 0
                               ? "Live from major wires — click any headline to load it into the editor."
-                              : "Live feeds unavailable — showing sample articles instead."
+                              : "Live feeds unavailable."
                         }
                         right={
                           <span className="inline-flex items-center gap-1.5 kicker">
@@ -1642,7 +1637,7 @@ export default function Dashboard() {
                     ? "Retrieving live headlines…"
                     : liveNews.length > 0
                       ? `${liveNews.length} live stories · refreshes every 30 minutes`
-                      : "Live feeds unavailable — sample articles shown"}
+                      : "Live feeds unavailable"}
                 </p>
               </motion.div>
             )}
