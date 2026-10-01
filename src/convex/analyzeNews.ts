@@ -176,14 +176,10 @@ function claimTokens(text: string): string[] {
     text.toLowerCase()
       .replace(/[^a-z0-9%$.\s-]/g, " ")
       .split(/\s+/)
+      // Trim stray punctuation ("volume." → "volume") but keep "5.5%" and "5.5".
+      .map(w => w.replace(/^[^\w%$]+/, "").replace(/[^\w%)]+$/, ""))
       .filter(w => w.length >= 4 && !STOP_WORDS.has(w.replace(/[^a-z]/g, ""))),
   )];
-}
-
-/** Normalized numeric values mentioned in the claim ("12", "5.25", "8200"). */
-function claimNumbers(text: string): string[] {
-  const matches = text.match(/\d+(?:[.,]\d+)*/g) || [];
-  return [...new Set(matches.map(m => m.replace(/,/g, "")))];
 }
 
 // ─── PROPOSITION-LEVEL CLAIM ↔ EVIDENCE COMPARISON ────────────────────────
@@ -265,7 +261,7 @@ const RETURN_CONTEXT =
 /** Actions a claim can assert — drives agreement and explicit-negation checks. */
 const ACTION_LEXICON: Array<[string, RegExp]> = [
   ["confirm", /\b(confirm(?:ed|s|ing)?)\b/i],
-  ["land", /\b(land(?:ed|s|ing)|touch(?:ed|ing)?\s*down|touchdown|set\s+foot)\b/i],
+  ["land", /\b(land|landed|lands|landing|touch(?:ed|ing)?\s*down|touchdown|set\s*foot)\b/i],
   ["launch", /\b(launch(?:ed|es|ing)?)\b/i],
   ["win", /\b(win(?:s|ning)?|won)\b/i],
   ["discover", /\b(discover(?:ed|s|ing)?)\b/i],
@@ -282,10 +278,18 @@ const ACTION_LEXICON: Array<[string, RegExp]> = [
   ["recall", /\b(recall(?:ed|s|ing)?)\b/i],
   ["arrive", /\b(arriv(?:ed|es|ing)|reach(?:ed|es|ing))\b/i],
   ["orbit", /\b(orbit(?:ed|s|ing)|flyby|flew\s+around|circled)\b/i],
+  // Change-of-magnitude / direction families. A claim and a source that report
+  // OPPOSITE directions for the same subject disagree about the proposition;
+  // the same direction with a rounded figure corroborates it.
+  ["increase", /\b(increas(?:e|ed|ing|es)|ris(?:e|es|ing)|rose|risen|grew|grown|growing|grow|gains?|gained|surge(?:d|s|ing)?|jump(?:ed|s|ing)?|soar(?:ed|s|ing)?|climb(?:ed|s|ing)?|climbed|escalat(?:e|ed|ion|ing)?|accelerat(?:e|ed|ion|ing)?|reached)\b/i],
+  ["decrease", /\b(decreas(?:e|ed|ing|es)|declin(?:e|ed|ing)|fall(?:s|ing)?|fell|fallen|drop(?:ped|s|ping)?|shrink(?:s|ing)?|shrank|loss|lost|lose|losing|loses|plummet(?:ed|s|ing)?|slid|slide|contract(?:ed|s|ing)?|reduc(?:e|ed|ion|ing)|erod(?:e|ed|ing)|melt(?:ed|s|ing)?|wast(?:e|ed|ing)?|diminish(?:ed|es|ing)?|dwindl(?:ed|ing)?)\b/i],
+  ["warn", /\b(warn(?:ed|s|ing)?|warning(?:s)?)\b/i],
+  ["threaten", /\b(threaten(?:ed|s|ing)?|threat(?:s)?)\b/i],
+  ["cause", /\b(caus(?:e|ed|es|ing)|trigger(?:ed|s|ing)?|result(?:ed|s|ing)?\s+in|led\s+to|leads?\s+to)\b/i],
 ];
 
 /** Mutually informative event-type signals (a flyby involves no landing). */
-const EVENT_LANDING = /\b(land(?:ed|s|ing)|touch(?:ed|ing)?\s*down|touchdown|set\s+foot)\b/i;
+const EVENT_LANDING = /\b(land|landed|lands|landing|touch(?:ed|ing)?\s*down|touchdown|set\s+foot)\b/i;
 const EVENT_FLYBY =
   /\b(flyby|fly\s+by|flew\s+around|flies\s+around|flying\s+around|orbited|orbit(?:s|ing)?\s+around|circled|flew\s+past|lunar\s+orbit)\b/i;
 
@@ -299,6 +303,11 @@ const COMMON_START_WORDS = new Set([
   "we", "he", "she", "it", "they", "this", "that", "these", "those", "after",
   "before", "why", "how", "what", "when", "where", "who", "new", "says",
   "said", "as", "of", "to", "from", "with", "its", "their",
+  // Quantifiers and discourse markers are not named subjects.
+  "more", "most", "less", "least", "many", "much", "several", "such", "both",
+  "all", "some", "any", "each", "every", "other", "another", "there", "here",
+  "until", "while", "although", "though", "because", "since", "during",
+  "between", "about", "over", "under", "after", "one", "two", "three",
 ]);
 
 interface PropositionQuant { noun: string; value: number; }
@@ -399,6 +408,15 @@ function quantityPairs(text: string): PropositionQuant[] {
       : m[2].toLowerCase() === "billion" ? 1e9 : 1e12;
     out.push({ noun: m[3].toLowerCase().replace(/s$/, ""), value: parseFloat(m[1].replace(",", ".")) * scale });
   }
+  // Percentages are measurements too ("5.5% of their ice volume" ≡
+  // "5.5 per cent of the ice volume") — compare them on the same axis.
+  // NOTE: no trailing \b — "%" is a non-word character, so a boundary after
+  // it can never match and every "5.5%" would be silently skipped.
+  const pct = /(\d+(?:[.,]\d+)?)\s*(?:%|per\s*cent|percent|pct)(?![a-z])/gi;
+  while ((m = pct.exec(text)) !== null) {
+    const value = parseFloat(m[1].replace(",", "."));
+    if (!Number.isNaN(value)) out.push({ noun: "percent", value });
+  }
   return out;
 }
 
@@ -438,8 +456,131 @@ function extractProposition(text: string): Proposition {
   };
 }
 
-function numberInText(n: string, haystack: string): boolean {
-  return new RegExp("(^|[^0-9])" + n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "([^0-9]|$)").test(haystack);
+// ─── TOLERANT NUMERIC COMPARISON ──────────────────────────────────────────
+// A source corroborates a claim when it states the SAME figure, not the same
+// string: "5%", "5.5%", "more than 5%" and "5–6%" are ordinary restatements of
+// one proposition. A clearly different figure for the same measure (17% vs
+// 5.5%) is NOT a match — it stays a mismatch (and may contradict).
+
+/** Relative tolerance covering ordinary rounding of a reported figure. */
+const FIGURE_TOLERANCE = 0.15;
+/** Wider band for explicitly approximate restatements ("about 5%", "nearly 5%"). */
+const APPROX_TOLERANCE = 0.35;
+
+function isYearValue(v: number): boolean {
+  return Number.isInteger(v) && v >= 1900 && v <= 2100;
+}
+
+/** Every numeric literal in a text, with its span. */
+function numericLiterals(text: string): Array<{ value: number; index: number; end: number }> {
+  const out: Array<{ value: number; index: number; end: number }> = [];
+  const re = /\d+(?:[.,]\d+)*/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text)) !== null) {
+    const value = parseFloat(m[0].replace(/,/g, ""));
+    if (!Number.isNaN(value)) out.push({ value, index: m.index, end: m.index + m[0].length });
+  }
+  return out;
+}
+
+/** The claim's MEASURED figures — calendar years are dates, not measurements. */
+function measuredFigures(text: string): number[] {
+  const out = new Set<number>();
+  for (const { value } of numericLiterals(text)) {
+    if (!isYearValue(value)) out.add(value);
+  }
+  return [...out];
+}
+
+/** How a source hedges the figure next to it ("more than 5%", "up to 6%"). */
+type FigureBound = "at_least" | "at_most" | "approx" | null;
+
+function boundAround(text: string, index: number): FigureBound {
+  const before = text.slice(Math.max(0, index - 28), index).toLowerCase();
+  const after = text.slice(index, index + 16).toLowerCase();
+  if (/\b(?:more than|over|above|at least|exceed(?:s|ing)?|greater than|upwards of|or more)\s*$/.test(before)) return "at_least";
+  if (/\b(?:up to|less than|under|below|at most|fewer than|no more than|or less)\s*$/.test(before)) return "at_most";
+  if (/\b(?:about|around|nearly|almost|approximately|roughly|some|close to|an estimated|a reported)\s*$/.test(before)) return "approx";
+  if (/^\s*(?:%|per\s*cent|percent)(?![a-z])/.test(after) && /\b(?:more than|over|above|at least|nearly|almost|about|around|up to|under)\s*$/.test(before)) return "approx";
+  return null;
+}
+
+/** Numeric ranges stated by a source ("5–6%", "between 5 and 6 percent"). */
+function statedRanges(text: string): Array<{ lo: number; hi: number }> {
+  const out: Array<{ lo: number; hi: number }> = [];
+  const re = /(\d+(?:[.,]\d+)?)\s*(?:-|–|—|to|and)\s*(\d+(?:[.,]\d+)?)\s*(?:%|per\s*cent|percent)?/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(text)) !== null) {
+    const a = parseFloat(m[1].replace(",", "."));
+    const b = parseFloat(m[2].replace(",", "."));
+    if (Number.isNaN(a) || Number.isNaN(b)) continue;
+    if (a === b) continue;
+    out.push({ lo: Math.min(a, b), hi: Math.max(a, b) });
+  }
+  return out;
+}
+
+/** Is this figure a percentage or an absolute count? They never compare. */
+function figureKind(value: number, text: string): "percent" | "count" {
+  for (const { value: v, end } of numericLiterals(text)) {
+    if (v !== value) continue;
+    // Inspect what FOLLOWS the number, not the number itself.
+    const after = text.slice(end, end + 18);
+    if (/^\s*(?:%|per\s*cent|percent|pct)(?![a-z])/i.test(after)) return "percent";
+  }
+  return "count";
+}
+
+/** Source figures that measure the same kind of thing as the claim figure. */
+function comparableFigures(claimValue: number, claimText: string, sourceText: string): number[] {
+  const kind = figureKind(claimValue, claimText);
+  return measuredFigures(sourceText)
+    .filter(v => figureKind(v, sourceText) === kind);
+}
+
+/** Does the source state this figure (directly, hedged or as a range)? */
+function figureRestated(claimValue: number, claimText: string, sourceText: string): boolean {
+  if (figureKind(claimValue, claimText) === "percent") {
+    for (const range of statedRanges(sourceText)) {
+      if (claimValue >= range.lo - Math.abs(range.hi - range.lo) - FIGURE_TOLERANCE &&
+          claimValue <= range.hi + Math.abs(range.hi - range.lo) + FIGURE_TOLERANCE) {
+        return true;
+      }
+    }
+  }
+  for (const value of comparableFigures(claimValue, claimText, sourceText)) {
+    const index = numericLiterals(sourceText).find(l => l.value === value)!.index;
+    const bound = boundAround(sourceText, index);
+    const diff = Math.abs(claimValue - value);
+    const scale = Math.max(Math.abs(claimValue), Math.abs(value), 1e-9);
+    if (diff === 0) return true;
+    if (diff / scale <= FIGURE_TOLERANCE) return true;
+    if (bound === "at_least" && value >= claimValue * (1 - FIGURE_TOLERANCE)) return true;
+    if (bound === "at_most" && value <= claimValue * (1 + FIGURE_TOLERANCE)) return true;
+    if (bound === "approx" && diff / scale <= APPROX_TOLERANCE) return true;
+  }
+  return false;
+}
+
+/** The source states a CLEARLY different figure for the same measure. */
+function figureContradicts(claimValue: number, claimText: string, sourceText: string): boolean {
+  if (figureRestated(claimValue, claimText, sourceText)) return false;
+  return comparableFigures(claimValue, claimText, sourceText).some(v =>
+    Math.abs(v - claimValue) / Math.max(Math.abs(v), Math.abs(claimValue), 1e-9) > FIGURE_TOLERANCE);
+}
+
+/** Two extracted quantities are the same measurement when rounding-tolerant. */
+function valuesCompatible(a: number, b: number): boolean {
+  if (a === b) return true;
+  return Math.abs(a - b) / Math.max(Math.abs(a), Math.abs(b), 1e-9) <= FIGURE_TOLERANCE;
+}
+
+/** Do both texts speak about the same period, or does only one specify one? */
+function periodsAgree(claimText: string, sourceText: string): boolean {
+  const years = (t: string) => [...new Set((t.match(/\b(?:19|20)\d{2}\b/g) ?? []))];
+  const a = years(claimText), b = years(sourceText);
+  if (a.length === 0 || b.length === 0) return true;
+  return a.some(y => b.includes(y));
 }
 
 function canonicalAction(verb: string): string | null {
@@ -494,7 +635,12 @@ function detectConflict(
     src.entities.includes(e) || src.entities.some(x => x === e || (e.length >= 4 && x.includes(e)) || (x.length >= 4 && e.includes(x))));
   const qtyAnchor = claim.quantities.some(cq => src.quantities.some(sq => sq.noun === cq.noun));
   const dateAnchor = claim.dates.some(d => src.dates.includes(d));
-  if (shared.length < 2 && overlap < 0.4 && !entityShared && !qtyAnchor && !dateAnchor) {
+  // An explicit negation of an action the claim asserts is a real conflict
+  // signal on its own — it must not be filtered out by the anchoring gate.
+  const neg = haystack.match(NEGATION_PATTERN);
+  const negatedAction = neg && neg[1] ? canonicalAction(neg[1]) : null;
+  const negationAnchor = !!negatedAction && claim.actions.includes(negatedAction);
+  if (!negationAnchor && shared.length < 2 && overlap < 0.4 && !entityShared && !qtyAnchor && !dateAnchor) {
     return undefined; // not anchored to the same subject — cannot conflict
   }
 
@@ -508,7 +654,23 @@ function detectConflict(
     return undefined;
   }
 
-  // 3. Destination / location conflict (both sides state a different place
+  // 3. Direction conflict — the claim reports a rise while the source reports
+  //    a fall (or the reverse) for the same subject. Only when both sides
+  //    state exactly one direction, so mixed coverage is never a conflict.
+  const claimUp = claim.actions.includes("increase");
+  const claimDown = claim.actions.includes("decrease");
+  const srcUp = src.actions.includes("increase");
+  const srcDown = src.actions.includes("decrease");
+  if (claimUp !== claimDown && srcUp !== srcDown && overlap >= 0.3) {
+    if (claimDown && srcUp) {
+      return "Direction conflict — the claim reports a decrease, while the retrieved source reports an increase for the same subject";
+    }
+    if (claimUp && srcDown) {
+      return "Direction conflict — the claim reports an increase, while the retrieved source reports a decrease for the same subject";
+    }
+  }
+
+  // 4. Destination / location conflict (both sides state a different place
   //    for the same subject in an event context).
   const claimQ = qualifiedPlaces(claim.text, shared);
   const srcQ = qualifiedPlaces(sourceText, shared);
@@ -517,7 +679,7 @@ function detectConflict(
       claimQ.join(", ") + "\", while the retrieved source places it at \"" + srcQ.join(", ") + "\"";
   }
 
-  // 4. Event-type conflict (claimed surface landing vs described flyby/orbit).
+  // 5. Event-type conflict (claimed surface landing vs described flyby/orbit).
   const claimLand = EVENT_LANDING.test(claim.text);
   const claimFlyby = EVENT_FLYBY.test(claim.text);
   const srcLand = EVENT_LANDING.test(sourceText);
@@ -529,32 +691,36 @@ function detectConflict(
     return "Event-type conflict — the claim describes a flyby/orbit, while the retrieved source describes a surface landing";
   }
 
-  // 5. Explicit negation of an action the claim asserts.
-  const neg = haystack.match(NEGATION_PATTERN);
-  if (neg && neg[1]) {
-    const verb = canonicalAction(neg[1]);
-    if (verb && claim.actions.includes(verb)) {
-      return "The retrieved source explicitly negates the action the claim asserts (\"" + neg[1] + "\")";
-    }
+  // 6. Explicit negation of an action the claim asserts.
+  if (neg && neg[1] && negationAnchor) {
+    return "The retrieved source explicitly negates the action the claim asserts (\"" + neg[1] + "\")";
   }
 
-  // 6. Quantity conflict for the same measured noun.
+  // 7. Quantity conflict for the same measured noun. Only a CLEARLY different
+  //    figure conflicts: 5.5% vs 5% is the same measurement rounded.
   for (const cq of claim.quantities) {
-    const sq = src.quantities.find(q => q.noun === cq.noun && q.value !== cq.value);
-    if (sq) {
+    const sameNoun = src.quantities.filter(q => q.noun === cq.noun);
+    if (sameNoun.some(q => valuesCompatible(cq.value, q.value))) continue;
+    const conflicting = sameNoun.find(q =>
+      Math.abs(q.value - cq.value) / Math.max(Math.abs(q.value), Math.abs(cq.value), 1e-9) > FIGURE_TOLERANCE);
+    if (conflicting) {
       return "Quantity conflict — the claim states \"" + cq.value + " " + cq.noun +
-        "\", while the retrieved source states \"" + sq.value + " " + sq.noun + "\"";
+        "\", while the retrieved source states \"" + conflicting.value + " " + conflicting.noun + "\"";
+    }
+    if (cq.noun === "percent" && figureContradicts(cq.value, claim.text, sourceText)) {
+      return "Quantity conflict — the claim states \"" + cq.value + " percent" +
+        "\", while the retrieved source reports a clearly different figure";
     }
   }
 
-  // 7. Date conflict (full date expressions on both sides, none in common).
+  // 8. Date conflict (full date expressions on both sides, none in common).
   if (claim.dates.length > 0 && src.dates.length > 0 &&
       !claim.dates.some(d => src.dates.includes(d))) {
     return "Date conflict — the claim dates this to \"" + claim.dates.join(", ") +
       "\", while the retrieved source dates it to \"" + src.dates.join(", ") + "\"";
   }
 
-  // 8. Superlative/ordinal conflict for the same category noun.
+  // 9. Superlative/ordinal conflict for the same category noun.
   for (const co of claim.ordinals) {
     const so = src.ordinals.find(o => o.noun === co.noun);
     if (so && so.ord !== co.ord) {
@@ -584,10 +750,27 @@ function compareProposition(
   const shared = claim.tokens.filter(t => src.tokens.includes(t));
   const entityShared = claim.entities.some(e =>
     src.entities.includes(e) || src.entities.some(x => x === e || (e.length >= 4 && x.includes(e)) || (x.length >= 4 && e.includes(x))));
-  const anchored = shared.length >= 2 || overlap >= 0.4 || entityShared;
+  // A source that restates the claim's MEASURED figure is anchored to the
+  // claim's proposition even when the wording is completely different
+  // ("disappeared" vs "vanished") — but only alongside at least one shared
+  // content word, so a coincidental number is never treated as corroboration.
+  const claimMeasured = measuredFigures(claim.text);
+  const numericAnchor = claimMeasured.length > 0 && shared.length >= 1 &&
+    claimMeasured.some(f => figureRestated(f, claim.text, sourceText)) &&
+    !claimMeasured.some(f => figureContradicts(f, claim.text, sourceText));
+  const anchored = shared.length >= 2 || overlap >= 0.4 || entityShared || numericAnchor;
 
   const conflict = detectConflict(claim, src, sourceText, haystack, headline, shared, overlap);
   if (conflict) return { relationship: "contradicts", overlap, reason: conflict };
+
+  // Both sides name specific entities and share none of them: same-sounding
+  // topic, different subject. Never corroboration, never partial agreement.
+  if (claim.entities.length > 0 && src.entities.length > 0 && !entityShared) {
+    return {
+      relationship: "does_not_address", overlap,
+      reason: "The retrieved source concerns a different named subject than this claim",
+    };
+  }
 
   if (!anchored) {
     return overlap >= 0.25
@@ -604,37 +787,63 @@ function compareProposition(
   // Subject is shared — compare the proposition itself, element by element.
   const claimQ = qualifiedPlaces(claim.text, shared);
   const srcQ = qualifiedPlaces(sourceText, shared);
-  const nums = claimNumbers(claim.text);
-  const numsOk = nums.length === 0 || nums.every(n => numberInText(n, haystack));
+  // Figures compare by VALUE, not by string: the same measurement restated
+  // with different rounding or a hedge is still corroboration.
+  const figures = measuredFigures(claim.text);
+  const figuresOk = figures.length === 0 || figures.every(f => figureRestated(f, claim.text, sourceText));
+  // A figure the source states CLEARLY differently blocks corroboration; a
+  // figure it simply does not mention (a duration, a secondary count) does not.
+  const figuresConflict = figures.some(f => figureContradicts(f, claim.text, sourceText));
   const placeAgree = claim.places.length > 0 && claim.places.some(p => src.places.includes(p));
   const destAddressed = claimQ.length === 0 || claimQ.some(p => srcQ.includes(p));
-  const qtyAgree = claim.quantities.some(cq => src.quantities.some(sq => sq.noun === cq.noun && sq.value === cq.value));
+  const qtyAgree = claim.quantities.some(cq =>
+    src.quantities.some(sq => sq.noun === cq.noun && valuesCompatible(cq.value, sq.value)));
+  const figureAgree = !qtyAgree && figures.length > 0 && figuresOk;
   const dateAgree = claim.dates.length > 0 && claim.dates.some(d => src.dates.includes(d));
+  const periodAgree = !dateAgree && periodsAgree(claim.text, sourceText);
   const actionAgree = claim.actions.some(a => src.actions.includes(a));
-  const entityGuard = claim.entities.length === 0 ? shared.length >= 3 : entityShared;
+  const entityGuard = claim.entities.length === 0
+    ? (shared.length >= 3 || (anchored && qtyAgree))
+    : entityShared;
   const realDetail =
-    (placeAgree ? 1 : 0) + (qtyAgree ? 1 : 0) + (dateAgree ? 1 : 0) + (actionAgree ? 1 : 0);
-  const detailScore =
-    (placeAgree ? 2 : 0) + (qtyAgree ? 2 : 0) + (dateAgree ? 1 : 0) +
-    (actionAgree ? 1 : 0) + (entityShared ? 1 : 0) + (overlap >= 0.5 ? 1 : 0);
+    (placeAgree ? 1 : 0) + (qtyAgree ? 1 : 0) +
+    (figureAgree && (entityShared || shared.length >= 2) ? 1 : 0) +
+    (dateAgree ? 1 : 0) + (actionAgree ? 1 : 0);
 
-  // SUPPORTS requires agreement with the proposition itself — never with the topic.
-  if (entityGuard && numsOk && destAddressed && detailScore >= 3) {
-    const agrees: string[] = [];
-    if (placeAgree) agrees.push("same location/destination");
-    if (qtyAgree) agrees.push("matching figures");
-    if (dateAgree) agrees.push("matching date");
-    if (actionAgree) agrees.push("matching action");
+  // Independent agreements on the proposition's elements. Matching a subject,
+  // a figure, a period and a direction is what corroboration means — an exact
+  // text match is neither required nor sufficient.
+  const agreements: string[] = [];
+  if (placeAgree) agreements.push("same location/destination");
+  if (qtyAgree) agreements.push("matching figures");
+  else if (figureAgree) agreements.push("same figure, restated");
+  if (dateAgree) agreements.push("matching date");
+  else if (periodAgree && /\b(?:19|20)\d{2}\b/.test(claim.text)) agreements.push("matching period");
+  if (actionAgree) agreements.push("matching event/direction");
+  if (entityShared) agreements.push("same named subject");
+  // A claim can state its subject in plain words ("…an estimated 5.5%") with
+  // no proper noun at all; shared subject wording still counts as agreement.
+  else if (claim.entities.length === 0 && anchored) agreements.push("same subject");
+
+  // Corroboration requires: the same subject, the same period, no unresolved
+  // location or figure mismatch, and agreement on the substance — at least two
+  // independent elements, one of which must be more than a shared subject.
+  const substantive = qtyAgree || figureAgree || dateAgree || actionAgree ||
+    (placeAgree && entityShared);
+  const corroborated = entityGuard && !figuresConflict && periodAgree && destAddressed &&
+    agreements.length >= 2 && substantive;
+
+  if (corroborated) {
     return {
       relationship: "supports", overlap,
-      reason: "The retrieved content agrees with the claim's proposition (" + (agrees.join(", ") || "specific details") + ")",
+      reason: "The retrieved content independently supports the claim's proposition (" + agreements.join(", ") + ")",
     };
   }
 
   if (realDetail >= 1) {
     let reason = "The retrieved source addresses this subject but only partially confirms the claim's proposition";
     if (!destAddressed) reason = "The retrieved source does not state the location/destination asserted by the claim";
-    else if (!numsOk) reason = "The retrieved source does not confirm the specific figures asserted by the claim";
+    else if (!figuresOk) reason = "The retrieved source does not confirm the figures asserted by the claim";
     return { relationship: "partial", overlap, reason };
   }
 
@@ -662,8 +871,8 @@ function evaluateRelationship(
 }
 
 
-function parseRssItems(xml: string): Array<{ title: string; link: string; pubDate: string; description: string; publisher: string }> {
-  const items: Array<{ title: string; link: string; pubDate: string; description: string; publisher: string }> = [];
+function parseRssItems(xml: string): Array<{ title: string; link: string; pubDate: string; description: string; publisher: string; publisherUrl: string }> {
+  const items: Array<{ title: string; link: string; pubDate: string; description: string; publisher: string; publisherUrl: string }> = [];
   const itemRegex = /<item[^>]*>([\s\S]*?)<\/item>/gi;
   let match: RegExpExecArray | null;
   while ((match = itemRegex.exec(xml)) !== null) {
@@ -678,25 +887,86 @@ function parseRssItems(xml: string): Array<{ title: string; link: string; pubDat
     };
     const title = get("title");
     if (!title) continue;
+    // <source url="https://www.bbc.co.uk">BBC News</source> — the real
+    // publisher behind the discovery layer.
+    const sourceTag = /<source\b([^>]*)>([\s\S]*?)<\/source\s*>/i.exec(itemXml);
+    const publisherUrlAttr = sourceTag
+      ? (/url\s*=\s*["']([^"']+)["']/i.exec(sourceTag[1]) || [])[1] || ""
+      : "";
     items.push({
       title,
       link: get("link"),
       pubDate: get("pubDate"),
       description: decodeHtml(get("description").replace(/<[^>]*>/g, "")).replace(/<[^>]*>/g, ""),
-      publisher: get("source"),
+      publisher: sourceTag ? sourceTag[2].trim() : "",
+      publisherUrl: publisherUrlAttr,
     });
     if (items.length >= 10) break;
   }
   return items;
 }
 
-function publisherFromItem(item: { publisher: string; link: string }): string {
-  if (item.publisher) return item.publisher;
+/** Hosts that belong to a discovery/aggregator layer rather than a publisher. */
+function isAggregatorHost(host: string): boolean {
+  return /(^|\.)(news\.)?google\.[a-z.]{2,}$/.test(host) ||
+    /(^|\.)(news|feeds?|rss)\.(yahoo|msn|bing|aol)\.[a-z.]{2,}$/.test(host);
+}
+
+/**
+ * Follow a discovery-layer result to the article it actually points at, so the
+ * real publisher URL is stored and displayed instead of the aggregator's.
+ * Best-effort: when the redirect cannot be resolved the original link is kept.
+ */
+async function resolvePublisherUrl(link: string): Promise<string> {
+  let host = "";
   try {
-    return new URL(item.link).hostname.replace(/^www\./, "");
+    host = new URL(link).hostname.replace(/^www\./, "");
   } catch {
-    return "Unknown publisher";
+    return link;
   }
+  if (!isAggregatorHost(host)) return link;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 5000);
+  try {
+    const res = await fetch(link, {
+      signal: controller.signal,
+      redirect: "follow",
+      headers: { "user-agent": "Mozilla/5.0 (compatible; Veritas/1.0)" },
+    });
+    const finalUrl = res.url || "";
+    if (!finalUrl) return link;
+    const finalHost = new URL(finalUrl).hostname.replace(/^www\./, "");
+    return isAggregatorHost(finalHost) ? link : finalUrl;
+  } catch {
+    return link;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/** Drop the aggregator's " - Publisher Name" suffix from a headline. */
+function stripPublisherSuffix(title: string, publisher: string): string {
+  if (!publisher) return title;
+  const suffix = " - " + publisher.trim();
+  if (title.trim().toLowerCase().endsWith(suffix.toLowerCase())) {
+    return title.trim().slice(0, title.trim().length - suffix.length).trim();
+  }
+  return title.trim();
+}
+
+function publisherFromItem(item: { publisher: string; link: string; publisherUrl?: string }): string {
+  if (item.publisher) return item.publisher;
+  // The link may point at a discovery layer — prefer the publisher's own site.
+  const candidates = [item.publisherUrl, item.link].filter(Boolean) as string[];
+  for (const candidate of candidates) {
+    try {
+      const host = new URL(candidate).hostname.replace(/^www\./, "");
+      if (!isAggregatorHost(host)) return publisherFromHostname(host);
+    } catch {
+      // try the next candidate
+    }
+  }
+  return "Unknown publisher";
 }
 
 function formatDate(pubDate: string): string {
@@ -711,7 +981,9 @@ function formatDate(pubDate: string): string {
  * Returns real retrieved sources only. On failure, `ok` is false.
  */
 async function searchClaim(claimText: string): Promise<ClaimSearch> {
-  const query = claimText.replace(/["“”]/g, " ").replace(/\s+/g, " ").trim().slice(0, 160);
+  // Search on a normalized, concise query derived from the COMPLETE claim —
+  // never on a malformed or truncated fragment.
+  const query = buildSearchQuery(claimText);
   if (query.length < 8) {
     return { ok: true, sources: [], error: "Claim too short to search." };
   }
@@ -732,13 +1004,15 @@ async function searchClaim(claimText: string): Promise<ClaimSearch> {
     const items = parseRssItems(xml);
 
     const evaluated = items.map(item => {
-      const { relationship, overlap, reason } = evaluateRelationship(claimText, item.title, item.description);
+      const headline = stripPublisherSuffix(decodeEntities(item.title), item.publisher);
+      const { relationship, overlap, reason } = evaluateRelationship(claimText, headline, item.description);
       // Evidence quality: primary/authoritative sources outrank loosely
       // related secondary coverage when the best results are selected.
       const authority = sourceAuthority(item.link, claimText);
       return {
+        item,
+        headline,
         name: publisherFromItem(item),
-        headline: item.title,
         date: formatDate(item.pubDate),
         excerpt: item.description.slice(0, 240) || "No snippet available.",
         url: item.link,
@@ -751,7 +1025,29 @@ async function searchClaim(claimText: string): Promise<ClaimSearch> {
 
     // Most evidentiary results first: decisive relationships, then authority.
     evaluated.sort((a, b) => b.rank - a.rank);
-    const top: RetrievedSource[] = evaluated.slice(0, 3).map(({ overlap: _overlap, rank: _rank, ...src }) => src);
+    const finalists = evaluated.slice(0, 3);
+
+    // SOURCE IDENTITY: Google News is discovery only. Follow each result to
+    // the article it points at so the real publisher URL, name and domain are
+    // what gets stored and displayed.
+    const resolved = await Promise.all(finalists.map(async (entry) => {
+      let url = await resolvePublisherUrl(entry.url);
+      let host = "";
+      try { host = new URL(url).hostname.replace(/^www\./, ""); } catch { host = ""; }
+      const stillAggregator = isAggregatorHost(host);
+      if (stillAggregator && entry.item.publisherUrl) {
+        // The feed names the publisher even when the article link cannot be
+        // followed — use the publisher's own site as the source identity.
+        url = entry.item.publisherUrl;
+        try { host = new URL(url).hostname.replace(/^www\./, ""); } catch { host = ""; }
+      }
+      const name = entry.name && entry.name !== "Unknown publisher"
+        ? entry.name
+        : publisherFromHostname(host);
+      const { item: _item, headline, date, excerpt, relationship, overlap, reason } = entry;
+      return { name, headline, date, excerpt, url, relationship, overlap, reason } satisfies RetrievedSource & { overlap: number };
+    }));
+    const top: RetrievedSource[] = resolved.map(({ overlap: _overlap, ...src }) => src);
 
     const anyAddressed = top.some(s =>
       s.relationship === "supports" || s.relationship === "contradicts" || s.relationship === "partial");
@@ -795,6 +1091,185 @@ async function searchClaim(claimText: string): Promise<ClaimSearch> {
   }
 }
 
+// ─── CLAIM TEXT NORMALIZATION ──────────────────────────────────────────────
+// Claims are normalized before they are stored, displayed and searched:
+// HTML entities are decoded, image-caption/photographer-credit contamination
+// is removed, duplicated metadata is collapsed. Numbers, dates, names and
+// units are never altered — only the encoding around them is repaired.
+
+const HTML_ENTITY_REPLACEMENTS: Array<[RegExp, string]> = [
+  [/&nbsp;/gi, " "], [/&amp;/gi, "&"], [/&lt;/gi, "<"], [/&gt;/gi, ">"],
+  [/&quot;/gi, '"'], [/&apos;/gi, "'"], [/&#0*39;/g, "'"],
+  [/&rsquo;/gi, "'"], [/&lsquo;/gi, "'"], [/&sbquo;/gi, "'"],
+  [/&rdquo;/gi, '"'], [/&ldquo;/gi, '"'], [/&bdquo;/gi, '"'],
+  [/&ndash;/gi, "-"], [/&mdash;/gi, "-"], [/&hyphen;/gi, "-"],
+  [/&hellip;/gi, "..."], [/&laquo;/gi, '"'], [/&raquo;/gi, '"'],
+  [/&deg;/gi, " degrees"], [/&euro;/gi, "€"], [/&pound;/gi, "£"],
+  [/&times;/gi, "x"], [/&frac12;/gi, "1/2"],
+];
+
+function decodeEntities(text: string): string {
+  let out = text;
+  for (const [re, rep] of HTML_ENTITY_REPLACEMENTS) out = out.replace(re, rep);
+  // Numeric entities (&#8217; &#x2019;).
+  out = out
+    .replace(/&#x([0-9a-f]+);/gi, (_m, hex) => safeFromCodePoint(parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_m, dec) => safeFromCodePoint(parseInt(dec, 10)));
+  return out;
+}
+
+function safeFromCodePoint(code: number): string {
+  if (!Number.isFinite(code) || code < 0 || code > 0x10ffff) return "";
+  try { return String.fromCodePoint(code); } catch { return ""; }
+}
+
+/** A bare surname glued to the front of a caption ("Hösli The front of …"). */
+function stripCaptionCredit(text: string): string {
+  const m = /^([A-ZÀ-Þ][\p{L}'’-]{1,}(?:\s+[A-ZÀ-Þ][\p{L}'’-]{1,}){0,2})\s+(?=[A-ZÀ-Þ])/u.exec(text);
+  if (!m) return text;
+  const remainder = text.slice(m[0].length).trim();
+  // Only strip when what remains is still a substantial sentence of its own.
+  if (remainder.split(/\s+/).length < 7) return text;
+  return remainder;
+}
+
+/** Normalize a candidate claim: entities, caption credit, duplicated metadata. */
+function normalizeClaimText(text: string): string {
+  let out = decodeEntities(text);
+  out = out.replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"');
+  out = out.replace(/\s*[|•]\s*$/, "");
+  out = out.replace(/\s*[|•]\s*[^-]{2,40}$/, "");
+  out = stripCaptionCredit(out);
+  // Words repeated by a caption/credit merge ("the the", "of of").
+  out = out.replace(/\b(\p{L}+)(\s+\1\b)+/giu, "$1");
+  // Punctuation runs produced by merging blocks.
+  out = out.replace(/([.,;:!?])\1{1,}/g, "$1");
+  // Detached punctuation left behind by inline markup ("sheets , the").
+  out = out.replace(/\s+([,;:.!?])/g, "$1");
+  return out.replace(/\s+/g, " ").trim();
+}
+
+/** Image captions, photo credits and image metadata markers. */
+const CAPTION_MARKER =
+  /\b(?:image|photo|photograph|picture)\s*(?:caption|credit|description)\b|^\s*(?:credit|image|photo|source)\s*:|\bgetty(?:\s+images)?\b|\bphotographer\b|\bimage\s+shows\b|©/i;
+
+/** Navigation, newsletter, signup, sharing and related-story interface text. */
+const INTERFACE_TEXT =
+  /\b(?:sign up|sign in|subscribe|subscription|newsletter|follow us|share this|share on|share via|read more|read next|read also|click here|learn more|see more|show more|load more|most read|most popular|related stories?|related articles?|related content|more on this|skip to|cookie|accept (?:all|cookies)|privacy policy|terms of use|advertisement|sponsored|log in|create an account|get the app|listen to|watch (?:now|this)|explore more|menu|home news|back to top|all rights reserved)\b/i;
+
+/** Category labels and section names — metadata lines, never propositions. */
+const LABEL_WORDS = new Set([
+  "news", "world", "politics", "sport", "sports", "business", "economy",
+  "technology", "tech", "health", "culture", "entertainment", "video", "live",
+  "analysis", "opinion", "features", "latest", "home", "more", "newsletter",
+]);
+
+function looksLikeLabelOnly(sentence: string): boolean {
+  const words = sentence.toLowerCase().split(/[^a-z]+/).filter(Boolean);
+  if (words.length === 0 || words.length > 6) return false;
+  return words.every(w => LABEL_WORDS.has(w) || w.length <= 2);
+}
+
+/** A sentence that opens with a connective is the tail of a clipped one. */
+const FRAGMENT_START =
+  /^(?:and|or|but|nor|so|yet|which|who|whom|whose|that|than|then|while|whilst|although|though|because|however|meanwhile|also|instead|such|per|via|with|without|plus|thus|hence|therefore)\b/i;
+
+/** A claim must assert something — it needs a verb, not just a noun phrase. */
+const CLAIM_VERB =
+  /\b(?:is|are|was|were|am|be|been|being|has|have|had|will|would|shall|can|could|should|may|might|must|do|does|did|said|say|says|stated|state|states|reported|reports|report|announced|announces|confirmed|confirms|estimated|estimates|found|finds|showed|shows|revealed|reveals|discovered|released|releases|launched|launches|approved|approves|rejected|rejects|banned|bans|signed|signs|elected|elects|appointed|appoints|died|dies|dead|killed|kills|rose|rises|risen|fell|falls|fallen|increased|increases|decreased|decreases|dropped|drops|grew|grows|grown|reached|reaches|hit|hits|exceeded|exceeds|recorded|records|measured|measures|published|publishes|warned|warns|threatened|threatens|caused|causes|became|becomes|remains|remain|includes|include|included|lost|lose|loses|gained|gain|gains|jumped|jumps|soared|soars|plummeted|surpassed|surpass|tripled|triple|halved|halve|stood|stands|totaled|totals|amounted|amounts|represents|represent|means|mean|began|begins|started|starts|ended|ends|arrived|arrives|returned|returns|affected|affects|damaged|damages|brought|brings|took|takes|take|saw|sees|see|expected|expects|forecast|forecasts|estimates?|projected|projects|estimated|planned|plans|reached|hit|struck|strikes)\b/i;
+
+/** Abbreviations ending in "." that never end a sentence. */
+const SENTENCE_ABBREVIATION =
+  /\b(?:mr|mrs|ms|dr|prof|sr|jr|st|vs|etc|inc|ltd|co|approx|est|no|fig|al|u\.s|u\.k|e\.g|i\.e|ca|circa|dept|gov|sen|rep|gen|lt|col|sgt|capt|hon|pres|supt|asst|messrs|ave|blvd)\.?$/i;
+
+/**
+ * Split text into sentences without ever cutting inside a number, an
+ * abbreviation or a decimal figure — so "an estimated 5.5% disappear." stays
+ * one complete sentence instead of becoming "…an estimated 5".
+ */
+function splitSentences(text: string): Array<{ text: string; terminated: boolean }> {
+  const out: Array<{ text: string; terminated: boolean }> = [];
+  let current = "";
+  let terminated = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    current += ch;
+    if (!/[.!?…]/.test(ch)) continue;
+    // Absorb repeated terminators and any closing quote/bracket.
+    while (i + 1 < text.length && /[.!?…"'”’)\]]/.test(text[i + 1])) {
+      i++; current += text[i];
+    }
+    const prev = current[current.length - 2] ?? "";
+    const next = text[i + 1] ?? "";
+    if (ch === "." || ch === "…") {
+      if (/\d/.test(prev) && /\d/.test(next)) continue;      // 5.5, 1.200
+      if (ch === "." && /\d/.test(prev) && next === "") continue; // "…an estimated 5"
+      if (ch === ".") {
+        const word = (/([\p{L}.]+)$/u.exec(current) || ["", ""])[1];
+        if (SENTENCE_ABBREVIATION.test(word)) continue;       // "Dr.", "U.S."
+        if (/^[\p{L}]$/u.test(word)) continue;                // initials "J. R. R."
+        if (/^\d+$/.test(word) && next !== "") continue;      // list markers "1." "2."
+      }
+    }
+    if (next !== "" && !/\s/.test(next)) continue;            // mid-token, e.g. "e.g"
+    const trimmed = current.trim();
+    if (trimmed) out.push({ text: trimmed, terminated: true });
+    current = "";
+    terminated = true;
+  }
+  const tail = current.trim();
+  if (tail) out.push({ text: tail, terminated });
+  return out;
+}
+
+/** Cut an over-long sentence at a clause boundary — never mid-clause. */
+function toCompleteClaim(sentence: string): string | null {
+  const MAX = 320;
+  if (sentence.length <= MAX) return sentence;
+  const head = sentence.slice(0, MAX);
+  const boundary = Math.max(
+    head.lastIndexOf("; "),
+    head.lastIndexOf(", and "),
+    head.lastIndexOf(", but "),
+    head.lastIndexOf(", while "),
+    head.lastIndexOf(", which "),
+    head.lastIndexOf(", where "),
+    head.lastIndexOf(" — "),
+  );
+  if (boundary > 80) {
+    const clause = head.slice(0, boundary).trim();
+    if (clause.split(/\s+/).length >= 8) return clause;
+  }
+  return null; // cannot recover a complete statement — discard it
+}
+
+/** Information density used to pick the most searchable clause of a claim. */
+function clauseDensity(clause: string): number {
+  const digits = (clause.match(/\d/g) || []).length;
+  const proper = (clause.match(/\b[A-ZÀ-Þ][a-zà-ÿ]{2,}/g) || []).length;
+  const words = clause.split(/\s+/).length;
+  return digits * 2.5 + proper * 2 + Math.min(words, 30) * 0.2;
+}
+
+/** Concise normalized search query derived from a complete claim. */
+function buildSearchQuery(claimText: string): string {
+  const normalized = normalizeClaimText(claimText);
+  if (!normalized) return "";
+  const clauses = normalized
+    .split(/(?<=[.;])\s+|,\s+(?:and|but|while|whereas|although|which)\s+/i)
+    .map(c => c.trim())
+    .filter(c => c.length >= 24);
+  let query = (clauses.length > 0
+    ? [...clauses].sort((a, b) => clauseDensity(b) - clauseDensity(a))[0]
+    : normalized);
+  if (query.length > 140) {
+    const cut = query.slice(0, 140);
+    const lastSpace = cut.lastIndexOf(" ");
+    query = (lastSpace > 60 ? cut.slice(0, lastSpace) : cut).replace(/[\s,;:.\-—…]+$/, "");
+  }
+  return query.replace(/["'`]/g, " ").replace(/\s+/g, " ").trim();
+}
+
 // ─── CLAIM EXTRACTION (text only — status comes from real evidence) ───────
 
 interface RawClaim {
@@ -806,8 +1281,37 @@ interface RawClaim {
   hasSensational: boolean;
 }
 
+/**
+ * Is this a complete, factual proposition?
+ * Rejects image captions, photographer credits, bylines, navigation,
+ * newsletter/signup text, related-story titles, social/share UI, category
+ * labels, page metadata and clipped fragments. Only validated claims are
+ * returned, so nothing downstream ever searches a malformed fragment.
+ */
+function isValidClaim(sentence: string, terminated: boolean): boolean {
+  const words = sentence.split(/\s+/).filter(Boolean);
+  if (words.length < 6) return false;                       // category label / fragment
+  if (CAPTION_MARKER.test(sentence)) return false;         // image caption / credit
+  if (INTERFACE_TEXT.test(sentence)) return false;         // navigation / newsletter / UI
+  // A connective opener is only disqualifying when the sentence was cut off:
+  // "Meanwhile, the WHO reported …" is complete, "and the ministry added that"
+  // is the tail of a clipped one.
+  if (FRAGMENT_START.test(sentence) && !terminated) return false;
+  if (!CLAIM_VERB.test(sentence)) return false;            // no meaningful predicate
+  // A leading capital is a subject, not stray punctuation or a photo credit.
+  const first = words[0].replace(/^[^\p{L}\p{N}]+/u, "");
+  if (!first || first.length < 2) return false;
+  if (looksLikeLabelOnly(sentence)) return false;
+  // Must not end mid-token: a trailing bare number or dangling function word
+  // means the sentence was cut off ("This year has seen an estimated 5").
+  if (!terminated && (/\d[\d.,]*$/.test(sentence) || /\s(?:of|and|or|with|the|a|an|to|in|on|at|for|from|by|than|that|which)$/i.test(sentence))) {
+    return false;
+  }
+  return true;
+}
+
 function extractRawClaims(text: string, maxClaims: number): RawClaim[] {
-  const sentences = text.split(/[.!?]+/).map(s => s.trim()).filter(s => s.length > 15);
+  const sentences = splitSentences(normalizeClaimText(text));
   const claims: RawClaim[] = [];
 
   // ONLY sentences that assert verifiable facts may become claims.
@@ -827,19 +1331,23 @@ function extractRawClaims(text: string, maxClaims: number): RawClaim[] {
   ];
 
   let claimId = 1;
-  for (const sentence of sentences) {
+  for (const { text: raw, terminated } of sentences) {
     if (claimId > maxClaims) break;
-    const isFactual = factualPatterns.some(p => p.test(sentence));
+    const isFactual = factualPatterns.some(p => p.test(raw));
     if (!isFactual) continue;
-    if (sentence.split(/\s+/).length < 6) continue;
+    if (!isValidClaim(raw, terminated)) continue;
+    // Preserve the COMPLETE statement — never a truncated fragment.
+    const complete = toCompleteClaim(raw);
+    if (!complete) continue;
+    if (!isValidClaim(complete, true)) continue;
 
     claims.push({
       id: claimId++,
-      text: sentence.length > 160 ? sentence.slice(0, 160) + "..." : sentence,
-      hasNumbers: /\d+%|\$[\d,]+|\d+ (million|billion)/i.test(sentence),
-      hasSource: /according to|published|researchers|officials|university/i.test(sentence),
-      hasAnonymous: /experts? (say|claim|warn)|sources? (say|claim)|insiders?/i.test(sentence),
-      hasSensational: /[A-Z]{3,}!|shocking|unbelievable|secret|hidden|exposed/i.test(sentence),
+      text: complete,
+      hasNumbers: /\d+%|\$[\d,]+|\d+ (million|billion)/i.test(complete),
+      hasSource: /according to|published|researchers|officials|university/i.test(complete),
+      hasAnonymous: /experts? (say|claim|warn)|sources? (say|claim)|insiders?/i.test(complete),
+      hasSensational: /[A-Z]{3,}!|shocking|unbelievable|secret|hidden|exposed/i.test(complete),
     });
   }
   return claims;
@@ -1587,14 +2095,16 @@ async function analyzeText(text: string, depth: Depth, urlCtx?: { url: string; p
       + (redFlags.length ? " " + redFlags.length + " linguistic warning signal(s) also detected." : "");
   } else if (supportedCount >= 2 && contradictedCount === 0) {
     verdict = "likely_real";
-    confidence = clamp(Math.round(55 + 20 * evidenceRatio + 8 * greenRatio), 55, redRatio >= 0.6 ? 72 : 85);
+    // Confidence rises with corroborated evidence only — linguistic signals
+    // never add to it (Problem: language must not paper over missing evidence).
+    confidence = clamp(Math.round(55 + 20 * evidenceRatio), 55, redRatio >= 0.6 ? 72 : 85);
     summary = "LIKELY CREDIBLE — " + supportedCount + " cross-checked claim(s) are corroborated by independent retrieved sources"
       + (firstSupport ? " (e.g. \"" + firstSupport.headline + "\" — " + firstSupport.name + ")" : "")
       + ". Linguistic signals: " + greenFlags.length + " positive, " + redFlags.length + " warning.";
   } else if (supportedCount === 1 && contradictedCount === 0) {
     if (redRatio < 0.5) {
       verdict = "likely_real";
-      confidence = clamp(Math.round(55 + 10 * greenRatio + 5), 55, 70);
+      confidence = clamp(60, 55, 70);
       summary = "LIKELY CREDIBLE — 1 cross-checked claim is corroborated by independent retrieved coverage"
         + (firstSupport ? " (\"" + firstSupport.headline + "\" — " + firstSupport.name + ")" : "")
         + ". Remaining claims are not yet corroborated; " + (claims.length - supportedCount) + " claim(s) still need verification.";
@@ -1680,7 +2190,11 @@ async function analyzeText(text: string, depth: Depth, urlCtx?: { url: string; p
     uncertain: partialCount,
     contradicted: contradictedCount,
     unverified: claims.length - supportedCount - partialCount - contradictedCount,
-    sourceCoverage: claims.length > 0 ? Math.round((supportedCount / claims.length) * 100) : 0,
+    // Share of claims that retrieved evidence actually reached — this can never
+    // read 0% while corroborating sources were found for some claim.
+    sourceCoverage: claims.length > 0
+      ? Math.round(((supportedCount + partialCount) / claims.length) * 100)
+      : 0,
     evidenceFound: totalRetrieved + redFlags.length + greenFlags.length,
   };
 
@@ -1870,8 +2384,14 @@ function extractPageMetadata(html: string): PageMeta {
 // unaffected; verdict, confidence, evidence and cross-check logic are
 // unchanged — this only narrows the text they analyze.
 
-/** Elements that are never part of the primary article body. */
-const CHROME_TAGS = ["script", "style", "noscript", "svg", "iframe", "nav", "header", "footer", "aside", "form", "button"];
+/** Elements that are never part of the primary article body.
+ *  `figure`/`figcaption` carry image captions and photographer credits — they
+ *  are page furniture, never a factual claim. */
+const CHROME_TAGS = [
+  "script", "style", "noscript", "svg", "iframe", "nav", "header", "footer",
+  "aside", "form", "button", "figure", "figcaption", "picture", "source",
+  "audio", "video", "address", "template", "h1",
+];
 
 /** class/id tokens that mark a recommendation, widget or ad block. */
 const WIDGET_TOKENS = new Set([
@@ -1885,6 +2405,12 @@ const WIDGET_TOKENS = new Set([
   "breadcrumb", "breadcrumbs", "pagination", "pager",
   "modal", "popup", "cookie", "banner", "skip", "follow",
   "nav", "navigation",
+  // image captions / photographer credits / bylines
+  "caption", "captions", "figcaption", "imgcaption", "imagecaption",
+  "mediacaption", "photocredit", "photocredits", "imgcredit", "imagecredit",
+  "photograph", "photographs", "photographer", "photographers",
+  "byline", "bylines", "authorbio", "authorsbio",
+  "standfirst", "standfirsts", "subheadline", "hedline", "hedlines",
 ]);
 
 /** Widget phrases that simple class/id tokens would miss. */
