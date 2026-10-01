@@ -293,9 +293,11 @@ const EVENT_LANDING = /\b(land|landed|lands|landing|touch(?:ed|ing)?\s*down|touc
 const EVENT_FLYBY =
   /\b(flyby|fly\s+by|flew\s+around|flies\s+around|flying\s+around|orbited|orbit(?:s|ing)?\s+around|circled|flew\s+past|lunar\s+orbit)\b/i;
 
-/** Explicit negation of an asserted action ("did not land", "never confirmed"). */
+/** Explicit negation of an asserted action ("did not land", "never confirmed").
+ *  Inflected forms are matched so "did not complete a landing" negates the
+ *  same asserted action as "did not land". */
 const NEGATION_PATTERN =
-  /\b(?:not|never|no|did\s+not|didn['’]t|does\s+not|doesn['’]t|has\s+not|hasn['’]t|was\s+not|weren['’]t|wasn['’]t|cannot|can['’]t|won['’]t)\s+(?:\w+\s+){0,3}?(land|confirm|launch|win|discover|release|approve|approval|ban|sign|elect|died|die|dies|crash|explode|acquire|merge|recall|reach|arrived|arrives|arriving)\b/i;
+  /\b(?:not|never|no|did\s+not|didn['’]t|does\s+not|doesn['’]t|has\s+not|hasn['’]t|had\s+not|was\s+not|were\s+not|weren['’]t|wasn['’]t|cannot|can['’]t|won['’]t|without)\s+(?:\w+\s+){0,3}?(land(?:ed|ing|s)?|confirm(?:ed|s|ing)?|launch(?:ed|es|ing)?|won|win(?:s|ning)?|discover(?:ed|s|ing)?|releas(?:ed|es|ing)|approv(?:ed|es|ing|al)|bann?(?:ed|s|ing)|sign(?:ed|s|ing)|elect(?:ed|s|ing|ion)|died|dies|dying|death|killed|killing|crash(?:ed|es|ing)?|explode[ds]?|acquir(?:ed|es|ing)|merg(?:ed|es|ing)|recall(?:ed|s|ing)?|reach(?:ed|es|ing)?|arriv(?:ed|es|ing)|complete[ds]?|complet(?:ed|ing)|achiev(?:ed|es|ing)|detect(?:ed|s|ing)?|surviv(?:ed|es|ing))\b/i;
 
 /** Common words that merely start a sentence — never entities. */
 const COMMON_START_WORDS = new Set([
@@ -384,6 +386,49 @@ function extractEntities(text: string): string[] {
     out.add(w.toLowerCase());
   }
   return [...out];
+}
+
+/**
+ * Entities that actually identify a SUBJECT. A capitalised word that merely
+ * starts a sentence ("Glacier ice volume fell…", "Swiss glaciers lost…") is an
+ * artefact of writing, not a proper name, and must never be treated as a
+ * different subject on its own.
+ */
+function distinctiveEntities(text: string): string[] {
+  const out = new Set<string>();
+  const monthRe = new RegExp("^(" + MONTHS + ")$", "i");
+  const words = text.split(/\s+/).map(raw =>
+    raw.replace(/^[^A-Za-z0-9.]+/, "").replace(/[^A-Za-z0-9.]+$/, "").replace(/'s$/i, ""));
+  const isNameWord = (w: string) =>
+    /^[A-Z][A-Za-z0-9.-]{1,}$/.test(w) &&
+    !COMMON_START_WORDS.has(w.toLowerCase()) && !monthRe.test(w);
+  let run: string[] = [];
+  const flush = () => {
+    if (run.length >= 2) {
+      const phrase = run.join(" ");
+      // A run that IS a place names a setting, never a subject.
+      if (!canonicalPlace(phrase)) out.add(phrase.toLowerCase());
+    } else if (run.length === 1) {
+      // A lone capitalised word is only a name when it is an acronym or a
+      // dotted initialism — otherwise it is an ordinary word that happens to
+      // be capitalised (or a Title-Case headline).
+      const w = run[0];
+      if (/[A-Z]{2}/.test(w) || w.includes(".")) out.add(w.toLowerCase());
+    }
+    run = [];
+  };
+  for (const w of words) {
+    if (isNameWord(w)) run.push(w);
+    else flush();
+  }
+  flush();
+  return [...out];
+}
+
+/** Do two entity sets name the same subject? */
+function sameEntitySet(a: string[], b: string[]): boolean {
+  return a.some(e => b.some(x =>
+    x === e || (e.length >= 4 && x.includes(e)) || (x.length >= 4 && e.includes(x))));
 }
 
 /** Quantity pairs ("four astronauts" → astronaut:4, "10-day" → day:10). */
@@ -483,11 +528,14 @@ function numericLiterals(text: string): Array<{ value: number; index: number; en
   return out;
 }
 
-/** The claim's MEASURED figures — calendar years are dates, not measurements. */
+/** The claim's MEASURED figures — calendar years are dates, not measurements,
+ *  and an ordinal ("the 44th president") is a rank, not a measurement. */
 function measuredFigures(text: string): number[] {
   const out = new Set<number>();
-  for (const { value } of numericLiterals(text)) {
-    if (!isYearValue(value)) out.add(value);
+  for (const { value, end } of numericLiterals(text)) {
+    if (isYearValue(value)) continue;
+    if (/^\s*(?:st|nd|rd|th)\b/i.test(text.slice(end))) continue;
+    out.add(value);
   }
   return [...out];
 }
@@ -583,33 +631,301 @@ function periodsAgree(claimText: string, sourceText: string): boolean {
   return a.some(y => b.includes(y));
 }
 
+// ─── TEMPORAL / CONTEXTUAL FRAME COMPATIBILITY ──────────────────────────────
+// Two statements about the same subject are NOT comparable when they speak
+// about different frames. A historical benchmark ("until recently, a 2% loss
+// was considered extreme") is a claim about a PAST threshold; a source
+// reporting "5% lost this year" is a measurement of the PRESENT period.
+// Such a source neither refutes nor restates the benchmark: it is simply
+// measuring something else, so it can never be a contradiction.
+
+/** Language that frames a statement as a past-era benchmark or threshold. */
+const HISTORICAL_FRAME: RegExp[] = [
+  /\buntil recently\b/i,
+  /\bused to\b/i,
+  /\b(?:formerly|previously|historically|in the past|back then|back in the)\b/i,
+  /\b(?:was|were) (?:considered|regarded|seen|treated|described|thought of|assumed|believed|known as|thought to be)\b/i,
+  /\buntil (?:now|the 19|the 20)\b/i,
+  /\b(?:for|over) (?:decades|years) (?:before|prior|until|earlier)\b/i,
+  /\bprior to\b/i,
+];
+
+function historicalFraming(text: string): boolean {
+  return HISTORICAL_FRAME.some(re => re.test(text));
+}
+
+/** The source explicitly disputes the historical statement itself. */
+const HISTORICAL_DISPUTE =
+  /\b(?:not (?:accurate|correct|true)|inaccurate|incorrect|was wrong|were wrong|misstated|overstated|no evidence that|never (?:considered|regarded|seen|treated))\b/i;
+
+type FrameVerdict = "not_historical" | "same_frame" | "different_frame";
+
+function yearSet(text: string): string[] {
+  return [...new Set(text.match(/\b(?:19|20)\d{2}\b/g) ?? [])];
+}
+
+/**
+ * Does the retrieved source speak about the SAME frame as a historical-benchmark
+ * claim? "same_frame" → its figures are comparable with the benchmark.
+ * "different_frame" → it reports a current or other-period measurement, which
+ * can neither contradict nor corroborate what was true of the past frame.
+ */
+function historicalBenchmarkFrame(claimText: string, sourceText: string): FrameVerdict {
+  if (!historicalFraming(claimText)) return "not_historical";
+  // An explicit dispute of the historical statement IS a contradiction.
+  if (HISTORICAL_DISPUTE.test(sourceText)) return "same_frame";
+  const claimYears = yearSet(claimText), srcYears = yearSet(sourceText);
+  if (claimYears.length > 0 && srcYears.length > 0 &&
+      !claimYears.some(y => srcYears.includes(y))) {
+    return "different_frame";
+  }
+  // The source pins a period the historical claim never mentions: it measures
+  // that period, it does not speak to the benchmark.
+  if (srcYears.length > 0 && claimYears.length === 0) return "different_frame";
+  // No competing period on either side: the frames are comparable only when
+  // the source itself is talking about the same past benchmark.
+  if (srcYears.length === 0 && claimYears.length === 0 && !historicalFraming(sourceText)) {
+    return "different_frame";
+  }
+  return "same_frame";
+}
+
+// ─── ATTRIBUTED QUOTATIONS ─────────────────────────────────────────────────
+// "It's really just disastrous," said Dr Matthias Huss, director of …
+// Corroborating such a claim requires the SAME PERSON to be named, the SAME
+// statement (or a close paraphrase of it) to appear, the source to ATTRIBUTE
+// the statement to that person, and the same event/period. A bare mention of
+// the person is never evidence of what they said.
+
+type QuoteAttribution = { quote: string; speaker: string };
+
+const SPEAKING_VERBS = "said|says|told|stated|states|added|explained|warned|declared|noted|described|argued|testified|called|calls|urged|urges|insisted|believed|wrote|writes|remarked|commented|predicted|reported";
+
+/** Pull the speaker's name out of the text following a speaking verb. */
+function speakerName(fragment: string): string {
+  const titled = fragment.match(
+    /(?:Dr|Prof|Professor|Mr|Mrs|Ms|Miss|Chief|Sir|Dr\.)\.?\s+((?:[A-Z][\w'’-]*\s*){1,3}[A-Z][\w'’-]+)/)?.[1];
+  const plain = fragment.match(/\b([A-Z][a-z'’-]+(?:\s+[A-Z][a-z'’-]+)+)\b/)?.[1];
+  const name = (titled ?? plain ?? "").replace(/\s+/g, " ").trim();
+  return name.split(/\s+/).length >= 2 ? name : "";
+}
+
+/** An attributed quotation: a statement credited to a named person. */
+function attributedQuote(text: string): QuoteAttribution | null {
+  // "…," said <Name>, <role>.
+  const after = text.match(
+    new RegExp(
+      "[\"“]([^\"“”]{4,180})[\"”]\\s*,?\\s*(?:" + SPEAKING_VERBS + ")\\s+([^,.;:()]{2,90})", "i",
+    ),
+  );
+  if (after) {
+    const speaker = speakerName(after[2]);
+    if (speaker) return { quote: after[1].replace(/\s+/g, " ").trim(), speaker };
+  }
+  // <Name> said: "…"
+  const before = text.match(
+    new RegExp(
+      "(?:" + SPEAKING_VERBS + ")\\s+([^,.;:()]{2,90}?)\\s*[:,]?\\s*[\"“]([^\"“”]{4,180})[\"”]", "i",
+    ),
+  );
+  if (before) {
+    const speaker = speakerName(before[1]);
+    if (speaker) return { quote: before[2].replace(/\s+/g, " ").trim(), speaker };
+  }
+  return null;
+}
+
+/** Descriptive families a close paraphrase must stay within. Comparing the
+ *  families (rather than the individual word) is what lets "disastrous" be
+ *  recognised as a paraphrase of "catastrophic" or "devastating". */
+const CHARACTERISATION_FAMILIES: RegExp[] = [
+  /\b(?:disastrous|disaster|catastrophic|catastrophe|devastating|devastation|calamitous|ruinous)\b/gi,
+  /\b(?:record|record-breaking|unprecedented|all-time|highest ever|worst ever)\b/gi,
+  /\b(?:severe|dire|alarming|alarmingly|appalling|shocking|dismal|bleak|sobering|grave)\b/gi,
+  /\b(?:extraordinary|remarkable|unusual|exceptional|unprecedented|notable)\b/gi,
+];
+
+function stemMatch(token: string, text: string): boolean {
+  const safe = token.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const stem = safe.slice(0, Math.max(5, safe.length - 2));
+  return new RegExp("\\b" + stem, "i").test(text);
+}
+
+/** Descriptive wording the quote and the source have in common. */
+function sharedCharacterisation(quote: string, sourceText: string): string[] {
+  const shared: string[] = [];
+  CHARACTERISATION_FAMILIES.forEach(family => {
+    const q = quote.match(family)?.[0];
+    const s = sourceText.match(family)?.[0];
+    if (q && s) shared.push(q.toLowerCase() + " / " + s.toLowerCase());
+  });
+  // A paraphrase may also simply repeat the same descriptive words.
+  if (shared.length === 0) {
+    for (const t of claimTokens(quote)) {
+      if (t.length >= 6 && stemMatch(t, sourceText)) { shared.push(t); break; }
+    }
+  }
+  return shared;
+}
+
+function nameParts(speaker: string): string[] {
+  return speaker.toLowerCase()
+    .replace(/\b(?:dr|prof|professor|mr|mrs|ms|miss|chief|sir)\b\.?/g, " ")
+    .split(/[^a-z'’-]+/).filter(Boolean);
+}
+
+/**
+ * Compare an attributed quotation with retrieved source text.
+ * "attributed"     → the same person, the same statement, attributed to them.
+ * "characterized"  → the same characterization of the same event, but the
+ *                     person is not named, so the attribution is unverified.
+ * "none"           → nothing comparable in this source.
+ */
+function quoteAttributionMatch(
+  attribution: QuoteAttribution,
+  sourceText: string,
+  claimText: string,
+): { level: "attributed" | "characterized" | "none"; sharedWords: string[] } {
+  const lower = sourceText.toLowerCase();
+  const parts = nameParts(attribution.speaker);
+  const surname = parts[parts.length - 1] ?? "";
+  const given = parts[0] ?? "";
+  if (surname.length < 3) return { level: "none", sharedWords: [] };
+
+  // 1. The statement must actually be restated or closely paraphrased.
+  const sharedWords = sharedCharacterisation(attribution.quote, sourceText);
+  if (sharedWords.length === 0) return { level: "none", sharedWords: [] };
+
+  // 2. The context must be the same event / period.
+  if (!periodsAgree(claimText, sourceText)) return { level: "none", sharedWords: [] };
+
+  // 3. The person must be named in the source. A generic mention of the same
+  //    name is not evidence of what they said, so without a nearby attribution
+  //    the result only corroborates the characterization.
+  if (!stemMatch(surname, lower)) return { level: "characterized", sharedWords };
+  // 4. It must be the same event/role context: the source has to carry the
+  //    claim's own subject wording, not just the same name and sentiment.
+  const quoteWords = new Set(claimTokens(attribution.quote));
+  const speakerWords = new Set(parts);
+  const contextShared = claimTokens(claimText)
+    .filter(t => !quoteWords.has(t) && !speakerWords.has(t) && t.length >= 4)
+    .filter(t => stemMatch(t, lower));
+  if (contextShared.length === 0) return { level: "characterized", sharedWords };
+  const at = lower.search(new RegExp("\\b" + surname.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
+  const window = sourceText.slice(Math.max(0, at - 140), at + 200);
+  const windowLower = window.toLowerCase();
+  const namesGivenName = given.length >= 3 && stemMatch(given, windowLower);
+  const ATTRIBUTION_NEARBY =
+    /\b(?:said|says|told|stated|warned|declared|added|explained|testified|called|calls|urged|urges|insisted|believed|wrote|writes|remarked|commented|predicted|according to|spokesperson|spokeswoman|spokesman)\b/i;
+  const spokeHere = ATTRIBUTION_NEARBY.test(window);
+  // The attribution must attach to THIS person, not to someone else nearby.
+  const attributionNear = spokeHere &&
+    (windowLower.lastIndexOf(surname, 120) > -1 ||
+     namesGivenName);
+  if (!attributionNear) return { level: "characterized", sharedWords };
+  return { level: "attributed", sharedWords };
+}
+
 function canonicalAction(verb: string): string | null {
   for (const [canon, re] of ACTION_LEXICON) if (re.test(verb)) return canon;
   return null;
 }
 
-/** Host-based evidence quality: official/primary ≫ established press ≫ other.
- *  Generic heuristics only — never topic-specific hardcoding. */
+/** Host-based evidence quality, ranked by tier.
+ *  Generic heuristics only — never topic-specific hardcoding.
+ *  1. primary scientific / institutional publishing
+ *  2. established newsrooms
+ *  3. secondary reporting
+ *  4. aggregators, content farms and reposts
+ */
 const ESTABLISHED_PRESS =
-  /\b(reuters|bbc|cnn|guardian|nytimes|newyorktimes|wsj|bloomberg|nbcnews|cbsnews|abcaus|usatoday|npr|pbs|sky|telegraph|independent|france24|dw|aljazeera|politico|axios|forbes|fortune|apnews|associatedpress)\b/i;
+  /\b(reuters|bbc|cnn|guardian|nytimes|newyorktimes|wsj|bloomberg|nbcnews|cbsnews|abcaus|usatoday|npr|pbs|sky|telegraph|independent|france24|dw|aljazeera|politico|axios|forbes|fortune|apnews|associatedpress|economist|washingtonpost|nypost|scmp|hindustantimes|timesofindia|indianexpress|thehindu|abc\.net\.au|abc\.com\.au|news\.com\.au|globaltimes|aljazeera)\b/i;
+
+/** Primary scientific, academic and intergovernmental publishing. */
+const PRIMARY_SCIENCE =
+  /\b(nature|science|scientificamerican|sciencemag|phys\.org|eurekalert|sciencedaily|plos|springer|sciencedirect|thelancet|nejm|bmj|pubmed|ncbi|wiley|frontiersin|mdpi|who\.int|wmo\.int|noaa|nasa|esa|eumetsat|usgs|wsl|niwa|scwz|glamos|ethz|epfl|uzh|unibe|meteofrance|metoffice|ipcc|copernicus|smithsonian|aaas|acs\.org|rsc\.org|ieee|nature\.com|science\.org)\b/i;
+
+/** Aggregators, content farms and reposts — never decisive evidence. */
+const REPOST_SURFACE =
+  /\b(blogspot|wordpress|wixsite|weebly|reddit|quora|forum|newsbreak|news24|news18|headline|toppr|scroll|oneindia|dtnext|livejournal|substack|medium\.com|newsfilecorp|prnewswire|newswire|ezynews|newsnow|newsnowtoday|google\.[a-z.]{2,}$|msn\.com|yahoo\.com|aol\.com|flipboard|smartnews|newsycraze|aninews)\b/i;
+
+/** Minimum authority a source needs before it may contradict a claim. */
+const MIN_CREDIBLE_AUTHORITY = 1;
 
 function sourceAuthority(url: string, claimText: string): number {
   const host = hostOf(url);
   if (!host) return 1;
-  let authority = 1;
-  if (/\.(gov|mil|edu)(\.|\/|$)/.test(host)) authority = 3;          // official / primary
-  else if (ESTABLISHED_PRESS.test(host)) authority = 2;              // established newsroom
-  if (/\b(blogspot|wordpress|wixsite|weebly|reddit|quora|forum)\b/.test(host)) {
-    authority = Math.min(authority, 0.5);                            // low-quality surface
-  }
+  let authority = 1.4;                                              // secondary reporting
+  if (/\.(gov|mil|edu|ac\.uk|gov\.uk|gouv)(\.|\/|$)/.test(host)) authority = 3.4;
+  else if (PRIMARY_SCIENCE.test(host)) authority = 3.2;              // primary scientific
+  else if (ESTABLISHED_PRESS.test(host)) authority = 2.2;            // established newsroom
+  if (REPOST_SURFACE.test(host)) authority = Math.min(authority, 0.4);
   // The claim's own subject owns this domain (NASA claim → nasa.gov):
   // the primary source for that subject substantially outranks secondary coverage.
   const parts = host.split(".");
   const entities = extractProposition(claimText).entities;
   const owned = entities.some(e => e.length >= 4 &&
     parts.some(p => p === e || (e.length >= 5 && (p.startsWith(e) || p.endsWith(e)))));
-  if (owned) authority = Math.max(authority, 3);
+  if (owned) authority = Math.max(authority, 3.4);
   return authority;
+}
+
+/**
+ * CONTRADICTION GATE. A retrieved snippet may only contradict a claim when it
+ * actually disputes the SAME proposition:
+ *   1. the same subject/entity      2. the same period or frame
+ *   3. the same quantity/proposition  4. the same context
+ *   5. an explicit opposing statement
+ * Failing any of these the result is "not addressed", never evidence of falsity.
+ */
+function contradictionAdmissible(
+  claim: Proposition,
+  src: Proposition,
+  sourceText: string,
+  haystack: string,
+  shared: string[],
+  overlap: number,
+  reason: string,
+): boolean {
+  // 1. same subject/entity
+  const entityShared = claim.entities.some(e =>
+    src.entities.includes(e) ||
+    src.entities.some(x => x === e || (e.length >= 4 && x.includes(e)) || (x.length >= 4 && e.includes(x))));
+  const claimSubject = distinctiveEntities(claim.text);
+  const srcSubject = distinctiveEntities(sourceText);
+  const sameSubjectName = sameEntitySet(claimSubject, srcSubject);
+  const anchored = shared.length >= 2 || overlap >= 0.4;
+  if (!entityShared && !sameSubjectName && !anchored) return false;
+  // Both sides name a different subject: never a contradiction.
+  if (claimSubject.length > 0 && srcSubject.length > 0 && !sameSubjectName) return false;
+
+  // 2. same period or frame
+  if (historicalBenchmarkFrame(claim.text, sourceText) === "different_frame") return false;
+  const claimYears = yearSet(claim.text), srcYears = yearSet(sourceText);
+  if (claimYears.length > 0 && srcYears.length > 0 &&
+      !claimYears.some(y => srcYears.includes(y))) {
+    return false;
+  }
+
+  // 3 + 4. the source must engage the claim's substance in the claim's context —
+  //          the same measured quantity, or the claim's own proposition. A
+  //          different measure or a passing mention is not a dispute.
+  const claimMeasured = measuredFigures(claim.text);
+  const sameQuantity = claim.quantities.some(cq => src.quantities.some(sq => sq.noun === cq.noun)) ||
+    claimMeasured.some(f => figureRestated(f, claim.text, sourceText) ||
+      figureContradicts(f, claim.text, sourceText));
+  if (!sameQuantity && !anchored && !entityShared) return false;
+
+  // 5. explicit opposition. Every branch below asserts an INCOMPATIBLE statement
+  //    (a different value, direction, place or event type); branches that rest
+  //    on wording must find that opposition actually asserted in the source.
+  const incompatibleStatement =
+    /Quantity conflict|Date conflict|Superlative conflict|Destination\/location conflict|Direction conflict|Event-type conflict|negates the action|is not the first|Explicit dispute/.test(reason);
+  const assertedOpposition =
+    /\b(?:not|never|without|denied|denies|refuted|negat\w*|inaccurate|incorrect|false|wrong|disputes?|disputed|rejects?|rejected|dismissed|misstat\w*|no evidence|contrary to|rather than|instead of|did not|does not|failed)\b/i
+      .test(haystack);
+  if (!incompatibleStatement && !assertedOpposition) return false;
+  return true;
 }
 
 /**
@@ -639,7 +955,17 @@ function detectConflict(
   // signal on its own — it must not be filtered out by the anchoring gate.
   const neg = haystack.match(NEGATION_PATTERN);
   const negatedAction = neg && neg[1] ? canonicalAction(neg[1]) : null;
-  const negationAnchor = !!negatedAction && claim.actions.includes(negatedAction);
+  // The negated verb may not itself be a canonical action ("did not complete a
+  // landing" negates the landing), so also look for a claimed action inside
+  // the negation's own wording.
+  const negationWindow = neg
+    ? haystack.slice(neg.index ?? 0, (neg.index ?? 0) + neg[0].length + 32)
+    : "";
+  const negatedClaimAction = neg
+    ? claim.actions.find(a => new RegExp("\\b" + a + "(?:ed|ing|s)?\\b", "i").test(negationWindow))
+    : undefined;
+  const negationAnchor = (!!negatedAction && claim.actions.includes(negatedAction)) ||
+    !!negatedClaimAction;
   if (!negationAnchor && shared.length < 2 && overlap < 0.4 && !entityShared && !qtyAnchor && !dateAnchor) {
     return undefined; // not anchored to the same subject — cannot conflict
   }
@@ -691,6 +1017,13 @@ function detectConflict(
     return "Event-type conflict — the claim describes a flyby/orbit, while the retrieved source describes a surface landing";
   }
 
+  // 5b. The one way a source about the present can refute a claim about the
+  //     past: it explicitly says the historical statement itself is wrong.
+  if (historicalFraming(claim.text) && HISTORICAL_DISPUTE.test(sourceText) &&
+      (entityShared || shared.length >= 2)) {
+    return "Explicit dispute — the retrieved source states that the historical statement asserted by this claim is inaccurate";
+  }
+
   // 6. Explicit negation of an action the claim asserts.
   if (neg && neg[1] && negationAnchor) {
     return "The retrieved source explicitly negates the action the claim asserts (\"" + neg[1] + "\")";
@@ -698,7 +1031,11 @@ function detectConflict(
 
   // 7. Quantity conflict for the same measured noun. Only a CLEARLY different
   //    figure conflicts: 5.5% vs 5% is the same measurement rounded.
-  for (const cq of claim.quantities) {
+  //    FRAME GUARD: a past-era benchmark ("until recently, 2% was considered
+  //    extreme") cannot be refuted by a current measurement of a different
+  //    period — that source measures something else, so it never contradicts.
+  const frame = historicalBenchmarkFrame(claim.text, sourceText);
+  for (const cq of frame === "different_frame" ? [] : claim.quantities) {
     const sameNoun = src.quantities.filter(q => q.noun === cq.noun);
     if (sameNoun.some(q => valuesCompatible(cq.value, q.value))) continue;
     const conflicting = sameNoun.find(q =>
@@ -714,6 +1051,7 @@ function detectConflict(
   }
 
   // 8. Date conflict (full date expressions on both sides, none in common).
+  if (frame === "different_frame") return undefined;
   if (claim.dates.length > 0 && src.dates.length > 0 &&
       !claim.dates.some(d => src.dates.includes(d))) {
     return "Date conflict — the claim dates this to \"" + claim.dates.join(", ") +
@@ -761,11 +1099,46 @@ function compareProposition(
   const anchored = shared.length >= 2 || overlap >= 0.4 || entityShared || numericAnchor;
 
   const conflict = detectConflict(claim, src, sourceText, haystack, headline, shared, overlap);
-  if (conflict) return { relationship: "contradicts", overlap, reason: conflict };
+  if (conflict && contradictionAdmissible(claim, src, sourceText, haystack, shared, overlap, conflict)) {
+    return { relationship: "contradicts", overlap, reason: conflict };
+  }
 
-  // Both sides name specific entities and share none of them: same-sounding
+  // ATTRIBUTED QUOTATION: a quote is verified by who said it, not by topic.
+  const attribution = attributedQuote(claim.text);
+  if (attribution) {
+    const match = quoteAttributionMatch(attribution, sourceText, claim.text);
+    if (match.level === "attributed") {
+      return {
+        relationship: "supports", overlap,
+        reason: "The retrieved source attributes the same statement to " + attribution.speaker +
+          " in the same context (" + match.sharedWords.slice(0, 3).join(", ") + ")",
+      };
+    }
+    if (match.level === "characterized") {
+      return {
+        relationship: "partial", overlap,
+        reason: "The retrieved source describes the same event with the same characterization (" +
+          match.sharedWords.slice(0, 2).join(", ") + "), but it does not attribute the statement to " +
+          attribution.speaker + ", so the attribution itself remains uncorroborated",
+      };
+    }
+  }
+
+  // A historical benchmark can only be corroborated by a source that speaks
+  // about the same past frame; a current measurement is not restatement.
+  if (historicalBenchmarkFrame(claim.text, sourceText) === "different_frame") {
+    return {
+      relationship: "unverified", overlap,
+      reason: "The retrieved source reports a measurement for a different period, which neither confirms nor disputes this claim about how the issue was previously understood",
+    };
+  }
+
+  // Both sides name a specific subject and share none of them: same-sounding
   // topic, different subject. Never corroboration, never partial agreement.
-  if (claim.entities.length > 0 && src.entities.length > 0 && !entityShared) {
+  const claimSubject = distinctiveEntities(claim.text);
+  const srcSubject = distinctiveEntities(sourceText);
+  if (claimSubject.length > 0 && srcSubject.length > 0 &&
+      !sameEntitySet(claimSubject, srcSubject)) {
     return {
       relationship: "does_not_address", overlap,
       reason: "The retrieved source concerns a different named subject than this claim",
@@ -802,9 +1175,12 @@ function compareProposition(
   const dateAgree = claim.dates.length > 0 && claim.dates.some(d => src.dates.includes(d));
   const periodAgree = !dateAgree && periodsAgree(claim.text, sourceText);
   const actionAgree = claim.actions.some(a => src.actions.includes(a));
-  const entityGuard = claim.entities.length === 0
-    ? (shared.length >= 3 || (anchored && qtyAgree))
-    : entityShared;
+  // The subject guard: when both sides name a subject they must be the same
+  // one; when neither does, the source must at least be anchored to the claim.
+  const sameSubjectName = sameEntitySet(claimSubject, srcSubject);
+  const entityGuard = claimSubject.length > 0
+    ? (entityShared || sameSubjectName)
+    : (shared.length >= 3 || anchored);
   const realDetail =
     (placeAgree ? 1 : 0) + (qtyAgree ? 1 : 0) +
     (figureAgree && (entityShared || shared.length >= 2) ? 1 : 0) +
@@ -820,7 +1196,7 @@ function compareProposition(
   if (dateAgree) agreements.push("matching date");
   else if (periodAgree && /\b(?:19|20)\d{2}\b/.test(claim.text)) agreements.push("matching period");
   if (actionAgree) agreements.push("matching event/direction");
-  if (entityShared) agreements.push("same named subject");
+  if (entityShared || sameSubjectName) agreements.push("same named subject");
   // A claim can state its subject in plain words ("…an estimated 5.5%") with
   // no proper noun at all; shared subject wording still counts as agreement.
   else if (claim.entities.length === 0 && anchored) agreements.push("same subject");
@@ -977,6 +1353,24 @@ function formatDate(pubDate: string): string {
 }
 
 /**
+ * A second, person-led query for an attributed quotation: the speaker's name
+ * plus the claim's own subject terms. The quoted words are deliberately left
+ * out so the search is not restricted to the exact phrasing.
+ */
+function buildAttributionQuery(attribution: QuoteAttribution, claimText: string): string | null {
+  const parts = nameParts(attribution.speaker);
+  const name = parts.length >= 2 ? parts[parts.length - 2] + " " + parts[parts.length - 1] : parts[0] ?? "";
+  if (name.length < 3) return null;
+  const quoteWords = new Set(claimTokens(attribution.quote));
+  const speakerWords = new Set(parts);
+  const subject = claimTokens(claimText)
+    .filter(t => !quoteWords.has(t) && !speakerWords.has(t) && t.length >= 4)
+    .slice(0, 3);
+  const query = [name].concat(subject).join(" ").trim();
+  return query.length >= 8 ? query : null;
+}
+
+/**
  * Live search for independent coverage of a claim.
  * Returns real retrieved sources only. On failure, `ok` is false.
  */
@@ -1001,14 +1395,45 @@ async function searchClaim(claimText: string): Promise<ClaimSearch> {
     });
     if (!res.ok) throw new Error("HTTP " + res.status);
     const xml = await res.text();
-    const items = parseRssItems(xml);
+    let items = parseRssItems(xml);
+
+    // A quotation is verified by looking for the PERSON who said it. Searching
+    // the proposition alone returns coverage of the event but nothing about the
+    // attribution, so an attributed quotation also gets a person-led query.
+    const attribution = attributedQuote(claimText);
+    if (attribution) {
+      const attributionQuery = buildAttributionQuery(attribution, claimText);
+      if (attributionQuery) {
+        try {
+          const altRes = await fetch(
+            "https://news.google.com/rss/search?q=" + encodeURIComponent(attributionQuery) +
+            "&hl=en-US&gl=US&ceid=US:en",
+            { signal: controller.signal, redirect: "follow",
+              headers: { "user-agent": "Mozilla/5.0 (compatible; Veritas/1.0)" } },
+          );
+          if (altRes.ok) {
+            const seen = new Set(items.map(i => i.title.toLowerCase().replace(/\s+/g, " ")));
+            for (const item of parseRssItems(await altRes.text())) {
+              const key = item.title.toLowerCase().replace(/\s+/g, " ");
+              if (seen.has(key)) continue;
+              seen.add(key);
+              items.push(item);
+            }
+          }
+        } catch {
+          // The person-led query is best-effort; the proposition query stands.
+        }
+      }
+    }
 
     const evaluated = items.map(item => {
       const headline = stripPublisherSuffix(decodeEntities(item.title), item.publisher);
       const { relationship, overlap, reason } = evaluateRelationship(claimText, headline, item.description);
       // Evidence quality: primary/authoritative sources outrank loosely
-      // related secondary coverage when the best results are selected.
-      const authority = sourceAuthority(item.link, claimText);
+      // related secondary coverage when the best results are selected. The
+      // feed link points at the discovery layer, so authority is read from the
+      // publisher's own domain.
+      const authority = sourceAuthority(item.publisherUrl || item.link, claimText);
       return {
         item,
         headline,
@@ -1045,7 +1470,14 @@ async function searchClaim(claimText: string): Promise<ClaimSearch> {
         ? entry.name
         : publisherFromHostname(host);
       const { item: _item, headline, date, excerpt, relationship, overlap, reason } = entry;
-      return { name, headline, date, excerpt, url, relationship, overlap, reason } satisfies RetrievedSource & { overlap: number };
+      // DISCOVERY IS NOT EVIDENCE: a result whose publisher cannot be
+      // identified is never cited as the source of a claim.
+      const citeable = !isAggregatorHost(host);
+      return {
+        name, headline, date, excerpt,
+        url: citeable ? url : "",
+        relationship, overlap, reason,
+      } satisfies RetrievedSource & { overlap: number };
     }));
     const top: RetrievedSource[] = resolved.map(({ overlap: _overlap, ...src }) => src);
 
@@ -1996,7 +2428,11 @@ async function analyzeText(text: string, depth: Depth, urlCtx?: { url: string; p
     const authorityOf = (s: { url: string }) => sourceAuthority(s.url, raw.text);
     const bestContraAuthority = contradicts.reduce((m, s) => Math.max(m, authorityOf(s)), 0);
     const bestSupportAuthority = supports.reduce((m, s) => Math.max(m, authorityOf(s)), 0);
+    // A contradiction must come from a credible publisher AND must not be
+    // outweighed by stronger evidence: an aggregator, content farm or repost
+    // on its own can never mark a claim as contradicted.
     const contradictionDecisive = contradicts.length > 0 &&
+      bestContraAuthority >= MIN_CREDIBLE_AUTHORITY &&
       (supports.length === 0 || bestContraAuthority >= bestSupportAuthority);
 
     if (contradictionDecisive) {
@@ -2041,12 +2477,18 @@ async function analyzeText(text: string, depth: Depth, urlCtx?: { url: string; p
     // No source addressed the proposition: results that merely mention the
     // same topic or entity are explicitly reported as not addressing it.
     const nonCorroborating = sources.filter(s => s.name !== "NO INDEPENDENT CORROBORATION FOUND" && s.name !== "SOURCE SEARCH UNAVAILABLE");
+    // An attributed quotation needs the ATTRIBUTION itself confirmed, not just
+    // the same characterization of the event: report that precisely.
+    const attribution = attributedQuote(raw.text);
+    const attributionNote = attribution
+      ? " This is an attributed quotation: no retrieved source was found that both names " + attribution.speaker + " and credits them with the same statement, so the attribution remains unverified."
+      : "";
     return {
       id: raw.id, text: raw.text,
       status: "needs_verification", confidence: 30,
-      evidence: nonCorroborating.length > 0
+      evidence: (nonCorroborating.length > 0
         ? "NO INDEPENDENT CORROBORATION FOUND — " + nonCorroborating.length + " retrieved result(s) mention the same topic or entity, but none address the specific proposition asserted by this claim. Insufficient evidence available."
-        : "NO INDEPENDENT CORROBORATION FOUND — insufficient evidence available.",
+        : "NO INDEPENDENT CORROBORATION FOUND — insufficient evidence available.") + attributionNote,
       sources: [], contradictingSources: [],
       explanation: "Topic similarity is not corroboration: retrieved results that only mention the same person, organization or event do not verify this claim. Absence of corroboration is not proof of falsity — the claim remains unverified. " + note,
     };
