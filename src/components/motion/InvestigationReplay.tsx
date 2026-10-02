@@ -13,7 +13,7 @@ interface ReplayStage {
   occurred: boolean;
 }
 
-export function InvestigationReplay({ analysis, retrievalFailed, failedUrl, failureReason }: {
+export function InvestigationReplay({ analysis, retrievalFailed, failedUrl, failureReason, detailedFailure, platformLabel }: {
   analysis: {
     wordCount: number;
     redFlags: string[];
@@ -30,6 +30,12 @@ export function InvestigationReplay({ analysis, retrievalFailed, failedUrl, fail
   retrievalFailed?: boolean;
   failedUrl?: string;
   failureReason?: string;
+  /** Detailed stop-trace: every pipeline stage is listed, performed or not.
+   *  Used when retrieval failed for a named platform, so the replay states
+   *  exactly which stages never ran instead of claiming an assessment. */
+  detailedFailure?: boolean;
+  /** Platform the submission was classified as, e.g. "Instagram". */
+  platformLabel?: string;
 }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentStage, setCurrentStage] = useState(0);
@@ -53,12 +59,21 @@ export function InvestigationReplay({ analysis, retrievalFailed, failedUrl, fail
     c.sources.length === 0 ||
     c.sources.every(s => !s.url && s.name === "SOURCE SEARCH UNAVAILABLE"));
 
-  const stages: ReplayStage[] = retrievalFailed ? [
+  const stages: ReplayStage[] = retrievalFailed ? (detailedFailure ? [
+    { id: 0, label: "ARTICLE RECEIVED — COMPLETE", detail: "URL received and classified as " + (platformLabel ?? "a social platform") + ".", icon: FileText, occurred: true },
+    { id: 1, label: "CONTENT RETRIEVAL — FAILED", detail: failureReason ? failureReason : "The post content could not be retrieved automatically.", icon: Globe, occurred: true },
+    { id: 2, label: "CLAIMS IDENTIFIED — NOT PERFORMED", detail: "No article content was available.", icon: Search, occurred: false },
+    { id: 3, label: "SOURCES SEARCHED — NOT PERFORMED", detail: "No factual claims were available.", icon: Globe, occurred: false },
+    { id: 4, label: "EVIDENCE COLLECTED — NOT PERFORMED", detail: "Nothing to corroborate — no independent source was consulted.", icon: CheckCircle2, occurred: false },
+    { id: 5, label: "CROSS-CHECKED — NOT PERFORMED", detail: "No claims and no retrieved evidence existed to cross-check.", icon: Brain, occurred: false },
+    { id: 6, label: "FRAMING ANALYZED — NOT PERFORMED", detail: "No article language was retrieved, so no framing or language analysis was run.", icon: Target, occurred: false },
+    { id: 7, label: "FINAL ASSESSMENT — NOT PERFORMED", detail: "No evidence-based assessment was generated. No confidence or verdict exists for this submission.", icon: Shield, occurred: false },
+  ] : [
     { id: 0, label: "ARTICLE URL RECEIVED", detail: failedUrl ? "URL submitted: " + failedUrl : "Article URL submitted for analysis", icon: FileText, occurred: true },
     { id: 1, label: "ARTICLE RETRIEVAL ATTEMPTED", detail: "Fetching article content from the provided URL", icon: Globe, occurred: true },
     { id: 2, label: "RETRIEVAL FAILED", detail: failureReason ? "Reason: " + failureReason : "Article content could not be retrieved", icon: AlertTriangle, occurred: true },
     { id: 3, label: "INVESTIGATION STOPPED", detail: "No claims, source search, evidence collection, cross-checking, framing analysis, confidence calculation, or verdict generation was performed.", icon: Shield, occurred: true },
-  ] : [
+  ]) : [
     { id: 0, label: "ARTICLE RECEIVED", detail: analysis.wordCount + " words analyzed", icon: FileText, occurred: true },
     { id: 1, label: "CLAIMS IDENTIFIED", detail: claims.length > 0 ? claims.length + " factual claim(s) extracted from the content" : "No claim data available for this result", icon: Search, occurred: claims.length > 0 },
     { id: 2, label: "SOURCES SEARCHED", detail: crossCheck.length > 0 ? crossCheck.length + " claim(s) searched against live news coverage" : "No cross-check data available for this result", icon: Globe, occurred: crossCheck.length > 0 },

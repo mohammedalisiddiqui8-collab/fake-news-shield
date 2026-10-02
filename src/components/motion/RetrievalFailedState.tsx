@@ -1,8 +1,9 @@
 import { motion } from "framer-motion";
-import { AlertTriangle, RotateCcw, ClipboardPaste, Fingerprint, Link2, Play } from "lucide-react";
+import { AlertTriangle, RotateCcw, ClipboardPaste, Fingerprint, Link2, Play, FileText, Globe } from "lucide-react";
 import { ArticleFingerprint, type FingerprintData } from "./ArticleFingerprint";
 import { EvidenceChain } from "./EvidenceChain";
 import { InvestigationReplay } from "./InvestigationReplay";
+import { SourceProfile, type SourceProfileData } from "./SourceProfile";
 
 /**
  * RETRIEVAL FAILED state — shown when a submitted URL could not be fetched.
@@ -43,6 +44,10 @@ interface RetrievalFailedStateProps {
   failureReason?: string;
   /** Platform whose own restrictions blocked retrieval (e.g. "instagram"). */
   failedPlatform?: string;
+  /** The submission WAS a URL — never submitted article text. */
+  inputType?: "url" | "text";
+  /** Only genuinely identified facts (domain, platform kind) are shown. */
+  sourceProfile?: SourceProfileData;
   onRetry: () => void;
   onPasteText: () => void;
 }
@@ -93,6 +98,8 @@ export function RetrievalFailedState({
   failedUrl,
   failureReason,
   failedPlatform,
+  inputType,
+  sourceProfile,
   onRetry,
   onPasteText,
 }: RetrievalFailedStateProps) {
@@ -100,10 +107,11 @@ export function RetrievalFailedState({
     failureReason || "URL could not be accessed or article content could not be retrieved.";
   // Wording only — a valid Instagram URL is a retrieval limit of that platform,
   // never an invalid URL.
-  const headline =
-    failedPlatform === "instagram"
-      ? "Could not retrieve content from this Instagram post."
-      : "Could not retrieve article content from the provided URL.";
+  const isInstagram = failedPlatform === "instagram";
+  const headline = isInstagram
+    ? "Could not retrieve content from this Instagram post."
+    : "Could not retrieve article content from the provided URL.";
+  const platformLabel = isInstagram ? "Instagram" : undefined;
 
   return (
     <div>
@@ -157,7 +165,7 @@ export function RetrievalFailedState({
                 className="text-[9px] font-mono mt-1 break-all"
                 style={{ color: "#A5A5A1", opacity: 0.7 }}
               >
-                URL {failedUrl}
+                {inputType === "url" ? "URL" : "Input type: URL"} {failedUrl}
               </p>
             )}
             <p className="text-[11px] font-semibold mt-2" style={{ color: "#B08479" }}>
@@ -187,16 +195,50 @@ export function RetrievalFailedState({
         </div>
       </motion.div>
 
-      {/* ─── Article Fingerprint — zeros, explicitly labeled ─── */}
+      {/* ─── Article Fingerprint — no fingerprint exists, never zeros as a result ─── */}
       <Panel
         icon={Fingerprint}
         title="Article Fingerprint"
-        subtitle="Zeros below mean no investigation ran — they are not an analysis result"
+        subtitle="Retrieval never returned content, so no fingerprint was produced"
         accent="#C9C3B7"
         delay={0.1}
       >
-        <ArticleFingerprint fingerprint={EMPTY_FINGERPRINT} note="ANALYSIS NOT PERFORMED" />
+        <ArticleFingerprint
+          fingerprint={EMPTY_FINGERPRINT}
+          note="RETRIEVAL UNAVAILABLE — ANALYSIS NOT PERFORMED"
+          available={false}
+        />
       </Panel>
+
+      {/* ─── Content not retrieved — the URL is never shown as article text ─── */}
+      <Panel
+        icon={FileText}
+        title="Content Not Retrieved"
+        subtitle="No article text was available for analysis"
+        accent="#B08479"
+        delay={0.13}
+      >
+        <p className="text-[11px] leading-relaxed" style={{ color: "#A5A5A1" }}>
+          {isInstagram
+            ? "The Instagram post could not be retrieved for analysis."
+            : "The article content could not be retrieved for analysis."}{" "}
+          The submitted URL is a source address, not article text: it was not
+          analysed, and no words of it were counted as content.
+        </p>
+      </Panel>
+
+      {/* ─── Source Profile — only what is genuinely known about the source ─── */}
+      {sourceProfile && (
+        <Panel
+          icon={Globe}
+          title="Source Profile"
+          subtitle="Known from the submitted URL; nothing inferred"
+          accent="#C9C3B7"
+          delay={0.16}
+        >
+          <SourceProfile profile={sourceProfile} />
+        </Panel>
+      )}
 
       {/* ─── Evidence Chain — INPUT → RETRIEVAL FAILED, stages disabled ─── */}
       <Panel
@@ -204,7 +246,7 @@ export function RetrievalFailedState({
         title="Evidence Chain"
         subtitle="Investigation stopped at retrieval"
         accent="#B08479"
-        delay={0.16}
+        delay={0.19}
       >
         <EvidenceChain
           verdict="uncertain"
@@ -231,6 +273,8 @@ export function RetrievalFailedState({
           retrievalFailed
           failedUrl={failedUrl}
           failureReason={reason}
+          detailedFailure={isInstagram}
+          platformLabel={platformLabel}
         />
       </Panel>
     </div>

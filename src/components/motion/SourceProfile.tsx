@@ -46,8 +46,9 @@ export function SourceProfile({ profile }: SourceProfileProps) {
           { icon: Calendar, label: "PUBLISHED", value: profile.publishedDate },
           { icon: Calendar, label: "UPDATED", value: profile.updatedDate },
           // Publisher type is only meaningful with a detected source — never
-          // classify an unidentified publisher (e.g. as "Government").
-          { icon: BookOpen, label: "TYPE", value: profile.source === "NOT AVAILABLE" ? "NOT AVAILABLE" : profile.sourceType },
+          // classify an unidentified publisher (e.g. as "Government"). A type
+          // stated by the platform itself (e.g. "Instagram post") is kept.
+          { icon: BookOpen, label: "TYPE", value: profile.source === "NOT AVAILABLE" && (profile.sourceType === "NOT AVAILABLE" || !profile.sourceType) ? "NOT AVAILABLE" : profile.sourceType },
         ].map((item, i) => (
           <motion.div
             key={item.label}

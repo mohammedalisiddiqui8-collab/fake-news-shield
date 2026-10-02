@@ -3067,7 +3067,25 @@ function classifyUrl(parsed: URL): UrlPlatform {
 
 /** Shown when Instagram itself prevents automated retrieval of the post. */
 const INSTAGRAM_NOT_RETRIEVABLE =
-  "Instagram does not allow the post content to be retrieved automatically.";
+  "Instagram content could not be retrieved automatically.";
+
+/**
+ * The whole submission is a single web address. A URL is never article text:
+ * such a submission always goes through retrieval, whatever the input toggle
+ * said, so the URL string itself can never reach claim extraction.
+ */
+function looksLikeSubmittedUrl(raw: string): boolean {
+  const trimmed = raw.trim();
+  if (!/^https?:\/\/\S+$/i.test(trimmed)) return false;
+  const candidate = extractUrlCandidate(trimmed);
+  if (!candidate) return false;
+  try {
+    const parsed = new URL(candidate);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
 
 /** Browser-shaped request for Instagram; news sites keep the existing agent. */
 const INSTAGRAM_USER_AGENT =
@@ -3100,7 +3118,7 @@ async function fetchArticleText(
   url: string,
 ): Promise<
   | { ok: true; text: string; page: PageMeta }
-  | { ok: false; error: string; invalid?: boolean; instagram?: boolean }
+  | { ok: false; error: string; invalid?: boolean; instagram?: boolean; platform?: UrlPlatform; host?: string }
 > {
   const candidate = extractUrlCandidate(url) ?? url.trim();
   let parsed: URL;
@@ -3131,7 +3149,7 @@ async function fetchArticleText(
     // a retrieval limitation of the platform, never a malformed URL.
     if (!res.ok) {
       return instagram
-        ? { ok: false, error: INSTAGRAM_NOT_RETRIEVABLE, instagram: true }
+        ? { ok: false, error: INSTAGRAM_NOT_RETRIEVABLE, instagram: true, platform, host: parsed.hostname.toLowerCase().replace(/^www\./, "") }
         : { ok: false, error: "server responded with HTTP " + res.status };
     }
     const html = await res.text();
@@ -3143,7 +3161,7 @@ async function fetchArticleText(
       // text is the caption in its own metadata. When even that is absent the
       // investigation stops here — no text is reconstructed or inferred.
       const caption = instagramPostText(html);
-      if (!caption) return { ok: false, error: INSTAGRAM_NOT_RETRIEVABLE, instagram: true };
+      if (!caption) return { ok: false, error: INSTAGRAM_NOT_RETRIEVABLE, instagram: true, platform, host: parsed.hostname.toLowerCase().replace(/^www\./, "") };
       return { ok: true, text: caption.slice(0, 12000), page };
     }
     // Claim extraction gets ONLY the primary article body: navigation,
@@ -3155,7 +3173,7 @@ async function fetchArticleText(
     return { ok: true, text: text.slice(0, 12000), page };
   } catch (e) {
     return instagram
-      ? { ok: false, error: INSTAGRAM_NOT_RETRIEVABLE, instagram: true }
+      ? { ok: false, error: INSTAGRAM_NOT_RETRIEVABLE, instagram: true, platform, host: parsed.hostname.toLowerCase().replace(/^www\./, "") }
       : { ok: false, error: e instanceof Error ? e.message : "fetch failed" };
   } finally {
     clearTimeout(timer);
@@ -3202,6 +3220,11 @@ function retrievalFailedResult(
   url: string,
   reason: string,
   platform?: "instagram",
+  sourceProfile?: {
+    domain: string;
+    sourceType: string;
+    availableEvidence: string[];
+  },
 ) {
   return {
     ...emptyResult(summary, url, ""),
@@ -3218,6 +3241,24 @@ function retrievalFailedResult(
     confidence: 0,
     // No article text was ever analyzed — never count the URL's own words.
     wordCount: 0,
+    // The submission WAS a URL even when it arrived on the text path: a URL is
+    // never treated as submitted article text.
+    resolvedInputType: "url" as const,
+    // No fingerprint was produced — the UI reports retrieval unavailable
+    // instead of presenting zeros as if an investigation had counted them.
+    fingerprintAvailable: false as const,
+    // Only genuinely identified facts are shown: the domain and the platform
+    // kind are known from the URL itself; nothing else is claimed.
+    sourceProfile: {
+      source: "NOT AVAILABLE",
+      domain: sourceProfile?.domain ?? "NOT AVAILABLE",
+      author: "NOT AVAILABLE",
+      publishedDate: "NOT AVAILABLE",
+      updatedDate: "NOT AVAILABLE",
+      sourceType: sourceProfile?.sourceType ?? "NOT AVAILABLE",
+      availableEvidence: sourceProfile?.availableEvidence ?? ["Insufficient input for source extraction"],
+      signals: [] as Array<{ label: string; available: boolean }>,
+    },
   };
 }
 
@@ -3233,7 +3274,12 @@ export const analyzeNews = action({
     let analyzedText = rawInput;
     let urlCtx: { url: string; page: PageMeta } | undefined;
 
-    if (args.inputType === "url") {
+    // A submission that IS a web address is always handled as a URL, whatever
+    // the input toggle said: the URL string itself never enters the text
+    // pipeline, so no claim, framing or verdict can ever be built from it.
+    const submittedIsUrl = args.inputType === "url" || looksLikeSubmittedUrl(rawInput);
+
+    if (submittedIsUrl) {
       const fetched = await fetchArticleText(rawInput);
       if (!fetched.ok) {
         // FETCH FAILED → STOP. Nothing downstream of retrieval is executed.
@@ -3241,9 +3287,19 @@ export const analyzeNews = action({
         // reported as such — never as an invalid URL, and never with invented
         // claims, sources, evidence, verdict or confidence.
         if (fetched.instagram) {
+          const kind =
+            fetched.platform === "instagram_reel" ? "Instagram reel" :
+            fetched.platform === "instagram_post" ? "Instagram post" : "Instagram page";
           return retrievalFailedResult(
             "UNABLE TO RETRIEVE — Instagram content could not be retrieved automatically. No factual verification was performed.",
             rawInput, fetched.error, "instagram",
+            {
+              domain: fetched.host || "instagram.com",
+              sourceType: kind,
+              availableEvidence: [
+                "Instagram does not serve the post content to automated readers — no caption, author or publication date is available",
+              ],
+            },
           );
         }
         return retrievalFailedResult(

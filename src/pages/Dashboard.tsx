@@ -73,6 +73,10 @@ interface AnalysisResult {
   failureReason?: string;
   /** Platform whose restrictions blocked retrieval (e.g. "instagram"). */
   failedPlatform?: string;
+  /** No fingerprint was produced because retrieval never returned content. */
+  fingerprintAvailable?: boolean;
+  /** The submission was handled as a URL even if the toggle said text. */
+  resolvedInputType?: "url" | "text";
 }
 
 /* ─── Status palette — the interface stays monochromatic until status needs meaning ─── */
@@ -571,10 +575,14 @@ export default function Dashboard() {
   const handleAnalyze = useCallback(async () => {
     if (!inputText.trim()) { toast.error("Please enter some text to analyze."); return; }
     if (inputText.trim().length < 20) { toast.error("Please enter at least 20 characters."); return; }
+    // A pasted web address is a URL submission, whatever the toggle shows: it
+    // must never be analysed as if the URL string were article text.
+    const isUrlSubmission = inputType === "url" || /^https?:\/\/\S+$/i.test(inputText.trim());
+    const submittedType: "url" | "text" = isUrlSubmission ? "url" : "text";
     setIsAnalyzing(true);
     setCurrentResult(null);
     try {
-      const result: AnalysisResult = await runAnalysis({ text: inputText.trim(), inputType, depth: analysisDepth });
+      const result: AnalysisResult = await runAnalysis({ text: inputText.trim(), inputType: submittedType, depth: analysisDepth });
       setCurrentResult(result);
       setActiveView("result");
       setSavedAt(Date.now());
@@ -582,7 +590,7 @@ export default function Dashboard() {
       // A retrieval failure is NOT an investigation — never persist it as a case file.
       if (!result.retrievalFailed) try {
         await createAnalysis({
-          inputText: inputText.trim().slice(0, 5000), inputType,
+          inputText: inputText.trim().slice(0, 5000), inputType: submittedType,
           verdict: result.verdict, confidence: result.confidence, summary: result.summary,
           redFlags: result.redFlags, greenFlags: result.greenFlags, reasoning: result.reasoning,
           // Persist the SAME investigation result so history replays the real analysis.
@@ -601,6 +609,9 @@ export default function Dashboard() {
       } catch { /* best-effort */ }
       if (result.retrievalFailed) toast.error("Could not retrieve the article — no analysis was performed.");
       else toast.success("Analysis complete.");
+      // The result view, the input toggle and the saved case file all agree on
+      // whether this submission was a URL or submitted text.
+      setInputType(submittedType);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Analysis failed.");
     } finally {
@@ -1865,6 +1876,8 @@ export default function Dashboard() {
                     failedUrl={currentResult.failedUrl}
                     failureReason={currentResult.failureReason}
                     failedPlatform={currentResult.failedPlatform}
+                    inputType={currentResult.resolvedInputType ?? inputType}
+                    sourceProfile={currentResult.sourceProfile}
                     onRetry={() => goDesk(true)}
                     onPasteText={() => { setInputType("text"); goDesk(true); }}
                   />

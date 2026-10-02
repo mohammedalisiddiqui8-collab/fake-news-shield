@@ -17,22 +17,29 @@ interface ArticleFingerprintProps {
   fingerprint: FingerprintData;
   dateStr?: string;
   note?: string;
+  /**
+   * false when no fingerprint was produced at all (retrieval never yielded
+   * content). Zeros are then NOT a result and are never printed: every figure
+   * reads "—" so no investigation appears to have happened.
+   */
+  available?: boolean;
 }
 
 /**
  * The fingerprint as an editorial ledger: figures set in serif against
  * hairline rules, two columns on desktop — a data page, not nine tiles.
  */
-export function ArticleFingerprint({ fingerprint, dateStr, note }: ArticleFingerprintProps) {
+export function ArticleFingerprint({ fingerprint, dateStr, note, available = true }: ArticleFingerprintProps) {
+  const value = (n: number) => (available ? String(n) : "—");
   const cells = [
-    { label: "Claims", value: String(fingerprint.claims), color: "#F1F0EA" },
-    { label: "Unique sources", value: String(fingerprint.sources), color: "#F1F0EA" },
-    { label: "Verified", value: String(fingerprint.verified), color: "#8A9A82" },
-    { label: "Uncertain", value: String(fingerprint.uncertain), color: "#B0A183" },
-    { label: "Contradicted", value: String(fingerprint.contradicted), color: "#B08479" },
-    { label: "Unverified", value: String(fingerprint.unverified), color: "#A5A5A1" },
-    { label: "Claim–source refs", value: fingerprint.sourceRefs != null ? String(fingerprint.sourceRefs) : "—", color: "#F1F0EA" },
-    { label: "Evidence found", value: String(fingerprint.evidenceFound), color: "#F1F0EA" },
+    { label: "Claims", value: value(fingerprint.claims), color: "#F1F0EA" },
+    { label: "Unique sources", value: value(fingerprint.sources), color: "#F1F0EA" },
+    { label: "Verified", value: value(fingerprint.verified), color: "#8A9A82" },
+    { label: "Uncertain", value: value(fingerprint.uncertain), color: "#B0A183" },
+    { label: "Contradicted", value: value(fingerprint.contradicted), color: "#B08479" },
+    { label: "Unverified", value: value(fingerprint.unverified), color: "#A5A5A1" },
+    { label: "Claim–source refs", value: available ? (fingerprint.sourceRefs != null ? String(fingerprint.sourceRefs) : "—") : "—", color: "#F1F0EA" },
+    { label: "Evidence found", value: value(fingerprint.evidenceFound), color: "#F1F0EA" },
   ];
 
   return (
@@ -62,13 +69,13 @@ export function ArticleFingerprint({ fingerprint, dateStr, note }: ArticleFinger
         <div className="flex items-baseline justify-between gap-4 mb-3">
           <span className="kicker" style={{ opacity: 0.7 }}>Source coverage</span>
           <span className="font-mono text-[11px] tabular" style={{ color: "#C9C3B7" }}>
-            {fingerprint.sourceCoverage}%
+            {available ? fingerprint.sourceCoverage + "%" : "—"}
           </span>
         </div>
         <div className="h-[2px] w-full" style={{ background: "#3A3B3E" }}>
           <motion.div
             initial={{ width: 0 }}
-            animate={{ width: `${fingerprint.sourceCoverage}%` }}
+            animate={{ width: available ? `${fingerprint.sourceCoverage}%` : "0%" }}
             transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             className="h-full"
             style={{ background: "#C9C3B7" }}
