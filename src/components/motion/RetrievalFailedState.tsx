@@ -41,6 +41,8 @@ const EMPTY_ANALYSIS = {
 interface RetrievalFailedStateProps {
   failedUrl?: string;
   failureReason?: string;
+  /** Platform whose own restrictions blocked retrieval (e.g. "instagram"). */
+  failedPlatform?: string;
   onRetry: () => void;
   onPasteText: () => void;
 }
@@ -90,11 +92,18 @@ function Panel({
 export function RetrievalFailedState({
   failedUrl,
   failureReason,
+  failedPlatform,
   onRetry,
   onPasteText,
 }: RetrievalFailedStateProps) {
   const reason =
     failureReason || "URL could not be accessed or article content could not be retrieved.";
+  // Wording only — a valid Instagram URL is a retrieval limit of that platform,
+  // never an invalid URL.
+  const headline =
+    failedPlatform === "instagram"
+      ? "Could not retrieve content from this Instagram post."
+      : "Could not retrieve article content from the provided URL.";
 
   return (
     <div>
@@ -138,7 +147,7 @@ export function RetrievalFailedState({
               </span>
             </div>
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Could not retrieve article content from the provided URL.
+              {headline}
             </p>
             <p className="text-[11px] leading-relaxed mt-1" style={{ color: "#A5A5A1" }}>
               Reason: {reason}

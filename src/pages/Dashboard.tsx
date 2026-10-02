@@ -71,6 +71,8 @@ interface AnalysisResult {
   retrievalFailed?: boolean;
   failedUrl?: string;
   failureReason?: string;
+  /** Platform whose restrictions blocked retrieval (e.g. "instagram"). */
+  failedPlatform?: string;
 }
 
 /* ─── Status palette — the interface stays monochromatic until status needs meaning ─── */
@@ -1862,6 +1864,7 @@ export default function Dashboard() {
                   <RetrievalFailedState
                     failedUrl={currentResult.failedUrl}
                     failureReason={currentResult.failureReason}
+                    failedPlatform={currentResult.failedPlatform}
                     onRetry={() => goDesk(true)}
                     onPasteText={() => { setInputType("text"); goDesk(true); }}
                   />

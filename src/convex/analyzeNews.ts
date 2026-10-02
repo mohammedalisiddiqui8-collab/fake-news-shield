@@ -3035,16 +3035,86 @@ function extractArticleBody(html: string): string {
   return wholePageText(html);
 }
 
-async function fetchArticleText(url: string): Promise<{ ok: true; text: string; page: PageMeta } | { ok: false; error: string }> {
+// ─── URL CLASSIFICATION ───────────────────────────────────────────────────
+// Submitted URLs are classified BEFORE any retrieval is attempted so that:
+//   • a structurally malformed input is reported as "Invalid URL";
+//   • a valid Instagram post/reel URL is recognised as Instagram and, when its
+//     content cannot be read, reported as a RETRIEVAL LIMITATION of that
+//     platform — never as an invalid URL;
+//   • every other URL keeps the existing article-retrieval behaviour.
+// The submitted string is never rewritten: the original value is what the
+// investigation/replay data carries.
+
+const INSTAGRAM_HOST = "instagram.com";
+
+type UrlPlatform = "instagram_post" | "instagram_reel" | "instagram_other" | "web";
+
+/** A usable web address inside the submitted string (pastes often carry extra characters). */
+function extractUrlCandidate(raw: string): string | null {
+  const match = /https?:\/\/[^\s<>"'`]+/i.exec(raw);
+  if (!match) return null;
+  return match[0].replace(/[)\]}>.,;:!?'"]+$/, "");
+}
+
+function classifyUrl(parsed: URL): UrlPlatform {
+  const host = parsed.hostname.toLowerCase().replace(/^www\./, "");
+  if (host !== INSTAGRAM_HOST && host !== "m." + INSTAGRAM_HOST) return "web";
+  const path = parsed.pathname.toLowerCase();
+  if (/^\/(?:p|tv)\//.test(path)) return "instagram_post";
+  if (/^\/(?:reel|reels)\//.test(path)) return "instagram_reel";
+  return "instagram_other";
+}
+
+/** Shown when Instagram itself prevents automated retrieval of the post. */
+const INSTAGRAM_NOT_RETRIEVABLE =
+  "Instagram does not allow the post content to be retrieved automatically.";
+
+/** Browser-shaped request for Instagram; news sites keep the existing agent. */
+const INSTAGRAM_USER_AGENT =
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36";
+
+/**
+ * The post caption Instagram publishes in its own page metadata, with the
+ * "97 likes, 2 comments - handle on November 5, 2025: " envelope removed.
+ * Returns "" when the page exposes no caption — nothing is ever invented.
+ */
+function instagramPostText(html: string): string {
+  let description = "";
+  for (const tag of html.match(/<meta\b[^>]*>/gi) || []) {
+    const key = (htmlAttr(tag, "property") || htmlAttr(tag, "name") || "").toLowerCase();
+    if (key !== "og:description" && key !== "description") continue;
+    const content = decodeEntities(htmlAttr(tag, "content") || "");
+    if (content.length > description.length) description = content;
+  }
+  if (!description) return "";
+  const caption = description
+    .replace(/^\s*\d[\d,.]*\s+likes?(?:,\s*\d[\d,.]*\s+comments?)?\s*-\s*/i, "")
+    .replace(/^\s*@?[\w.\-]+\s+on\s+[A-Z][a-z]+\s+\d{1,2},\s+\d{4}\s*:\s*/, "")
+    .replace(/^[\s:—-]+/, "")
+    .replace(/\s+/g, " ")
+    .trim();
+  return caption.length >= 40 ? caption : "";
+}
+
+async function fetchArticleText(
+  url: string,
+): Promise<
+  | { ok: true; text: string; page: PageMeta }
+  | { ok: false; error: string; invalid?: boolean; instagram?: boolean }
+> {
+  const candidate = extractUrlCandidate(url) ?? url.trim();
   let parsed: URL;
   try {
-    parsed = new URL(url);
+    parsed = new URL(candidate);
     if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-      return { ok: false, error: "only http/https URLs are supported" };
+      return { ok: false, error: "only http/https URLs are supported", invalid: true };
     }
   } catch {
-    return { ok: false, error: "invalid URL" };
+    return { ok: false, error: "Invalid URL", invalid: true };
   }
+
+  const platform = classifyUrl(parsed);
+  const instagram = platform !== "web";
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 8000);
@@ -3052,13 +3122,30 @@ async function fetchArticleText(url: string): Promise<{ ok: true; text: string; 
     const res = await fetch(parsed.toString(), {
       signal: controller.signal,
       redirect: "follow",
-      headers: { "user-agent": "Mozilla/5.0 (compatible; Veritas/1.0)" },
+      headers: {
+        "user-agent": instagram ? INSTAGRAM_USER_AGENT : "Mozilla/5.0 (compatible; Veritas/1.0)",
+        ...(instagram ? { accept: "text/html,application/xhtml+xml", "accept-language": "en-US,en;q=0.9" } : {}),
+      },
     });
-    if (!res.ok) return { ok: false, error: "server responded with HTTP " + res.status };
+    // Instagram blocks, rate-limits and login-walls automated readers. That is
+    // a retrieval limitation of the platform, never a malformed URL.
+    if (!res.ok) {
+      return instagram
+        ? { ok: false, error: INSTAGRAM_NOT_RETRIEVABLE, instagram: true }
+        : { ok: false, error: "server responded with HTTP " + res.status };
+    }
     const html = await res.text();
     // Original-source metadata for the Source Profile — parsed from the raw
     // HTML before script/style stripping.
     const page = extractPageMetadata(html);
+    if (instagram) {
+      // Instagram serves a JavaScript shell: the only server-rendered post
+      // text is the caption in its own metadata. When even that is absent the
+      // investigation stops here — no text is reconstructed or inferred.
+      const caption = instagramPostText(html);
+      if (!caption) return { ok: false, error: INSTAGRAM_NOT_RETRIEVABLE, instagram: true };
+      return { ok: true, text: caption.slice(0, 12000), page };
+    }
     // Claim extraction gets ONLY the primary article body: navigation,
     // related/recommendation content, footers, ads and widgets are excluded
     // before any sentence can become a claim. Falls back to the whole-page
@@ -3067,7 +3154,9 @@ async function fetchArticleText(url: string): Promise<{ ok: true; text: string; 
     if (text.length < 100) return { ok: false, error: "no readable article text found on the page" };
     return { ok: true, text: text.slice(0, 12000), page };
   } catch (e) {
-    return { ok: false, error: e instanceof Error ? e.message : "fetch failed" };
+    return instagram
+      ? { ok: false, error: INSTAGRAM_NOT_RETRIEVABLE, instagram: true }
+      : { ok: false, error: e instanceof Error ? e.message : "fetch failed" };
   } finally {
     clearTimeout(timer);
   }
@@ -3108,11 +3197,21 @@ function emptyResult(summary: string, rawInput: string, analyzedText: string) {
 // The frontend renders a distinct "RETRIEVAL FAILED" state (confidence shown
 // as "—", verdict "RETRIEVAL FAILED", not "UNCERTAIN"), and this result is
 // never persisted as an investigation case file.
-function retrievalFailedResult(summary: string, url: string, reason: string) {
+function retrievalFailedResult(
+  summary: string,
+  url: string,
+  reason: string,
+  platform?: "instagram",
+) {
   return {
     ...emptyResult(summary, url, ""),
     retrievalFailed: true as const,
+    // The ORIGINAL submitted URL — never a shortened platform label — so the
+    // investigation/replay data and the UI can identify the real source.
     failedUrl: url,
+    // Present only when the limit comes from a named platform (Instagram),
+    // so the UI can describe the failure accurately without re-parsing the URL.
+    failedPlatform: platform,
     failureReason: reason || "URL could not be accessed or article content could not be retrieved.",
     // Internal placeholder only — never displayed (the UI gates on
     // retrievalFailed and shows confidence "—" / verdict "RETRIEVAL FAILED").
@@ -3138,6 +3237,15 @@ export const analyzeNews = action({
       const fetched = await fetchArticleText(rawInput);
       if (!fetched.ok) {
         // FETCH FAILED → STOP. Nothing downstream of retrieval is executed.
+        // A valid but unreadable Instagram post is a platform retrieval limit,
+        // reported as such — never as an invalid URL, and never with invented
+        // claims, sources, evidence, verdict or confidence.
+        if (fetched.instagram) {
+          return retrievalFailedResult(
+            "UNABLE TO RETRIEVE — Instagram content could not be retrieved automatically. No factual verification was performed.",
+            rawInput, fetched.error, "instagram",
+          );
+        }
         return retrievalFailedResult(
           "UNABLE TO RETRIEVE — could not fetch article text from the provided URL (" + fetched.error + "). No analysis was performed. Paste the article text directly instead.",
           rawInput, fetched.error,
