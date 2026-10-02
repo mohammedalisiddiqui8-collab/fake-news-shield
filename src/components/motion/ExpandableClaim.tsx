@@ -22,9 +22,9 @@ interface ExpandableClaimProps {
 }
 
 const statusConfig = {
-  supported: { icon: CheckCircle2, color: "#8A9A82", label: "SUPPORTED" },
-  unverified: { icon: AlertTriangle, color: "#B0A183", label: "UNVERIFIED" },
-  misleading: { icon: XCircle, color: "#B08479", label: "MISLEADING" },
+  supported: { icon: CheckCircle2, color: "#8FA58A", label: "SUPPORTED" },
+  unverified: { icon: AlertTriangle, color: "#B7A47A", label: "UNVERIFIED" },
+  misleading: { icon: XCircle, color: "#B3263E", label: "MISLEADING" },
 };
 
 /**
@@ -57,7 +57,7 @@ export function ExpandableClaim({
           <div className="flex items-baseline justify-between gap-3">
             <span
               className="kicker"
-              style={{ color: "#C9C3B7" }}
+              style={{ color: "#F1F0EA" }}
             >
               {kind === "signal"
                 ? (signalLabel ?? "Language signal")
@@ -72,15 +72,15 @@ export function ExpandableClaim({
             </span>
           </div>
           <p
-            className="mt-1.5 text-[12.5px] leading-relaxed italic"
-            style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#F1F0EA" }}
+            className="font-quote mt-1.5 text-[12.5px] leading-relaxed"
+            style={{ color: "#F1F0EA" }}
           >
             “{claimText}”
           </p>
           {confidence != null && (
             <div className="mt-2 flex items-center gap-2.5">
               <span className="kicker" style={{ opacity: 0.7 }}>Confidence</span>
-              <span className="h-[2px] w-20" style={{ background: "#3A3B3E" }}>
+              <span className="h-[2px] w-20" style={{ background: "#242424" }}>
                 <motion.span
                   className="block h-full"
                   initial={{ width: 0 }}
@@ -104,7 +104,7 @@ export function ExpandableClaim({
           transition={{ duration: 0.2 }}
           className="shrink-0 mt-1"
         >
-          <ChevronDown className="w-3.5 h-3.5" style={{ color: "#A5A5A1" }} />
+          <ChevronDown className="w-3.5 h-3.5" style={{ color: "#A6A39B" }} />
         </motion.div>
       </button>
 

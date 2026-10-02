@@ -25,7 +25,7 @@ export function VerificationGlyph({ size = 44 }: { size?: number }) {
       {/* Shield outline — drawn once, left resting */}
       <motion.path
         d="M24 5 L40 11 V24 C40 33.5 33 40.5 24 43.5 C15 40.5 8 33.5 8 24 V11 Z"
-        stroke="#C9C3B7"
+        stroke="#F1F0EA"
         strokeOpacity="0.5"
         strokeWidth="1"
         strokeLinejoin="round"

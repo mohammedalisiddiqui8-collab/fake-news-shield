@@ -33,8 +33,8 @@ export function MethodologyView() {
         transition={{ duration: 0.5 }}
         className="flex items-center gap-4"
       >
-        <span className="kicker" style={{ color: "#C9C3B7" }}>Our approach</span>
-        <span className="h-px flex-1" style={{ background: "#3A3B3E" }} />
+        <span className="kicker" style={{ color: "#F1F0EA" }}>Our approach</span>
+        <span className="h-px flex-1" style={{ background: "#242424" }} />
       </motion.div>
 
       <h2
@@ -61,7 +61,7 @@ export function MethodologyView() {
             {i < steps.length - 1 && (
               <span
                 className="absolute left-[13px] top-8 bottom-0 w-px sm:left-[15px]"
-                style={{ background: "#3A3B3E" }}
+                style={{ background: "#242424" }}
                 aria-hidden="true"
               />
             )}

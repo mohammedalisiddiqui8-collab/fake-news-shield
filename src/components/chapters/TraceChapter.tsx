@@ -21,12 +21,12 @@ const rowVariants = {
   quiet: { opacity: 0.6 },
 };
 const numVariants = {
-  closed: { color: "#6F7074" },
-  hover: { color: "#8E8E8A" },
+  closed: { color: "#6B6963" },
+  hover: { color: "#6B6963" },
   open: { color: "#F1F0EA" },
 };
 const labelVariants = {
-  closed: { color: "#C9C3B7", y: 0 },
+  closed: { color: "#F1F0EA", y: 0 },
   hover: { color: "#F1F0EA", y: 0 },
   open: { color: "#F1F0EA", y: -1 },
 };
@@ -109,7 +109,7 @@ export function TraceChapter() {
           is scrolled; framer resolves it instantly under reduced motion */}
       <motion.span
         className="absolute left-[7px] top-2 bottom-2 w-px hidden origin-top sm:block"
-        style={{ background: "#C9C3B7", opacity: 0.55, scaleY: reduceMotion ? 1 : drawn }}
+        style={{ background: "#F1F0EA", opacity: 0.55, scaleY: reduceMotion ? 1 : drawn }}
         aria-hidden="true"
       />
 
@@ -137,11 +137,11 @@ export function TraceChapter() {
                 <span className="relative hidden w-[15px] shrink-0 self-center sm:block">
                   <motion.span
                     className="absolute left-1/2 top-1/2 block h-[7px] w-[7px] -translate-x-1/2 -translate-y-1/2"
-                    style={{ border: "1px solid #6F7074", background: "#202124" }}
+                    style={{ border: "1px solid #6B6963", background: "#080808" }}
                     initial={false}
                     animate={{
-                      borderColor: isOpen ? "#C9C3B7" : "#6F7074",
-                      backgroundColor: isOpen ? "#C9C3B7" : "#202124",
+                      borderColor: isOpen ? "#F1F0EA" : "#6B6963",
+                      backgroundColor: isOpen ? "#F1F0EA" : "#080808",
                       scale: isOpen ? 1.2 : 1,
                     }}
                     transition={{ duration: 0.3, ease: EASE }}
@@ -156,7 +156,7 @@ export function TraceChapter() {
                   <span className="flex flex-wrap items-baseline gap-x-3">
                     <motion.span
                       className="text-[19px] sm:text-[22px] leading-none tracking-[0.02em]"
-                      style={{ fontFamily: "'DM Serif Display', serif" }}
+                      style={{ fontFamily: "'Bodoni Moda', Georgia, serif" }}
                       variants={labelVariants}
                     >
                       {station.label}
@@ -171,10 +171,10 @@ export function TraceChapter() {
                 </span>
 
                 {/* The indicator is a rule, not a chevron */}
-                <span className="relative mt-2 hidden h-px w-10 shrink-0 sm:block" style={{ background: "#3A3B3E" }}>
+                <span className="relative mt-2 hidden h-px w-10 shrink-0 sm:block" style={{ background: "#242424" }}>
                   <motion.span
                     className="absolute inset-0 origin-left"
-                    style={{ background: "#C9C3B7" }}
+                    style={{ background: "#F1F0EA" }}
                     initial={false}
                     animate={{ scaleX: isOpen ? 1 : 0 }}
                     transition={{ duration: 0.45, ease: EASE }}
@@ -190,7 +190,7 @@ export function TraceChapter() {
               >
                 <motion.p
                   className="pb-7 pl-12 pr-4 text-[12.5px] leading-[1.8] text-muted-foreground max-w-[62ch] sm:pl-16"
-                  style={{ fontFamily: "'Source Serif 4', Georgia, serif" }}
+                  style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
                   initial={false}
                   animate={{ opacity: isOpen ? 1 : 0, y: isOpen ? 0 : -6 }}
                   transition={{ duration: 0.45, ease: EASE, delay: isOpen ? 0.08 : 0 }}
@@ -201,7 +201,7 @@ export function TraceChapter() {
 
               {/* Hairline between stations */}
               {i < TRACE_STATIONS.length - 1 && (
-                <div className="hidden h-px sm:block" style={{ background: "#3A3B3E", opacity: 0.4 }} />
+                <div className="hidden h-px sm:block" style={{ background: "#242424", opacity: 0.4 }} />
               )}
             </motion.li>
           );

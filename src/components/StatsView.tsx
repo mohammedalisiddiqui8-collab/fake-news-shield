@@ -21,9 +21,9 @@ interface StatsViewProps {
 
 /* Muted, printed semantics — three quiet tones, never a traffic light. */
 const COLORS = {
-  likely_real: "#8A9A82",
-  uncertain: "#B0A183",
-  likely_fake: "#B08479",
+  likely_real: "#8FA58A",
+  uncertain: "#B7A47A",
+  likely_fake: "#B3263E",
 };
 
 const VERDICT_LABELS = {
@@ -67,7 +67,7 @@ export function StatsView({ analyses }: StatsViewProps) {
 
   /* One editorial strip: figures set in serif against a kicker, divided by hairlines. */
   const statCells = [
-    { label: "Total articles analyzed", value: totalAnalyses, sub: "", color: "#C9C3B7" },
+    { label: "Total articles analyzed", value: totalAnalyses, sub: "", color: "#F1F0EA" },
     { label: "Likely credible", value: verdictCounts.likely_real, sub: `${pct(verdictCounts.likely_real)}%`, color: COLORS.likely_real },
     { label: "Likely misleading", value: verdictCounts.likely_fake, sub: `${pct(verdictCounts.likely_fake)}%`, color: COLORS.likely_fake },
     { label: "Uncertain", value: verdictCounts.uncertain, sub: `${pct(verdictCounts.uncertain)}%`, color: COLORS.uncertain },
@@ -119,7 +119,7 @@ export function StatsView({ analyses }: StatsViewProps) {
                     innerRadius={62}
                     outerRadius={86}
                     dataKey="value"
-                    stroke="#202124"
+                    stroke="#080808"
                     strokeWidth={2}
                   >
                     {pieData.map((entry) => (
@@ -128,8 +128,8 @@ export function StatsView({ analyses }: StatsViewProps) {
                   </Pie>
                   <Tooltip
                     contentStyle={{
-                      background: "#2B2D30",
-                      border: "1px solid #3A3B3E",
+                      background: "#0C0C0C",
+                      border: "1px solid #242424",
                       borderRadius: "2px",
                       fontSize: "11px",
                       color: "#F1F0EA",
@@ -142,7 +142,7 @@ export function StatsView({ analyses }: StatsViewProps) {
               {pieData.map((d) => (
                 <div key={d.name} className="flex items-center gap-3 py-2.5 border-b border-border/70">
                   <span className="w-2 h-2 shrink-0" style={{ background: d.color }} />
-                  <span className="flex-1 text-[12.5px]" style={{ fontFamily: "'Source Serif 4', Georgia, serif" }}>
+                  <span className="flex-1 text-[12.5px]" style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}>
                     {d.name}
                   </span>
                   <span className="font-mono text-[11px] tabular" style={{ color: d.color }}>{d.value}</span>
@@ -172,7 +172,7 @@ export function StatsView({ analyses }: StatsViewProps) {
                     <span className="num-marker shrink-0">{String(i + 1).padStart(2, "0")}</span>
                     <span
                       className="flex-1 text-[13.5px] leading-snug"
-                      style={{ fontFamily: "'Source Serif 4', Georgia, serif" }}
+                      style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
                     >
                       {flag.name}
                     </span>
@@ -180,7 +180,7 @@ export function StatsView({ analyses }: StatsViewProps) {
                       {flag.pct}%
                     </span>
                   </div>
-                  <div className="h-[2px] w-full" style={{ background: "#3A3B3E" }}>
+                  <div className="h-[2px] w-full" style={{ background: "#242424" }}>
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${flag.pct}%` }}

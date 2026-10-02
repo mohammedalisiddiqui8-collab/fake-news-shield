@@ -10,11 +10,11 @@ export interface FreshnessItem {
 }
 
 const statusConfig: Record<string, { label: string; color: string }> = {
-  current: { label: "CURRENT", color: "#8A9A82" },
-  recent: { label: "RECENT", color: "#A5A5A1" },
-  outdated: { label: "STALE", color: "#B08479" },
-  historical: { label: "HISTORICAL", color: "#A5A5A1" },
-  unknown: { label: "DATE NOT FOUND", color: "#A5A5A1" },
+  current: { label: "CURRENT", color: "#8FA58A" },
+  recent: { label: "RECENT", color: "#A6A39B" },
+  outdated: { label: "STALE", color: "#B3263E" },
+  historical: { label: "HISTORICAL", color: "#A6A39B" },
+  unknown: { label: "DATE NOT FOUND", color: "#A6A39B" },
 };
 
 /**
@@ -53,7 +53,7 @@ export function FreshnessIndicator({ freshness }: { freshness: FreshnessItem[] }
               </div>
               <p
                 className="mt-1 text-[12.5px] leading-snug"
-                style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#F1F0EA" }}
+                style={{ fontFamily: "'Manrope', system-ui, sans-serif", color: "#F1F0EA" }}
               >
                 {item.claimText}
               </p>
@@ -62,7 +62,7 @@ export function FreshnessIndicator({ freshness }: { freshness: FreshnessItem[] }
                   <span className="kicker" style={{ opacity: 0.6 }}>Source: {item.sourceDate}</span>
                 )}
                 {item.newerAvailable && (
-                  <span className="kicker" style={{ color: "#B0A183" }}>Newer information available</span>
+                  <span className="kicker" style={{ color: "#B7A47A" }}>Newer information available</span>
                 )}
               </div>
             </div>

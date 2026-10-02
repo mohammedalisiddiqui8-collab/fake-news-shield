@@ -31,10 +31,10 @@ const statusConfig: Record<
   Claim["status"],
   { icon: typeof CheckCircle2; color: string; label: string }
 > = {
-  supported: { icon: CheckCircle2, color: "#8A9A82", label: "SUPPORTED" },
-  uncertain: { icon: HelpCircle, color: "#B0A183", label: "UNCERTAIN" },
-  contradicted: { icon: XCircle, color: "#B08479", label: "CONTRADICTED" },
-  needs_verification: { icon: AlertTriangle, color: "#A5A5A1", label: "NEEDS VERIFICATION" },
+  supported: { icon: CheckCircle2, color: "#8FA58A", label: "SUPPORTED" },
+  uncertain: { icon: HelpCircle, color: "#B7A47A", label: "UNCERTAIN" },
+  contradicted: { icon: XCircle, color: "#B3263E", label: "CONTRADICTED" },
+  needs_verification: { icon: AlertTriangle, color: "#A6A39B", label: "NEEDS VERIFICATION" },
 };
 
 /**
@@ -71,7 +71,7 @@ export function ClaimAnalysis({ claims }: ClaimAnalysisProps) {
               onClick={() => setExpandedId(isExpanded ? null : claim.id)}
             >
               <div className="flex items-baseline justify-between gap-4 px-1">
-                <span className="num-marker" style={{ color: "#C9C3B7" }}>
+                <span className="num-marker" style={{ color: "#F1F0EA" }}>
                   Claim {String(claim.id).padStart(2, "0")}
                 </span>
                 <span
@@ -85,8 +85,8 @@ export function ClaimAnalysis({ claims }: ClaimAnalysisProps) {
 
               <div className="mt-3 flex items-start gap-4 px-1">
                 <p
-                  className="flex-1 min-w-0 text-[15px] sm:text-[16px] leading-[1.65] italic"
-                  style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#F1F0EA" }}
+                  className="font-quote flex-1 min-w-0 text-[15px] sm:text-[16px] leading-[1.65]"
+                  style={{ color: "#F1F0EA" }}
                 >
                   “{claim.text}”
                 </p>
@@ -95,13 +95,13 @@ export function ClaimAnalysis({ claims }: ClaimAnalysisProps) {
                   transition={{ duration: 0.2 }}
                   className="shrink-0 mt-1.5"
                 >
-                  <ChevronDown className="w-4 h-4" style={{ color: "#A5A5A1" }} />
+                  <ChevronDown className="w-4 h-4" style={{ color: "#A6A39B" }} />
                 </motion.div>
               </div>
 
               <div className="mt-3.5 flex items-center gap-3 px-1">
                 <span className="kicker" style={{ opacity: 0.7 }}>Confidence</span>
-                <span className="h-[2px] w-24 sm:w-32" style={{ background: "#3A3B3E" }}>
+                <span className="h-[2px] w-24 sm:w-32" style={{ background: "#242424" }}>
                   <motion.span
                     className="block h-full"
                     initial={{ width: 0 }}
@@ -146,10 +146,10 @@ export function ClaimAnalysis({ claims }: ClaimAnalysisProps) {
                       </span>
                     </motion.span>
                     <div>
-                      <p className="kicker" style={{ color: "#C9C3B7" }}>Evidence</p>
+                      <p className="kicker" style={{ color: "#F1F0EA" }}>Evidence</p>
                       <p
                         className="mt-2 text-[13px] leading-[1.8]"
-                        style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#F1F0EA" }}
+                        style={{ color: "#F1F0EA" }}
                       >
                         {claim.evidence}
                       </p>
@@ -157,11 +157,11 @@ export function ClaimAnalysis({ claims }: ClaimAnalysisProps) {
 
                     {claim.sources.length > 0 && (
                       <div>
-                        <p className="kicker" style={{ color: "#8A9A82" }}>Supporting sources</p>
+                        <p className="kicker" style={{ color: "#8FA58A" }}>Supporting sources</p>
                         <div className="mt-2 space-y-1.5">
                           {claim.sources.map((src, j) => (
                             <div key={j} className="flex items-start gap-2">
-                              <ExternalLink className="w-3 h-3 shrink-0 mt-0.5" style={{ color: "#8A9A82" }} />
+                              <ExternalLink className="w-3 h-3 shrink-0 mt-0.5" style={{ color: "#8FA58A" }} />
                               <span className="text-[12px] leading-relaxed text-muted-foreground">{src}</span>
                             </div>
                           ))}
@@ -171,11 +171,11 @@ export function ClaimAnalysis({ claims }: ClaimAnalysisProps) {
 
                     {claim.contradictingSources.length > 0 && (
                       <div>
-                        <p className="kicker" style={{ color: "#B08479" }}>Contradicting sources</p>
+                        <p className="kicker" style={{ color: "#B3263E" }}>Contradicting sources</p>
                         <div className="mt-2 space-y-1.5">
                           {claim.contradictingSources.map((src, j) => (
                             <div key={j} className="flex items-start gap-2">
-                              <XCircle className="w-3 h-3 shrink-0 mt-0.5" style={{ color: "#B08479" }} />
+                              <XCircle className="w-3 h-3 shrink-0 mt-0.5" style={{ color: "#B3263E" }} />
                               <span className="text-[12px] leading-relaxed text-muted-foreground">{src}</span>
                             </div>
                           ))}
@@ -184,10 +184,10 @@ export function ClaimAnalysis({ claims }: ClaimAnalysisProps) {
                     )}
 
                     <div>
-                      <p className="kicker" style={{ color: "#C9C3B7" }}>Reasoning</p>
+                      <p className="kicker" style={{ color: "#F1F0EA" }}>Reasoning</p>
                       <p
                         className="mt-2 text-[13px] leading-[1.8]"
-                        style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#F1F0EA" }}
+                        style={{ color: "#F1F0EA" }}
                       >
                         {claim.explanation}
                       </p>

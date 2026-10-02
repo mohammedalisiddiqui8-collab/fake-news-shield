@@ -14,7 +14,7 @@ export default function NotFound() {
       <div className="h-px w-full bg-[#2A2B2E]" />
 
       <header className="px-6 py-6 sm:px-10 sm:py-8">
-        <span className="font-mono text-[10px] tracking-[0.3em] text-[#6F7074]">V/</span>
+        <span className="font-mono text-[10px] tracking-[0.3em] text-[#6B6963]">V/</span>
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center px-6 pb-24 text-center">
@@ -24,15 +24,15 @@ export default function NotFound() {
           404
         </h1>
 
-        <div className="mt-9 h-px w-14 bg-[#3A3B3E]" />
+        <div className="mt-9 h-px w-14 bg-[#242424]" />
 
-        <p className="mt-9 text-[12px] leading-relaxed text-[#A5A5A1] max-w-sm">
+        <p className="mt-9 text-[12px] leading-relaxed text-[#A6A39B] max-w-sm">
           The page you requested is not in this edition.
         </p>
 
         <button
           onClick={() => navigate("/")}
-          className="group mt-12 flex items-center gap-3 text-[11px] font-light uppercase tracking-[0.28em] text-[#A5A5A1] transition-colors duration-500 hover:text-[#F1F0EA]"
+          className="group mt-12 flex items-center gap-3 text-[11px] font-light uppercase tracking-[0.28em] text-[#A6A39B] transition-colors duration-500 hover:text-[#F1F0EA]"
         >
           <span className="ul-hover">Return to the title page</span>
           <span className="inline-block transition-transform duration-500 ease-out group-hover:-translate-x-1">

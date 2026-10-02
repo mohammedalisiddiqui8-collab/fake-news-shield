@@ -73,7 +73,7 @@ function Panel({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, delay }}
       className="mb-3 overflow-hidden"
-      style={{ background: "#252629", border: "1px solid #3A3B3E" }}
+      style={{ background: "#0C0C0C", border: "1px solid #242424" }}
     >
       <div className="px-4 sm:px-5 pt-4 pb-2">
         <div className="flex items-center gap-1.5 mb-1">
@@ -85,7 +85,7 @@ function Panel({
             {title}
           </h3>
         </div>
-        <p className="text-[9px]" style={{ color: "#A5A5A1" }}>
+        <p className="text-[9px]" style={{ color: "#A6A39B" }}>
           {subtitle}
         </p>
       </div>
@@ -128,7 +128,7 @@ export function RetrievalFailedState({
             className="w-14 h-14 rounded flex items-center justify-center shrink-0"
             style={{ background: "rgba(176,132,121,0.08)", border: "1px solid rgba(176,132,121,0.25)" }}
           >
-            <AlertTriangle className="w-6 h-6" style={{ color: "#B08479" }} />
+            <AlertTriangle className="w-6 h-6" style={{ color: "#B3263E" }} />
           </div>
           <div className="flex-1 text-center sm:text-left">
             <p className="text-[10px] text-muted-foreground uppercase tracking-[0.15em] font-semibold mb-1">
@@ -136,20 +136,20 @@ export function RetrievalFailedState({
             </p>
             <h2
               className="text-lg sm:text-xl font-bold mb-2"
-              style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F0EA" }}
+              style={{ fontFamily: "'Bodoni Moda', Georgia, serif", color: "#F1F0EA" }}
             >
               UNABLE TO ANALYZE
             </h2>
             <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start mb-2">
               <span
                 className="text-[8px] font-bold tracking-[0.1em] px-1.5 py-0.5"
-                style={{ background: "rgba(176,132,121,0.15)", color: "#B08479", borderRadius: "1px" }}
+                style={{ background: "rgba(176,132,121,0.15)", color: "#B3263E", borderRadius: "1px" }}
               >
                 RETRIEVAL FAILED
               </span>
               <span
                 className="text-[9px] font-mono tracking-wider"
-                style={{ color: "#A5A5A1" }}
+                style={{ color: "#A6A39B" }}
               >
                 CONFIDENCE —
               </span>
@@ -157,18 +157,18 @@ export function RetrievalFailedState({
             <p className="text-xs text-muted-foreground leading-relaxed">
               {headline}
             </p>
-            <p className="text-[11px] leading-relaxed mt-1" style={{ color: "#A5A5A1" }}>
+            <p className="text-[11px] leading-relaxed mt-1" style={{ color: "#A6A39B" }}>
               Reason: {reason}
             </p>
             {failedUrl && (
               <p
                 className="text-[9px] font-mono mt-1 break-all"
-                style={{ color: "#A5A5A1", opacity: 0.7 }}
+                style={{ color: "#A6A39B", opacity: 0.7 }}
               >
                 {inputType === "url" ? "URL" : "Input type: URL"} {failedUrl}
               </p>
             )}
-            <p className="text-[11px] font-semibold mt-2" style={{ color: "#B08479" }}>
+            <p className="text-[11px] font-semibold mt-2" style={{ color: "#B3263E" }}>
               No factual verification was performed.
             </p>
           </div>
@@ -179,7 +179,7 @@ export function RetrievalFailedState({
           <button
             type="button"
             className="cursor-pointer flex items-center justify-center gap-2 h-9 px-5 text-xs font-medium rounded transition-all duration-200 hover:-translate-y-[1px] active:scale-[0.98]"
-            style={{ background: "#C9C3B7", color: "#151618" }}
+            style={{ background: "#F1F0EA", color: "#080808" }}
             onClick={onRetry}
           >
             <RotateCcw className="w-3.5 h-3.5" />Try Again
@@ -187,7 +187,7 @@ export function RetrievalFailedState({
           <button
             type="button"
             className="cursor-pointer flex items-center justify-center gap-2 h-9 px-5 text-xs font-medium rounded transition-all duration-200 hover:-translate-y-[1px] active:scale-[0.98]"
-            style={{ background: "#252629", color: "#F1F0EA", border: "1px solid #3A3B3E" }}
+            style={{ background: "#0C0C0C", color: "#F1F0EA", border: "1px solid #242424" }}
             onClick={onPasteText}
           >
             <ClipboardPaste className="w-3.5 h-3.5" />Paste Article Text
@@ -200,7 +200,7 @@ export function RetrievalFailedState({
         icon={Fingerprint}
         title="Article Fingerprint"
         subtitle="Retrieval never returned content, so no fingerprint was produced"
-        accent="#C9C3B7"
+        accent="#F1F0EA"
         delay={0.1}
       >
         <ArticleFingerprint
@@ -215,10 +215,10 @@ export function RetrievalFailedState({
         icon={FileText}
         title="Content Not Retrieved"
         subtitle="No article text was available for analysis"
-        accent="#B08479"
+        accent="#B3263E"
         delay={0.13}
       >
-        <p className="text-[11px] leading-relaxed" style={{ color: "#A5A5A1" }}>
+        <p className="text-[11px] leading-relaxed" style={{ color: "#A6A39B" }}>
           {isInstagram
             ? "The Instagram post could not be retrieved for analysis."
             : "The article content could not be retrieved for analysis."}{" "}
@@ -233,7 +233,7 @@ export function RetrievalFailedState({
           icon={Globe}
           title="Source Profile"
           subtitle="Known from the submitted URL; nothing inferred"
-          accent="#C9C3B7"
+          accent="#F1F0EA"
           delay={0.16}
         >
           <SourceProfile profile={sourceProfile} />
@@ -245,7 +245,7 @@ export function RetrievalFailedState({
         icon={Link2}
         title="Evidence Chain"
         subtitle="Investigation stopped at retrieval"
-        accent="#B08479"
+        accent="#B3263E"
         delay={0.19}
       >
         <EvidenceChain
@@ -265,7 +265,7 @@ export function RetrievalFailedState({
         icon={Play}
         title="Investigation Replay"
         subtitle="Trace of what actually happened"
-        accent="#B08479"
+        accent="#B3263E"
         delay={0.22}
       >
         <InvestigationReplay

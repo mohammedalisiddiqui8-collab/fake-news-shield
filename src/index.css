@@ -1,22 +1,13 @@
-/* ─── Google Fonts ─── */
-@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap');
+/* ─── Google Fonts ───
+   Three roles, three faces:
+     Bodoni Moda    — display / brand titles (600) and upright quotes (400)
+     Manrope        — all general content: nav, buttons, body, labels, meta
+     JetBrains Mono — technical data only: counts, percentages, timestamps
 
-/* ─── Masthead face — Aveline ───
-   Aveline (Latinotype) is the display face reserved for the VERITAS wordmark
-   and major editorial display. It is a licensed commercial family — not on
-   Google Fonts or Fontsource — so no webfont file ships with the project.
-   `.font-masthead` lists it first and falls back to Libre Baskerville, which
-   keeps the masthead correct today and upgrades automatically the moment the
-   licensed files exist. To activate Aveline, place the licensed woff2 in
-   `src/fonts/` and uncomment:
-@font-face {
-  font-family: 'Aveline';
-  src: url('./fonts/Aveline-Regular.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-*/
+   DM Serif Display / Libre Baskerville / Source Serif 4 / Inter are retained
+   for the title page, whose typography is explicitly frozen (see the
+   `.veritas-night` scope at the bottom of this file). ─── */
+@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500;6..96,600&family=Manrope:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap');
 
 @import "tailwindcss";
 @import "tw-animate-css";
@@ -43,9 +34,10 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   /* Status-only accents — muted, printed, never neon */
-  --color-signal-sage: #8A9A82;
-  --color-signal-ochre: #B0A183;
-  --color-signal-clay: #B08479;
+  --color-signal-sage: #8FA58A;
+  --color-signal-brass: #B7A47A;
+  --color-signal-crimson: #B3263E;
+  --color-signal-clay: #B7A47A;
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -64,114 +56,89 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/* ─── LOCKED PALETTE — Graphite editorial edition ───
-   Deep charcoal canvas · near-black surfaces · soft ivory ink ·
-   hairline graphite rules · one warm bone accent · muted sage / ochre / clay status */
+/* ─── LOCKED PALETTE — Void Essence editorial edition ───
+   Near-black canvas (#080808) · off-white ink (#F1F0EA) · warm grey
+   secondary (#A6A39B) · hairline rules (#242424) · three status inks only:
+   sage (supported), muted brass (uncertain / needs verification),
+   crimson (contradicted / warning). No glow, no glass, no gradient. ─── */
 :root {
   --radius: 0.125rem;
-  --background: #202124;
+  --background: #080808;
   --foreground: #F1F0EA;
-  --card: #252629;
+  --card: #0C0C0C;
   --card-foreground: #F1F0EA;
-  --popover: #2B2D30;
+  --popover: #0C0C0C;
   --popover-foreground: #F1F0EA;
-  --primary: #C9C3B7;
-  --primary-foreground: #151618;
-  --secondary: #2B2D30;
-  --secondary-foreground: #A5A5A1;
-  --muted: #252629;
-  --muted-foreground: #A5A5A1;
-  --accent: #C9C3B7;
-  --accent-foreground: #151618;
-  --destructive: #B08479;
-  --border: #3A3B3E;
-  --input: #3A3B3E;
-  --ring: #C9C3B7;
-  --chart-1: #C9C3B7;
-  --chart-2: #A5A5A1;
-  --chart-3: #B08479;
-  --chart-4: #8A9A82;
-  --chart-5: #B0A183;
-  --sidebar: #151618;
-  --sidebar-foreground: #CFCEC8;
+  --primary: #F1F0EA;
+  --primary-foreground: #080808;
+  --secondary: #101010;
+  --secondary-foreground: #A6A39B;
+  --muted: #0C0C0C;
+  --muted-foreground: #A6A39B;
+  --accent: #F1F0EA;
+  --accent-foreground: #080808;
+  --destructive: #B3263E;
+  --border: #242424;
+  --input: #242424;
+  --ring: #F1F0EA;
+  --chart-1: #F1F0EA;
+  --chart-2: #A6A39B;
+  --chart-3: #B3263E;
+  --chart-4: #8FA58A;
+  --chart-5: #B7A47A;
+  --sidebar: #080808;
+  --sidebar-foreground: #F1F0EA;
   --sidebar-primary: #F1F0EA;
-  --sidebar-primary-foreground: #151618;
-  --sidebar-accent: #1E1F22;
+  --sidebar-primary-foreground: #080808;
+  --sidebar-accent: #0C0C0C;
   --sidebar-accent-foreground: #F1F0EA;
-  --sidebar-border: #2A2B2E;
-  --sidebar-ring: #C9C3B7;
+  --sidebar-border: #242424;
+  --sidebar-ring: #F1F0EA;
+  /* Status inks, addressable by name wherever a state colour is needed. */
+  --ink: #F1F0EA;
+  --ink-soft: #A6A39B;
+  --ink-dim: #6B6963;
+  --rule: #242424;
+  --surface: #0C0C0C;
+  --status-supported: #8FA58A;
+  --status-uncertain: #B7A47A;
+  --status-contradicted: #B3263E;
 }
 
 /* One editorial edition: the theme switch keeps the same printed palette so
    inline editorial colors can never desynchronize from the tokens. */
 .dark {
-  --background: #202124;
+  --background: #080808;
   --foreground: #F1F0EA;
-  --card: #252629;
+  --card: #0C0C0C;
   --card-foreground: #F1F0EA;
-  --popover: #2B2D30;
+  --popover: #0C0C0C;
   --popover-foreground: #F1F0EA;
-  --primary: #C9C3B7;
-  --primary-foreground: #151618;
-  --secondary: #2B2D30;
-  --secondary-foreground: #A5A5A1;
-  --muted: #252629;
-  --muted-foreground: #A5A5A1;
-  --accent: #C9C3B7;
-  --accent-foreground: #151618;
-  --destructive: #B08479;
-  --border: #3A3B3E;
-  --input: #3A3B3E;
-  --ring: #C9C3B7;
-  --chart-1: #C9C3B7;
-  --chart-2: #A5A5A1;
-  --chart-3: #B08479;
-  --chart-4: #8A9A82;
-  --chart-5: #B0A183;
-  --sidebar: #151618;
-  --sidebar-foreground: #CFCEC8;
+  --primary: #F1F0EA;
+  --primary-foreground: #080808;
+  --secondary: #101010;
+  --secondary-foreground: #A6A39B;
+  --muted: #0C0C0C;
+  --muted-foreground: #A6A39B;
+  --accent: #F1F0EA;
+  --accent-foreground: #080808;
+  --destructive: #B3263E;
+  --border: #242424;
+  --input: #242424;
+  --ring: #F1F0EA;
+  --chart-1: #F1F0EA;
+  --chart-2: #A6A39B;
+  --chart-3: #B3263E;
+  --chart-4: #8FA58A;
+  --chart-5: #B7A47A;
+  --sidebar: #080808;
+  --sidebar-foreground: #F1F0EA;
   --sidebar-primary: #F1F0EA;
-  --sidebar-primary-foreground: #151618;
-  --sidebar-accent: #1E1F22;
+  --sidebar-primary-foreground: #080808;
+  --sidebar-accent: #0C0C0C;
   --sidebar-accent-foreground: #F1F0EA;
-  --sidebar-border: #2A2B2E;
-  --sidebar-ring: #C9C3B7;
-}
-
-/* ─── Night edition scope — the title page runs one value deeper so the
-   opening frame reads as near-black, then resolves to the same system. ─── */
-.veritas-night {
-  --background: #151618;
-  --foreground: #F1F0EA;
-  --card: #202124;
-  --card-foreground: #F1F0EA;
-  --popover: #252629;
-  --popover-foreground: #F1F0EA;
-  --primary: #C9C3B7;
-  --primary-foreground: #151618;
-  --secondary: #252629;
-  --secondary-foreground: #A5A5A1;
-  --muted: #202124;
-  --muted-foreground: #A5A5A1;
-  --accent: #C9C3B7;
-  --accent-foreground: #151618;
-  --destructive: #B08479;
-  --border: #3A3B3E;
-  --input: #3A3B3E;
-  --ring: #C9C3B7;
-  --chart-1: #C9C3B7;
-  --chart-2: #A5A5A1;
-  --chart-3: #B08479;
-  --chart-4: #8A9A82;
-  --chart-5: #B0A183;
-  --sidebar: #151618;
-  --sidebar-foreground: #CFCEC8;
-  --sidebar-primary: #F1F0EA;
-  --sidebar-primary-foreground: #151618;
-  --sidebar-accent: #1E1F22;
-  --sidebar-accent-foreground: #F1F0EA;
-  --sidebar-border: #2A2B2E;
-  --sidebar-ring: #C9C3B7;
+  --sidebar-border: #242424;
+  --sidebar-ring: #F1F0EA;
 }
 
 @layer base {
@@ -179,45 +146,51 @@
   html { -webkit-text-size-adjust: 100%; }
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: 'Manrope', system-ui, -apple-system, sans-serif;
     font-feature-settings: "cv11", "ss01", "ss03";
     overflow-x: hidden;
   }
   button:not([disabled]), [role="button"]:not([disabled]) { cursor: pointer; }
-  h1, h2, h3, .font-serif-editorial {
-    font-family: 'DM Serif Display', 'Source Serif 4', Georgia, serif;
-    font-weight: 400;
+
+  /* A · DISPLAY / BRAND — Bodoni Moda, semi-bold. Refined, never heavy. */
+  h1, h2, h3, .font-serif-editorial, .font-display {
+    font-family: 'Bodoni Moda', 'Source Serif 4', Georgia, serif;
+    font-weight: 600;
     letter-spacing: -0.005em;
   }
-  /* The masthead face — the wordmark reads as a publication, not a logo.
-     Aveline leads the chain (see the commented @font-face at the top of this
-     file); Libre Baskerville carries the masthead until those files are
-     added. Everything set in `.font-masthead` upgrades together. */
-  .font-masthead {
-    font-family: 'Aveline', 'Libre Baskerville', 'DM Serif Display', Georgia, serif;
+  /* B · QUOTES — Bodoni Moda regular, upright. Never italic. */
+  .font-quote {
+    font-family: 'Bodoni Moda', 'Source Serif 4', Georgia, serif;
     font-weight: 400;
+    font-style: normal;
   }
-  code, .font-mono { font-family: 'JetBrains Mono', monospace; }
+  /* A · the wordmark reads as a publication, not a logo. */
+  .font-masthead {
+    font-family: 'Bodoni Moda', 'Source Serif 4', Georgia, serif;
+    font-weight: 600;
+  }
+  /* D · TECHNICAL DATA — counts, percentages, timestamps, identifiers. */
+  code, .font-mono, .tabular { font-family: 'JetBrains Mono', monospace; }
 }
 
 @layer utilities {
   /* Restrained hairline surface — no glass, no glow, no lift */
   .glass-card {
-    background: #252629;
-    border: 1px solid #3A3B3E;
+    background: #0C0C0C;
+    border: 1px solid #242424;
     border-radius: 0.125rem;
   }
 
   .editorial-rule {
     height: 1px;
-    background: #3A3B3E;
+    background: #242424;
   }
 
   .text-balance { text-wrap: balance; }
 
   /* ─── Editorial furniture ─── */
   .kicker {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Manrope', system-ui, sans-serif;
     font-size: 9px;
     line-height: 1.6;
     letter-spacing: 0.24em;
@@ -228,7 +201,7 @@
     font-family: 'JetBrains Mono', monospace;
     font-size: 9px;
     letter-spacing: 0.14em;
-    color: #6F7074;
+    color: #6B6963;
     font-variant-numeric: tabular-nums;
   }
   .tabular { font-variant-numeric: tabular-nums; }
@@ -247,41 +220,102 @@
   .row-hover:hover { background-color: rgba(241, 240, 234, 0.035); }
 
   /* ─── Framed functional control — a control, not a pill ───
-     Thin border, flat charcoal, readable uppercase; brightens on hover
-     exactly the way the rest of the hairline system does. */
+     Thin rule, flat, readable uppercase; brightens on hover exactly the way
+     the rest of the hairline system does. */
   .ctrl-frame {
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 0.625rem;
-    border: 1px solid #3A3B3E;
+    border: 1px solid #242424;
     background: transparent;
     color: #F1F0EA;
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'Manrope', system-ui, sans-serif;
     text-transform: uppercase;
     letter-spacing: 0.16em;
     transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
   }
   .ctrl-frame:hover:not(:disabled) {
-    border-color: rgba(201, 195, 183, 0.75);
-    background: rgba(201, 195, 183, 0.05);
+    border-color: rgba(241, 240, 234, 0.4);
+    background: rgba(241, 240, 234, 0.05);
   }
   .ctrl-frame:active:not(:disabled) { transform: translateY(1px); }
   .ctrl-frame:disabled { opacity: 0.4; cursor: not-allowed; }
-  .ctrl-frame[data-primary="true"] {
-    border-color: rgba(201, 195, 183, 0.55);
-  }
+  .ctrl-frame[data-primary="true"] { border-color: rgba(241, 240, 234, 0.28); }
   .ctrl-frame[data-primary="true"]:hover:not(:disabled) {
-    border-color: #C9C3B7;
-    background: rgba(201, 195, 183, 0.09);
+    border-color: rgba(241, 240, 234, 0.7);
+    background: rgba(241, 240, 234, 0.07);
   }
   /* Horizontal strips (mobile nav) without a visible scrollbar */
   .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
   .no-scrollbar::-webkit-scrollbar { display: none; }
 
+  /* ═══ EDITORIAL TOOLBAR ═══
+     One quiet horizontal bar: wordmark, section links, one primary action.
+     Flat #080808, a single #242424 hairline beneath, no glass, no pill, no
+     glow. Inactive links sit at secondary ink and travel toward ivory on
+     hover; the active link is ivory with a 1px ivory underline. */
+  .v-toolbar {
+    background: #080808;
+    border-bottom: 1px solid #242424;
+    font-family: 'Manrope', system-ui, sans-serif;
+  }
+  .v-nav-link {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0;
+    font-size: 10px;
+    line-height: 1;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #A6A39B;
+    background: none;
+    border: 0;
+    transition: color 0.28s ease;
+  }
+  .v-nav-link::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -1px;
+    height: 1px;
+    background: #F1F0EA;
+    transform: scaleX(0);
+    transform-origin: left center;
+    transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .v-nav-link:hover:not(:disabled) { color: #F1F0EA; }
+  .v-nav-link:hover:not(:disabled)::after { transform: scaleX(1); }
+  .v-nav-link[data-active='true'] { color: #F1F0EA; }
+  .v-nav-link[data-active='true']::after { transform: scaleX(1); }
+  .v-nav-link:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  /* The primary action — restrained, flat, with an arrow that steps right. */
+  .v-nav-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 10px;
+    line-height: 1;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #F1F0EA;
+    background: none;
+    border: 0;
+    transition: color 0.28s ease;
+  }
+  .v-nav-cta:hover { color: #A6A39B; }
+  .v-nav-cta .v-nav-arrow {
+    display: inline-block;
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .v-nav-cta:hover .v-nav-arrow { transform: translateX(4px); }
+
   /* ─── Navigation surfaces (desktop rail + mobile header) ─── */
-  .veritas-nav-surface .kicker { color: #7E7F83; }
-  .veritas-nav-surface .num-marker { color: #5C5D61; }
+  .veritas-nav-surface .kicker { color: #A6A39B; }
+  .veritas-nav-surface .num-marker { color: #6B6963; }
 }
 
 @keyframes statusPulse {
@@ -323,10 +357,10 @@
 
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #3A3B3E; border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: #6F7074; }
+::-webkit-scrollbar-thumb { background: #242424; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #6B6963; }
 
-::selection { background: rgba(201, 195, 183, 0.2); color: #F1F0EA; }
+::selection { background: rgba(241, 240, 234, 0.18); color: #F1F0EA; }
 
 /* ─── Reduced motion — the investigation is still fully readable without it ───
    Kills decorative/scroll-linked movement for users who ask the system to
@@ -352,19 +386,60 @@ html { scroll-behavior: smooth; }
 .tiptap { outline: none; }
 .tiptap p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
-  float: left;  color: #6F7074;
+  float: left;  color: #6B6963;
   pointer-events: none; height: 0;
 }
 
-/* ─── Subtle film grain — keeps flat charcoal from reading as dead pixels ─── */
+/* ─── Subtle film grain — keeps flat black from reading as dead pixels ─── */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   z-index: 9998;
   pointer-events: none;
-  opacity: 0.05;
+  opacity: 0.04;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size: 200px;
 }
 
+/* ─── Title page scope — FROZEN ───
+   The hero's composition, artwork, quote and moving line are explicitly out of
+   scope for this pass, so the title page keeps the exact faces and near-black
+   canvas it was built with. Everything outside `.veritas-night` runs the new
+   Void Essence system. */
+.veritas-night {
+  --background: #080807;
+  --foreground: #F1F0EA;
+  --card: #0A0A0A;
+  --card-foreground: #F1F0EA;
+  --popover: #0C0C0C;
+  --popover-foreground: #F1F0EA;
+  --primary: #F1F0EA;
+  --primary-foreground: #080808;
+  --secondary: #0C0C0C;
+  --secondary-foreground: #A5A5A1;
+  --muted: #0A0A0A;
+  --muted-foreground: #A5A5A1;
+  --accent: #F1F0EA;
+  --accent-foreground: #080808;
+  --destructive: #B08479;
+  --border: #2A2B2E;
+  --input: #2A2B2E;
+  --ring: #C9C3B7;
+}
+.veritas-night body,
+.veritas-night {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+.veritas-night h1,
+.veritas-night h2,
+.veritas-night h3,
+.veritas-night .font-serif-editorial {
+  font-family: 'DM Serif Display', 'Source Serif 4', Georgia, serif;
+  font-weight: 400;
+  font-style: italic;
+}
+.veritas-night .font-masthead {
+  font-family: 'Libre Baskerville', 'DM Serif Display', Georgia, serif;
+  font-weight: 400;
+}

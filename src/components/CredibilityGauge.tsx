@@ -8,16 +8,16 @@ interface CredibilityGaugeProps {
 
 const verdictColors: Record<string, { stroke: string; track: string }> = {
   likely_real: {
-    stroke: "#3A3B3E",
-    track: "#A5A5A1",
+    stroke: "#242424",
+    track: "#A6A39B",
   },
   uncertain: {
-    stroke: "#B0A183",
-    track: "#A5A5A1",
+    stroke: "#B7A47A",
+    track: "#A6A39B",
   },
   likely_fake: {
-    stroke: "#B08479",
-    track: "#A5A5A1",
+    stroke: "#B3263E",
+    track: "#A6A39B",
   },
 };
 
@@ -74,7 +74,7 @@ export function CredibilityGauge({
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5, delay: 0.6, ease: [0.22, 1, 0.36, 1] }}
           className="text-2xl font-bold tracking-tight"
-          style={{ color: colors.stroke, fontFamily: "'DM Serif Display', serif" }}
+          style={{ color: colors.stroke, fontFamily: "'Bodoni Moda', Georgia, serif" }}
         >
           {confidence}%
         </motion.span>

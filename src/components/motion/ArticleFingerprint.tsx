@@ -39,10 +39,10 @@ export function ArticleFingerprint({ fingerprint, dateStr, note, available = tru
   const cells = [
     { label: "Claims", value: value(fingerprint.claims), color: "#F1F0EA" },
     { label: "Unique sources", value: value(fingerprint.sources), color: "#F1F0EA" },
-    { label: "Verified", value: value(fingerprint.verified), color: "#8A9A82" },
-    { label: "Uncertain", value: value(fingerprint.uncertain), color: "#B0A183" },
-    { label: "Contradicted", value: value(fingerprint.contradicted), color: "#B08479" },
-    { label: "Unverified", value: value(fingerprint.unverified), color: "#A5A5A1" },
+    { label: "Verified", value: value(fingerprint.verified), color: "#8FA58A" },
+    { label: "Uncertain", value: value(fingerprint.uncertain), color: "#B7A47A" },
+    { label: "Contradicted", value: value(fingerprint.contradicted), color: "#B3263E" },
+    { label: "Unverified", value: value(fingerprint.unverified), color: "#A6A39B" },
     { label: "Claim–source refs", value: available ? (fingerprint.sourceRefs != null ? String(fingerprint.sourceRefs) : "—") : "—", color: "#F1F0EA" },
     { label: "Evidence found", value: value(fingerprint.evidenceFound), color: "#F1F0EA" },
   ];
@@ -73,17 +73,17 @@ export function ArticleFingerprint({ fingerprint, dateStr, note, available = tru
       <div className="mt-8 pt-6 border-t border-border">
         <div className="flex items-baseline justify-between gap-4 mb-3">
           <span className="kicker" style={{ opacity: 0.7 }}>Source coverage</span>
-          <span className="font-mono text-[11px] tabular" style={{ color: "#C9C3B7" }}>
+          <span className="font-mono text-[11px] tabular" style={{ color: "#F1F0EA" }}>
             {coverage}
           </span>
         </div>
-        <div className="h-[2px] w-full" style={{ background: "#3A3B3E" }}>
+        <div className="h-[2px] w-full" style={{ background: "#242424" }}>
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: coverageWidth }}
             transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             className="h-full"
-            style={{ background: "#C9C3B7" }}
+            style={{ background: "#F1F0EA" }}
           />
         </div>
         <p className="kicker mt-4" style={{ opacity: 0.45 }}>

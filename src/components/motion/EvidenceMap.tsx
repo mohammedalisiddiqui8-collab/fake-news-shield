@@ -22,18 +22,18 @@ const REL_LABEL: Record<string, string> = {
 };
 
 const REL_COLOR: Record<string, string> = {
-  supports: "#8A9A82",
-  contradicts: "#B08479",
-  partial: "#B0A183",
-  does_not_address: "#A5A5A1",
-  unverified: "#A5A5A1",
-  insufficient: "#A5A5A1",
+  supports: "#8FA58A",
+  contradicts: "#B3263E",
+  partial: "#B7A47A",
+  does_not_address: "#A6A39B",
+  unverified: "#A6A39B",
+  insufficient: "#A6A39B",
 };
 
 function statusColor(status?: string) {
-  if (status === "supported") return "#8A9A82";
-  if (status === "contradicted") return "#B08479";
-  return "#B0A183";
+  if (status === "supported") return "#8FA58A";
+  if (status === "contradicted") return "#B3263E";
+  return "#B7A47A";
 }
 
 function StatusMark({ status }: { status?: string }) {
@@ -64,7 +64,7 @@ export function EvidenceMap({
 }) {
   const [openId, setOpenId] = useState<number | null>(null);
   const verdictColor =
-    verdict === "likely_real" ? "#8A9A82" : verdict === "likely_fake" ? "#B08479" : "#B0A183";
+    verdict === "likely_real" ? "#8FA58A" : verdict === "likely_fake" ? "#B3263E" : "#B7A47A";
 
   // While one claim is open it holds the reader's attention: every other
   // claim quiets down so its connections read clearly. No claim is ever
@@ -78,7 +78,7 @@ export function EvidenceMap({
         <p className="kicker" style={{ opacity: 0.5 }}>Evidence map</p>
         <p
           className="mt-3 text-[13px] leading-[1.8] text-muted-foreground"
-          style={{ fontFamily: "'Source Serif 4', Georgia, serif" }}
+          style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
         >
           No claims were extracted for this investigation, so there is nothing to map. Run an
           investigation on an article and the claim → source connections appear here, drawn from
@@ -121,7 +121,7 @@ export function EvidenceMap({
                 </span>
                 <span
                   className="flex-1 min-w-0 text-[12.5px] leading-snug"
-                  style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#F1F0EA" }}
+                  style={{ fontFamily: "'Manrope', system-ui, sans-serif", color: "#F1F0EA" }}
                 >
                   {claim.text}
                 </span>
@@ -159,7 +159,7 @@ export function EvidenceMap({
                   {/* The vertical rail from the claim down to its sources */}
                   <motion.span
                     className="absolute left-[13px] top-0 w-px sm:left-[17px]"
-                    style={{ background: "#3A3B3E" }}
+                    style={{ background: "#242424" }}
                     initial={{ height: 0 }}
                     animate={{ height: isOpen ? "100%" : 0 }}
                     transition={{ duration: 0.45, ease: EASE }}
@@ -173,7 +173,7 @@ export function EvidenceMap({
                   ) : (
                     <ul>
                       {claim.sources.map((src, si) => {
-                        const tone = REL_COLOR[src.relationship] ?? "#A5A5A1";
+                        const tone = REL_COLOR[src.relationship] ?? "#A6A39B";
                         return (
                           <motion.li
                             key={si}
@@ -185,7 +185,7 @@ export function EvidenceMap({
                             {/* The horizontal connector from the rail to this source */}
                             <span
                               className="absolute -left-3 top-[13px] h-px w-3 sm:-left-5"
-                              style={{ background: "#3A3B3E" }}
+                              style={{ background: "#242424" }}
                               aria-hidden="true"
                             />
                             <span
@@ -225,7 +225,7 @@ export function EvidenceMap({
           <span className="block h-[7px] w-[7px]" style={{ background: verdictColor }} aria-hidden="true" />
           <span
             className="text-[16px] leading-none tracking-[0.03em]"
-            style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F0EA" }}
+            style={{ fontFamily: "'Bodoni Moda', Georgia, serif", color: "#F1F0EA" }}
           >
             {verdict.replace(/_/g, " ")}
           </span>

@@ -115,7 +115,7 @@ export function PatternsChapter({
         <span className="kicker shrink-0" style={{ opacity: 0.5 }}>{AXIS_LEFT}</span>
         <motion.span
           className="h-px flex-1 origin-left"
-          style={{ background: "#3A3B3E" }}
+          style={{ background: "#242424" }}
           initial={{ scaleX: 0 }}
           whileInView={{ scaleX: 1 }}
           viewport={{ once: true, margin: "-10%" }}
@@ -128,7 +128,7 @@ export function PatternsChapter({
       <div className="mt-9 grid gap-x-14 gap-y-10 lg:grid-cols-2">
         {(["caution", "balance"] as const).map((pole) => {
           const group = PATTERN_SIGNALS.filter((s) => s.pole === pole);
-          const tone = pole === "caution" ? "#B08479" : "#8A9A82";
+          const tone = pole === "caution" ? "#B3263E" : "#8FA58A";
           return (
             <div key={pole}>
               <div className="flex items-baseline justify-between gap-3 border-b pb-2">
@@ -159,7 +159,7 @@ export function PatternsChapter({
                             value, when there is one — it breathes up to full
                             weight when its signal is selected */}
                         <span className="relative block h-[9px] w-9 shrink-0 overflow-visible">
-                          <span className="absolute left-0 right-0 top-1/2 h-px -translate-y-1/2" style={{ background: "#3A3B3E" }} />
+                          <span className="absolute left-0 right-0 top-1/2 h-px -translate-y-1/2" style={{ background: "#242424" }} />
                           {typeof v === "number" && v > 0 && (
                             <motion.span
                               className="absolute top-1/2 h-px -translate-y-1/2"
@@ -178,7 +178,7 @@ export function PatternsChapter({
                         <span
                           className="flex-1 text-[12.5px] tracking-[0.01em] transition-all duration-300"
                           style={{
-                            color: isActive ? "#F1F0EA" : "#A5A5A1",
+                            color: isActive ? "#F1F0EA" : "#A6A39B",
                             transform: isActive ? "translateX(2px)" : "translateX(0)",
                           }}
                         >
@@ -186,7 +186,7 @@ export function PatternsChapter({
                         </span>
                         <span
                           className="kicker tabular shrink-0 transition-colors duration-300"
-                          style={{ color: isActive ? tone : "#6F7074" }}
+                          style={{ color: isActive ? tone : "#6B6963" }}
                         >
                           {typeof v === "number" ? `${v}%` : "—"}
                         </span>
@@ -205,13 +205,13 @@ export function PatternsChapter({
         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
           <span
             className="text-[15px] leading-none tracking-[0.04em]"
-            style={{ fontFamily: "'DM Serif Display', serif", color: "#F1F0EA" }}
+            style={{ fontFamily: "'Bodoni Moda', Georgia, serif", color: "#F1F0EA" }}
           >
             {signal.name}
           </span>
           <span
             className="kicker"
-            style={{ color: signal.pole === "caution" ? "#B08479" : "#8A9A82" }}
+            style={{ color: signal.pole === "caution" ? "#B3263E" : "#8FA58A" }}
           >
             {signal.pole === "caution" ? "Warning signal" : "Positive signal"}
           </span>
@@ -222,7 +222,7 @@ export function PatternsChapter({
 
         <p
           className="mt-4 max-w-[64ch] text-[13px] leading-[1.7]"
-          style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#A5A5A1" }}
+          style={{ fontFamily: "'Manrope', system-ui, sans-serif", color: "#A6A39B" }}
         >
           {signal.reads} {signal.weight}
         </p>
@@ -233,7 +233,7 @@ export function PatternsChapter({
         className="mt-9 inline-flex max-w-full flex-col gap-1.5 border px-4 py-3"
         style={{ borderColor: "rgba(176,161,131,0.4)", background: "rgba(176,161,131,0.05)" }}
       >
-        <span className="kicker" style={{ color: "#B0A183", fontSize: "9.5px" }}>
+        <span className="kicker" style={{ color: "#B7A47A", fontSize: "9.5px" }}>
           Language patterns are not proof of truth
         </span>
         <p className="text-[11px] leading-relaxed text-muted-foreground">

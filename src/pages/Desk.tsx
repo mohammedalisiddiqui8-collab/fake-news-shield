@@ -72,7 +72,7 @@ function InvestigationRoute() {
               {/* The hairline segment — a short tail after the last marker */}
               <span
                 className={`absolute top-[3px] h-px ${last ? "left-0 right-[82%]" : "left-0 right-0"}`}
-                style={{ background: "#3A3B3E" }}
+                style={{ background: "#242424" }}
                 aria-hidden="true"
               />
               <motion.span
@@ -87,7 +87,7 @@ function InvestigationRoute() {
               {/* The station marker */}
               <motion.span
                 className="relative block h-[7px] w-[7px]"
-                style={{ background: "#202124", border: "1px solid #6F7074" }}
+                style={{ background: "#080808", border: "1px solid #6B6963" }}
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true, margin: "-8%" }}
@@ -96,7 +96,7 @@ function InvestigationRoute() {
               />
               <span className="num-marker mt-3 block">{station.no}</span>
               <span
-                className="mt-1 hidden text-[8.5px] uppercase tracking-[0.16em] text-[#8E8E8A] sm:block"
+                className="mt-1 hidden text-[8.5px] uppercase tracking-[0.16em] text-[#6B6963] sm:block"
                 style={{ fontFamily: "'JetBrains Mono', monospace" }}
               >
                 {station.label}
@@ -113,48 +113,90 @@ export default function Desk() {
   const navigate = useNavigate();
   const [showEnter, setShowEnter] = useState(false);
   const [showMethod, setShowMethod] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     const t = setTimeout(() => setShowEnter(true), 500);
     return () => clearTimeout(t);
   }, []);
 
+  /* Close the compact mobile menu when the viewport grows past the breakpoint,
+     so it can never be left hanging open behind the desktop toolbar. */
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const onChange = () => { if (mq.matches) setMenuOpen(false); };
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
+
   return (
     <div className="relative min-h-screen bg-background text-foreground">
       {/* ── Atmosphere — the title page's artwork, held far back ── */}
       <HeroAtmosphere strength="desk" />
-      {/* ── Masthead — the publication header: back to the title page, forward to the desk work ── */}
-      <header
-        className="sticky top-0 z-40 border-b"
-        style={{ background: "rgba(21,22,24,0.92)", backdropFilter: "blur(6px)", borderColor: "rgba(241,240,234,0.1)" }}
-      >
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-5 sm:px-8">
+      {/* ═══ EDITORIAL TOOLBAR — DESK ═══
+          One quiet bar: the wordmark, the two sections, one primary action.
+          Flat #080808 with a single hairline rule beneath; no glass, no pill,
+          no glow. Desktop shows the full set; narrow screens collapse to the
+          wordmark and a MENU control. */}
+      <header className="v-toolbar sticky top-0 z-40">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-6 px-5 sm:px-8 lg:px-12">
           <button
             type="button"
             onClick={() => navigate("/")}
-            className="group flex items-baseline gap-3"
+            className="v-nav-link !text-[13px] !tracking-[0.28em] text-[#F1F0EA]"
             aria-label="Veritas — title page"
           >
-            <span className="font-mono text-[10px] tracking-[0.3em] text-[#6F7074] transition-colors duration-500 group-hover:text-[#C9C3B7]">
-              V/
-            </span>
-            <span className="font-masthead text-[14px] uppercase tracking-[0.28em] text-[#F1F0EA] transition-colors duration-500 group-hover:text-white">
-              Veritas
-            </span>
+            Veritas
           </button>
 
-          <nav className="flex items-center gap-5 sm:gap-7">
-            <span className="kicker hidden sm:inline" style={{ color: "#C9C3B7" }}>Investigation desk</span>
-            <button
-              type="button"
-              onClick={() => navigate("/analysis")}
-              className="group inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.2em] text-[#A5A5A1] transition-colors duration-300 hover:text-[#F1F0EA]"
-            >
+          {/* Desktop: DESK · ANALYSIS · NEW ANALYSIS → */}
+          <nav className="hidden items-center gap-9 md:flex" aria-label="Primary">
+            <span className="v-nav-link" data-active="true" aria-current="page">Desk</span>
+            <button type="button" className="v-nav-link" onClick={() => navigate("/analysis")}>
               Analysis
-              <ArrowRight className="h-3 w-3 transition-transform duration-300 group-hover:translate-x-0.5" />
+            </button>
+            <button type="button" className="v-nav-cta" onClick={() => navigate("/analysis")}>
+              New analysis
+              <span className="v-nav-arrow" aria-hidden="true">→</span>
             </button>
           </nav>
+
+          {/* Narrow screens: wordmark + MENU */}
+          <button
+            type="button"
+            className="v-nav-link md:hidden"
+            onClick={() => setMenuOpen((o) => !o)}
+            aria-expanded={menuOpen}
+            aria-controls="desk-mobile-menu"
+          >
+            Menu
+          </button>
         </div>
+
+        <AnimatePresence>
+          {menuOpen && (
+            <motion.nav
+              id="desk-mobile-menu"
+              aria-label="Primary"
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.28, ease: EASE }}
+              className="overflow-hidden md:hidden"
+            >
+              <div className="mx-auto flex max-w-6xl flex-col px-5 pb-5 sm:px-8">
+                <span className="v-nav-link py-3" data-active="true" aria-current="page">Desk</span>
+                <button type="button" className="v-nav-link py-3 text-left" onClick={() => { setMenuOpen(false); navigate("/analysis"); }}>
+                  Analysis
+                </button>
+                <button type="button" className="v-nav-cta py-3" onClick={() => { setMenuOpen(false); navigate("/analysis"); }}>
+                  New analysis
+                  <span className="v-nav-arrow" aria-hidden="true">→</span>
+                </button>
+              </div>
+            </motion.nav>
+          )}
+        </AnimatePresence>
       </header>
 
       {/* ── Opening of the desk — folio line, directive, then straight into the work ── */}
@@ -167,14 +209,14 @@ export default function Desk() {
           {/* The folio line — printed annotation, not chrome. Carries the
               chapter number, the case file and the edition date. */}
           <div className="flex items-baseline gap-4">
-            <span className="kicker shrink-0" style={{ color: "#C9C3B7" }}>
+            <span className="kicker shrink-0" style={{ color: "#F1F0EA" }}>
               01 / The investigation desk
             </span>
-            <span className="hidden h-px w-10 shrink-0 self-center sm:block" style={{ background: "#3A3B3E" }} aria-hidden="true" />
+            <span className="hidden h-px w-10 shrink-0 self-center sm:block" style={{ background: "#242424" }} aria-hidden="true" />
             <span className="kicker hidden shrink-0 lg:inline">
               Case / 001 · Veritas investigation desk · Live verification system
             </span>
-            <span className="h-px flex-1" style={{ background: "#3A3B3E" }} aria-hidden="true" />
+            <span className="h-px flex-1" style={{ background: "#242424" }} aria-hidden="true" />
             <span className="kicker shrink-0 hidden sm:inline">
               {new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
             </span>
@@ -185,7 +227,7 @@ export default function Desk() {
             Follow the evidence.
           </h1>
 
-          <p className="mt-4 text-[10.5px] uppercase tracking-[0.18em] text-[#A5A5A1]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+          <p className="mt-4 text-[10.5px] uppercase tracking-[0.18em] text-[#A6A39B]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
             Trace how each claim becomes a verdict.
           </p>
 
@@ -217,7 +259,7 @@ export default function Desk() {
               type="button"
               onClick={() => setShowMethod((s) => !s)}
               aria-expanded={showMethod}
-              className="group inline-flex items-center gap-2 text-[9.5px] uppercase tracking-[0.22em] text-[#8E8E8A] transition-colors duration-300 hover:text-[#F1F0EA]"
+              className="group inline-flex items-center gap-2 text-[9.5px] uppercase tracking-[0.22em] text-[#6B6963] transition-colors duration-300 hover:text-[#F1F0EA]"
               style={{ fontFamily: "'JetBrains Mono', monospace" }}
             >
               {showMethod ? "Close the method" : "About the method"}
@@ -244,7 +286,7 @@ export default function Desk() {
               >
                 <p
                   className="max-w-[56ch] pt-6 text-[13px] leading-[1.8] text-muted-foreground"
-                  style={{ fontFamily: "'Source Serif 4', Georgia, serif" }}
+                  style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
                 >
                   How Veritas investigates: retrieve the article, extract its checkable claims, retrieve
                   independent coverage, weigh the evidence, assess. Each chapter below shows one system
@@ -275,7 +317,7 @@ export default function Desk() {
         <div className="mt-28 lg:mt-36 border-t border-border pt-12">
           <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="kicker" style={{ color: "#C9C3B7" }}>Ready when you are</p>
+              <p className="kicker" style={{ color: "#F1F0EA" }}>Ready when you are</p>
               <p className="mt-3 max-w-[46ch] text-[13.5px] leading-[1.75] text-muted-foreground">
                 File an investigation and the full report — verdict, claims, evidence, reasoning — is yours.
               </p>

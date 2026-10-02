@@ -16,12 +16,12 @@ import type { CrossCheckSource } from "@/components/motion/SourceCrossCheck";
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 const REL: Record<string, { label: string; color: string }> = {
-  supports: { label: "SUPPORTS", color: "#8A9A82" },
-  contradicts: { label: "CONTRADICTS", color: "#B08479" },
-  partial: { label: "PARTIAL", color: "#B0A183" },
-  does_not_address: { label: "NOT ADDRESSED", color: "#A5A5A1" },
-  unverified: { label: "UNVERIFIED", color: "#A5A5A1" },
-  insufficient: { label: "INSUFFICIENT", color: "#A5A5A1" },
+  supports: { label: "SUPPORTS", color: "#8FA58A" },
+  contradicts: { label: "CONTRADICTS", color: "#B3263E" },
+  partial: { label: "PARTIAL", color: "#B7A47A" },
+  does_not_address: { label: "NOT ADDRESSED", color: "#A6A39B" },
+  unverified: { label: "UNVERIFIED", color: "#A6A39B" },
+  insufficient: { label: "INSUFFICIENT", color: "#A6A39B" },
 };
 
 export function SourceTrail({
@@ -105,7 +105,7 @@ export function SourceTrail({
                   <span className="kicker truncate sm:hidden" style={{ opacity: 0.45 }}>
                     Claim {String(src.claimId).padStart(2, "0")}
                   </span>
-                  <span className="hidden truncate text-[11.5px] sm:block" style={{ color: "#A5A5A1" }}>
+                  <span className="hidden truncate text-[11.5px] sm:block" style={{ color: "#A6A39B" }}>
                     Claim {String(src.claimId).padStart(2, "0")} · {src.claimText}
                   </span>
                 </span>
@@ -118,7 +118,7 @@ export function SourceTrail({
                     animate={{ rotate: isOpen ? 45 : 0, opacity: isOpen ? 1 : 0.45 }}
                     transition={{ duration: 0.3, ease: EASE }}
                   >
-                    <Plus className="h-3 w-3" style={{ color: "#C9C3B7" }} />
+                    <Plus className="h-3 w-3" style={{ color: "#F1F0EA" }} />
                   </motion.span>
                 </span>
               </button>
@@ -141,12 +141,12 @@ export function SourceTrail({
                       <p className="kicker" style={{ opacity: 0.5 }}>Evidence · {rel.label.toLowerCase()}</p>
                       <p
                         className="mt-2 text-[12px] leading-snug"
-                        style={{ fontFamily: "'Source Serif 4', Georgia, serif", color: "#F1F0EA" }}
+                        style={{ fontFamily: "'Manrope', system-ui, sans-serif", color: "#F1F0EA" }}
                       >
                         {src.headline}
                       </p>
                       {src.excerpt && (
-                        <p className="mt-1.5 max-w-[70ch] text-[10.5px] leading-relaxed" style={{ color: "#A5A5A1" }}>
+                        <p className="mt-1.5 max-w-[70ch] text-[10.5px] leading-relaxed" style={{ color: "#A6A39B" }}>
                           {src.excerpt}
                         </p>
                       )}
@@ -156,7 +156,7 @@ export function SourceTrail({
                           target="_blank"
                           rel="noopener noreferrer"
                           className="ul-hover mt-3 inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.16em]"
-                          style={{ color: "#C9C3B7" }}
+                          style={{ color: "#F1F0EA" }}
                         >
                           Read the source
                           <ExternalLink className="h-3 w-3" />

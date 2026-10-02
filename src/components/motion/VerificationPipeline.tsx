@@ -46,12 +46,12 @@ export function VerificationPipeline({
                     ? "rgba(201,195,183,0.08)"
                     : isActive
                       ? "rgba(201,195,183,0.06)"
-                      : "#252629",
+                      : "#0C0C0C",
                   borderColor: isDone
                     ? "rgba(201,195,183,0.2)"
                     : isActive
                       ? "rgba(201,195,183,0.15)"
-                      : "#3A3B3E",
+                      : "#242424",
                 }}
                 transition={{ duration: 0.4 }}
                 className="w-7 h-7 rounded-sm flex items-center justify-center shrink-0 z-10"
@@ -63,15 +63,15 @@ export function VerificationPipeline({
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", stiffness: 400, damping: 20 }}
                   >
-                    <CheckCircle2 className="w-3.5 h-3.5" style={{ color: "#C9C3B7" }} />
+                    <CheckCircle2 className="w-3.5 h-3.5" style={{ color: "#F1F0EA" }} />
                   </motion.div>
                 ) : isActive ? (
                   <Loader2
                     className="w-3.5 h-3.5 animate-spin"
-                    style={{ color: "#C9C3B7" }}
+                    style={{ color: "#F1F0EA" }}
                   />
                 ) : (
-                  <step.icon className="w-3.5 h-3.5" style={{ color: "#A5A5A140" }} />
+                  <step.icon className="w-3.5 h-3.5" style={{ color: "#A6A39B40" }} />
                 )}
               </motion.div>
 
@@ -80,7 +80,7 @@ export function VerificationPipeline({
                 <div className="relative w-px flex-1 min-h-[24px]">
                   <div
                     className="absolute inset-0"
-                    style={{ background: "#3A3B3E" }}
+                    style={{ background: "#242424" }}
                   />
                   <motion.div
                     initial={{ height: 0 }}
@@ -109,14 +109,14 @@ export function VerificationPipeline({
                 className="text-[9px] font-bold tracking-[0.15em] block"
                 style={{
                   fontFamily: "'JetBrains Mono', monospace",
-                  color: isActive ? "#C9C3B7" : isDone ? "#A5A5A1" : "#A5A5A1",
+                  color: isActive ? "#F1F0EA" : isDone ? "#A6A39B" : "#A6A39B",
                 }}
               >
                 {step.label}
               </span>
               <span
                 className="text-[9px] block mt-0.5"
-                style={{ color: "#A5A5A1" }}
+                style={{ color: "#A6A39B" }}
               >
                 {step.sublabel}
               </span>
@@ -131,12 +131,12 @@ export function VerificationPipeline({
                     className="mt-1.5 overflow-hidden"
                     style={{ width: "100%", maxWidth: 120 }}
                   >
-                    <div className="relative h-[1px]" style={{ background: "#3A3B3E" }}>
+                    <div className="relative h-[1px]" style={{ background: "#242424" }}>
                       <motion.div
                         animate={{ x: ["-100%", "200%"] }}
                         transition={{ duration: 1.8, repeat: Infinity, ease: "linear" }}
                         className="absolute inset-0"
-                        style={{ background: "linear-gradient(90deg, transparent, #C9C3B7, transparent)" }}
+                        style={{ background: "linear-gradient(90deg, transparent, #F1F0EA, transparent)" }}
                       />
                     </div>
                     <div className="flex items-center gap-1.5 mt-1">
@@ -144,9 +144,9 @@ export function VerificationPipeline({
                         animate={{ opacity: [0.3, 0.8, 0.3] }}
                         transition={{ duration: 1.5, repeat: Infinity }}
                         className="w-[3px] h-[3px] rounded-full"
-                        style={{ background: "#C9C3B7" }}
+                        style={{ background: "#F1F0EA" }}
                       />
-                      <span className="text-[8px] tracking-wider" style={{ color: "#C9C3B7", opacity: 0.7 }}>Processing</span>
+                      <span className="text-[8px] tracking-wider" style={{ color: "#F1F0EA", opacity: 0.7 }}>Processing</span>
                     </div>
                   </motion.div>
                 )}

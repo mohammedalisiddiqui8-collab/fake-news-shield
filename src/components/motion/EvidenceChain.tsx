@@ -173,11 +173,11 @@ export function EvidenceChain(props: EvidenceChainProps) {
     return (
       <div className="border-t border-border">
         <div className="flex items-center gap-4 py-4">
-          <span className="num-marker shrink-0" style={{ color: "#B08479" }}>00</span>
-          <span className="kicker flex-1" style={{ color: "#B08479" }}>
+          <span className="num-marker shrink-0" style={{ color: "#B3263E" }}>00</span>
+          <span className="kicker flex-1" style={{ color: "#B3263E" }}>
             Input → retrieval failed
           </span>
-          <AlertTriangle className="w-3.5 h-3.5 shrink-0" style={{ color: "#B08479" }} />
+          <AlertTriangle className="w-3.5 h-3.5 shrink-0" style={{ color: "#B3263E" }} />
         </div>
         <p className="pb-5 pl-9 sm:pl-12 text-[12px] leading-[1.75] text-muted-foreground max-w-2xl">
           Reason: {props.failureReason || "URL could not be accessed or article content could not be retrieved."}{" "}
@@ -204,7 +204,7 @@ export function EvidenceChain(props: EvidenceChainProps) {
       {/* One hairline spine running the length of the chain */}
       <span
         className="absolute left-[15px] top-3 bottom-3 w-px sm:left-[17px]"
-        style={{ background: "#3A3B3E" }}
+        style={{ background: "#242424" }}
         aria-hidden="true"
       />
 
@@ -225,9 +225,9 @@ export function EvidenceChain(props: EvidenceChainProps) {
                 <span
                   className="flex h-[31px] w-[31px] items-center justify-center text-[9px] tabular transition-colors duration-300 sm:h-[35px] sm:w-[35px]"
                   style={{
-                    background: isExpanded ? "#C9C3B7" : "#202124",
-                    border: `1px solid ${isExpanded ? "#C9C3B7" : "#3A3B3E"}`,
-                    color: isExpanded ? "#151618" : "#A5A5A1",
+                    background: isExpanded ? "#F1F0EA" : "#080808",
+                    border: `1px solid ${isExpanded ? "#F1F0EA" : "#242424"}`,
+                    color: isExpanded ? "#080808" : "#A6A39B",
                   }}
                 >
                   {String(i + 1).padStart(2, "0")}
@@ -251,7 +251,7 @@ export function EvidenceChain(props: EvidenceChainProps) {
                 transition={{ duration: 0.25 }}
                 className="shrink-0"
               >
-                <ChevronDown className="w-3.5 h-3.5" style={{ color: "#6F7074" }} />
+                <ChevronDown className="w-3.5 h-3.5" style={{ color: "#6B6963" }} />
               </motion.span>
             </button>
 
@@ -288,13 +288,13 @@ export function EvidenceChain(props: EvidenceChainProps) {
                           >
                             <span
                               className="mt-[7px] h-px w-3 shrink-0"
-                              style={{ background: negative ? "#B08479" : "#5C5D61" }}
+                              style={{ background: negative ? "#B3263E" : "#5C5D61" }}
                             />
                             <span
                               className="text-[12.5px] leading-[1.7]"
                               style={{
-                                fontFamily: "'Source Serif 4', Georgia, serif",
-                                color: negative ? "#D8C6C1" : "#A5A5A1",
+                                fontFamily: "'Manrope', system-ui, sans-serif",
+                                color: negative ? "#D8C6C1" : "#A6A39B",
                               }}
                             >
                               {item}

@@ -94,9 +94,9 @@ export const SCRUTINY_STAGES: ScrutinyStage[] = [
     example:
       "The verdict follows from the contradicted claim, not from the tone of the writing. The reasoning is published alongside it, so the route to the result can be checked.",
     outcomes: [
-      { label: "Credible", tone: "#8A9A82", note: "Key claims corroborated by retrieved independent coverage." },
-      { label: "Uncertain", tone: "#B0A183", note: "Evidence insufficient, mixed, or unavailable." },
-      { label: "Misleading", tone: "#B08479", note: "Key claims contradicted by retrieved independent coverage." },
+      { label: "Credible", tone: "#8FA58A", note: "Key claims corroborated by retrieved independent coverage." },
+      { label: "Uncertain", tone: "#B7A47A", note: "Evidence insufficient, mixed, or unavailable." },
+      { label: "Misleading", tone: "#B3263E", note: "Key claims contradicted by retrieved independent coverage." },
     ],
   },
 ];
@@ -118,7 +118,7 @@ export function ScrutinyChapter() {
         {/* The spine — one hairline running the full length of the path */}
         <span
           className="absolute left-[7px] top-[30px] bottom-[27px] w-px"
-          style={{ background: "#3A3B3E" }}
+          style={{ background: "#242424" }}
           aria-hidden="true"
         />
 
@@ -142,17 +142,17 @@ export function ScrutinyChapter() {
                   <motion.span
                     className="block h-[9px] w-[9px]"
                     animate={{
-                      background: isActive ? "#C9C3B7" : isDone ? "#6F7074" : "#202124",
-                      borderColor: isActive ? "#C9C3B7" : isDone ? "#6F7074" : "#3A3B3E",
+                      background: isActive ? "#F1F0EA" : isDone ? "#6B6963" : "#080808",
+                      borderColor: isActive ? "#F1F0EA" : isDone ? "#6B6963" : "#242424",
                     }}
                     transition={{ duration: 0.3, ease: EASE }}
-                    style={{ border: "1px solid #3A3B3E" }}
+                    style={{ border: "1px solid #242424" }}
                     aria-hidden="true"
                   />
                 </span>
 
                 {/* Number, label, question */}
-                <span className="num-marker w-7 shrink-0 pt-[5px] transition-colors duration-300" style={{ color: isActive ? "#C9C3B7" : isDone ? "#8A8A86" : "#6F7074" }}>
+                <span className="num-marker w-7 shrink-0 pt-[5px] transition-colors duration-300" style={{ color: isActive ? "#F1F0EA" : isDone ? "#8A8A86" : "#6B6963" }}>
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 <span className="flex-1 min-w-0">
@@ -160,21 +160,21 @@ export function ScrutinyChapter() {
                     <span
                       className="text-[19px] sm:text-[22px] leading-none tracking-[0.02em] transition-colors duration-300"
                       style={{
-                        fontFamily: "'DM Serif Display', serif",
-                        color: isActive ? "#F1F0EA" : isDone ? "#C9C3B7" : "#A5A5A1",
+                        fontFamily: "'Bodoni Moda', Georgia, serif",
+                        color: isActive ? "#F1F0EA" : isDone ? "#F1F0EA" : "#A6A39B",
                       }}
                     >
                       {s.label}
                     </span>
                     <StageIcon
                       className="h-3 w-3 self-center transition-colors duration-300"
-                      style={{ color: isActive ? "#C9C3B7" : "#6F7074" }}
+                      style={{ color: isActive ? "#F1F0EA" : "#6B6963" }}
                     />
                     <span
                       className="text-[11.5px] italic transition-colors duration-300 sm:text-[12.5px]"
                       style={{
-                        fontFamily: "'Source Serif 4', Georgia, serif",
-                        color: isActive ? "#A5A5A1" : "#6F7074",
+                        fontFamily: "'Manrope', system-ui, sans-serif",
+                        color: isActive ? "#A6A39B" : "#6B6963",
                       }}
                     >
                       {s.question}
@@ -183,10 +183,10 @@ export function ScrutinyChapter() {
                 </span>
 
                 {/* State tick — a rule that extends when the stage is active */}
-                <span className="relative mt-1 hidden h-px w-10 shrink-0 sm:block" style={{ background: "#3A3B3E" }}>
+                <span className="relative mt-1 hidden h-px w-10 shrink-0 sm:block" style={{ background: "#242424" }}>
                   <motion.span
                     className="absolute inset-0 origin-left"
-                    style={{ background: "#C9C3B7" }}
+                    style={{ background: "#F1F0EA" }}
                     initial={false}
                     animate={{ scaleX: isActive ? 1 : 0 }}
                     transition={{ duration: 0.4, ease: EASE }}
@@ -213,7 +213,7 @@ export function ScrutinyChapter() {
                             <p className="kicker mb-3" style={{ opacity: 0.5 }}>Worked example</p>
                             <p
                               className="text-[13.5px] leading-[1.85] text-[#F1F0EA]"
-                              style={{ fontFamily: "'Source Serif 4', Georgia, serif" }}
+                              style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
                             >
                               {s.example}
                             </p>
@@ -255,7 +255,7 @@ export function ScrutinyChapter() {
                             </div>
 
                             <div className="mt-5 flex items-center gap-2.5 border-t border-border/70 pt-4">
-                              <FileText className="h-3 w-3 shrink-0" style={{ color: "#6F7074" }} />
+                              <FileText className="h-3 w-3 shrink-0" style={{ color: "#6B6963" }} />
                               <p className="text-[10.5px] leading-relaxed text-muted-foreground" style={{ opacity: 0.75 }}>
                                 This is the real Veritas sequence. The stage you select in a report shows the actual
                                 claims, sources and passages from your own investigation.
