@@ -149,6 +149,8 @@ interface RetrievedSource {
   relationship: Relationship;
   /** Why this relationship was assigned (proposition-level detail). */
   reason?: string;
+  /** Where this result sits in the evidence record (preliminary / later). */
+  role?: EvidenceRole;
 }
 
 interface ClaimSearch {
@@ -181,6 +183,20 @@ function claimTokens(text: string): string[] {
       .filter(w => w.length >= 4 && !STOP_WORDS.has(w.replace(/[^a-z]/g, ""))),
   )];
 }
+
+/** All-caps words that are ordinary headline typography, not an acronym. */
+const COMMON_UPPER = new Set([
+  "THE", "AND", "FOR", "ARE", "BUT", "NOT", "YOU", "ALL", "ANY", "CAN", "HAD",
+  "HAS", "HIS", "HER", "WAS", "ONE", "OUR", "OUT", "DAY", "GET", "HAVE", "HIM",
+  "ITS", "NEW", "NOW", "OLD", "SEE", "TWO", "WAY", "WHO", "DID", "DOES", "THAT",
+  "THIS", "THESE", "THOSE", "WITH", "FROM", "THEY", "BEEN", "WERE", "SAID",
+  "EACH", "WHICH", "THEIR", "WILL", "OTHER", "ABOUT", "MANY", "THEN", "THEM",
+  "WOULD", "COULD", "INTO", "THAN", "ALSO", "AFTER", "BEFORE", "DURING",
+  "BETWEEN", "MORE", "SOME", "SUCH", "ONLY", "OVER", "UNDER", "WHEN", "WHAT",
+  "WHERE", "HOW", "WHY", "BEING", "DONE", "MUST", "SHOULD", "SHALL", "VERY",
+  "JUST", "BECAUSE", "WHILE", "ALTHOUGH", "HOWEVER", "BOTH", "SAME", "OWN",
+  "TOO", "MAY", "MIGHT", "MR", "MRS", "MS", "DR", "ST", "I",
+]);
 
 // ─── PROPOSITION-LEVEL CLAIM ↔ EVIDENCE COMPARISON ────────────────────────
 // A claim is decomposed into its full proposition: key entities, event,
@@ -690,6 +706,278 @@ function historicalBenchmarkFrame(claimText: string, sourceText: string): FrameV
   return "same_frame";
 }
 
+// ─── TIME-AWARE EVIDENCE: PRELIMINARY REPORTS vs LATER RESOLUTION ─────────
+// A claim about an experimental or reported finding has THREE possible fates
+// in the evidence record, and they must never be collapsed into one:
+//   • contemporaneous coverage  — confirms the claim was reported accurately
+//     at the time, which is not the same as the claim being right;
+//   • a later correction       — the result itself was an error (retraction,
+//     faulty equipment, replication failure, institutional statement);
+//   • a later resolution       — independent follow-up work settled it.
+// Later evidence is retrieved and reported as such; it never silently flips
+// an accurately-reported historical claim to "false".
+
+type EvidenceRole = "preliminary" | "correction" | "resolution" | "neutral";
+
+/**
+ * Language marking evidence that a published result was itself revised.
+ * Kept deliberately concrete: a headline that says the result was a mistake,
+ * a fault, a flaw or an error is reporting a REVISION of the earlier claim.
+ */
+const CORRECTION_MARKERS =
+  /\b(?:correct(?:ed|s|ion)|retract(?:ed|s|ion)|withd(?:ew|rawn|awing)|invalidat\w*|overturn(?:ed|s)?|revers(?:ed|al)|was wrong|were wrong|were the result|erroneous|mistake|mistaken|\berrors?\b|faulty|\bfault\b|flaw(?:s|ed)?|glitch(?:es)?|loose (?:cable|wire|connector)|cable|turn(?:ed|s)? out|not what|blunder\w*|failed to replicate|did not replicate|could not be reproduced|not reproduced|refute[ds]?|debunk(?:ed|s)?|dispute[ds]?|denie[ds]?|admit(?:s|ted|ting)?|concede[ds]?|own(?:ed)? up|apolog\w+)\b/i;
+
+/**
+ * Language marking independent follow-up work that settled a question —
+ * the answer itself, one way or the other.
+ */
+const RESOLUTION_MARKERS =
+  /\b(?:follow[- ]?up|replicat(?:e|ed|es|ion|ions)|reproduc(?:e|ed|tion)|bookend|final results?|settl(?:ed|es|ing)|resolv(?:ed|es|ing)|no longer|not faster|never faster|obey(?:s|ed)?|within the (?:margin|error|uncertainty)|consistent with|confirmed|confirms|confirmation|after (?:further|more|additional|careful)|new (?:measurement|measurements|run|runs|results?)|clos(?:ing|ed)|verdict|settles?|conclud\w+)\b/i;
+
+/** Language marking an early, hedged or provisional report. */
+const PRELIMINARY_MARKERS =
+  /\b(?:preliminary|provisional|might|may have|could have|appears? to|suggests?|claimed|claims|if true|if correct|would (?:mean|imply)|potentially|possibly|first (?:time|evidence)|to be confirmed|unconfirmed|reportedly|said to have|may be|might be|anomal\w+|unexpected\w*)\b/i;
+
+/** Claims about experiments/results need the later evidence trail as well. */
+const SCIENTIFIC_CLAIM =
+  /\b(?:experiment|experiments|measur\w+|detector|particles?|physicists?|researchers? (?:at|said)|published|study|studies|trial|telescope|observatory|satellite|simulation|scientists? (?:say|said|found|reported|announced)|preliminary|anomal\w+|hypothesis|theory|claim(?:ed)? that|astronomers?|biologists?|chemists?|geologists?|scientists?)\b/i;
+
+/** Does this claim need the contemporaneous + follow-up search pair? */
+function needsFollowUpEvidence(claimText: string): boolean {
+  return PRELIMINARY_MARKERS.test(claimText) || SCIENTIFIC_CLAIM.test(claimText);
+}
+
+/**
+ * Does the claim ASSERT a reported finding of its own, rather than describe the
+ * study, quote somebody, or characterise a reaction? Only such a claim is what
+ * later follow-up evidence can revise, and only such a claim is worth
+ * searching for by the finding's name. An attributed quotation is verified by
+ * WHO said it, so it stays on the attribution path.
+ */
+function assertsReportedFinding(claimText: string): boolean {
+  if (attributedQuote(claimText)) return false;
+  if (reportsSomebodyElse(claimText)) return false;
+  // A claim that is ITSELF about a correction or a confirmation is follow-up
+  // evidence, not an open reported finding — there is nothing later to find.
+  if (CORRECTION_MARKERS.test(claimText) || RESOLUTION_MARKERS.test(claimText)) return false;
+  if (!SCIENTIFIC_CLAIM.test(claimText)) return false;
+  // It must state an OUTCOME, not the method. "The measurement was made over
+  // 16000 neutrinos in 2009 and 2010" describes how the study was run; later
+  // evidence about the result does not speak to it. "…arriving earlier than
+  // light should allow" states the finding itself, and later evidence about
+  // that finding is directly relevant.
+  return /\b(?:faster|slower|earlier|later|higher|lower|greater|larger|smaller|more|less|exceed\w*|above|below|beyond|outside|anomal\w+|unexpected\w*|contrary to|instead of|would (?:mean|imply|overturn|break)|overturn\w*|breakthrough|faster than|not\b[^.]{0,20}\bpossible)\b/i.test(claimText);
+}
+
+/**
+ * Reported speech without quotation marks: "Professor Ereditato, spokesman for
+ * the OPERA collaboration, said the result was …". The finding here is what
+ * somebody SAID, so the claim is about the speaker, not about the result, and
+ * it is verified by attribution rather than by the finding's later history.
+ */
+function reportsSomebodyElse(claimText: string): boolean {
+  // Quoted speech is always somebody's statement.
+  if (/["“][^"”]{8,}["”]/.test(claimText)) return true;
+  const speaks = new RegExp("\\b(?:" + SPEAKING_VERBS + ")\\b", "i");
+  if (!speaks.test(claimText)) return false;
+  // A NAMED PERSON as the subject — a title, a two-word name, or a surname
+  // followed by an appositive. "Professor Ereditato … said", "Borrino, a
+  // physicist …, said". The claim is then about what that person said.
+  // A sentence merely STARTING with a capitalised word ("In 1998 a team …")
+  // is not a person and is not treated as one.
+  const namedSubject = new RegExp(
+    "\\b(?:Dr|Prof|Professor|Mr|Mrs|Ms|Miss)\\.?\\s+[A-Z][a-z'’-]+" +          // title + name
+    "|\\b[A-Z][a-z'’-]+\\s+[A-Z][a-z'’-]+\\b" +                                 // Firstname Lastname
+    "|(?:^|[.!?]\\s+)[A-Z][a-z'’-]{2,},",                                       // Surname, appositive
+  );
+  if (namedSubject.test(claimText)) return true;
+  // An unnamed group expressing a view: "other physicists said …".
+  return /\b(?:other|some|many|several|critics|experts|detractors|sceptics|skeptics)\s+[a-z]+s?\s+(?:said|argue[ds]?|contend\w*|belie[vd]e|warn\w*|note[ds]?|claim\w*)\b/i.test(claimText);
+}
+
+/**
+ * Which part of the evidence record does a retrieved result belong to?
+ * Read from the result's own headline/snippet only — never inferred.
+ *
+ * Order matters: a headline that reports a FAULT is a correction even when it
+ * also contains neutral scientific vocabulary, and a headline that reports the
+ * SETTLED ANSWER is a resolution even when it is phrased as a finding.
+ */
+function evidenceRole(headline: string, description: string): EvidenceRole {
+  const text = (headline + " — " + description).replace(/\s+/g, " ");
+  if (CORRECTION_MARKERS.test(text)) return "correction";
+  if (RESOLUTION_MARKERS.test(text)) return "resolution";
+  if (PRELIMINARY_MARKERS.test(text)) return "preliminary";
+  return "neutral";
+}
+
+// ── Follow-up retrieval: what to search for AFTER the original report ───────
+// A 2011 announcement can only ever be matched by 2011 coverage, so a second
+// pass is needed that names the reported FINDING and asks for its correction.
+// The subject is taken from the ARTICLE, not from one claim: an article is
+// about one finding, and the later evidence lives under that finding's name
+// (the experiment, the institution), not under each sentence's wording.
+
+/**
+ * Acronyms / initialisms in the text (OPERA, CERN, NASA …). Two letters are
+ * too short to be safe — "HD", "UK" style fragments produce nonsense queries —
+ * so an initialism must be at least three characters.
+ */
+function acronymList(text: string): string[] {
+  return [...new Set(
+    (text.match(/\b[A-Z][A-Za-z]*[A-Z][A-Za-z]*\b|\b[A-Z]{3,8}\b/g) ?? [])
+      .filter(w => w.length >= 3 && !COMMON_UPPER.has(w) && !/^[A-Z][a-z]/.test(w)),
+  )];
+}
+
+/**
+ * Method-and-process vocabulary: present in the report of almost any study, so
+ * it can never identify WHICH finding a later headline is about.
+ */
+const GENERIC_EVIDENCE_TERMS = new Set([
+  "measurement", "measurements", "result", "results", "study", "studies",
+  "report", "reports", "reported", "data", "analysis", "analyses", "experiment",
+  "experiments", "detection", "observation", "observations", "finding",
+  "findings", "evidence", "process", "method", "methods", "technique",
+  "techniques", "number", "numbers", "rate", "value", "values", "level",
+  "levels", "amount", "amounts", "average", "total", "range", "figure",
+  "figures", "paper", "papers", "journal", "review", "authors", "author",
+  "publication", "published", "announced", "discovered", "confirmed",
+  "accuracy", "precise", "precisely", "measured", "detected", "observed",
+  "recorded", "scientists", "researchers", "physicists", "experts", "team",
+  "teams", "group", "groups", "collaboration", "collaborations", "project",
+  "projects", "laboratory", "university", "institute", "centre", "center",
+  "evidence", "possible", "possibly", "potential", "significant", "accuracy",
+  "scientific", "seriously", "serious", "independent", "independently",
+  "important", "major", "main", "key", "notable", "remarkable", "famous",
+  "widely", "reports", "reporting", "coverage", "attention", "debate",
+  "controversy", "mystery", "puzzle", "question", "questions", "answers",
+]);
+
+/**
+ * The article's actual subject matter, ranked by how many SEPARATE parts of the
+ * article they recur in. A term the whole piece keeps returning to is the
+ * finding; a term used once is local colour. Generic process vocabulary is
+ * excluded because it cannot tell two different studies apart.
+ */
+function subjectNouns(text: string): string[] {
+  const sentences = text.split(/(?<=[.!?])\s+|\n+/).filter(s => s.trim().length > 0);
+  const spread = new Map<string, number>();
+  const total = new Map<string, number>();
+  for (const sentence of sentences) {
+    for (const t of new Set(claimTokens(sentence))) {
+      if (t.length < 4) continue;
+      if (/^\d/.test(t)) continue;
+      // A participle names an action, not the thing being acted on.
+      if (/(?:ing|ed)$/.test(t) && !/(?:bed|led|red|ted|ded|ned|ked|med|red|seed|feed|speed|need|breed)$/.test(t)) continue;
+      if (GENERIC_EVIDENCE_TERMS.has(t)) continue;
+      if (/^\d+$/.test(t)) continue;
+      spread.set(t, (spread.get(t) ?? 0) + 1);
+      total.set(t, (total.get(t) ?? 0) + 1);
+    }
+  }
+  return [...spread.entries()]
+    .sort((a, b) =>
+      b[1] - a[1] ||
+      (total.get(b[0]) ?? 0) - (total.get(a[0]) ?? 0) ||
+      b[0].length - a[0].length)
+    .map(e => e[0]);
+}
+
+/** Terms the article returns to in more than one part — its real subject. */
+function coreSubjectNouns(text: string): string[] {
+  const sentences = text.split(/(?<=[.!?])\s+|\n+/).filter(s => s.trim().length > 0);
+  const spread = new Map<string, number>();
+  for (const sentence of sentences) {
+    for (const t of new Set(claimTokens(sentence))) {
+      spread.set(t, (spread.get(t) ?? 0) + 1);
+    }
+  }
+  return subjectNouns(text).filter(t => (spread.get(t) ?? 0) >= 2);
+}
+
+/**
+ * Queries for the follow-up pass. Two intents, both anchored on the finding's
+ * own name (the experiment or institution plus its subject noun), because that
+ * is how the correcting institution, the re-analysis and the final results
+ * refer to the result:
+ *   • REVISION  — what went wrong with the reported result.
+ *   • RESOLUTION — what the finding's final position turned out to be.
+ * Without the second intent the search only ever finds the announcement being
+ * walked back, and misses the later statement that closed the question.
+ */
+/** Comparative and time words that describe a measurement without naming it. */
+const NON_SUBJECT_NOUNS = new Set([
+  "light", "faster", "slower", "fast", "slow", "speed", "time", "times", "year",
+  "years", "day", "days", "hour", "hours", "minute", "minutes", "second",
+  "seconds", "way", "ways", "thing", "things", "part", "parts", "case", "cases",
+  "point", "points", "issue", "issues", "fact", "facts", "kind", "sort", "type",
+]);
+
+function buildFollowUpQueries(claimText: string, articleText: string): string[] {
+  const acronyms = acronymList(articleText);
+  const nouns = subjectNouns(articleText);
+  // Prefer a subject noun that THIS claim is actually about, so a claim about
+  // the measurement is followed up by searching for the measurement. A
+  // comparative like "faster" does not name the finding, so it cannot be the
+  // anchor on its own — the article's own subject noun is used instead.
+  // Only a claim that asserts a finding is followed up under the finding's
+  // name; a quotation or a reaction has no later resolution to retrieve.
+  if (!assertsReportedFinding(claimText)) return [];
+  const name = acronyms.find(a => new RegExp("\\b" + a + "\\b", "i").test(claimText)) ?? acronyms[0] ?? "";
+  // The experiment/institution name is not a subject noun in its own right:
+  // "OPERA opera" would search the art form, not the experiment.
+  const usable = nouns.filter(n => !NON_SUBJECT_NOUNS.has(n) && n !== name.toLowerCase());
+  // The anchor must be a term the WHOLE article keeps returning to, not a word
+  // that happens to appear in this one sentence.
+  const core = new Set(coreSubjectNouns(articleText));
+  const claimToks = new Set(claimTokens(claimText));
+  const inClaim = usable.filter(n => core.has(n) && claimToks.has(n));
+  const anchor = inClaim[0] ?? usable.find(n => core.has(n)) ?? usable[0] ?? claimTokens(claimText)[0] ?? "";
+  const stem = [name, anchor].filter(Boolean).join(" ");
+  const queries: string[] = [];
+  if (stem.length >= 10) {
+    queries.push(stem + " error");
+    queries.push(stem + " final results");
+  }
+  if (queries.length === 0) {
+    const second = usable.find(n => n !== anchor);
+    if (second) queries.push(anchor + " " + second + " error");
+  }
+  return [...new Set(queries.filter(q => q.trim().length >= 12))].slice(0, 2);
+}
+
+/**
+ * Is this retrieved result genuinely about the claim's subject?
+ *
+ * Deliberately looser than proposition agreement — a later correction is about
+ * the FINDING, and a headline states the finding ("faster-than-light neutrino
+ * measurement") rather than the claim's whole sentence — but never as loose as
+ * a shared institution name. A lab that publishes many unrelated final results
+ * must not link every one of them to a claim about this particular finding, so
+ * a match needs at least TWO of the claim's own content terms present in the
+ * retrieved text, and at least one of them must be a term other than the
+ * institution/experiment name itself.
+ */
+function addressesClaimSubject(claimText: string, sourceText: string): boolean {
+  const terms = claimTokens(claimText);
+  if (terms.length < 2) return false;
+  const entities = distinctiveEntities(claimText);
+  // A hit that is only the lab/experiment name carries no information about
+  // WHICH finding is meant, so it cannot stand alone as the link.
+  const beyondName = terms.filter(t =>
+    !GENERIC_EVIDENCE_TERMS.has(t) &&
+    !entities.some(e => stemMatch(t, e) || stemMatch(e, t)) &&
+    stemMatch(t, sourceText));
+  if (beyondName.length >= 2) return true;
+  if (terms.length <= 4) return beyondName.length >= 1;
+  // A long, detailed claim against a SHORT headline: one shared content term
+  // is enough, because a five-word headline cannot echo a thirteen-word claim
+  // and the shared term is the subject itself.
+  const sourceTerms = claimTokens(sourceText);
+  return beyondName.length >= 1 && sourceTerms.length <= 6;
+}
+
 // ─── ATTRIBUTED QUOTATIONS ─────────────────────────────────────────────────
 // "It's really just disastrous," said Dr Matthias Huss, director of …
 // Corroborating such a claim requires the SAME PERSON to be named, the SAME
@@ -843,7 +1131,7 @@ const ESTABLISHED_PRESS =
 
 /** Primary scientific, academic and intergovernmental publishing. */
 const PRIMARY_SCIENCE =
-  /\b(nature|science|scientificamerican|sciencemag|phys\.org|eurekalert|sciencedaily|plos|springer|sciencedirect|thelancet|nejm|bmj|pubmed|ncbi|wiley|frontiersin|mdpi|who\.int|wmo\.int|noaa|nasa|esa|eumetsat|usgs|wsl|niwa|scwz|glamos|ethz|epfl|uzh|unibe|meteofrance|metoffice|ipcc|copernicus|smithsonian|aaas|acs\.org|rsc\.org|ieee|nature\.com|science\.org)\b/i;
+  /\b(nature|science|scientificamerican|sciencemag|phys\.org|eurekalert|sciencedaily|plos|springer|sciencedirect|thelancet|nejm|bmj|pubmed|ncbi|wiley|frontiersin|mdpi|who\.int|wmo\.int|noaa|nasa|esa|eumetsat|usgs|wsl|niwa|scwz|glamos|ethz|epfl|uzh|unibe|meteofrance|metoffice|ipcc|copernicus|smithsonian|aaas|acs\.org|rsc\.org|ieee|nature\.com|science\.org|home\.cern|home\.cern\.ch|cern\.ch|atlas\.cern|cerncourier|doi\.org|arxiv\.org|inspirehep|acs|ieee|nejm\.org|science\.org|doi)\b/i;
 
 /** Aggregators, content farms and reposts — never decisive evidence. */
 const REPOST_SURFACE =
@@ -1370,23 +1658,63 @@ function buildAttributionQuery(attribution: QuoteAttribution, claimText: string)
   return query.length >= 8 ? query : null;
 }
 
+function googleNewsQueryUrl(query: string): string {
+  return "https://news.google.com/rss/search?q=" + encodeURIComponent(query) +
+    "&hl=en-US&gl=US&ceid=US:en";
+}
+
+type RssItem = ReturnType<typeof parseRssItems>[number];
+
+/** One discovery-layer query. Returns null when the feed cannot be read. */
+async function fetchNewsItems(url: string, signal: AbortSignal): Promise<RssItem[] | null> {
+  try {
+    const res = await fetch(url, {
+      signal,
+      redirect: "follow",
+      headers: { "user-agent": "Mozilla/5.0 (compatible; Veritas/1.0)" },
+    });
+    if (!res.ok) return null;
+    return parseRssItems(await res.text());
+  } catch {
+    return null;
+  }
+}
+
+/** Merge newly retrieved items into the pool, dropping repeats. */
+function mergeItems(pool: RssItem[], incoming: RssItem[]): void {
+  const seen = new Set(pool.map(i => i.title.toLowerCase().replace(/\s+/g, " ")));
+  for (const item of incoming) {
+    const key = item.title.toLowerCase().replace(/\s+/g, " ");
+    if (seen.has(key)) continue;
+    seen.add(key);
+    pool.push(item);
+  }
+}
+
 /**
  * Live search for independent coverage of a claim.
  * Returns real retrieved sources only. On failure, `ok` is false.
+ *
+ * For claims about a reported finding the search deliberately runs in TWO
+ * passes: contemporaneous coverage of the report, and follow-up evidence
+ * (the institution's own later update, a correction, a replication). Without
+ * the second pass a 2011 announcement can only ever be matched by 2011
+ * coverage, and the later resolution of the finding stays invisible.
  */
-async function searchClaim(claimText: string): Promise<ClaimSearch> {
+async function searchClaim(
+  claimText: string,
+  options?: { followUp?: boolean; articleText?: string },
+): Promise<ClaimSearch> {
   // Search on a normalized, concise query derived from the COMPLETE claim —
   // never on a malformed or truncated fragment.
   const query = buildSearchQuery(claimText);
   if (query.length < 8) {
     return { ok: true, sources: [], error: "Claim too short to search." };
   }
-  const url =
-    "https://news.google.com/rss/search?q=" + encodeURIComponent(query) +
-    "&hl=en-US&gl=US&ceid=US:en";
+  const url = googleNewsQueryUrl(query);
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 7000);
+  const timer = setTimeout(() => controller.abort(), options?.followUp ? 14000 : 7000);
   try {
     const res = await fetch(url, {
       signal: controller.signal,
@@ -1397,6 +1725,18 @@ async function searchClaim(claimText: string): Promise<ClaimSearch> {
     const xml = await res.text();
     let items = parseRssItems(xml);
 
+    // FOLLOW-UP PASS — the evidence that came AFTER the report. Searched for
+    // every claim about a reported finding so a later correction, retraction,
+    // replication or institutional update can be found and linked.
+    if (options?.followUp) {
+      const extra = await Promise.all(
+        buildFollowUpQueries(claimText, options?.articleText ?? claimText)
+          .filter(followUpQuery => followUpQuery !== query)
+          .map(followUpQuery => fetchNewsItems(googleNewsQueryUrl(followUpQuery), controller.signal)),
+      );
+      for (const batch of extra) if (batch) mergeItems(items, batch);
+    }
+
     // A quotation is verified by looking for the PERSON who said it. Searching
     // the proposition alone returns coverage of the event but nothing about the
     // attribution, so an attributed quotation also gets a person-led query.
@@ -1404,25 +1744,9 @@ async function searchClaim(claimText: string): Promise<ClaimSearch> {
     if (attribution) {
       const attributionQuery = buildAttributionQuery(attribution, claimText);
       if (attributionQuery) {
-        try {
-          const altRes = await fetch(
-            "https://news.google.com/rss/search?q=" + encodeURIComponent(attributionQuery) +
-            "&hl=en-US&gl=US&ceid=US:en",
-            { signal: controller.signal, redirect: "follow",
-              headers: { "user-agent": "Mozilla/5.0 (compatible; Veritas/1.0)" } },
-          );
-          if (altRes.ok) {
-            const seen = new Set(items.map(i => i.title.toLowerCase().replace(/\s+/g, " ")));
-            for (const item of parseRssItems(await altRes.text())) {
-              const key = item.title.toLowerCase().replace(/\s+/g, " ");
-              if (seen.has(key)) continue;
-              seen.add(key);
-              items.push(item);
-            }
-          }
-        } catch {
-          // The person-led query is best-effort; the proposition query stands.
-        }
+        const extra = await fetchNewsItems(googleNewsQueryUrl(attributionQuery), controller.signal);
+        // The person-led query is best-effort; the proposition query stands.
+        if (extra) mergeItems(items, extra);
       }
     }
 
@@ -1434,6 +1758,11 @@ async function searchClaim(claimText: string): Promise<ClaimSearch> {
       // feed link points at the discovery layer, so authority is read from the
       // publisher's own domain.
       const authority = sourceAuthority(item.publisherUrl || item.link, claimText);
+      const role = evidenceRole(headline, item.description);
+      // Later evidence that corrects or resolves the reported finding is the
+      // decisive part of the record for such a claim, so it is never crowded
+      // out by contemporaneous re-reporting of the original announcement.
+      const roleBonus = role === "correction" ? 45 : role === "resolution" ? 30 : 0;
       return {
         item,
         headline,
@@ -1444,13 +1773,36 @@ async function searchClaim(claimText: string): Promise<ClaimSearch> {
         relationship,
         overlap,
         reason,
-        rank: RELATIONSHIP_RANK[relationship] * 100 + authority * 10 + Math.round(overlap * 5),
+        role,
+        rank: RELATIONSHIP_RANK[relationship] * 100 + authority * 10 + Math.round(overlap * 5) + roleBonus +
+          // A result that is actually ABOUT this claim's subject is worth more
+          // than a marginally better-scoring result about something else that
+          // merely shares the institution name.
+          (addressesClaimSubject(claimText, headline + " " + item.description) ? 60 : 0),
       };
     });
 
-    // Most evidentiary results first: decisive relationships, then authority.
+    // Most evidentiary results first: decisive relationships, then subject
+    // match, then authority, then later evidence about the same finding.
     evaluated.sort((a, b) => b.rank - a.rank);
     const finalists = evaluated.slice(0, 3);
+    // Guarantee the later-evidence result is on the list when one was
+    // retrieved about the SAME finding: an institutional update or a
+    // correction outranks a third restatement of the original report.
+    const laterEntry = evaluated.find(e =>
+      (e.role === "correction" || e.role === "resolution") &&
+      !finalists.includes(e) &&
+      addressesClaimSubject(claimText, e.headline + " " + e.excerpt));
+    if (laterEntry && finalists.length > 0) finalists[finalists.length - 1] = laterEntry;
+    // A subject-matched result is never displaced by one about something else
+    // that merely shares the institution name: swap the displaced entry out.
+    if (laterEntry) {
+      const onSubject = finalists.filter(f =>
+        addressesClaimSubject(claimText, f.headline + " " + f.excerpt));
+      const offSubject = finalists.findIndex(f =>
+        !addressesClaimSubject(claimText, f.headline + " " + f.excerpt));
+      if (onSubject.length === 0 && offSubject >= 0) finalists[offSubject] = laterEntry;
+    }
 
     // SOURCE IDENTITY: Google News is discovery only. Follow each result to
     // the article it points at so the real publisher URL, name and domain are
@@ -1469,17 +1821,32 @@ async function searchClaim(claimText: string): Promise<ClaimSearch> {
       const name = entry.name && entry.name !== "Unknown publisher"
         ? entry.name
         : publisherFromHostname(host);
-      const { item: _item, headline, date, excerpt, relationship, overlap, reason } = entry;
+      const { item: _item, headline, date, excerpt, relationship, overlap, reason, role } = entry;
       // DISCOVERY IS NOT EVIDENCE: a result whose publisher cannot be
       // identified is never cited as the source of a claim.
       const citeable = !isAggregatorHost(host);
       return {
         name, headline, date, excerpt,
         url: citeable ? url : "",
-        relationship, overlap, reason,
+        relationship, overlap, reason, role,
       } satisfies RetrievedSource & { overlap: number };
     }));
     const top: RetrievedSource[] = resolved.map(({ overlap: _overlap, ...src }) => src);
+    // A later correction/resolution IS addressed evidence: without this the
+    // "no independent corroboration" notice would be appended to a claim that
+    // real follow-up evidence had in fact been retrieved for.
+    if (top.length > 0 && !top.some(s => s.relationship === "supports" || s.relationship === "contradicts" || s.relationship === "partial")) {
+      const engaged = top.find(s =>
+        (s.role === "correction" || s.role === "resolution") &&
+        addressesClaimSubject(claimText, s.headline + " " + s.excerpt));
+      if (engaged) {
+        engaged.relationship = "partial";
+        engaged.reason = "Later evidence about the same reported finding: " +
+          (engaged.role === "correction"
+            ? "the result was subsequently revised"
+            : "the question was settled by subsequent work");
+      }
+    }
 
     const anyAddressed = top.some(s =>
       s.relationship === "supports" || s.relationship === "contradicts" || s.relationship === "partial");
@@ -2387,9 +2754,16 @@ async function analyzeText(text: string, depth: Depth, urlCtx?: { url: string; p
 
   // ── LIVE EXTERNAL CROSS-CHECK ──
   const checked = rawClaims.slice(0, CROSSCHECK_LIMIT[depth]);
-  const searchResults = await Promise.all(checked.map(c => searchClaim(c.text)));
+  // Claims about a reported finding get the two-pass search (contemporaneous
+  // coverage + follow-up evidence); every other claim keeps one query.
+  const searchResults = await Promise.all(
+    checked.map(c => searchClaim(c.text, {
+      followUp: needsFollowUpEvidence(c.text),
+      articleText: text,
+    })));
   const searchFailures = searchResults.filter(r => !r.ok).length;
 
+  let laterEvidenceClaims = 0;
   const claims: ClaimResult[] = rawClaims.map((raw) => {
     const idx = checked.findIndex(c => c.id === raw.id);
     const note = linguisticNote(raw);
@@ -2411,6 +2785,17 @@ async function analyzeText(text: string, depth: Depth, urlCtx?: { url: string; p
     const contradicts = sources.filter(s => s.relationship === "contradicts");
     const notAddressing = sources.filter(s =>
       s.relationship === "does_not_address" || s.relationship === "unverified");
+    // Follow-up evidence actually retrieved for THIS claim's subject: a
+    // correction of the reported result, or independent work that resolved it.
+    const laterEvidence = sources.filter(s =>
+      (s.role === "correction" || s.role === "resolution") &&
+      addressesClaimSubject(raw.text, s.headline + " " + s.excerpt));
+    // Does the claim ASSERT the reported finding (as opposed to describing the
+    // study, quoting a person, or hedging it)? Only such a claim is what later
+    // evidence revises. An attributed quotation is verified by WHO said it, so
+    // it stays on the attribution path instead.
+    const attribution = attributedQuote(raw.text);
+    const assertsFinding = assertsReportedFinding(raw.text);
 
     if (!result.ok) {
       return {
@@ -2434,6 +2819,36 @@ async function analyzeText(text: string, depth: Depth, urlCtx?: { url: string; p
     const contradictionDecisive = contradicts.length > 0 &&
       bestContraAuthority >= MIN_CREDIBLE_AUTHORITY &&
       (supports.length === 0 || bestContraAuthority >= bestSupportAuthority);
+
+    // ── LATER EVIDENCE ABOUT A REPORTED FINDING ──
+    // Checked BEFORE the contradiction branch, because a later correction of a
+    // measurement reads as a contradiction of the claim's proposition while
+    // saying nothing about whether the article reported it accurately at the
+    // time. When the only thing opposing the claim IS that later evidence, the
+    // honest state is time-bounded uncertainty, not "false". A contradiction
+    // from any other source still stands as a contradiction.
+    if (laterEvidence.length > 0 && assertsFinding &&
+        (contradicts.length === 0 || contradicts.every(c => laterEvidence.includes(c)))) {
+      laterEvidenceClaims++;
+      const later = [...laterEvidence].sort((a, b) => {
+        const ra = a.role === "correction" ? 1 : 0, rb = b.role === "correction" ? 1 : 0;
+        if (ra !== rb) return rb - ra;
+        return sourceAuthority(b.url, raw.text) - sourceAuthority(a.url, raw.text);
+      })[0];
+      const correction = later.role === "correction";
+      return {
+        id: raw.id, text: raw.text,
+        status: "uncertain", confidence: correction ? 38 : 42,
+        evidence: (correction
+          ? "REPORTED AT THE TIME, RESULT LATER REVISED — this claim asserts a reported finding. Independent later evidence was retrieved that revises that result: \""
+          : "REPORTED AT THE TIME, RESULT LATER SETTLED — this claim asserts a reported finding. Independent later evidence was retrieved that settled the question: \"") +
+          later.headline + "\" — " + later.name + (later.date !== "N/A" ? " (" + later.date + ")" : "") +
+          ". This evidence is time-separated: it speaks to the RESULT, not to whether the article reported it accurately when it was published. The claim is therefore neither marked corroborated nor treated as false.",
+        sources: laterEvidence.map(s => s.name + " — \"" + s.headline + "\"" + (s.date !== "N/A" ? " (" + s.date + ")" : "")),
+        contradictingSources: [],
+        explanation: "Time matters here. The article reported a finding that was genuinely in circulation when it was written, and it could not have known what was established later. The retrieved follow-up evidence revises or settles the underlying RESULT rather than showing the original reporting was wrong, so this claim is reported as time-bounded uncertainty: not corroborated, not false. No verification of the original result is claimed. " + note,
+      };
+    }
 
     if (contradictionDecisive) {
       const ranked = [...contradicts].sort((a, b) => authorityOf(b) - authorityOf(a));
@@ -2479,7 +2894,6 @@ async function analyzeText(text: string, depth: Depth, urlCtx?: { url: string; p
     const nonCorroborating = sources.filter(s => s.name !== "NO INDEPENDENT CORROBORATION FOUND" && s.name !== "SOURCE SEARCH UNAVAILABLE");
     // An attributed quotation needs the ATTRIBUTION itself confirmed, not just
     // the same characterization of the event: report that precisely.
-    const attribution = attributedQuote(raw.text);
     const attributionNote = attribution
       ? " This is an attributed quotation: no retrieved source was found that both names " + attribution.speaker + " and credits them with the same statement, so the attribution remains unverified."
       : "";
@@ -2559,6 +2973,17 @@ async function analyzeText(text: string, depth: Depth, urlCtx?: { url: string; p
     verdict = "uncertain";
     confidence = clamp(45 + contradictedCount * 3, 45, 55);
     summary = "MIXED EVIDENCE — retrieved independent coverage both corroborates (" + supportedCount + ") and contradicts (" + contradictedCount + ") the extracted claims. Conflicting evidence — verify against primary sources.";
+  } else if (laterEvidenceClaims > 0) {
+    // Later evidence was retrieved for at least one claim: the result reported
+    // at the time was subsequently revised or settled. That is a real
+    // evidence finding, and it is NOT the same as "no evidence was found".
+    verdict = "uncertain";
+    confidence = Math.min(baseConfidence, 45);
+    summary = "TIME-BOUNDED EVIDENCE — " + laterEvidenceClaims + " of " + claims.length +
+      " cross-checked claim(s) report a finding that independent later evidence revised or settled. " +
+      "The reporting matched what was known when the article was published, but the underlying result did not hold up. " +
+      "These claims are neither corroborated nor marked false. " +
+      totalRetrieved + " unique independent source(s) retrieved (" + sourceRefs + " claim–source reference(s)).";
   } else {
     // No decisive external evidence for any claim.
     const allFailed = searchFailures >= checked.length && checked.length > 0;
@@ -2617,6 +3042,9 @@ async function analyzeText(text: string, depth: Depth, urlCtx?: { url: string; p
       "derived from " + totalRetrieved + " unique independent source(s) (" + sourceRefs + " claim–source reference(s)) retrieved in a live search" +
       (searchFailures > 0 ? " (" + searchFailures + " claim search(es) unavailable)" : "") + ".",
     );
+    if (laterEvidenceClaims > 0) {
+      parts.push(laterEvidenceClaims + " claim(s) are time-bounded: the reported finding was revised or settled by later independent evidence, which speaks to the result rather than to the accuracy of the original reporting.");
+    }
   }
   if (claims.length > 0 && unresolvedCount > 0) {
     parts.push(unresolvedCount + " of " + claims.length + " claim(s) remain unverified (no firm external evidence for or against) — confidence is capped accordingly.");
