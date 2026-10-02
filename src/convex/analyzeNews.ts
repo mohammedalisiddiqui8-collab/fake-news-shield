@@ -2888,6 +2888,41 @@ interface CrossCheckClaimResult {
   }>;
 }
 
+/** Relationships that mean a retrieved source's own content addressed the
+ * claim's proposition. does_not_address / unverified / insufficient mean the
+ * result only matched on topic or entity, or was a sentinel notice. */
+const COVERING_RELATIONSHIPS = new Set<string>(["supports", "contradicts", "partial"]);
+
+/**
+ * CLAIM COVERAGE — how many extracted claims the investigation actually
+ * REACHED with usable, directly relevant evidence.
+ *
+ * A claim counts when at least one real retrieved source (one carrying a URL)
+ * addressed its proposition — matching it (supports), conflicting with it
+ * (contradicts) or addressing it in part (partial) — AND the engine accepted
+ * that evidence as backing the claim's finding, which is exactly the set of
+ * claims that reached a finding other than "needs verification". A claim is
+ * counted at most once however many sources or evidence items it carries, and
+ * claims left unverified because retrieval only turned up topic-level matches
+ * are not covered.
+ *
+ * Derived solely from the claim statuses and their cross-checked sources; it
+ * is never a function of unique sources, claim–source references, evidence
+ * snippets, search results, word count or the confidence score.
+ */
+function countCoveredClaims(
+  claims: Array<{ id: number; status: string }>,
+  crossCheck: CrossCheckClaimResult[],
+): number {
+  const sourcesByClaim = new Map(crossCheck.map(c => [c.claimId, c.sources]));
+  return claims.filter(claim => {
+    if (claim.status === "needs_verification") return false;
+    return (sourcesByClaim.get(claim.id) ?? []).some(
+      s => !!s.url && COVERING_RELATIONSHIPS.has(s.relationship),
+    );
+  }).length;
+}
+
 interface TimelineEventResult {
   id: number;
   type: "claim_identified" | "source_found" | "source_searched" | "corroboration" | "contradiction" | "linguistic_analysis" | "assessment";
@@ -3434,6 +3469,8 @@ async function analyzeText(text: string, depth: Depth, urlCtx?: { url: string; p
   const partialCount = claims.filter(c => c.status === "uncertain").length;
   const evidenceRatio = claims.length > 0 ? (supportedCount + 0.5 * partialCount) / claims.length : 0;
 
+  // ── CLAIM COVERAGE ──
+  const coveredClaims = countCoveredClaims(claims, crossCheck);
   const firstSupport = realSourcesAll.find(s => s.relationship === "supports");
   const firstContradiction = realSourcesAll.find(s => s.relationship === "contradicts");
 
@@ -3578,10 +3615,13 @@ async function analyzeText(text: string, depth: Depth, urlCtx?: { url: string; p
     uncertain: partialCount,
     contradicted: contradictedCount,
     unverified: claims.length - supportedCount - partialCount - contradictedCount,
-    // Share of claims that retrieved evidence actually reached — this can never
-    // read 0% while corroborating sources were found for some claim.
+    // CLAIM COVERAGE — share of extracted claims that have at least one valid,
+    // directly relevant evidence-backed source. Counted per claim (never per
+    // source, reference, snippet or verdict), and a claim counts whether the
+    // evidence ended up SUPPORTING or CONTRADICTING it. 0 extracted claims
+    // reads 0 here and is displayed as "—" in the fingerprint.
     sourceCoverage: claims.length > 0
-      ? Math.round(((supportedCount + partialCount) / claims.length) * 100)
+      ? Math.round((coveredClaims / claims.length) * 100)
       : 0,
     evidenceFound: totalRetrieved + redFlags.length + greenFlags.length,
   };

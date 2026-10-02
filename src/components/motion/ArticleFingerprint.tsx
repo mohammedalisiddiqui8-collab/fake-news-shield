@@ -31,6 +31,11 @@ interface ArticleFingerprintProps {
  */
 export function ArticleFingerprint({ fingerprint, dateStr, note, available = true }: ArticleFingerprintProps) {
   const value = (n: number) => (available ? String(n) : "—");
+  // Source coverage is a claim ratio: with no extracted claims there is no
+  // ratio to report, so it reads "—" rather than 0%.
+  const coverageAvailable = available && fingerprint.claims > 0;
+  const coverage = coverageAvailable ? fingerprint.sourceCoverage + "%" : "—";
+  const coverageWidth = coverageAvailable ? `${fingerprint.sourceCoverage}%` : "0%";
   const cells = [
     { label: "Claims", value: value(fingerprint.claims), color: "#F1F0EA" },
     { label: "Unique sources", value: value(fingerprint.sources), color: "#F1F0EA" },
@@ -69,13 +74,13 @@ export function ArticleFingerprint({ fingerprint, dateStr, note, available = tru
         <div className="flex items-baseline justify-between gap-4 mb-3">
           <span className="kicker" style={{ opacity: 0.7 }}>Source coverage</span>
           <span className="font-mono text-[11px] tabular" style={{ color: "#C9C3B7" }}>
-            {available ? fingerprint.sourceCoverage + "%" : "—"}
+            {coverage}
           </span>
         </div>
         <div className="h-[2px] w-full" style={{ background: "#3A3B3E" }}>
           <motion.div
             initial={{ width: 0 }}
-            animate={{ width: available ? `${fingerprint.sourceCoverage}%` : "0%" }}
+            animate={{ width: coverageWidth }}
             transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             className="h-full"
             style={{ background: "#C9C3B7" }}
