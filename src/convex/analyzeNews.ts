@@ -151,6 +151,20 @@ interface RetrievedSource {
   reason?: string;
   /** Where this result sits in the evidence record (preliminary / later). */
   role?: EvidenceRole;
+  /**
+   * The source's OWN words in which it states that the reported result was
+   * invalidated, corrected or replaced ("consistent with the speed of light",
+   * "can be attributed to a faulty element of the timing system"). Present
+   * only when the retrieved text actually contains such language.
+   */
+  resolution?: string;
+  /**
+   * Does this source directly establish that the claim's reported proposition
+   * was wrong, withdrawn or caused by an identified measurement error?
+   * Requires resolution language about the SAME event, from a source that is
+   * not contemporaneous with the claim.
+   */
+  invalidates?: boolean;
 }
 
 interface ClaimSearch {
@@ -766,7 +780,7 @@ function assertsReportedFinding(claimText: string): boolean {
   // evidence about the result does not speak to it. "…arriving earlier than
   // light should allow" states the finding itself, and later evidence about
   // that finding is directly relevant.
-  return /\b(?:faster|slower|earlier|later|higher|lower|greater|larger|smaller|more|less|exceed\w*|above|below|beyond|outside|anomal\w+|unexpected\w*|contrary to|instead of|would (?:mean|imply|overturn|break)|overturn\w*|breakthrough|faster than|not\b[^.]{0,20}\bpossible)\b/i.test(claimText);
+  return /\b(?:faster|quicker|slower|earlier|later|sooner|swift(?:er|ly)|speedier|outpaced|outrun\w*|beat|higher|lower|greater|larger|smaller|more|less|exceed\w*|above|below|beyond|outside|anomal\w+|unexpected\w*|contrary to|instead of|would (?:mean|imply|overturn|break)|overturn\w*|breakthrough|faster than|not\b[^.]{0,20}\bpossible)\b/i.test(claimText);
 }
 
 /**
@@ -811,12 +825,167 @@ function evidenceRole(headline: string, description: string): EvidenceRole {
   return "neutral";
 }
 
+// ── HISTORICAL SEMANTIC MATCHING: THE SAME EVENT IN LATER WORDING ─────────
+// A claim about a reported finding is a proposition with six parts, and later
+// evidence speaks to that proposition when it names the same SUBJECT and the
+// same EVENT — however differently it words the outcome. "Neutrinos were
+// recorded travelling faster than light" and "the OPERA measurement was
+// attributed to a faulty element of the fibre optic timing system" describe
+// ONE underlying event. Without this layer the later evidence is retrieved and
+// then discarded as being about "some other subject", and a claim whose result
+// was settled years later stays unverified forever.
+
+/** Stems of the act of measuring/reporting — what makes an event identifiable. */
+const EVENT_STEMS = [
+  "measur", "record", "detect", "observ", "report", "announc", "publish",
+  "result", "timing", "clock", "veloc", "speed", "flight", "beam", "detector",
+  "experiment", "sampl", "data", "pulse", "time", "count",
+];
+
+/**
+ * Canonical DIRECTION of a comparison. "quicker", "faster", "sooner",
+ * "outpaced" and "exceeded" all state the same comparative direction, so a
+ * later source that says "faster" is talking about the same claim as one that
+ * said "quicker" — this is what lets differently worded evidence match.
+ */
+function directionStems(text: string): string[] {
+  const t = text.toLowerCase();
+  const out: string[] = [];
+  if (/\b(?:faster|quicker|swift(?:er|ly)|speedier|sooner|earl(?:y|ier)|outpac\w*|outrun\w*|beat|exceed\w*|above|beyond|outside|greater|larger|higher|more than|surpass\w*)\b/.test(t)) out.push("faster");
+  if (/\b(?:slower|slower than|lat(?:er|est)|behind|lower|smaller|less than|below|under)\b/.test(t)) out.push("slower");
+  return out;
+}
+
+/** Event vocabulary present in a text, as matchable stems. */
+function eventStems(text: string): string[] {
+  const t = text.toLowerCase();
+  return EVENT_STEMS.filter(stem => new RegExp("\\b" + stem).test(t));
+}
+
+/** Does any of these stems occur in the text? */
+function anyStemPresent(stems: string[], text: string): boolean {
+  const t = text.toLowerCase();
+  return stems.some(stem => new RegExp("\\b" + stem).test(t));
+}
+
+/**
+ * Explicit RESOLUTION language: wording in which a source states that a
+ * published result was invalidated, corrected, withdrawn or replaced by a
+ * settled answer. This is the language the evidence trail must expose, and
+ * it is read from the retrieved text itself — never assumed.
+ */
+const RESOLUTION_LANGUAGE =
+  /\b(?:consistent with (?:the )?(?:speed of light|light speed|expected|special relativity)|in (?:line|agreement) with (?:the )?speed of light|not (?:faster|exceed\w*|faster than)|never faster|no longer faster|did not exceed|does not exceed|obey(?:s|ed)? (?:the )?(?:law|laws|speed)|within (?:the )?(?:margin|error|uncertainty)|can be attributed to|could be attributed to|attributable to|ascribed to|blamed (?:on|for)|traced (?:back )?to|due to (?:a |an )?(?:faulty|loose|broken|bad)|faulty|flaw\w*|glitch\w*|loose (?:cable|wire|connector)|wiring|connector|mistake\w*|measurement error|systematic error|human error|an? error|error in the|was wrong|were wrong|was withdrawn|were withdrawn|is withdrawn|retract\w*|invalidat\w*|an? (?:artefact|artifact)|artefact of|artifact of|turned out to be|proved to be|shown to be|found to be|after further|final results?|settl(?:ed|es)|conclud\w+|resolv(?:ed|es) the|clos(?:ed|es) the)\b/i;
+
+/**
+ * The STRICT tier of resolution language: wording that states a result itself
+ * was negated, invalidated, withdrawn, replaced or traced to a fault. This —
+ * and not the broader vocabulary above — is what may contradict a claim.
+ * "Final results" on their own is a headline about some later measurement, not
+ * a statement that the claim's own result failed, so it does not appear here.
+ */
+const INVALIDATION_LANGUAGE =
+  /\b(?:not (?:faster|exceed\w*)|never faster|no longer faster|did not exceed|does not exceed|no (?:longer )?any evidence|obey(?:s|ed)? (?:the )?(?:law|laws|speed)|within (?:the )?(?:margin|error|uncertainty)|consistent with (?:the )?(?:speed of light|light speed|expected|special relativity)|can be attributed to|could be attributed to|attributable to|traced (?:back )?to|blamed (?:on|for)|due to (?:a |an )?(?:faulty|loose|broken|bad)|faulty|flaw\w*|glitch\w*|loose (?:cable|wire|connector)|wiring|connector|mistake\w*|measurement error|systematic error|human error|error in the|was wrong|were wrong|withd(?:ew|rawn)|retract\w*|invalidat\w*|an? (?:artefact|artifact)|artefact of|artifact of|turned out to be|proved to be|shown to be|failed to replicate|did not replicate|could not be reproduced|not reproduced)\b/i;
+
+/**
+ * A claim that states its own caveat or uncertainty. Later evidence may have
+ * superseded the finding, but a claim that already said its own margin of
+ * error or that it was provisional is not "contradicted" by what happened
+ * afterwards — it was careful at the time.
+ */
+const SELF_QUALIFIED_CLAIM =
+  /\b(?:margin of error|error margin|significance (?:was )?undermined|not conclusive|inconclusive|unconfirmed|to be confirmed|needs? (?:further |more |to be )?(?:scrutiny|verification|checking|confirmation|peer review)|under scrutiny|open to scrutiny|presented for|for scrutiny|submitted (?:to|for)|no definitive|not definitive|preliminary|provisional|caution\w*|caveat|would need to|remains? to be|still to be|may have|might have|could have|if true|appears? to|suggests?)\b/i;
+
+type ClaimProposition = {
+  /** Terms that identify WHAT the claim is about. */
+  subject: string[];
+  /** Stems of the act of measuring/reporting the claim describes. */
+  event: string[];
+  /** The measured figures the claim states. */
+  quantity: number[];
+  /** The years/dates the claim states. */
+  time: string[];
+  /** Canonical comparative direction(s) the claim concludes. */
+  interpretation: string[];
+  /** Whether the claim reports, corrects or confirms a finding. */
+  status: "reported" | "corrected" | "confirmed";
+  /** Whether the claim states its own caveat. */
+  qualified: boolean;
+};
+
+/**
+ * Reduce a claim to SUBJECT / EVENT-MEASUREMENT / QUANTITY / TIME /
+ * INTERPRETATION / STATUS so that evidence about the same underlying event
+ * can be recognised under completely different wording.
+ */
+function normalizeClaimProposition(claimText: string, articleText?: string): ClaimProposition {
+  const nouns = claimTokens(claimText).filter(t =>
+    t.length >= 4 && !GENERIC_EVIDENCE_TERMS.has(t) && !NON_SUBJECT_NOUNS.has(t));
+  const articleCore = articleText ? new Set(coreSubjectNouns(articleText)) : new Set<string>();
+  // Terms the WHOLE article keeps returning to come first: they name the
+  // finding, while a word used once in this sentence is local colour.
+  const subject = [...new Set([
+    ...nouns.filter(n => articleCore.has(n)),
+    ...nouns,
+    ...distinctiveEntities(claimText),
+  ])].slice(0, 8);
+  return {
+    subject,
+    event: eventStems(claimText),
+    quantity: measuredFigures(claimText),
+    time: [...new Set(claimText.match(/\b(?:19|20)\d{2}\b/g) ?? [])],
+    interpretation: directionStems(claimText),
+    status: CORRECTION_MARKERS.test(claimText) ? "corrected"
+      : RESOLUTION_MARKERS.test(claimText) ? "confirmed"
+      : "reported",
+    qualified: SELF_QUALIFIED_CLAIM.test(claimText),
+  };
+}
+
+/**
+ * Does this retrieved source concern the SAME underlying event as the claim?
+ *
+ * Deliberately not a keyword test: sharing one background word with the claim
+ * ("Einstein") is the same TOPIC, never the same EVENT. A link requires a
+ * shared SUBJECT term plus at least one of — a second subject term, the same
+ * act of measuring, the same comparative direction, or the same figure — so
+ * that "faster-than-light neutrino measurement" and "the OPERA result was an
+ * artefact of the timing system" are linked while a background explainer on
+ * relativity is not.
+ */
+function sameUnderlyingEvent(prop: ClaimProposition, sourceText: string): boolean {
+  if (prop.subject.length === 0) return false;
+  const hits = prop.subject.filter(t => stemMatch(t.toLowerCase(), sourceText));
+  if (hits.length === 0) return false;
+  if (hits.length >= 2) return true;
+  return anyStemPresent(prop.event, sourceText) ||
+    anyStemPresent(prop.interpretation, sourceText) ||
+    prop.quantity.some(q => new RegExp("\\b" + String(q).replace(".", "\\.")).test(sourceText));
+}
+
+/**
+ * The sentences of a retrieved source that state the resolution itself. This
+ * is the passage the evidence trail exposes: the source's OWN words, never a
+ * paraphrase assembled by the engine. `strict` selects only the wording that
+ * invalidates a result.
+ */
+function resolutionPassage(text: string, strict = true): string {
+  const parts = String(text || "")
+    .split(/(?<=[.!?])\s+/)
+    .map(s => s.trim())
+    .filter(s => s.length >= 12 && s.length <= 400);
+  const hits = parts.filter(s => (strict ? INVALIDATION_LANGUAGE : RESOLUTION_LANGUAGE).test(s));
+  if (hits.length === 0) return "";
+  return hits.slice(0, 2).join(" ").replace(/\s+/g, " ").trim().slice(0, 340);
+}
+
 // ── Follow-up retrieval: what to search for AFTER the original report ───────
 // A 2011 announcement can only ever be matched by 2011 coverage, so a second
 // pass is needed that names the reported FINDING and asks for its correction.
-// The subject is taken from the ARTICLE, not from one claim: an article is
-// about one finding, and the later evidence lives under that finding's name
-// (the experiment, the institution), not under each sentence's wording.
+// The subject comes from the CLAIM's own normalized proposition — the finding
+// as the claim names it — and the article supplies the experiment's and the
+// institution's own names, because that is how a correcting institution, a
+// re-analysis and the final results refer to the result.
 
 /**
  * Acronyms / initialisms in the text (OPERA, CERN, NASA …). Two letters are
@@ -906,6 +1075,20 @@ function coreSubjectNouns(text: string): string[] {
  * Without the second intent the search only ever finds the announcement being
  * walked back, and misses the later statement that closed the question.
  */
+/**
+ * Vocabulary that describes the FRAME of reference — the theory, the branch of
+ * physics, the general subject — rather than the thing that was measured.
+ * Searching for "relativity error" retrieves essays about Einstein; the later
+ * record of a measurement lives under the noun the measurement was OF.
+ */
+const FRAME_NOUNS = new Set([
+  "theory", "theories", "theory's", "relativity", "physics", "quantum", "model",
+  "models", "principle", "principles", "equation", "equations", "formula",
+  "effect", "framework", "discipline", "science", "sciences", "hypothesis",
+  "modern", "constant", "constants", "energy", "universe", "world", "everything",
+  "particle", "particles", "nature", "existence", "understanding", "physics'",
+]);
+
 /** Comparative and time words that describe a measurement without naming it. */
 const NON_SUBJECT_NOUNS = new Set([
   "light", "faster", "slower", "fast", "slow", "speed", "time", "times", "year",
@@ -914,26 +1097,69 @@ const NON_SUBJECT_NOUNS = new Set([
   "point", "points", "issue", "issues", "fact", "facts", "kind", "sort", "type",
 ]);
 
+/**
+ * Names the article keeps returning to — the experiment, the laboratory, the
+ * institution. A Title-Cased word only counts as a NAME when it recurs in more
+ * than one part of the article; a word that merely starts a sentence is
+ * writing, not a subject.
+ */
+function recurringNames(text: string): string[] {
+  const sentences = text.split(/(?<=[.!?])\s+|\n+/).filter(s => s.trim().length > 0);
+  const spread = new Map<string, number>();
+  for (const sentence of sentences) {
+    for (const w of new Set(sentence.match(/\b[A-Z][A-Za-z'’-]{2,}\b/g) ?? [])) {
+      // A possessive ("Einstein's") is the name plus a grammar mark; the name
+      // itself is what later evidence is indexed under.
+      const bare = w.replace(/['’]s?$/, "");
+      if (bare !== w && bare.length < 3) continue;
+      const lower = bare.toLowerCase();
+      if (COMMON_UPPER.has(w) || COMMON_START_WORDS.has(lower)) continue;
+      if (monthNameSet.has(lower)) continue;
+      // An all-caps initialism is always a name; a Title-Cased word is one
+      // only when it appears in more than one part of the article.
+      spread.set(lower, (spread.get(lower) ?? 0) + (/^[A-Z][a-z]/.test(bare) ? 1 : 3));
+    }
+  }
+  return [...spread.entries()]
+    .filter(([, n]) => n >= 2)
+    .sort((a, b) => b[1] - a[1] || b[0].length - a[0].length)
+    .map(e => e[0]);
+}
+
+const monthNameSet = new Set([
+  "january", "february", "march", "april", "may", "june", "july", "august",
+  "september", "october", "november", "december",
+]);
+
 function buildFollowUpQueries(claimText: string, articleText: string): string[] {
   const acronyms = acronymList(articleText);
   const nouns = subjectNouns(articleText);
-  // Prefer a subject noun that THIS claim is actually about, so a claim about
-  // the measurement is followed up by searching for the measurement. A
-  // comparative like "faster" does not name the finding, so it cannot be the
-  // anchor on its own — the article's own subject noun is used instead.
-  // Only a claim that asserts a finding is followed up under the finding's
+  // Only a claim that ASSERTS a finding is followed up under the finding's
   // name; a quotation or a reaction has no later resolution to retrieve.
   if (!assertsReportedFinding(claimText)) return [];
-  const name = acronyms.find(a => new RegExp("\\b" + a + "\\b", "i").test(claimText)) ?? acronyms[0] ?? "";
-  // The experiment/institution name is not a subject noun in its own right:
-  // "OPERA opera" would search the art form, not the experiment.
-  const usable = nouns.filter(n => !NON_SUBJECT_NOUNS.has(n) && n !== name.toLowerCase());
-  // The anchor must be a term the WHOLE article keeps returning to, not a word
-  // that happens to appear in this one sentence.
+  const prop = normalizeClaimProposition(claimText, articleText);
+  const recurring = recurringNames(articleText);
+  const claimLower = claimText.toLowerCase();
+  const claimToks = new Set(prop.subject);
+  // The FINDING'S OWN NAME: the experiment or institution, in the spelling the
+  // article uses. An all-caps acronym wins — that is how the institution, the
+  // re-analysis and the final results all refer to the result. A Title-Cased
+  // name that appears in the claim is the next best ("the Opera experiment").
+  const inClaim = (n: string) => new RegExp("\\b" + n + "\\b", "i").test(claimLower);
+  // The article is about ONE finding, so the experiment/institution name comes
+  // from the article: an all-caps initialism if it has one, otherwise the name
+  // the whole article keeps returning to (the laboratory, the experiment). That
+  // name is exactly what the correcting institution and the final results use.
+  const name = acronyms.find(a => inClaim(a)) ?? acronyms[0] ?? recurring[0] ?? "";
+  // Prefer a subject noun THIS claim is about, so a claim about the
+  // measurement is followed up by searching for the measurement. A comparative
+  // like "quicker" does not name the finding, so it cannot be the anchor on
+  // its own — the article's own subject noun is used instead.
+  const usable = nouns.filter(n =>
+    !NON_SUBJECT_NOUNS.has(n) && !FRAME_NOUNS.has(n) && n !== name.toLowerCase());
   const core = new Set(coreSubjectNouns(articleText));
-  const claimToks = new Set(claimTokens(claimText));
-  const inClaim = usable.filter(n => core.has(n) && claimToks.has(n));
-  const anchor = inClaim[0] ?? usable.find(n => core.has(n)) ?? usable[0] ?? claimTokens(claimText)[0] ?? "";
+  const inClaimNouns = usable.filter(n => core.has(n) && claimToks.has(n));
+  const anchor = inClaimNouns[0] ?? usable.find(n => core.has(n)) ?? usable[0] ?? prop.subject[0] ?? "";
   const stem = [name, anchor].filter(Boolean).join(" ");
   const queries: string[] = [];
   if (stem.length >= 10) {
@@ -944,7 +1170,39 @@ function buildFollowUpQueries(claimText: string, articleText: string): string[] 
     const second = usable.find(n => n !== anchor);
     if (second) queries.push(anchor + " " + second + " error");
   }
-  return [...new Set(queries.filter(q => q.trim().length >= 12))].slice(0, 2);
+  // INSTITUTIONAL PASS — the correcting institution publishes the resolution on
+  // its OWN site, where a general news search rarely ranks it. The hosts are
+  // derived from the article's own recurring names (an experiment and the
+  // institution that ran it), never from a hard-coded list of sources.
+  const hosts = institutionalHosts(recurring.slice(0, 2));
+  // The institution's own site is searched under the NOUN THE MEASUREMENT WAS
+  // OF plus the experiment's own name — not under the article's framing, where
+  // "relativity error" only ever finds essays about Einstein.
+  const institutionTerms = [anchor, name]
+    .filter(Boolean)
+    .filter((t, i, arr) => arr.indexOf(t) === i)
+    .join(" ");
+  if (hosts.length > 0 && institutionTerms.length >= 6) {
+    queries.push(institutionTerms + " (" + hosts.slice(0, 6).map(h => "site:" + h).join(" OR ") + ")");
+  }
+  return [...new Set(queries.filter(q => q.trim().length >= 12))].slice(0, 3);
+}
+
+/**
+ * Plausible own-site addresses for the article's own recurring names, as
+ * ready-to-use `site:` clauses. Purely a naming convention — no source is
+ * named here; a host that does not exist simply contributes no results.
+ */
+function institutionalHosts(names: string[]): string[] {
+  const out: string[] = [];
+  for (const raw of names) {
+    const n = raw.toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (n.length < 3) continue;
+    for (const host of ["home." + n, n + ".ch", n + ".org", n + ".gov", n + ".int", n + ".edu"]) {
+      if (!out.includes(host)) out.push(host);
+    }
+  }
+  return out;
 }
 
 /**
@@ -953,15 +1211,19 @@ function buildFollowUpQueries(claimText: string, articleText: string): string[] 
  * Deliberately looser than proposition agreement — a later correction is about
  * the FINDING, and a headline states the finding ("faster-than-light neutrino
  * measurement") rather than the claim's whole sentence — but never as loose as
- * a shared institution name. A lab that publishes many unrelated final results
- * must not link every one of them to a claim about this particular finding, so
- * a match needs at least TWO of the claim's own content terms present in the
- * retrieved text, and at least one of them must be a term other than the
- * institution/experiment name itself.
+ * a shared institution name. The test is therefore made on the claim's
+ * NORMALIZED PROPOSITION (subject / event / quantity / interpretation), so a
+ * later source about the same underlying event is linked even when it shares
+ * almost no wording with the original sentence, while a source that merely
+ * covers the same topic is not.
  */
 function addressesClaimSubject(claimText: string, sourceText: string): boolean {
   const terms = claimTokens(claimText);
   if (terms.length < 2) return false;
+  // SAME UNDERLYING EVENT — the historical link: "neutrinos were recorded
+  // travelling faster than light" and "the measurement was attributed to a
+  // faulty timing system" are one event described two ways.
+  if (sameUnderlyingEvent(normalizeClaimProposition(claimText), sourceText)) return true;
   const entities = distinctiveEntities(claimText);
   // A hit that is only the lab/experiment name carries no information about
   // WHICH finding is meant, so it cannot stand alone as the link.
@@ -1139,6 +1401,15 @@ const REPOST_SURFACE =
 
 /** Minimum authority a source needs before it may contradict a claim. */
 const MIN_CREDIBLE_AUTHORITY = 1;
+
+/**
+ * An OFFICIAL scientific institution's own site — a government or
+ * intergovernmental laboratory, or the research organisation that ran the
+ * experiment. Its own record of a finding outranks press coverage of it, so it
+ * is given a slot in the evidence trail when one was retrieved.
+ */
+const OFFICIAL_INSTITUTION =
+  /(?:\.(?:gov|mil|int)(?:\.|$)|(^|\.)home\.cern($|\.)|(^|\.)cern\.ch($|\.)|(^|\.)atlas\.cern($|\.))/;
 
 function sourceAuthority(url: string, claimText: string): number {
   const host = hostOf(url);
@@ -1610,12 +1881,16 @@ async function resolvePublisherUrl(link: string): Promise<string> {
 
 /** Drop the aggregator's " - Publisher Name" suffix from a headline. */
 function stripPublisherSuffix(title: string, publisher: string): string {
-  if (!publisher) return title;
-  const suffix = " - " + publisher.trim();
-  if (title.trim().toLowerCase().endsWith(suffix.toLowerCase())) {
-    return title.trim().slice(0, title.trim().length - suffix.length).trim();
+  let out = title.trim();
+  if (publisher) {
+    const suffix = " - " + publisher.trim();
+    if (out.toLowerCase().endsWith(suffix.toLowerCase())) {
+      out = out.slice(0, out.length - suffix.length).trim();
+    }
   }
-  return title.trim();
+  // Some institutional feeds append the site's own label to the real headline
+  // ("…from CERN to Gran Sasso - Home"). It is not part of the headline.
+  return out.replace(/\s*[\|–—-]\s*home\s*$/i, "").trim() || out;
 }
 
 function publisherFromItem(item: { publisher: string; link: string; publisherUrl?: string }): string {
@@ -1631,6 +1906,52 @@ function publisherFromItem(item: { publisher: string; link: string; publisherUrl
     }
   }
   return "Unknown publisher";
+}
+
+/** Site-title artefacts a discovery feed sometimes reports as the publisher. */
+const PUBLISHER_ARTEFACT = /(?:^|\s)[|–—-]\s*(?:home|home\s*\|\s*home|news|homepage|home\s*page)\s*$/i;
+const PUBLISHER_ARTEFACT_LEADING = /^(?:home|news|homepage)\s*\|\s*/i;
+
+/**
+ * The feed's own description for a result, cleaned. Discovery feeds repeat the
+ * headline followed by the publisher name; a repeat of the headline carries no
+ * information and is dropped, so the evidence trail shows the resolution
+ * wording rather than the title twice.
+ */
+function feedSnippet(description: string, publisher: string, headline: string): string {
+  const cleaned = (description || "").replace(/&nbsp;/gi, " ").replace(/\s+/g, " ").trim();
+  const withoutPublisher = publisher && cleaned.toLowerCase().endsWith(publisher.toLowerCase())
+    ? cleaned.slice(0, cleaned.length - publisher.length).trim()
+    : cleaned;
+  return withoutPublisher.toLowerCase().startsWith(headline.toLowerCase().slice(0, 24))
+    ? ""
+    : withoutPublisher;
+}
+
+/**
+ * The publisher's real name. A feed occasionally carries the page title
+ * instead of the publisher ("Home | CERN") or nothing but a bare hostname
+ * ("aljazeera.com"); in both cases the name is derived from the publisher's
+ * own domain rather than displayed as a page title.
+ */
+function cleanPublisherName(name: string, host: string, title?: string): string {
+  let out = (name || "").replace(/\s+/g, " ").trim();
+  const isArtefact =
+    out.length === 0 || out === "Unknown publisher" ||
+    PUBLISHER_ARTEFACT.test(out) ||
+    PUBLISHER_ARTEFACT_LEADING.test(out) ||
+    (!!title && out.toLowerCase() === title.toLowerCase());
+  if (!isArtefact) return out;
+  if (host) {
+    // Drop a generic leading label ("home.cern" → "cern", "news.nature.com").
+    const labels = host.split(".").filter(Boolean);
+    const generic = new Set(["home", "www", "news", "index", "en", "web"]);
+    const core = labels.find(l => !generic.has(l)) ?? labels[labels.length - 2] ?? labels[0];
+    if (core && core.length >= 3) {
+      return core.length <= 3 ? core.toUpperCase() : core.charAt(0).toUpperCase() + core.slice(1);
+    }
+  }
+  return out && out !== "Unknown publisher" ? out : "Unknown publisher";
 }
 
 function formatDate(pubDate: string): string {
@@ -1656,6 +1977,49 @@ function buildAttributionQuery(attribution: QuoteAttribution, claimText: string)
     .slice(0, 3);
   const query = [name].concat(subject).join(" ").trim();
   return query.length >= 8 ? query : null;
+}
+
+/** A real article address (not a bare site root) whose page can be read. */
+function isReadableArticleUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    if (isAggregatorHost(parsed.hostname.replace(/^www\./, ""))) return false;
+    return parsed.pathname.replace(/\/+$/, "").length > 0;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Read the source's OWN page and return the passage in which it states the
+ * resolution. Used only for a real article address: a site root would return
+ * some other article's sentence, which would be invented evidence. When no
+ * such passage exists, "" is returned and the retrieved wording stands.
+ */
+async function pageResolutionPassage(url: string, claimText: string): Promise<string> {
+  if (!isReadableArticleUrl(url)) return "";
+  const subjects = normalizeClaimProposition(claimText).subject;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 6000);
+  try {
+    const res = await fetch(url, {
+      signal: controller.signal,
+      redirect: "follow",
+      headers: { "user-agent": "Mozilla/5.0 (compatible; Veritas/1.0)" },
+    });
+    if (!res.ok) return "";
+    const text = extractArticleBody(await res.text());
+    if (text.length < 200) return "";
+    const hits = text.split(/(?<=[.!?])\s+/).filter(s =>
+      s.length >= 25 && s.length <= 400 &&
+      INVALIDATION_LANGUAGE.test(s) &&
+      (subjects.length === 0 || subjects.some(t => stemMatch(t.toLowerCase(), s))));
+    return hits.slice(0, 2).join(" ").replace(/\s+/g, " ").trim().slice(0, 340);
+  } catch {
+    return "";
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 function googleNewsQueryUrl(query: string): string {
@@ -1703,7 +2067,7 @@ function mergeItems(pool: RssItem[], incoming: RssItem[]): void {
  */
 async function searchClaim(
   claimText: string,
-  options?: { followUp?: boolean; articleText?: string },
+  options?: { followUp?: boolean; articleText?: string; publishedYear?: string },
 ): Promise<ClaimSearch> {
   // Search on a normalized, concise query derived from the COMPLETE claim —
   // never on a malformed or truncated fragment.
@@ -1712,9 +2076,11 @@ async function searchClaim(
     return { ok: true, sources: [], error: "Claim too short to search." };
   }
   const url = googleNewsQueryUrl(query);
+  const prop = normalizeClaimProposition(claimText, options?.articleText);
+  const publishedYear = options?.publishedYear ?? "";
 
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), options?.followUp ? 14000 : 7000);
+  const timer = setTimeout(() => controller.abort(), options?.followUp ? 16000 : 7000);
   try {
     const res = await fetch(url, {
       signal: controller.signal,
@@ -1725,13 +2091,26 @@ async function searchClaim(
     const xml = await res.text();
     let items = parseRssItems(xml);
 
-    // FOLLOW-UP PASS — the evidence that came AFTER the report. Searched for
-    // every claim about a reported finding so a later correction, retraction,
-    // replication or institutional update can be found and linked.
+    // PASS A — CONTEMPORANEOUS EVIDENCE, stated as the finding's proposition
+    // rather than as the claim's wording: the finding's own subject terms plus
+    // the comparative it concludes. A 2011 report written as a long sentence
+    // ("…according to Einstein's theory, which spawned E=MC2…") otherwise
+    // retrieves background explainers instead of the day's coverage.
+    const contemporary = [prop.subject[0], prop.subject[1], prop.interpretation[0]]
+      .filter(Boolean).join(" ").trim();
+    // PASS B — FOLLOW-UP / RESOLUTION EVIDENCE: the institution's own later
+    // update, a correction, a retraction, a replication or an independent
+    // measurement. Searched for every claim about a reported finding so a
+    // result settled years later can still be found and linked.
     if (options?.followUp) {
-      const extra = await Promise.all(
+      const extras = [
+        contemporary.length >= 12 && contemporary !== query ? [contemporary] : [],
         buildFollowUpQueries(claimText, options?.articleText ?? claimText)
-          .filter(followUpQuery => followUpQuery !== query)
+          .filter(followUpQuery => followUpQuery !== query),
+      ].flat();
+      const extra = await Promise.all(
+        extras
+          .filter(q => q && q !== query)
           .map(followUpQuery => fetchNewsItems(googleNewsQueryUrl(followUpQuery), controller.signal)),
       );
       for (const batch of extra) if (batch) mergeItems(items, batch);
@@ -1759,6 +2138,27 @@ async function searchClaim(
       // publisher's own domain.
       const authority = sourceAuthority(item.publisherUrl || item.link, claimText);
       const role = evidenceRole(headline, item.description);
+      const itemYear = (item.pubDate.match(/\b(?:19|20)\d{2}\b/) ?? [])[0] ?? "";
+      const sameEvent = addressesClaimSubject(claimText, headline + " " + item.description);
+      // EXPLICIT RESOLUTION LANGUAGE in the retrieved text itself. This is the
+      // passage the evidence trail exposes — the source's own words, never a
+      // paraphrase — and its presence is what turns a later result into direct
+      // evidence about the SAME event rather than a mention of the topic.
+      const snippet = feedSnippet(item.description, item.publisher, headline);
+      const resolution = resolutionPassage(headline + (snippet ? " — " + snippet : ""));
+      // Same-event link on the strict proposition-level test.
+      const onEvent = sameUnderlyingEvent(prop, headline + (snippet ? " — " + snippet : ""));
+      // A later or independent source directly establishes that the reported
+      // proposition was wrong, invalidated, withdrawn or caused by an
+      // identified measurement error. Three things are required, and all three
+      // must come from the retrieved text: the source must concern the SAME
+      // EVENT (the strict proposition-level test — never a shared topic), it
+      // must state the invalidation in so many words, and it must not be
+      // contemporaneous coverage of the original report.
+      const contemporaneous = !!(publishedYear && itemYear && itemYear <= publishedYear);
+      const invalidates = !contemporaneous &&
+        sameUnderlyingEvent(prop, headline + " — " + item.description) &&
+        INVALIDATION_LANGUAGE.test(headline + " — " + item.description);
       // Later evidence that corrects or resolves the reported finding is the
       // decisive part of the record for such a claim, so it is never crowded
       // out by contemporaneous re-reporting of the original announcement.
@@ -1768,17 +2168,28 @@ async function searchClaim(
         headline,
         name: publisherFromItem(item),
         date: formatDate(item.pubDate),
-        excerpt: item.description.slice(0, 240) || "No snippet available.",
+        excerpt: resolution || snippet.slice(0, 240) || headline,
         url: item.link,
         relationship,
         overlap,
         reason,
         role,
+        resolution,
+        invalidates,
         rank: RELATIONSHIP_RANK[relationship] * 100 + authority * 10 + Math.round(overlap * 5) + roleBonus +
           // A result that is actually ABOUT this claim's subject is worth more
           // than a marginally better-scoring result about something else that
           // merely shares the institution name.
-          (addressesClaimSubject(claimText, headline + " " + item.description) ? 60 : 0),
+          (sameEvent ? 60 : 0) +
+          // Direct invalidation of the reported proposition is the decisive
+          // evidence for such a claim, and an official institutional source
+          // saying so outranks press coverage of it.
+          (invalidates ? 55 + Math.round(authority * 10) : 0) +
+          // A result about the SAME event, or one that reports something about
+          // the finding, is evidence; a result that merely mentions the topic
+          // is noise and is demoted below everything that engaged.
+          (onEvent ? 25 : 0) -
+          (!onEvent && resolution === "" && role === "neutral" ? 40 : 0),
       };
     });
 
@@ -1787,12 +2198,14 @@ async function searchClaim(
     evaluated.sort((a, b) => b.rank - a.rank);
     const finalists = evaluated.slice(0, 3);
     // Guarantee the later-evidence result is on the list when one was
-    // retrieved about the SAME finding: an institutional update or a
-    // correction outranks a third restatement of the original report.
-    const laterEntry = evaluated.find(e =>
-      (e.role === "correction" || e.role === "resolution") &&
-      !finalists.includes(e) &&
-      addressesClaimSubject(claimText, e.headline + " " + e.excerpt));
+    // retrieved about the SAME finding: a source that directly invalidates the
+    // reported proposition comes first, then an institutional update or a
+    // correction — both outrank a third restatement of the original report.
+    const laterEntry = evaluated.find(e => e.invalidates && !finalists.includes(e)) ??
+      evaluated.find(e =>
+        (e.role === "correction" || e.role === "resolution") &&
+        !finalists.includes(e) &&
+        addressesClaimSubject(claimText, e.headline + " " + e.excerpt));
     if (laterEntry && finalists.length > 0) finalists[finalists.length - 1] = laterEntry;
     // A subject-matched result is never displaced by one about something else
     // that merely shares the institution name: swap the displaced entry out.
@@ -1802,6 +2215,20 @@ async function searchClaim(
       const offSubject = finalists.findIndex(f =>
         !addressesClaimSubject(claimText, f.headline + " " + f.excerpt));
       if (onSubject.length === 0 && offSubject >= 0) finalists[offSubject] = laterEntry;
+    }
+    // SOURCE PRIORITY — for a scientific claim, the reporting INSTITUTION's own
+    // record of the finding outranks press coverage of it: official
+    // institutions first, then peer-reviewed venues, then reputable news. When
+    // such a source was retrieved but crowded out, it takes a slot.
+    const isOfficial = (e: (typeof evaluated)[number]) =>
+      OFFICIAL_INSTITUTION.test(hostOf(e.item.publisherUrl || e.item.link));
+    const officialEntry = evaluated.find(e =>
+      !finalists.includes(e) &&
+      isOfficial(e) &&
+      sameUnderlyingEvent(prop, e.headline + " — " + e.excerpt));
+    if (officialEntry && finalists.length > 0 && !finalists.some(isOfficial)) {
+      const weakest = finalists.reduce((a, b) => (a.rank <= b.rank ? a : b));
+      finalists[finalists.indexOf(weakest)] = officialEntry;
     }
 
     // SOURCE IDENTITY: Google News is discovery only. Follow each result to
@@ -1818,10 +2245,8 @@ async function searchClaim(
         url = entry.item.publisherUrl;
         try { host = new URL(url).hostname.replace(/^www\./, ""); } catch { host = ""; }
       }
-      const name = entry.name && entry.name !== "Unknown publisher"
-        ? entry.name
-        : publisherFromHostname(host);
-      const { item: _item, headline, date, excerpt, relationship, overlap, reason, role } = entry;
+      const name = cleanPublisherName(entry.name, host, entry.headline);
+      const { item: _item, headline, date, excerpt, relationship, overlap, reason, role, resolution, invalidates } = entry;
       // DISCOVERY IS NOT EVIDENCE: a result whose publisher cannot be
       // identified is never cited as the source of a claim.
       const citeable = !isAggregatorHost(host);
@@ -1829,22 +2254,59 @@ async function searchClaim(
         name, headline, date, excerpt,
         url: citeable ? url : "",
         relationship, overlap, reason, role,
+        resolution, invalidates,
       } satisfies RetrievedSource & { overlap: number };
     }));
     const top: RetrievedSource[] = resolved.map(({ overlap: _overlap, ...src }) => src);
+    // THE PASSAGE — when a later source directly invalidates the reported
+    // proposition, its own page is read so the evidence trail shows the words
+    // in which it states the resolution. Best-effort and bounded to one source
+    // per claim; when the address is only a site root nothing is invented.
+    for (const source of top.filter(s => s.invalidates && isReadableArticleUrl(s.url)).slice(0, 1)) {
+      const passage = await pageResolutionPassage(source.url, claimText);
+      if (passage) { source.resolution = passage; source.excerpt = passage; }
+    }
     // A later correction/resolution IS addressed evidence: without this the
     // "no independent corroboration" notice would be appended to a claim that
     // real follow-up evidence had in fact been retrieved for.
     if (top.length > 0 && !top.some(s => s.relationship === "supports" || s.relationship === "contradicts" || s.relationship === "partial")) {
-      const engaged = top.find(s =>
-        (s.role === "correction" || s.role === "resolution") &&
-        addressesClaimSubject(claimText, s.headline + " " + s.excerpt));
+      // A source that states the result was invalidated, corrected or caused
+      // by an identified measurement error CONTRADICTS the proposition the
+      // claim asserted. This applies only to a claim that asserts a reported
+      // finding: a quotation or a reaction is verified by attribution, not by
+      // what later happened to the finding.
+      const engaged = assertsReportedFinding(claimText)
+        ? top.find(s => s.invalidates)
+        : undefined;
       if (engaged) {
-        engaged.relationship = "partial";
-        engaged.reason = "Later evidence about the same reported finding: " +
-          (engaged.role === "correction"
-            ? "the result was subsequently revised"
-            : "the question was settled by subsequent work");
+        engaged.relationship = "contradicts";
+        engaged.reason = "Later evidence establishes that the reported result did not hold: \"" +
+          (engaged.resolution || engaged.headline) + "\"";
+      } else {
+        const later = top.find(s =>
+          (s.role === "correction" || s.role === "resolution") &&
+          addressesClaimSubject(claimText, s.headline + " " + s.excerpt));
+        if (later) {
+          later.relationship = "partial";
+          later.reason = "Later evidence about the same reported finding: " +
+            (later.role === "correction"
+              ? "the result was subsequently revised"
+              : "the question was settled by subsequent work");
+        }
+      }
+    }
+
+    // A source that negates the reported result is ENGAGED with the claim even
+    // when it shares almost none of the claim's wording: proposition comparison
+    // guards restatement, not negation. Without this a later "not faster than
+    // light" result would sit in the evidence trail labelled as not addressing
+    // the very claim it contradicts.
+    for (const source of top) {
+      if (!source.invalidates) continue;
+      if (source.relationship === "does_not_address" || source.relationship === "unverified") {
+        source.relationship = "contradicts";
+        source.reason = "Later evidence establishes that the reported result did not hold: \"" +
+          (source.resolution || source.headline) + "\"";
       }
     }
 
@@ -2754,16 +3216,23 @@ async function analyzeText(text: string, depth: Depth, urlCtx?: { url: string; p
 
   // ── LIVE EXTERNAL CROSS-CHECK ──
   const checked = rawClaims.slice(0, CROSSCHECK_LIMIT[depth]);
+  // The article's own publication year, when the page or its text states one.
+  // It is what separates CONTEMPORANEOUS coverage of the report — which
+  // corroborates that the article reported what was said at the time — from
+  // LATER evidence about the result.
+  const publishedYear = (sourceProfile.publishedDate.match(/\b(?:19|20)\d{2}\b/) ?? [])[0] ?? "";
   // Claims about a reported finding get the two-pass search (contemporaneous
-  // coverage + follow-up evidence); every other claim keeps one query.
+  // coverage + follow-up/resolution evidence); every other claim keeps one query.
   const searchResults = await Promise.all(
     checked.map(c => searchClaim(c.text, {
       followUp: needsFollowUpEvidence(c.text),
       articleText: text,
+      publishedYear,
     })));
   const searchFailures = searchResults.filter(r => !r.ok).length;
 
   let laterEvidenceClaims = 0;
+  let supersededClaims = 0;
   const claims: ClaimResult[] = rawClaims.map((raw) => {
     const idx = checked.findIndex(c => c.id === raw.id);
     const note = linguisticNote(raw);
@@ -2821,20 +3290,54 @@ async function analyzeText(text: string, depth: Depth, urlCtx?: { url: string; p
       (supports.length === 0 || bestContraAuthority >= bestSupportAuthority);
 
     // ── LATER EVIDENCE ABOUT A REPORTED FINDING ──
-    // Checked BEFORE the contradiction branch, because a later correction of a
-    // measurement reads as a contradiction of the claim's proposition while
-    // saying nothing about whether the article reported it accurately at the
-    // time. When the only thing opposing the claim IS that later evidence, the
-    // honest state is time-bounded uncertainty, not "false". A contradiction
-    // from any other source still stands as a contradiction.
+    // Checked BEFORE the plain contradiction branch, because later evidence
+    // about a measurement has to be read against the TIMELINE of the claim:
+    //   • a source stating that the result was invalidated, withdrawn or
+    //     caused by an identified measurement error CONTRADICTS the claim's
+    //     interpretation — that is what the evidence establishes;
+    //   • later evidence that merely revises or settles the result, without
+    //     saying the reported proposition was wrong, leaves the claim
+    //     time-bounded: reported at the time, revised later, not false.
+    // Either way the article's own reporting of what was claimed at the time
+    // is NOT what is being judged. A contradiction from any other source
+    // still stands as an ordinary contradiction.
+    const invalidating = laterEvidence.filter(s => s.invalidates);
     if (laterEvidence.length > 0 && assertsFinding &&
         (contradicts.length === 0 || contradicts.every(c => laterEvidence.includes(c)))) {
       laterEvidenceClaims++;
-      const later = [...laterEvidence].sort((a, b) => {
+      const byAuthority = (a: { url: string; role?: EvidenceRole }, b: { url: string; role?: EvidenceRole }) => {
         const ra = a.role === "correction" ? 1 : 0, rb = b.role === "correction" ? 1 : 0;
         if (ra !== rb) return rb - ra;
         return sourceAuthority(b.url, raw.text) - sourceAuthority(a.url, raw.text);
-      })[0];
+      };
+
+      // ── SUPERSEDED: later evidence directly invalidated the interpretation ──
+      // The claim states a conclusion drawn from the reported measurement, and
+      // a later independent source says in as many words that the result was
+      // wrong, replaced or caused by a measurement fault. The claim's status
+      // then reflects that evolution: the INTERPRETATION is contradicted by
+      // later evidence. A claim that stated its own caveat at the time, or
+      // that quotes somebody, is never treated this way.
+      const selfQualified = SELF_QUALIFIED_CLAIM.test(raw.text);
+      if (invalidating.length > 0 && !selfQualified && !attribution) {
+        supersededClaims++;
+        const top = [...invalidating].sort(byAuthority)[0];
+        const official = sourceAuthority(top.url, raw.text) >= 3;
+        const passage = top.resolution || top.headline;
+        return {
+          id: raw.id, text: raw.text,
+          status: "contradicted",
+          confidence: official ? 72 : 63,
+          evidence: "CONTRADICTED BY LATER EVIDENCE — this claim asserts the interpretation drawn from a reported measurement. Later independent evidence establishes that the result did not hold: \"" + passage + "\". " +
+            "Retrieved source: \"" + top.headline + "\" — " + top.name + (top.date !== "N/A" ? " (" + top.date + ")" : "") + (official ? " (primary/institutional source)." : ".") +
+            " The claim is contradicted on what it concludes, not on the fact that the result was reported and presented for independent scrutiny at the time.",
+          sources: invalidating.map(s => s.name + " — \"" + s.headline + "\"" + (s.date !== "N/A" ? " (" + s.date + ")" : "")),
+          contradictingSources: invalidating.map(s => s.name + " — \"" + s.headline + "\""),
+          explanation: "The historical sequence is what makes this a contradiction rather than a false report. The measurement was reported and explicitly put forward for independent scrutiny; later independent work did not reproduce it; the institution responsible then attributed the original anomaly to an identified fault in the measurement itself. A source states this in its own words: \"" + passage + "\". The interpretation asserted by this claim is therefore contradicted by later evidence. This says nothing about whether the article reported what was genuinely claimed at the time — only that the claim's conclusion does not reflect the current evidence. " + note,
+        };
+      }
+
+      const later = [...laterEvidence].sort(byAuthority)[0];
       const correction = later.role === "correction";
       return {
         id: raw.id, text: raw.text,
@@ -2943,6 +3446,18 @@ async function analyzeText(text: string, depth: Depth, urlCtx?: { url: string; p
     confidence = Math.min(baseConfidence, 32);
     summary = "UNABLE TO VERIFY — no distinct factual claims could be extracted from this content, so no claim-level verification was possible."
       + (redFlags.length > 0 ? " " + redFlags.length + " linguistic warning signal(s) were detected." : "");
+  } else if (supersededClaims > 0 && contradictedCount === supersededClaims) {
+    // A reported finding that later independent evidence invalidated. The
+    // claims that draw their conclusion from it are contradicted; the article
+    // as a whole is NOT thereby shown to have misreported anything, so this is
+    // never "likely fake" — the reporting matched what was claimed at the time.
+    verdict = "uncertain";
+    confidence = clamp(46 + supersededClaims * 4, 46, 62);
+    summary = "SUPERSEDED BY LATER EVIDENCE — " + supersededClaims + " of " + claims.length +
+      " cross-checked claim(s) assert an interpretation of a reported measurement that later independent evidence has contradicted. " +
+      "The result was reported and presented for independent scrutiny at the time, later measurements did not reproduce it, and the institution concerned then attributed the original anomaly to an identified fault in the measurement. " +
+      "Those claims are marked contradicted on the evidence; this is a finding about the RESULT, not a finding that the article misreported anything. " +
+      totalRetrieved + " unique independent source(s) retrieved (" + sourceRefs + " claim–source reference(s)).";
   } else if (contradictedCount > 0 && supportedCount === 0) {
     verdict = "likely_fake";
     confidence = clamp(55 + contradictedCount * 8 + Math.round(redRatio * 10), 55, 80);
@@ -3044,6 +3559,9 @@ async function analyzeText(text: string, depth: Depth, urlCtx?: { url: string; p
     );
     if (laterEvidenceClaims > 0) {
       parts.push(laterEvidenceClaims + " claim(s) are time-bounded: the reported finding was revised or settled by later independent evidence, which speaks to the result rather than to the accuracy of the original reporting.");
+    }
+    if (supersededClaims > 0) {
+      parts.push(supersededClaims + " claim(s) are contradicted by later evidence that directly invalidates the reported result; the article's reporting of what was claimed at the time is not what is contradicted.");
     }
   }
   if (claims.length > 0 && unresolvedCount > 0) {
