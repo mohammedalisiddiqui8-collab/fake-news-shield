@@ -72,10 +72,8 @@
    cascade and nothing can drift out of sync.
 
    LIGHT (default) — warm editorial paper, never pure white:
-     canvas #F3F0E8 · ink #181818 · secondary #625F58 · dim #77736A
-     rule #D8D3C8 · crimson #A51F36 · green #41794E · brass #826A38
-     (status inks darkened from the suggested values for WCAG legibility:
-      6.5:1, 4.5:1 and 4.5:1 on paper.)
+     canvas #F3F0E8 · ink #342A20 · secondary #6F665D · dim #77736A
+     rule #D8D3C8 · crimson #A51F36 · green #4F8A5B · brass #947A43
 
    DARK — the original Veritas canvas:
      canvas #080808 · ink #F1F0EA · secondary #A6A39B · dim #6B6963
@@ -88,13 +86,13 @@
   --v-bg-rgb: 243 240 232;        /* #F3F0E8 */
   --v-surface-rgb: 250 248 242;   /* #FAF8F2 */
   --v-surface-2-rgb: 237 233 222; /* #EDE9DE */
-  --v-ink-rgb: 24 24 24;          /* #181818 */
-  --v-ink-soft-rgb: 98 95 88;     /* #625F58 */
+  --v-ink-rgb: 52 42 32;          /* #342A20 — warm brown, not washed-out ivory */
+  --v-ink-soft-rgb: 111 102 93;   /* #6F665D */
   --v-ink-dim-rgb: 119 115 106;   /* #77736A */
   --v-rule-rgb: 216 211 200;      /* #D8D3C8 */
   --v-crimson-rgb: 165 31 54;     /* #A51F36 */
-  --v-green-rgb: 65 121 78;       /* #41794E */
-  --v-brass-rgb: 130 106 56;      /* #826A38 */
+  --v-green-rgb: 79 138 91;       /* #4F8A5B */
+  --v-brass-rgb: 148 122 67;      /* #947A43 */
 
   /* ── solid editorial inks (aliases, never re-valued per theme) ── */
   --v-bg: rgb(var(--v-bg-rgb));
