@@ -22,9 +22,9 @@ interface ExpandableClaimProps {
 }
 
 const statusConfig = {
-  supported: { icon: CheckCircle2, color: "#8FA58A", label: "SUPPORTED" },
-  unverified: { icon: AlertTriangle, color: "#B7A47A", label: "UNVERIFIED" },
-  misleading: { icon: XCircle, color: "#B3263E", label: "MISLEADING" },
+  supported: { icon: CheckCircle2, color: "var(--v-green)", label: "SUPPORTED" },
+  unverified: { icon: AlertTriangle, color: "var(--v-brass)", label: "UNVERIFIED" },
+  misleading: { icon: XCircle, color: "var(--v-crimson)", label: "MISLEADING" },
 };
 
 /**
@@ -51,13 +51,13 @@ export function ExpandableClaim({
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="w-full cursor-pointer text-left py-3.5 px-1 flex items-start gap-3 transition-colors hover:bg-[rgba(241,240,234,0.018)]"
+        className="w-full cursor-pointer text-left py-3.5 px-1 flex items-start gap-3 transition-colors hover:bg-[rgb(var(--v-ink-rgb) /0.018)]"
       >
         <div className="flex-1 min-w-0">
           <div className="flex items-baseline justify-between gap-3">
             <span
               className="kicker"
-              style={{ color: "#F1F0EA" }}
+              style={{ color: "var(--v-ink)" }}
             >
               {kind === "signal"
                 ? (signalLabel ?? "Language signal")
@@ -73,14 +73,14 @@ export function ExpandableClaim({
           </div>
           <p
             className="font-quote mt-1.5 text-[12.5px] leading-relaxed"
-            style={{ color: "#F1F0EA" }}
+            style={{ color: "var(--v-ink)" }}
           >
             “{claimText}”
           </p>
           {confidence != null && (
             <div className="mt-2 flex items-center gap-2.5">
               <span className="kicker" style={{ opacity: 0.7 }}>Confidence</span>
-              <span className="h-[2px] w-20" style={{ background: "#242424" }}>
+              <span className="h-[2px] w-20" style={{ background: "var(--v-rule)" }}>
                 <motion.span
                   className="block h-full"
                   initial={{ width: 0 }}
@@ -104,7 +104,7 @@ export function ExpandableClaim({
           transition={{ duration: 0.2 }}
           className="shrink-0 mt-1"
         >
-          <ChevronDown className="w-3.5 h-3.5" style={{ color: "#A6A39B" }} />
+          <ChevronDown className="w-3.5 h-3.5" style={{ color: "var(--v-ink-soft)" }} />
         </motion.div>
       </button>
 

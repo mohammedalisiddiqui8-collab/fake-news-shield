@@ -85,7 +85,7 @@ export const FRAMEWORK_LANGUAGE_TRACK: FrameworkNode[] = [
 function Node({
   node,
   i,
-  tone = "#F1F0EA",
+  tone = "var(--v-ink)",
 }: {
   node: FrameworkNode;
   i: number;
@@ -108,7 +108,7 @@ function Node({
       {/* The track spine and its node */}
       <motion.span
         className="absolute left-0 top-[5px] block h-[7px] w-[7px]"
-        style={{ background: "#080808", border: `1px solid ${tone}` }}
+        style={{ background: "var(--v-bg)", border: `1px solid ${tone}` }}
         initial={{ opacity: 0 }}
         whileInView={{ opacity: 1 }}
         viewport={{ once: true, margin: "-6% 0px -6% 0px" }}
@@ -117,7 +117,7 @@ function Node({
       />
       <motion.span
         className="absolute left-[3px] top-[16px] bottom-[-8px] w-px origin-top"
-        style={{ background: "#242424" }}
+        style={{ background: "var(--v-rule)" }}
         initial={{ scaleY: 0 }}
         whileInView={{ scaleY: 1 }}
         viewport={{ once: true, margin: "-6% 0px -6% 0px" }}
@@ -125,7 +125,7 @@ function Node({
         aria-hidden="true"
       />
 
-      <p className="text-[14px] leading-none tracking-[0.02em]" style={{ fontFamily: "'Bodoni Moda', Georgia, serif", color: "#F1F0EA" }}>
+      <p className="text-[14px] leading-none tracking-[0.02em]" style={{ fontFamily: "'Bodoni Moda', Georgia, serif", color: "var(--v-ink)" }}>
         {node.label}
       </p>
       <AnimatePresence initial={false}>
@@ -140,7 +140,7 @@ function Node({
           >
             <p
               className="pt-2.5 text-[12px] leading-[1.75] text-muted-foreground max-w-[58ch]"
-              style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
+              style={{ fontFamily: "'Instrument Sans', system-ui, sans-serif" }}
             >
               {node.detail}
             </p>
@@ -155,7 +155,7 @@ function Node({
           aria-label={`${open ? "Hide" : "Show"} detail for ${node.label}`}
           onClick={() => setOpen(!open)}
           className="transition-opacity hover:opacity-100"
-          style={{ opacity: 0.55, color: "#F1F0EA" }}
+          style={{ opacity: 0.55, color: "var(--v-ink)" }}
         >
           {open ? "−" : "+"}
         </button>
@@ -167,24 +167,24 @@ function Node({
 export function FrameworkChapter() {
   const [tab, setTab] = useState<"claims" | "language">("claims");
   const track = tab === "claims" ? FRAMEWORK_CLAIM_TRACK : FRAMEWORK_LANGUAGE_TRACK;
-  const tone = tab === "claims" ? "#F1F0EA" : "#B7A47A";
+  const tone = tab === "claims" ? "var(--v-ink)" : "var(--v-brass)";
 
   return (
     <div>
       {/* ── Input ── */}
-      <div className="border border-border p-5 sm:p-6" style={{ background: "#0C0C0C" }}>
+      <div className="border border-border p-5 sm:p-6" style={{ background: "var(--v-surface)" }}>
         <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-          <span className="kicker" style={{ color: "#F1F0EA" }}>Input</span>
-          <span className="text-[15px] leading-none" style={{ fontFamily: "'Bodoni Moda', Georgia, serif", color: "#F1F0EA" }}>
+          <span className="kicker" style={{ color: "var(--v-ink)" }}>Input</span>
+          <span className="text-[15px] leading-none" style={{ fontFamily: "'Bodoni Moda', Georgia, serif", color: "var(--v-ink)" }}>
             {FRAMEWORK_INPUT.label}
           </span>
-          <span className="kicker ml-auto" style={{ color: "#F1F0EA" }}>
+          <span className="kicker ml-auto" style={{ color: "var(--v-ink)" }}>
             → {FRAMEWORK_INPUT.output}
           </span>
         </div>
         <p
           className="mt-3 text-[12.5px] leading-[1.75] text-muted-foreground max-w-[70ch]"
-          style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
+          style={{ fontFamily: "'Instrument Sans', system-ui, sans-serif" }}
         >
           {FRAMEWORK_INPUT.detail}
         </p>
@@ -201,14 +201,14 @@ export function FrameworkChapter() {
                 type="button"
                 onClick={() => setTab(t)}
                 className="relative px-4 py-2 text-[10px] uppercase tracking-[0.18em] transition-colors"
-                style={{ color: tab === t ? "#F1F0EA" : "#6B6963" }}
+                style={{ color: tab === t ? "var(--v-ink)" : "var(--v-ink-dim)" }}
               >
                 {t === "claims" ? "Claim track" : "Language track"}
                 {tab === t && (
                   <motion.span
                     layoutId="framework-tab"
                     className="absolute left-0 right-0 bottom-0 h-[1.5px]"
-                    style={{ background: "#F1F0EA" }}
+                    style={{ background: "var(--v-ink)" }}
                     transition={{ duration: 0.35, ease: EASE }}
                   />
                 )}
@@ -231,9 +231,9 @@ export function FrameworkChapter() {
           className="relative"
         >
           <li className="relative pb-8 pl-7">
-            <span className="absolute left-0 top-[5px] block h-[7px] w-[7px]" style={{ background: "#080808", border: `1px solid ${tone}` }} />
+            <span className="absolute left-0 top-[5px] block h-[7px] w-[7px]" style={{ background: "var(--v-bg)", border: `1px solid ${tone}` }} />
             <p className="kicker" style={{ opacity: 0.5 }}>Track</p>
-            <p className="mt-2 text-[15px] leading-none" style={{ fontFamily: "'Bodoni Moda', Georgia, serif", color: "#F1F0EA" }}>
+            <p className="mt-2 text-[15px] leading-none" style={{ fontFamily: "'Bodoni Moda', Georgia, serif", color: "var(--v-ink)" }}>
               {tab === "claims" ? "Factual verification" : "Language & framing"}
             </p>
           </li>
@@ -247,13 +247,13 @@ export function FrameworkChapter() {
           <div className="border-t border-border pt-6">
             <div className="flex flex-wrap items-baseline gap-x-3">
               <span className="kicker" style={{ opacity: 0.5 }}>Both tracks report to</span>
-              <span className="text-[15px] leading-none" style={{ fontFamily: "'Bodoni Moda', Georgia, serif", color: "#F1F0EA" }}>
+              <span className="text-[15px] leading-none" style={{ fontFamily: "'Bodoni Moda', Georgia, serif", color: "var(--v-ink)" }}>
                 Credibility assessment
               </span>
             </div>
             <p
               className="mt-3 text-[12.5px] leading-[1.75] text-muted-foreground max-w-[56ch]"
-              style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
+              style={{ fontFamily: "'Instrument Sans', system-ui, sans-serif" }}
             >
               Four factors are reported: source reliability, claim consistency, language signal and evidence
               strength. Each is shown with the figures it was computed from, and each can be opened to read
@@ -264,13 +264,13 @@ export function FrameworkChapter() {
           <div className="mt-8 border-t border-border pt-6">
             <div className="flex flex-wrap items-baseline gap-x-3">
               <span className="kicker" style={{ opacity: 0.5 }}>Produced by the claim track only</span>
-              <span className="text-[15px] leading-none" style={{ fontFamily: "'Bodoni Moda', Georgia, serif", color: "#F1F0EA" }}>
+              <span className="text-[15px] leading-none" style={{ fontFamily: "'Bodoni Moda', Georgia, serif", color: "var(--v-ink)" }}>
                 Verdict &amp; confidence
               </span>
             </div>
             <p
               className="mt-3 text-[12.5px] leading-[1.75] text-muted-foreground max-w-[56ch]"
-              style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
+              style={{ fontFamily: "'Instrument Sans', system-ui, sans-serif" }}
             >
               A verdict and a confidence figure, published with the reasoning that produced them. When
               evidence is missing or mixed, the result is uncertainty — not a guess.
@@ -279,9 +279,9 @@ export function FrameworkChapter() {
             {/* The separation, drawn */}
             <div
               className="mt-6 flex items-start gap-3 border p-4"
-              style={{ borderColor: "rgba(176,161,131,0.3)", background: "rgba(176,161,131,0.05)" }}
+              style={{ borderColor: "rgb(var(--v-brass-rgb) /0.3)", background: "rgb(var(--v-brass-rgb) /0.05)" }}
             >
-              <span className="mt-[6px] block h-[7px] w-[7px] shrink-0" style={{ background: "#B7A47A" }} />
+              <span className="mt-[6px] block h-[7px] w-[7px] shrink-0" style={{ background: "var(--v-brass)" }} />
               <p className="text-[11.5px] leading-[1.7] text-muted-foreground">
                 The language track stops here. It is reported beside the verdict as an observation about
                 writing, and it cannot produce one on its own.

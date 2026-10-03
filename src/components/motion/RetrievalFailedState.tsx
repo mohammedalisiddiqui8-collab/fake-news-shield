@@ -73,19 +73,19 @@ function Panel({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25, delay }}
       className="mb-3 overflow-hidden"
-      style={{ background: "#0C0C0C", border: "1px solid #242424" }}
+      style={{ background: "var(--v-surface)", border: "1px solid var(--v-rule)" }}
     >
       <div className="px-4 sm:px-5 pt-4 pb-2">
         <div className="flex items-center gap-1.5 mb-1">
           <Icon className="w-3.5 h-3.5" style={{ color: accent }} />
           <h3
             className="text-[10px] font-semibold uppercase tracking-[0.15em]"
-            style={{ color: "#F1F0EA" }}
+            style={{ color: "var(--v-ink)" }}
           >
             {title}
           </h3>
         </div>
-        <p className="text-[9px]" style={{ color: "#A6A39B" }}>
+        <p className="text-[9px]" style={{ color: "var(--v-ink-soft)" }}>
           {subtitle}
         </p>
       </div>
@@ -121,14 +121,14 @@ export function RetrievalFailedState({
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.35 }}
         className="glass-card p-5 sm:p-7 mb-4"
-        style={{ border: "1px solid rgba(176,132,121,0.25)" }}
+        style={{ border: "1px solid rgb(var(--v-crimson-rgb) /0.25)" }}
       >
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
           <div
             className="w-14 h-14 rounded flex items-center justify-center shrink-0"
-            style={{ background: "rgba(176,132,121,0.08)", border: "1px solid rgba(176,132,121,0.25)" }}
+            style={{ background: "rgb(var(--v-crimson-rgb) /0.08)", border: "1px solid rgb(var(--v-crimson-rgb) /0.25)" }}
           >
-            <AlertTriangle className="w-6 h-6" style={{ color: "#B3263E" }} />
+            <AlertTriangle className="w-6 h-6" style={{ color: "var(--v-crimson)" }} />
           </div>
           <div className="flex-1 text-center sm:text-left">
             <p className="text-[10px] text-muted-foreground uppercase tracking-[0.15em] font-semibold mb-1">
@@ -136,20 +136,20 @@ export function RetrievalFailedState({
             </p>
             <h2
               className="text-lg sm:text-xl font-bold mb-2"
-              style={{ fontFamily: "'Bodoni Moda', Georgia, serif", color: "#F1F0EA" }}
+              style={{ fontFamily: "'Bodoni Moda', Georgia, serif", color: "var(--v-ink)" }}
             >
               UNABLE TO ANALYZE
             </h2>
             <div className="flex items-center gap-2 flex-wrap justify-center sm:justify-start mb-2">
               <span
                 className="text-[8px] font-bold tracking-[0.1em] px-1.5 py-0.5"
-                style={{ background: "rgba(176,132,121,0.15)", color: "#B3263E", borderRadius: "1px" }}
+                style={{ background: "rgb(var(--v-crimson-rgb) /0.15)", color: "var(--v-crimson)", borderRadius: "1px" }}
               >
                 RETRIEVAL FAILED
               </span>
               <span
                 className="text-[9px] font-mono tracking-wider"
-                style={{ color: "#A6A39B" }}
+                style={{ color: "var(--v-ink-soft)" }}
               >
                 CONFIDENCE —
               </span>
@@ -157,18 +157,18 @@ export function RetrievalFailedState({
             <p className="text-xs text-muted-foreground leading-relaxed">
               {headline}
             </p>
-            <p className="text-[11px] leading-relaxed mt-1" style={{ color: "#A6A39B" }}>
+            <p className="text-[11px] leading-relaxed mt-1" style={{ color: "var(--v-ink-soft)" }}>
               Reason: {reason}
             </p>
             {failedUrl && (
               <p
                 className="text-[9px] font-mono mt-1 break-all"
-                style={{ color: "#A6A39B", opacity: 0.7 }}
+                style={{ color: "var(--v-ink-soft)", opacity: 0.7 }}
               >
                 {inputType === "url" ? "URL" : "Input type: URL"} {failedUrl}
               </p>
             )}
-            <p className="text-[11px] font-semibold mt-2" style={{ color: "#B3263E" }}>
+            <p className="text-[11px] font-semibold mt-2" style={{ color: "var(--v-crimson)" }}>
               No factual verification was performed.
             </p>
           </div>
@@ -179,7 +179,7 @@ export function RetrievalFailedState({
           <button
             type="button"
             className="cursor-pointer flex items-center justify-center gap-2 h-9 px-5 text-xs font-medium rounded transition-all duration-200 hover:-translate-y-[1px] active:scale-[0.98]"
-            style={{ background: "#F1F0EA", color: "#080808" }}
+            style={{ background: "var(--v-ink)", color: "var(--v-bg)" }}
             onClick={onRetry}
           >
             <RotateCcw className="w-3.5 h-3.5" />Try Again
@@ -187,7 +187,7 @@ export function RetrievalFailedState({
           <button
             type="button"
             className="cursor-pointer flex items-center justify-center gap-2 h-9 px-5 text-xs font-medium rounded transition-all duration-200 hover:-translate-y-[1px] active:scale-[0.98]"
-            style={{ background: "#0C0C0C", color: "#F1F0EA", border: "1px solid #242424" }}
+            style={{ background: "var(--v-surface)", color: "var(--v-ink)", border: "1px solid var(--v-rule)" }}
             onClick={onPasteText}
           >
             <ClipboardPaste className="w-3.5 h-3.5" />Paste Article Text
@@ -200,7 +200,7 @@ export function RetrievalFailedState({
         icon={Fingerprint}
         title="Article Fingerprint"
         subtitle="Retrieval never returned content, so no fingerprint was produced"
-        accent="#F1F0EA"
+        accent="var(--v-ink)"
         delay={0.1}
       >
         <ArticleFingerprint
@@ -215,10 +215,10 @@ export function RetrievalFailedState({
         icon={FileText}
         title="Content Not Retrieved"
         subtitle="No article text was available for analysis"
-        accent="#B3263E"
+        accent="var(--v-crimson)"
         delay={0.13}
       >
-        <p className="text-[11px] leading-relaxed" style={{ color: "#A6A39B" }}>
+        <p className="text-[11px] leading-relaxed" style={{ color: "var(--v-ink-soft)" }}>
           {isInstagram
             ? "The Instagram post could not be retrieved for analysis."
             : "The article content could not be retrieved for analysis."}{" "}
@@ -233,7 +233,7 @@ export function RetrievalFailedState({
           icon={Globe}
           title="Source Profile"
           subtitle="Known from the submitted URL; nothing inferred"
-          accent="#F1F0EA"
+          accent="var(--v-ink)"
           delay={0.16}
         >
           <SourceProfile profile={sourceProfile} />
@@ -245,7 +245,7 @@ export function RetrievalFailedState({
         icon={Link2}
         title="Evidence Chain"
         subtitle="Investigation stopped at retrieval"
-        accent="#B3263E"
+        accent="var(--v-crimson)"
         delay={0.19}
       >
         <EvidenceChain
@@ -265,7 +265,7 @@ export function RetrievalFailedState({
         icon={Play}
         title="Investigation Replay"
         subtitle="Trace of what actually happened"
-        accent="#B3263E"
+        accent="var(--v-crimson)"
         delay={0.22}
       >
         <InvestigationReplay

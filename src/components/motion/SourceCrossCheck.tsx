@@ -28,19 +28,19 @@ function domainOf(url?: string): string | null {
 }
 
 const relConfig: Record<string, { label: string; icon: typeof CheckCircle2; color: string; bg: string }> = {
-  supports: { label: "SUPPORTS", icon: CheckCircle2, color: "#8FA58A", bg: "rgba(138,154,130,0.07)" },
-  contradicts: { label: "CONTRADICTS", icon: AlertTriangle, color: "#B3263E", bg: "rgba(176,132,121,0.07)" },
-  partial: { label: "PARTIAL", icon: HelpCircle, color: "#B7A47A", bg: "rgba(176,161,131,0.07)" },
-  does_not_address: { label: "DOES NOT ADDRESS", icon: HelpCircle, color: "#A6A39B", bg: "rgba(241,240,234,0.05)" },
-  unverified: { label: "UNVERIFIED", icon: HelpCircle, color: "#A6A39B", bg: "rgba(241,240,234,0.05)" },
-  insufficient: { label: "INSUFFICIENT", icon: HelpCircle, color: "#A6A39B", bg: "rgba(241,240,234,0.05)" },
+  supports: { label: "SUPPORTS", icon: CheckCircle2, color: "var(--v-green)", bg: "rgb(var(--v-green-rgb) /0.07)" },
+  contradicts: { label: "CONTRADICTS", icon: AlertTriangle, color: "var(--v-crimson)", bg: "rgb(var(--v-crimson-rgb) /0.07)" },
+  partial: { label: "PARTIAL", icon: HelpCircle, color: "var(--v-brass)", bg: "rgb(var(--v-brass-rgb) /0.07)" },
+  does_not_address: { label: "DOES NOT ADDRESS", icon: HelpCircle, color: "var(--v-ink-soft)", bg: "rgb(var(--v-ink-rgb) /0.05)" },
+  unverified: { label: "UNVERIFIED", icon: HelpCircle, color: "var(--v-ink-soft)", bg: "rgb(var(--v-ink-rgb) /0.05)" },
+  insufficient: { label: "INSUFFICIENT", icon: HelpCircle, color: "var(--v-ink-soft)", bg: "rgb(var(--v-ink-rgb) /0.05)" },
 };
 
 const claimStatusConfig: Record<string, { label: string; color: string }> = {
-  supported: { label: "CORROBORATED", color: "#8FA58A" },
-  contradicted: { label: "CONTRADICTED", color: "#B3263E" },
-  uncertain: { label: "UNCERTAIN", color: "#B7A47A" },
-  needs_verification: { label: "UNVERIFIED", color: "#A6A39B" },
+  supported: { label: "CORROBORATED", color: "var(--v-green)" },
+  contradicted: { label: "CONTRADICTED", color: "var(--v-crimson)" },
+  uncertain: { label: "UNCERTAIN", color: "var(--v-brass)" },
+  needs_verification: { label: "UNVERIFIED", color: "var(--v-ink-soft)" },
 };
 
 /**
@@ -88,12 +88,12 @@ export function SourceCrossCheck({ crossCheck, claims }: {
                       </span>
                     )}
                     {supports > 0 && (
-                      <span className="text-[9.5px] font-semibold tracking-[0.14em]" style={{ color: "#8FA58A" }}>
+                      <span className="text-[9.5px] font-semibold tracking-[0.14em]" style={{ color: "var(--v-green)" }}>
                         {supports} SUPPORT{supports > 1 ? "S" : ""}
                       </span>
                     )}
                     {contradicts > 0 && (
-                      <span className="text-[9.5px] font-semibold tracking-[0.14em]" style={{ color: "#B3263E" }}>
+                      <span className="text-[9.5px] font-semibold tracking-[0.14em]" style={{ color: "var(--v-crimson)" }}>
                         {contradicts} CONTRADICT{contradicts > 1 ? "S" : ""}
                       </span>
                     )}
@@ -107,7 +107,7 @@ export function SourceCrossCheck({ crossCheck, claims }: {
                   </div>
                   <p
                     className="mt-1.5 text-[13px] leading-snug"
-                    style={{ fontFamily: "'Manrope', system-ui, sans-serif", color: "#F1F0EA" }}
+                    style={{ fontFamily: "'Instrument Sans', system-ui, sans-serif", color: "var(--v-ink)" }}
                   >
                     {claim.claimText}
                   </p>
@@ -120,7 +120,7 @@ export function SourceCrossCheck({ crossCheck, claims }: {
                   transition={{ duration: 0.2 }}
                   className="shrink-0 mt-1"
                 >
-                  <ChevronDown className="w-3.5 h-3.5" style={{ color: "#A6A39B" }} />
+                  <ChevronDown className="w-3.5 h-3.5" style={{ color: "var(--v-ink-soft)" }} />
                 </motion.span>
               </div>
             </button>
@@ -152,7 +152,7 @@ export function SourceCrossCheck({ crossCheck, claims }: {
                                   <span className="num-marker shrink-0" style={{ opacity: 0.65 }}>
                                     {String(si + 1).padStart(2, "0")}
                                   </span>
-                                  <span className="text-[12px] font-medium truncate" style={{ color: "#F1F0EA" }}>
+                                  <span className="text-[12px] font-medium truncate" style={{ color: "var(--v-ink)" }}>
                                     {src.name}
                                   </span>
                                   {dom && dom !== src.name && (
@@ -169,11 +169,11 @@ export function SourceCrossCheck({ crossCheck, claims }: {
                               </div>
                               <p
                                 className="mt-1.5 text-[12px] leading-snug"
-                                style={{ fontFamily: "'Manrope', system-ui, sans-serif", color: "#F1F0EA" }}
+                                style={{ fontFamily: "'Instrument Sans', system-ui, sans-serif", color: "var(--v-ink)" }}
                               >
                                 {src.headline}
                               </p>
-                              <p className="mt-1 text-[10.5px] leading-relaxed" style={{ color: "#A6A39B" }}>
+                              <p className="mt-1 text-[10.5px] leading-relaxed" style={{ color: "var(--v-ink-soft)" }}>
                                 {src.excerpt}
                               </p>
                               <div className="mt-1.5 flex items-center gap-4">
@@ -183,7 +183,7 @@ export function SourceCrossCheck({ crossCheck, claims }: {
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="inline-flex items-center gap-1 kicker ul-hover transition-colors hover:text-foreground"
-                                    style={{ color: "#F1F0EA" }}
+                                    style={{ color: "var(--v-ink)" }}
                                   >
                                     <ExternalLink className="w-2.5 h-2.5" />
                                     Open source

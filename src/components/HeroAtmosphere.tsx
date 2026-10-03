@@ -1,5 +1,5 @@
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 
 /* ─── Atmospheric layer ───────────────────────────────────────────────
    The intro page's own artwork, borrowed as depth rather than as a
@@ -19,9 +19,9 @@ import { useEffect, useState } from "react";
 
 type Strength = "desk" | "analysis";
 
-const TREATMENT: Record<Strength, { blur: string; opacity: string; wash: string; drift: string }> = {
-  desk: { blur: "blur-[6px]", opacity: "opacity-[0.12]", wash: "bg-[#08080A]/85", drift: "3%" },
-  analysis: { blur: "blur-[8px]", opacity: "opacity-[0.07]", wash: "bg-[#08080A]/92", drift: "2%" },
+const TREATMENT: Record<Strength, { blur: string; image: string; wash: string; drift: string }> = {
+  desk: { blur: "blur-[6px]", image: "0.12", wash: "atmo-wash-desk", drift: "3%" },
+  analysis: { blur: "blur-[8px]", image: "0.07", wash: "atmo-wash-analysis", drift: "2%" },
 };
 
 export default function HeroAtmosphere({ strength = "desk" }: { strength?: Strength }) {
@@ -53,11 +53,14 @@ export default function HeroAtmosphere({ strength = "desk" }: { strength?: Stren
           <img
             src="/veritas-hero.png"
             alt=""
-            className={`h-full w-full scale-110 object-cover ${t.blur} ${t.opacity}`}
+            className={`atmo-image h-full w-full scale-110 object-cover ${t.blur}`}
+            style={{ "--atmo-image": t.image } as CSSProperties}
           />
         </picture>
       </motion.div>
-      {/* Near-black wash — the layer that keeps the page readable. */}
+      {/* Near-black wash — the layer that keeps the page readable. It takes
+          the current canvas colour, so on paper it is a paper wash rather
+          than a black one. */}
       <div className={`absolute inset-0 ${t.wash}`} />
     </div>
   );

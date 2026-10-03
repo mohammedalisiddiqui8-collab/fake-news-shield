@@ -120,36 +120,36 @@ export function InvestigationReplay({ analysis, retrievalFailed, failedUrl, fail
       {/* Controls — square hairline instruments, quiet against the document */}
       <div className="flex items-center gap-1.5 mb-4">
         <button type="button" onClick={reset} title="Restart replay"
-          className="w-7 h-7 flex items-center justify-center transition-colors hover:bg-[rgba(241,240,234,0.04)]"
-          style={{ border: "1px solid #242424", color: "#A6A39B" }}>
+          className="w-7 h-7 flex items-center justify-center transition-colors hover:bg-[rgb(var(--v-ink-rgb) /0.04)]"
+          style={{ border: "1px solid var(--v-rule)", color: "var(--v-ink-soft)" }}>
           <RotateCcw className="w-3 h-3" />
         </button>
         <button type="button" onClick={stepBack} disabled={currentStage === 0} title="Previous stage"
-          className="w-7 h-7 flex items-center justify-center transition-colors hover:bg-[rgba(241,240,234,0.04)] disabled:opacity-30"
-          style={{ border: "1px solid #242424", color: "#A6A39B" }}>
+          className="w-7 h-7 flex items-center justify-center transition-colors hover:bg-[rgb(var(--v-ink-rgb) /0.04)] disabled:opacity-30"
+          style={{ border: "1px solid var(--v-rule)", color: "var(--v-ink-soft)" }}>
           <SkipBack className="w-3 h-3" />
         </button>
         <button type="button" onClick={isPlaying ? pause : play} title={isPlaying ? "Pause replay" : "Play replay"}
           className="w-8 h-8 flex items-center justify-center transition-colors hover:opacity-85"
-          style={{ border: "1px solid #F1F0EA", color: "#F1F0EA" }}>
+          style={{ border: "1px solid var(--v-ink)", color: "var(--v-ink)" }}>
           {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
         </button>
         <button type="button" onClick={stepForward} disabled={currentStage >= stages.length - 1} title="Next stage"
-          className="w-7 h-7 flex items-center justify-center transition-colors hover:bg-[rgba(241,240,234,0.04)] disabled:opacity-30"
-          style={{ border: "1px solid #242424", color: "#A6A39B" }}>
+          className="w-7 h-7 flex items-center justify-center transition-colors hover:bg-[rgb(var(--v-ink-rgb) /0.04)] disabled:opacity-30"
+          style={{ border: "1px solid var(--v-rule)", color: "var(--v-ink-soft)" }}>
           <SkipForward className="w-3 h-3" />
         </button>
 
         {/* Progress — a single hairline rule, not a pill */}
-        <div className="flex-1 relative h-px ml-2" style={{ background: "#242424" }}>
+        <div className="flex-1 relative h-px ml-2" style={{ background: "var(--v-rule)" }}>
           <motion.div
             animate={{ width: ((currentStage / (stages.length - 1)) * 100) + "%" }}
             transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
             className="absolute top-0 left-0 h-px"
-            style={{ background: "#F1F0EA" }}
+            style={{ background: "var(--v-ink)" }}
           />
         </div>
-        <span className="text-[9px] tracking-[0.14em] ml-2 tabular" style={{ fontFamily: "'JetBrains Mono', monospace", color: "#A6A39B" }}>
+        <span className="text-[9px] tracking-[0.14em] ml-2 tabular" style={{ fontFamily: "'JetBrains Mono', monospace", color: "var(--v-ink-soft)" }}>
           {String(currentStage + 1).padStart(2, "0")} / {String(stages.length).padStart(2, "0")}
         </span>
       </div>
@@ -173,7 +173,7 @@ export function InvestigationReplay({ analysis, retrievalFailed, failedUrl, fail
                 <motion.span
                   layoutId="replay-active"
                   className="absolute left-0 top-0 bottom-0 w-[2px]"
-                  style={{ background: "#F1F0EA" }}
+                  style={{ background: "var(--v-ink)" }}
                   transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
                 />
               )}
@@ -181,7 +181,7 @@ export function InvestigationReplay({ analysis, retrievalFailed, failedUrl, fail
                 <motion.span
                   layoutId="replay-active-bg"
                   className="absolute inset-0"
-                  style={{ background: "rgba(201,195,183,0.045)" }}
+                  style={{ background: "rgb(var(--v-ink-rgb) /0.045)" }}
                   transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
                 />
               )}
@@ -192,7 +192,7 @@ export function InvestigationReplay({ analysis, retrievalFailed, failedUrl, fail
                   className="w-7 shrink-0 text-center text-[9px] leading-none pt-3.5 tracking-[0.12em]"
                   style={{
                     fontFamily: "'JetBrains Mono', monospace",
-                    color: isActive ? "#F1F0EA" : isDone ? "#8FA58A" : "#A6A39B",
+                    color: isActive ? "var(--v-ink)" : isDone ? "var(--v-green)" : "var(--v-ink-soft)",
                     opacity: isPending ? 0.7 : 1,
                     fontVariantNumeric: "tabular-nums",
                   }}
@@ -201,12 +201,12 @@ export function InvestigationReplay({ analysis, retrievalFailed, failedUrl, fail
                 </span>
                 {i < stages.length - 1 && (
                   <div className="relative w-px flex-1 min-h-[18px]">
-                    <div className="absolute inset-0" style={{ background: "#242424" }} />
+                    <div className="absolute inset-0" style={{ background: "var(--v-rule)" }} />
                     <motion.div
                       animate={{ height: isDone || isActive ? "100%" : "0%" }}
                       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
                       className="absolute top-0 left-0 w-full"
-                      style={{ background: "rgba(201,195,183,0.35)" }}
+                      style={{ background: "rgb(var(--v-ink-rgb) /0.35)" }}
                     />
                   </div>
                 )}
@@ -222,13 +222,13 @@ export function InvestigationReplay({ analysis, retrievalFailed, failedUrl, fail
                   <span className="flex items-baseline gap-2.5 min-w-0">
                     <stage.icon
                       className="w-3.5 h-3.5 shrink-0 self-center"
-                      style={{ color: isActive ? "#F1F0EA" : "#6B6963" }}
+                      style={{ color: isActive ? "var(--v-ink)" : "var(--v-ink-dim)" }}
                     />
                     <span
                       className="text-[9.5px] tracking-[0.18em] uppercase"
                       style={{
                         fontFamily: "'JetBrains Mono', monospace",
-                        color: isActive ? "#F1F0EA" : "#A6A39B",
+                        color: isActive ? "var(--v-ink)" : "var(--v-ink-soft)",
                         fontWeight: isActive ? 600 : 500,
                       }}
                     >
@@ -236,14 +236,14 @@ export function InvestigationReplay({ analysis, retrievalFailed, failedUrl, fail
                     </span>
                   </span>
                   <span className="shrink-0 flex items-center gap-1.5">
-                    {isDone && stage.occurred && <CheckCircle2 className="w-3 h-3" style={{ color: "#8FA58A" }} />}
+                    {isDone && stage.occurred && <CheckCircle2 className="w-3 h-3" style={{ color: "var(--v-green)" }} />}
                     {isDone && !stage.occurred && (
-                      <span className="text-[8px] tracking-[0.16em] uppercase" style={{ fontFamily: "'JetBrains Mono', monospace", color: "#B7A47A" }}>
+                      <span className="text-[8px] tracking-[0.16em] uppercase" style={{ fontFamily: "'JetBrains Mono', monospace", color: "var(--v-brass)" }}>
                         not performed
                       </span>
                     )}
                     {isActive && (
-                      <span className="text-[8px] tracking-[0.16em] uppercase" style={{ fontFamily: "'JetBrains Mono', monospace", color: "#F1F0EA" }}>
+                      <span className="text-[8px] tracking-[0.16em] uppercase" style={{ fontFamily: "'JetBrains Mono', monospace", color: "var(--v-ink)" }}>
                         current step
                       </span>
                     )}
@@ -255,7 +255,7 @@ export function InvestigationReplay({ analysis, retrievalFailed, failedUrl, fail
                     animate={{ opacity: isDone && !isActive ? 0.8 : 1, y: 0 }}
                     transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
                     className="mt-1 text-[11px] leading-relaxed"
-                    style={{ color: isActive ? "#F1F0EA" : "#A6A39B" }}
+                    style={{ color: isActive ? "var(--v-ink)" : "var(--v-ink-soft)" }}
                   >
                     {stage.detail}
                   </motion.p>

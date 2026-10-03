@@ -16,12 +16,12 @@ import type { CrossCheckSource } from "@/components/motion/SourceCrossCheck";
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 const REL: Record<string, { label: string; color: string }> = {
-  supports: { label: "SUPPORTS", color: "#8FA58A" },
-  contradicts: { label: "CONTRADICTS", color: "#B3263E" },
-  partial: { label: "PARTIAL", color: "#B7A47A" },
-  does_not_address: { label: "NOT ADDRESSED", color: "#A6A39B" },
-  unverified: { label: "UNVERIFIED", color: "#A6A39B" },
-  insufficient: { label: "INSUFFICIENT", color: "#A6A39B" },
+  supports: { label: "SUPPORTS", color: "var(--v-green)" },
+  contradicts: { label: "CONTRADICTS", color: "var(--v-crimson)" },
+  partial: { label: "PARTIAL", color: "var(--v-brass)" },
+  does_not_address: { label: "NOT ADDRESSED", color: "var(--v-ink-soft)" },
+  unverified: { label: "UNVERIFIED", color: "var(--v-ink-soft)" },
+  insufficient: { label: "INSUFFICIENT", color: "var(--v-ink-soft)" },
 };
 
 export function SourceTrail({
@@ -82,7 +82,7 @@ export function SourceTrail({
                 className="group flex w-full flex-col gap-1.5 py-3.5 text-left min-h-[44px] sm:flex-row sm:items-baseline sm:gap-4"
               >
                 <span className="min-w-0 sm:w-28 sm:shrink-0">
-                  <span className="block truncate text-[12px] font-medium" style={{ color: "#F1F0EA" }}>
+                  <span className="block truncate text-[12px] font-medium" style={{ color: "var(--v-ink)" }}>
                     {src.name}
                   </span>
                   {domain && domain !== src.name && (
@@ -105,7 +105,7 @@ export function SourceTrail({
                   <span className="kicker truncate sm:hidden" style={{ opacity: 0.45 }}>
                     Claim {String(src.claimId).padStart(2, "0")}
                   </span>
-                  <span className="hidden truncate text-[11.5px] sm:block" style={{ color: "#A6A39B" }}>
+                  <span className="hidden truncate text-[11.5px] sm:block" style={{ color: "var(--v-ink-soft)" }}>
                     Claim {String(src.claimId).padStart(2, "0")} · {src.claimText}
                   </span>
                 </span>
@@ -118,7 +118,7 @@ export function SourceTrail({
                     animate={{ rotate: isOpen ? 45 : 0, opacity: isOpen ? 1 : 0.45 }}
                     transition={{ duration: 0.3, ease: EASE }}
                   >
-                    <Plus className="h-3 w-3" style={{ color: "#F1F0EA" }} />
+                    <Plus className="h-3 w-3" style={{ color: "var(--v-ink)" }} />
                   </motion.span>
                 </span>
               </button>
@@ -141,12 +141,12 @@ export function SourceTrail({
                       <p className="kicker" style={{ opacity: 0.5 }}>Evidence · {rel.label.toLowerCase()}</p>
                       <p
                         className="mt-2 text-[12px] leading-snug"
-                        style={{ fontFamily: "'Manrope', system-ui, sans-serif", color: "#F1F0EA" }}
+                        style={{ fontFamily: "'Instrument Sans', system-ui, sans-serif", color: "var(--v-ink)" }}
                       >
                         {src.headline}
                       </p>
                       {src.excerpt && (
-                        <p className="mt-1.5 max-w-[70ch] text-[10.5px] leading-relaxed" style={{ color: "#A6A39B" }}>
+                        <p className="mt-1.5 max-w-[70ch] text-[10.5px] leading-relaxed" style={{ color: "var(--v-ink-soft)" }}>
                           {src.excerpt}
                         </p>
                       )}
@@ -156,7 +156,7 @@ export function SourceTrail({
                           target="_blank"
                           rel="noopener noreferrer"
                           className="ul-hover mt-3 inline-flex items-center gap-1.5 text-[10px] uppercase tracking-[0.16em]"
-                          style={{ color: "#F1F0EA" }}
+                          style={{ color: "var(--v-ink)" }}
                         >
                           Read the source
                           <ExternalLink className="h-3 w-3" />

@@ -37,21 +37,21 @@ const verdictDisplay: Record<
 > = {
   likely_real: {
     icon: CheckCircle2,
-    color: "#F1F0EA",
+    color: "var(--v-ink)",
     label: "CREDIBLE",
-    bg: "rgba(201,195,183,0.08)",
+    bg: "rgb(var(--v-ink-rgb) /0.08)",
   },
   likely_fake: {
     icon: XCircle,
-    color: "#B3263E",
+    color: "var(--v-crimson)",
     label: "MISLEADING",
-    bg: "rgba(176,132,121,0.08)",
+    bg: "rgb(var(--v-crimson-rgb) /0.08)",
   },
   uncertain: {
     icon: AlertTriangle,
-    color: "#B7A47A",
+    color: "var(--v-brass)",
     label: "UNCERTAIN",
-    bg: "rgba(176,161,131,0.08)",
+    bg: "rgb(var(--v-brass-rgb) /0.08)",
   },
 };
 
@@ -65,17 +65,17 @@ export function CaseFiles({ cases, onSelect, onDelete }: CaseFilesProps) {
       <div className="py-10 text-center">
         <div
           className="w-12 h-12 rounded-sm flex items-center justify-center mx-auto mb-3"
-          style={{ background: "rgba(201,195,183,0.06)", border: "1px solid #242424" }}
+          style={{ background: "rgb(var(--v-ink-rgb) /0.06)", border: "1px solid var(--v-rule)" }}
         >
-          <Shield className="w-5 h-5" style={{ color: "#F1F0EA" }} />
+          <Shield className="w-5 h-5" style={{ color: "var(--v-ink)" }} />
         </div>
         <h3
           className="text-sm font-semibold mb-1"
-          style={{ fontFamily: "'Bodoni Moda', Georgia, serif", color: "#F1F0EA" }}
+          style={{ fontFamily: "'Bodoni Moda', Georgia, serif", color: "var(--v-ink)" }}
         >
           No case files
         </h3>
-        <p className="text-[11px]" style={{ color: "#A6A39B" }}>
+        <p className="text-[11px]" style={{ color: "var(--v-ink-soft)" }}>
           Start analyzing to create your first investigation case.
         </p>
       </div>
@@ -94,9 +94,9 @@ export function CaseFiles({ cases, onSelect, onDelete }: CaseFilesProps) {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.2, delay: i * 0.04 }}
-            className="group cursor-pointer transition-all duration-200 hover:bg-white/[0.015]"
+            className="group cursor-pointer transition-all duration-200 hover:bg-[rgb(var(--v-ink-rgb)/0.04)]"
             style={{
-              borderBottom: "1px solid #242424",
+              borderBottom: "1px solid var(--v-rule)",
             }}
             onClick={() => onSelect(caseFile)}
           >
@@ -117,7 +117,7 @@ export function CaseFiles({ cases, onSelect, onDelete }: CaseFilesProps) {
                     className="text-[9.5px] font-bold tracking-[0.2em]"
                     style={{
                       fontFamily: "'JetBrains Mono', monospace",
-                      color: "#B7A47A",
+                      color: "var(--v-brass)",
                     }}
                   >
                     {caseFile.caseNumber}
@@ -142,7 +142,7 @@ export function CaseFiles({ cases, onSelect, onDelete }: CaseFilesProps) {
                 {/* Summary */}
                 <p
                   className="text-[11px] leading-relaxed line-clamp-1"
-                  style={{ color: "#A6A39B" }}
+                  style={{ color: "var(--v-ink-soft)" }}
                 >
                   {caseFile.summary}
                 </p>
@@ -150,20 +150,20 @@ export function CaseFiles({ cases, onSelect, onDelete }: CaseFilesProps) {
                 {/* Metadata row */}
                 <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                   <div className="flex items-center gap-1">
-                    <Clock className="w-2.5 h-2.5" style={{ color: "#A6A39B", opacity: 0.4 }} />
+                    <Clock className="w-2.5 h-2.5" style={{ color: "var(--v-ink-soft)", opacity: 0.4 }} />
                     <span
                       className="text-[9.5px]"
-                      style={{ color: "#A6A39B", opacity: 0.5 }}
+                      style={{ color: "var(--v-ink-soft)", opacity: 0.5 }}
                     >
                       {caseFile.analyzedAt}
                     </span>
                   </div>
                   {caseFile.source && caseFile.source !== "N/A" && (
                     <div className="flex items-center gap-1">
-                      <Globe className="w-2.5 h-2.5" style={{ color: "#A6A39B", opacity: 0.4 }} />
+                      <Globe className="w-2.5 h-2.5" style={{ color: "var(--v-ink-soft)", opacity: 0.4 }} />
                       <span
                         className="text-[9.5px]"
-                        style={{ color: "#A6A39B", opacity: 0.5 }}
+                        style={{ color: "var(--v-ink-soft)", opacity: 0.5 }}
                       >
                         {caseFile.source}
                       </span>
@@ -171,7 +171,7 @@ export function CaseFiles({ cases, onSelect, onDelete }: CaseFilesProps) {
                   )}
                   <span
                     className="text-[9.5px] px-1.5 py-0.5"
-                    style={{ color: "#A6A39B", opacity: 0.4, border: "1px solid #242424", borderRadius: "1px" }}
+                    style={{ color: "var(--v-ink-soft)", opacity: 0.4, border: "1px solid var(--v-rule)", borderRadius: "1px" }}
                   >
                     {caseFile.type}
                   </span>
@@ -188,11 +188,11 @@ export function CaseFiles({ cases, onSelect, onDelete }: CaseFilesProps) {
                     onDelete(caseFile.id);
                   }}
                 >
-                  <Trash2 className="w-3 h-3" style={{ color: "#A6A39B" }} />
+                  <Trash2 className="w-3 h-3" style={{ color: "var(--v-ink-soft)" }} />
                 </button>
                 <ChevronRight
                   className="w-3.5 h-3.5 transition-colors"
-                  style={{ color: "#A6A39B" }}
+                  style={{ color: "var(--v-ink-soft)" }}
                 />
               </div>
             </div>

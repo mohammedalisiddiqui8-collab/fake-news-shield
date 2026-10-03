@@ -83,11 +83,11 @@ interface AnalysisResult {
    sage = supported/verified · muted brass = uncertain / needs verification ·
    crimson = contradicted / warning. Monochrome until status needs meaning. */
 const STATUS = {
-  green: "#8FA58A",
-  amber: "#B7A47A",
-  red: "#B3263E",
-  gold: "#F1F0EA",
-  bronze: "#F1F0EA",
+  green: "var(--v-green)",
+  amber: "var(--v-brass)",
+  red: "var(--v-crimson)",
+  gold: "var(--v-ink)",
+  bronze: "var(--v-ink)",
 } as const;
 
 const verdictStatus: Record<Verdict, string> = {
@@ -229,12 +229,12 @@ function ConfidenceRing({ value, delay = 0.35 }: { value: number; delay?: number
   return (
     <div className="relative inline-flex shrink-0 items-center justify-center" role="img" aria-label={`Confidence ${value}%`}>
       <svg width="86" height="86" viewBox="0 0 86 86" fill="none">
-        <circle cx="43" cy="43" r={R} stroke="#242424" strokeWidth="2" />
+        <circle cx="43" cy="43" r={R} stroke="var(--v-rule)" strokeWidth="2" />
         <motion.circle
           cx="43"
           cy="43"
           r={R}
-          stroke="#F1F0EA"
+          stroke="var(--v-ink)"
           strokeWidth="2"
           strokeLinecap="butt"
           transform="rotate(-90 43 43)"
@@ -245,7 +245,7 @@ function ConfidenceRing({ value, delay = 0.35 }: { value: number; delay?: number
         />
       </svg>
       <span className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-[19px] leading-none tabular" style={{ fontFamily: "'JetBrains Mono', monospace", color: "#F1F0EA" }}>
+        <span className="text-[19px] leading-none tabular" style={{ fontFamily: "'JetBrains Mono', monospace", color: "var(--v-ink)" }}>
           {value}%
         </span>
         <span className="mt-1 kicker" style={{ fontSize: "7.5px", letterSpacing: "0.22em", opacity: 0.7 }}>Confidence</span>
@@ -297,11 +297,11 @@ function MetricBar({ label, value, color }: { label: string; value: number | nul
     <div className="py-2.5 border-b border-border/70 last:border-b-0">
       <div className="flex items-baseline justify-between gap-3 mb-1.5">
         <span className="kicker truncate">{label}</span>
-        <span className="font-mono text-[10px] tabular shrink-0" style={{ color: value == null ? "#A6A39B" : color }}>
+        <span className="font-mono text-[10px] tabular shrink-0" style={{ color: value == null ? "var(--v-ink-soft)" : color }}>
           {value == null ? "—" : `${value}%`}
         </span>
       </div>
-      <div className="h-[2px] w-full" style={{ background: "#242424" }}>
+      <div className="h-[2px] w-full" style={{ background: "var(--v-rule)" }}>
         {value != null && (
           <motion.div
             initial={{ width: 0 }}
@@ -324,49 +324,49 @@ function EditorialPlate() {
   const rightLines = [88, 74, 92, 60, 84];
   return (
     <svg viewBox="0 0 320 400" className="w-full h-auto" fill="none" aria-hidden="true">
-      <rect x="6" y="6" width="308" height="388" stroke="#F1F0EA" strokeOpacity="0.16" />
-      <rect x="13" y="13" width="294" height="374" stroke="#F1F0EA" strokeOpacity="0.07" />
+      <rect x="6" y="6" width="308" height="388" stroke="var(--v-ink)" strokeOpacity="0.16" />
+      <rect x="13" y="13" width="294" height="374" stroke="var(--v-ink)" strokeOpacity="0.07" />
 
       {/* masthead */}
-      <text x="160" y="54" textAnchor="middle" fontFamily="'Bodoni Moda', Georgia, serif" fontSize="27" letterSpacing="7" fill="#F1F0EA" fillOpacity="0.85">VERITAS</text>
-      <text x="160" y="72" textAnchor="middle" fontFamily="'JetBrains Mono', monospace" fontSize="6.5" letterSpacing="3.4" fill="#A6A39B">TRUTH · EVIDENCE · CONTEXT</text>
-      <line x1="30" y1="84" x2="290" y2="84" stroke="#F1F0EA" strokeOpacity="0.55" />
-      <line x1="30" y1="87.5" x2="290" y2="87.5" stroke="#F1F0EA" strokeOpacity="0.16" />
+      <text x="160" y="54" textAnchor="middle" fontFamily="'Bodoni Moda', Georgia, serif" fontSize="27" letterSpacing="7" fill="var(--v-ink)" fillOpacity="0.85">VERITAS</text>
+      <text x="160" y="72" textAnchor="middle" fontFamily="'JetBrains Mono', monospace" fontSize="6.5" letterSpacing="3.4" fill="var(--v-ink-soft)">TRUTH · EVIDENCE · CONTEXT</text>
+      <line x1="30" y1="84" x2="290" y2="84" stroke="var(--v-ink)" strokeOpacity="0.55" />
+      <line x1="30" y1="87.5" x2="290" y2="87.5" stroke="var(--v-ink)" strokeOpacity="0.16" />
 
       {/* deck headline */}
-      <rect x="30" y="102" width="212" height="8" fill="#F1F0EA" fillOpacity="0.5" />
-      <rect x="30" y="116" width="168" height="8" fill="#F1F0EA" fillOpacity="0.32" />
-      <text x="30" y="140" fontFamily="'JetBrains Mono', monospace" fontSize="6.5" letterSpacing="2.4" fill="#A6A39B">FILED BY THE VERIFICATION DESK</text>
-      <line x1="30" y1="150" x2="290" y2="150" stroke="#F1F0EA" strokeOpacity="0.12" />
+      <rect x="30" y="102" width="212" height="8" fill="var(--v-ink)" fillOpacity="0.5" />
+      <rect x="30" y="116" width="168" height="8" fill="var(--v-ink)" fillOpacity="0.32" />
+      <text x="30" y="140" fontFamily="'JetBrains Mono', monospace" fontSize="6.5" letterSpacing="2.4" fill="var(--v-ink-soft)">FILED BY THE VERIFICATION DESK</text>
+      <line x1="30" y1="150" x2="290" y2="150" stroke="var(--v-ink)" strokeOpacity="0.12" />
 
       {/* two column measures */}
-      <line x1="160" y1="164" x2="160" y2="316" stroke="#F1F0EA" strokeOpacity="0.1" />
+      <line x1="160" y1="164" x2="160" y2="316" stroke="var(--v-ink)" strokeOpacity="0.1" />
       {leftLines.map((w, i) => (
-        <rect key={`l${i}`} x="30" y={168 + i * 17} width={w * 1.6} height="4" fill="#F1F0EA" fillOpacity={0.16 + (i % 3) * 0.05} />
+        <rect key={`l${i}`} x="30" y={168 + i * 17} width={w * 1.6} height="4" fill="var(--v-ink)" fillOpacity={0.16 + (i % 3) * 0.05} />
       ))}
       {rightLines.map((w, i) => (
-        <rect key={`r${i}`} x="172" y={168 + i * 17} width={w * 0.95} height="4" fill="#F1F0EA" fillOpacity={0.16 + (i % 2) * 0.05} />
+        <rect key={`r${i}`} x="172" y={168 + i * 17} width={w * 0.95} height="4" fill="var(--v-ink)" fillOpacity={0.16 + (i % 2) * 0.05} />
       ))}
 
       {/* magnifier over the right column — investigation, not decoration */}
-      <circle cx="220" cy="262" r="38" fill="#080808" fillOpacity="0.92" stroke="#F1F0EA" strokeOpacity="0.75" strokeWidth="1.4" />
-      <line x1="247" y1="289" x2="272" y2="314" stroke="#F1F0EA" strokeOpacity="0.75" strokeWidth="3.5" strokeLinecap="round" />
+      <circle cx="220" cy="262" r="38" fill="var(--v-bg)" fillOpacity="0.92" stroke="var(--v-ink)" strokeOpacity="0.75" strokeWidth="1.4" />
+      <line x1="247" y1="289" x2="272" y2="314" stroke="var(--v-ink)" strokeOpacity="0.75" strokeWidth="3.5" strokeLinecap="round" />
       {[246, 256, 266].map((y, i) => (
-        <rect key={`m${i}`} x="194" y={y} width={i === 1 ? 44 : 36} height="3.5" fill="#F1F0EA" fillOpacity={i === 1 ? 0.65 : 0.4} />
+        <rect key={`m${i}`} x="194" y={y} width={i === 1 ? 44 : 36} height="3.5" fill="var(--v-ink)" fillOpacity={i === 1 ? 0.65 : 0.4} />
       ))}
 
       {/* seal */}
-      <circle cx="56" cy="344" r="20" stroke="#F1F0EA" strokeOpacity="0.5" />
-      <circle cx="56" cy="344" r="15" stroke="#F1F0EA" strokeOpacity="0.3" />
-      <text x="56" y="342" textAnchor="middle" fontFamily="'JetBrains Mono', monospace" fontSize="6" letterSpacing="1" fill="#F1F0EA" fillOpacity="0.8">EVERY</text>
-      <text x="56" y="351" textAnchor="middle" fontFamily="'JetBrains Mono', monospace" fontSize="6" letterSpacing="1" fill="#F1F0EA" fillOpacity="0.8">CLAIM</text>
+      <circle cx="56" cy="344" r="20" stroke="var(--v-ink)" strokeOpacity="0.5" />
+      <circle cx="56" cy="344" r="15" stroke="var(--v-ink)" strokeOpacity="0.3" />
+      <text x="56" y="342" textAnchor="middle" fontFamily="'JetBrains Mono', monospace" fontSize="6" letterSpacing="1" fill="var(--v-ink)" fillOpacity="0.8">EVERY</text>
+      <text x="56" y="351" textAnchor="middle" fontFamily="'JetBrains Mono', monospace" fontSize="6" letterSpacing="1" fill="var(--v-ink)" fillOpacity="0.8">CLAIM</text>
 
       {/* footer rules + dateline */}
-      <line x1="88" y1="336" x2="290" y2="336" stroke="#F1F0EA" strokeOpacity="0.12" />
-      <line x1="88" y1="344" x2="290" y2="344" stroke="#F1F0EA" strokeOpacity="0.12" />
-      <line x1="88" y1="352" x2="248" y2="352" stroke="#F1F0EA" strokeOpacity="0.12" />
-      <line x1="30" y1="372" x2="290" y2="372" stroke="#F1F0EA" strokeOpacity="0.16" />
-      <text x="160" y="384" textAnchor="middle" fontFamily="'JetBrains Mono', monospace" fontSize="6" letterSpacing="3" fill="#A6A39B">INDEPENDENT · EVIDENCE-LED · OPEN</text>
+      <line x1="88" y1="336" x2="290" y2="336" stroke="var(--v-ink)" strokeOpacity="0.12" />
+      <line x1="88" y1="344" x2="290" y2="344" stroke="var(--v-ink)" strokeOpacity="0.12" />
+      <line x1="88" y1="352" x2="248" y2="352" stroke="var(--v-ink)" strokeOpacity="0.12" />
+      <line x1="30" y1="372" x2="290" y2="372" stroke="var(--v-ink)" strokeOpacity="0.16" />
+      <text x="160" y="384" textAnchor="middle" fontFamily="'JetBrains Mono', monospace" fontSize="6" letterSpacing="3" fill="var(--v-ink-soft)">INDEPENDENT · EVIDENCE-LED · OPEN</text>
     </svg>
   );
 }
@@ -380,9 +380,9 @@ function HeadlinesColumn({ items, loading, onPick, variant = "table" }: {
       <div className="border-t border-border">
         {Array.from({ length: 5 }).map((_, i) => (
           <div key={i} className="flex items-center gap-4 py-4 border-b border-border animate-pulse">
-            <div className="h-2 w-16 shrink-0" style={{ background: "#0C0C0C" }} />
-            <div className="h-3 flex-1" style={{ background: "#0C0C0C" }} />
-            <div className="h-2 w-20 shrink-0 hidden sm:block" style={{ background: "#0C0C0C" }} />
+            <div className="h-2 w-16 shrink-0" style={{ background: "var(--v-surface)" }} />
+            <div className="h-3 flex-1" style={{ background: "var(--v-surface)" }} />
+            <div className="h-2 w-20 shrink-0 hidden sm:block" style={{ background: "var(--v-surface)" }} />
           </div>
         ))}
       </div>
@@ -394,7 +394,7 @@ function HeadlinesColumn({ items, loading, onPick, variant = "table" }: {
   if (items.length === 0) {
     return (
       <div className="border-t border-border py-10 text-center">
-        <p className="kicker" style={{ color: "#F1F0EA" }}>LIVE HEADLINES UNAVAILABLE</p>
+        <p className="kicker" style={{ color: "var(--v-ink)" }}>LIVE HEADLINES UNAVAILABLE</p>
         <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
           Unable to retrieve current headlines. Try again later.
         </p>
@@ -418,12 +418,12 @@ function HeadlinesColumn({ items, loading, onPick, variant = "table" }: {
               <span className="flex-1 min-w-0">
                 <span
                   className="block text-[13.5px] leading-snug transition-colors group-hover:text-primary"
-                  style={{ fontFamily: "'Manrope', system-ui, sans-serif", color: "#F1F0EA" }}
+                  style={{ fontFamily: "'Instrument Sans', system-ui, sans-serif", color: "var(--v-ink)" }}
                 >
                   {item.label}
                 </span>
                 <span className="mt-1.5 flex flex-wrap items-center gap-x-1.5">
-                  {item.source && <span className="kicker" style={{ color: "#F1F0EA" }}>{item.source}</span>}
+                  {item.source && <span className="kicker" style={{ color: "var(--v-ink)" }}>{item.source}</span>}
                   {item.source && <span className="kicker" style={{ opacity: 0.5 }}>·</span>}
                   <span className="kicker" style={{ opacity: 0.65 }}>{item.category}</span>
                   {item.publishedAgo && <span className="kicker" style={{ opacity: 0.5 }}>·</span>}
@@ -435,7 +435,7 @@ function HeadlinesColumn({ items, loading, onPick, variant = "table" }: {
               </span>
               <ChevronRight
                 className="w-3.5 h-3.5 shrink-0 mt-1 opacity-0 transition-all group-hover:opacity-70 group-hover:translate-x-0.5"
-                style={{ color: "#F1F0EA" }}
+                style={{ color: "var(--v-ink)" }}
               />
             </div>
           </button>
@@ -467,14 +467,14 @@ function HeadlinesColumn({ items, loading, onPick, variant = "table" }: {
               <span className="flex-1 min-w-0">
                 <span
                   className="block text-[14px] leading-snug transition-colors group-hover:text-primary"
-                  style={{ fontFamily: "'Manrope', system-ui, sans-serif", color: "#F1F0EA" }}
+                  style={{ fontFamily: "'Instrument Sans', system-ui, sans-serif", color: "var(--v-ink)" }}
                 >
                   {item.label}
                 </span>
                 <span className="sm:hidden mt-1.5 flex flex-wrap items-center gap-x-2">
                   <span className="kicker">{item.category}</span>
                   {item.source && <span className="kicker opacity-50">·</span>}
-                  {item.source && <span className="kicker" style={{ color: "#F1F0EA" }}>{item.source}</span>}
+                  {item.source && <span className="kicker" style={{ color: "var(--v-ink)" }}>{item.source}</span>}
                   {item.publishedAgo && <span className="kicker opacity-50">·</span>}
                   {item.publishedAgo && <span className="kicker" style={{ opacity: 0.7 }}>{item.publishedAgo}</span>}
                 </span>
@@ -483,12 +483,12 @@ function HeadlinesColumn({ items, loading, onPick, variant = "table" }: {
                 )}
               </span>
               <span className="hidden sm:flex items-center gap-3 w-[9.5rem] justify-end shrink-0">
-                <span className="kicker truncate" style={{ color: "#F1F0EA" }}>{item.source}</span>
+                <span className="kicker truncate" style={{ color: "var(--v-ink)" }}>{item.source}</span>
                 <span className="kicker tabular opacity-60 shrink-0">{item.publishedAgo}</span>
               </span>
               <ChevronRight
                 className="hidden sm:block w-3.5 h-3.5 shrink-0 translate-y-0.5 opacity-0 transition-all group-hover:opacity-70 group-hover:translate-x-0.5"
-                style={{ color: "#F1F0EA" }}
+                style={{ color: "var(--v-ink)" }}
               />
             </div>
           </button>
@@ -1038,7 +1038,7 @@ export default function Dashboard() {
     // Legacy rows: a stored retrieval failure is NOT an investigation.
     const wasRetrievalFailure =
       typeof analysis.summary === "string" && analysis.summary.startsWith("UNABLE TO RETRIEVE");
-    const statusColor = wasRetrievalFailure ? "#A6A39B" : (verdictStatus[analysis.verdict as Verdict] ?? "#A6A39B");
+    const statusColor = wasRetrievalFailure ? "var(--v-ink-soft)" : (verdictStatus[analysis.verdict as Verdict] ?? "var(--v-ink-soft)");
     const statusLabel = wasRetrievalFailure ? "Retrieval failed" : avc.label;
     const subject: string = analysis.inputType === "url"
       ? analysis.inputText
@@ -1061,7 +1061,7 @@ export default function Dashboard() {
           <div className="flex items-start gap-4 px-2 py-4">
             <span className="num-marker shrink-0 pt-[3px]">{String(i + 1).padStart(2, "0")}</span>
             <div className="flex-1 min-w-0">
-              <p className="text-[14.5px] leading-snug break-words" style={{ fontFamily: "'Manrope', system-ui, sans-serif", color: "#F1F0EA" }}>
+              <p className="text-[14.5px] leading-snug break-words" style={{ fontFamily: "'Instrument Sans', system-ui, sans-serif", color: "var(--v-ink)" }}>
                 {subject || "Untitled submission"}
               </p>
               <p className="mt-1.5 kicker" style={{ opacity: 0.65 }}>
@@ -1083,7 +1083,7 @@ export default function Dashboard() {
               </button>
               <ChevronRight
                 className="w-3.5 h-3.5 opacity-0 group-hover:opacity-70 transition-opacity"
-                style={{ color: "#F1F0EA" }}
+                style={{ color: "var(--v-ink)" }}
               />
             </span>
           </div>
@@ -1106,7 +1106,7 @@ export default function Dashboard() {
         <div className="flex items-center gap-4 px-2 py-3.5">
           <span className="num-marker w-6 hidden sm:block opacity-70">{String(i + 1).padStart(2, "0")}</span>
           <div className="flex-1 min-w-0">
-            <p className="text-[13.5px] leading-snug truncate" style={{ fontFamily: "'Manrope', system-ui, sans-serif", color: "#F1F0EA" }}>
+            <p className="text-[13.5px] leading-snug truncate" style={{ fontFamily: "'Instrument Sans', system-ui, sans-serif", color: "var(--v-ink)" }}>
               {subject || "Untitled submission"}
             </p>
             <p className="sm:hidden mt-1.5 flex flex-wrap items-center gap-x-2">
@@ -1135,7 +1135,7 @@ export default function Dashboard() {
             </button>
             <ChevronRight
               className="w-3.5 h-3.5 opacity-0 group-hover:opacity-70 transition-opacity"
-              style={{ color: "#F1F0EA" }}
+              style={{ color: "var(--v-ink)" }}
             />
           </span>
         </div>
@@ -1149,7 +1149,7 @@ export default function Dashboard() {
       <HeroAtmosphere strength="analysis" />
       {/* ═══ EDITORIAL TOOLBAR — ANALYSIS ═══
           The same quiet bar the desk uses: wordmark, the two sections, and the
-          report's two existing actions. Flat #080808, one hairline rule, no
+          report's two existing actions. Flat var(--v-bg), one hairline rule, no
           glass and no glow. Desktop shows the full set; narrow screens
           collapse to the wordmark and a MENU control. */}
       <header className="v-toolbar sticky top-0 z-50">
@@ -1157,7 +1157,7 @@ export default function Dashboard() {
           <button
             type="button"
             onClick={() => navigate("/")}
-            className="v-nav-link !text-[13px] !tracking-[0.28em] text-[#F1F0EA]"
+            className="v-nav-link !text-[13px] !tracking-[0.28em] text-[var(--v-ink)]"
             aria-label="Veritas — title page"
           >
             Veritas
@@ -1218,21 +1218,21 @@ export default function Dashboard() {
       </header>
 
       {/* ─── Desktop: navigation rail — a publication index, not an admin panel ─── */}
-      <aside className="veritas-nav-surface veritas-rail hidden lg:flex fixed left-0 z-40 w-56 flex-col" style={{ top: "3.5rem", bottom: 0, background: "#080808", borderRight: "1px solid #242424" }}>
+      <aside className="veritas-nav-surface veritas-rail hidden lg:flex fixed left-0 z-40 w-56 flex-col" style={{ top: "3.5rem", bottom: 0, background: "var(--v-bg)", borderRight: "1px solid var(--v-rule)" }}>
         <div className="px-5 pt-7 pb-6">
           <button type="button" className="flex items-center gap-2.5" onClick={() => navigate("/")}>
-            <Shield className="w-4 h-4" style={{ color: "#F1F0EA" }} />
-            <span className="text-[16px] uppercase tracking-[0.28em]" style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 600, color: "#F1F0EA" }}>
+            <Shield className="w-4 h-4" style={{ color: "var(--v-ink)" }} />
+            <span className="text-[16px] uppercase tracking-[0.28em]" style={{ fontFamily: "'Bodoni Moda', serif", fontWeight: 600, color: "var(--v-ink)" }}>
               Veritas
             </span>
           </button>
-          <p className="mt-2.5 kicker" style={{ fontSize: 9, letterSpacing: "0.28em", color: "#6B6963" }}>Truth · Evidence · Context</p>
+          <p className="mt-2.5 kicker" style={{ fontSize: 9, letterSpacing: "0.28em", color: "var(--v-ink-dim)" }}>Truth · Evidence · Context</p>
         </div>
 
         <nav className="flex-1 px-4 overflow-y-auto">
           {navGroups.map((group) => (
             <div key={group.title} className="mb-6">
-              <p className="kicker px-1 mb-2" style={{ color: "#6B6963" }}>{group.title}</p>
+              <p className="kicker px-1 mb-2" style={{ color: "var(--v-ink-dim)" }}>{group.title}</p>
               <div>
                 {group.items.map((item) => {
                   const active = activeView === item.view && !item.action;
@@ -1247,15 +1247,15 @@ export default function Dashboard() {
                         item.disabled
                           ? "opacity-35 cursor-not-allowed"
                           : active
-                            ? "text-[#F1F0EA]"
-                            : "text-[#A6A39B] hover:text-[#F1F0EA]"
+                            ? "text-[var(--v-ink)]"
+                            : "text-[var(--v-ink-soft)] hover:text-[var(--v-ink)]"
                       }`}
                     >
                       {active && (
                         <motion.span
                           layoutId="nav-active"
                           className="absolute left-0 top-0 bottom-0 w-px"
-                          style={{ background: "#F1F0EA" }}
+                          style={{ background: "var(--v-ink)" }}
                         />
                       )}
                       <item.icon className="w-3.5 h-3.5 shrink-0" />
@@ -1268,17 +1268,17 @@ export default function Dashboard() {
           ))}
         </nav>
 
-        <div className="px-5 py-4 flex items-end justify-between gap-2" style={{ borderTop: "1px solid rgba(241,240,234,0.12)" }}>
+        <div className="px-5 py-4 flex items-end justify-between gap-2" style={{ borderTop: "1px solid rgb(var(--v-ink-rgb) /0.12)" }}>
           <div className="min-w-0">
-            <p className="kicker" style={{ fontSize: 9, color: "#6B6963" }}>Edition</p>
-            <p className="kicker mt-1 tabular" style={{ fontSize: 9, color: "#A6A39B" }}>{editionLabel}</p>
+            <p className="kicker" style={{ fontSize: 9, color: "var(--v-ink-dim)" }}>Edition</p>
+            <p className="kicker mt-1 tabular" style={{ fontSize: 9, color: "var(--v-ink-soft)" }}>{editionLabel}</p>
           </div>
           <button
             type="button"
             title={theme === "dark" ? "Switch to light" : "Switch to dark"}
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="p-2 transition-colors hover:text-[#F1F0EA]"
-            style={{ border: "1px solid rgba(241,240,234,0.18)", color: "#A6A39B" }}
+            className="p-2 transition-colors hover:text-[var(--v-ink)]"
+            style={{ border: "1px solid rgb(var(--v-ink-rgb) /0.18)", color: "var(--v-ink-soft)" }}
           >
             {theme === "dark" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
           </button>
@@ -1286,7 +1286,7 @@ export default function Dashboard() {
       </aside>
 
       {/* ─── Mobile: compact section strip below the toolbar — same publication navigation, no vertical waste ─── */}
-      <header className="veritas-nav-surface lg:hidden sticky z-40" style={{ top: "3.5rem", background: "#080808", borderBottom: "1px solid #242424" }}>
+      <header className="veritas-nav-surface lg:hidden sticky z-40" style={{ top: "3.5rem", background: "var(--v-bg)", borderBottom: "1px solid var(--v-rule)" }}>
         <div className="h-12 pl-3 pr-2 flex items-center">
           <div className="flex-1 min-w-0 flex items-center justify-end gap-0.5 overflow-x-auto no-scrollbar">
             {allNavItems.map((item) => {
@@ -1300,9 +1300,9 @@ export default function Dashboard() {
                   aria-label={item.label}
                   onClick={() => goNav(item)}
                   className={`shrink-0 h-8 w-8 flex items-center justify-center transition-colors ${
-                    item.disabled ? "opacity-35" : active ? "text-[#F1F0EA]" : "text-[#A6A39B]"
+                    item.disabled ? "opacity-35" : active ? "text-[var(--v-ink)]" : "text-[var(--v-ink-soft)]"
                   }`}
-                  style={active ? { background: "rgba(241,240,234,0.08)" } : undefined}
+                  style={active ? { background: "rgb(var(--v-ink-rgb) /0.08)" } : undefined}
                 >
                   <item.icon className="w-3.5 h-3.5" />
                 </button>
@@ -1328,11 +1328,11 @@ export default function Dashboard() {
                       animate={{ opacity: 1 }}
                       exit={{ opacity: 0 }}
                       className="fixed inset-0 z-[60] flex items-center justify-center px-6"
-                      style={{ background: "rgba(8,8,8,0.97)" }}
+                      style={{ background: "rgb(var(--v-bg-rgb) / 0.97)" }}
                     >
                       <div className="w-full max-w-sm">
-                        <div className="flex items-baseline justify-between border-b pb-1.5" style={{ borderColor: "rgba(36,36,36,0.9)" }}>
-                          <span className="kicker" style={{ color: "#F1F0EA" }}>Veritas</span>
+                        <div className="flex items-baseline justify-between border-b pb-1.5" style={{ borderColor: "rgb(var(--v-rule-rgb) /0.9)" }}>
+                          <span className="kicker" style={{ color: "var(--v-ink)" }}>Veritas</span>
                           <span className="kicker">Verification in progress</span>
                         </div>
                         <div className="border-b border-border mt-[3px]" />
@@ -1343,13 +1343,13 @@ export default function Dashboard() {
                         <div className="mt-7">
                           <VerificationPipeline currentStep={pipelineStep} />
                         </div>
-                        <div className="mt-6 h-px w-full overflow-hidden" style={{ background: "#242424" }}>
+                        <div className="mt-6 h-px w-full overflow-hidden" style={{ background: "var(--v-rule)" }}>
                           <motion.div
                             className="h-full"
                             initial={{ width: "4%" }}
                             animate={{ width: "96%" }}
                             transition={{ duration: 3.6, ease: "easeInOut" }}
-                            style={{ background: "#F1F0EA" }}
+                            style={{ background: "var(--v-ink)" }}
                           />
                         </div>
                       </div>
@@ -1361,16 +1361,16 @@ export default function Dashboard() {
                 <section className="grid lg:grid-cols-[1.65fr_0.75fr] gap-x-16 gap-y-16 items-start">
                   <div>
                     <div className="flex items-center gap-4">
-                      <span className="kicker shrink-0" style={{ color: "#F1F0EA" }}>
+                      <span className="kicker shrink-0" style={{ color: "var(--v-ink)" }}>
                         Veritas / Analysis
                       </span>
-                      <span className="h-px flex-1" style={{ background: "#242424" }} />
+                      <span className="h-px flex-1" style={{ background: "var(--v-rule)" }} />
                       <span className="kicker shrink-0 hidden sm:inline">{todayLabel}</span>
                     </div>
 
-                    <h1 className="mt-12 sm:mt-16 font-serif-editorial text-[clamp(2.1rem,6vw,3.75rem)] leading-[1.05] text-[#F1F0EA]">
+                    <h1 className="mt-12 sm:mt-16 font-serif-editorial text-[clamp(2.1rem,6vw,3.75rem)] leading-[1.05] text-[var(--v-ink)]">
                       <span className="block">Verify what you read.</span>
-                      <span className="block text-[#6B6963]">Follow the evidence.</span>
+                      <span className="block text-[var(--v-ink-dim)]">Follow the evidence.</span>
                       {/* The desk is the working page; the method lives on the Investigation Desk */}
                     </h1>
 
@@ -1439,7 +1439,7 @@ export default function Dashboard() {
                           >
                             Paste URL
                             {inputType === "url" && (
-                              <motion.span layoutId="mode-tab" className="absolute left-0 right-0 -bottom-px h-[1.5px]" style={{ background: "#F1F0EA" }} />
+                              <motion.span layoutId="mode-tab" className="absolute left-0 right-0 -bottom-px h-[1.5px]" style={{ background: "var(--v-ink)" }} />
                             )}
                           </button>
                           <span className="kicker px-1.5" style={{ opacity: 0.4 }}>or</span>
@@ -1452,7 +1452,7 @@ export default function Dashboard() {
                           >
                             Paste Text
                             {inputType === "text" && (
-                              <motion.span layoutId="mode-tab" className="absolute left-0 right-0 -bottom-px h-[1.5px]" style={{ background: "#F1F0EA" }} />
+                              <motion.span layoutId="mode-tab" className="absolute left-0 right-0 -bottom-px h-[1.5px]" style={{ background: "var(--v-ink)" }} />
                             )}
                           </button>
                         </div>
@@ -1469,7 +1469,7 @@ export default function Dashboard() {
                             >
                               {depth}
                               {analysisDepth === depth && (
-                                <motion.span layoutId="depth-tab" className="absolute left-0 right-0 -bottom-px h-[1.5px]" style={{ background: "#F1F0EA" }} />
+                                <motion.span layoutId="depth-tab" className="absolute left-0 right-0 -bottom-px h-[1.5px]" style={{ background: "var(--v-ink)" }} />
                               )}
                             </button>
                           ))}
@@ -1482,7 +1482,7 @@ export default function Dashboard() {
                       </p>
 
                       {/* Editor — one bordered instrument, not a floating card */}
-                      <div className="mt-4 border border-border" style={{ background: "#0C0C0C" }}>
+                      <div className="mt-4 border border-border" style={{ background: "var(--v-surface)" }}>
                         <Textarea
                           ref={textareaRef}
                           value={inputText}
@@ -1528,7 +1528,7 @@ export default function Dashboard() {
                             transition={{ duration: 0.3 }}
                             className="flex items-start gap-2 max-w-md"
                           >
-                            <Lightbulb className="w-3.5 h-3.5 mt-0.5 shrink-0" style={{ color: "#B7A47A" }} />
+                            <Lightbulb className="w-3.5 h-3.5 mt-0.5 shrink-0" style={{ color: "var(--v-brass)" }} />
                             <p className="text-[11px] leading-relaxed text-muted-foreground italic">{mediaLiteracyTips[currentTip]}</p>
                           </motion.div>
                         </AnimatePresence>
@@ -1566,7 +1566,7 @@ export default function Dashboard() {
                           >
                             <p
                               className="font-serif-editorial text-[30px] sm:text-[36px] leading-none tabular"
-                              style={{ color: cell.value == null ? "#6B6963" : "#F1F0EA" }}
+                              style={{ color: cell.value == null ? "var(--v-ink-dim)" : "var(--v-ink)" }}
                             >
                               {cell.value == null ? "—" : <AnimatedNumber value={cell.value} />}
                             </p>
@@ -1626,9 +1626,9 @@ export default function Dashboard() {
                         <div className="mt-4 space-y-3">
                           {Array.from({ length: 3 }).map((_, i) => (
                             <div key={i} className="flex items-center gap-4 py-3.5 border-b border-border animate-pulse">
-                              <div className="h-3 w-6" style={{ background: "#0C0C0C" }} />
-                              <div className="h-3 flex-1" style={{ background: "#0C0C0C" }} />
-                              <div className="h-3 w-24 hidden sm:block" style={{ background: "#0C0C0C" }} />
+                              <div className="h-3 w-6" style={{ background: "var(--v-surface)" }} />
+                              <div className="h-3 flex-1" style={{ background: "var(--v-surface)" }} />
+                              <div className="h-3 w-24 hidden sm:block" style={{ background: "var(--v-surface)" }} />
                             </div>
                           ))}
                         </div>
@@ -1678,7 +1678,7 @@ export default function Dashboard() {
                             </span>
                             <span
                               className="text-[15px] leading-none tabular shrink-0"
-                              style={{ fontFamily: "'JetBrains Mono', monospace", color: row.value == null ? "#A6A39B" : "#F1F0EA" }}
+                              style={{ fontFamily: "'JetBrains Mono', monospace", color: row.value == null ? "var(--v-ink-soft)" : "var(--v-ink)" }}
                             >
                               {row.value == null ? "—" : <AnimatedNumber value={row.value} />}
                             </span>
@@ -1700,8 +1700,8 @@ export default function Dashboard() {
             {/* ═══════════════ DAILY HEADLINES ═══════════════ */}
             {activeView === "headlines" && (
               <motion.div key="headlines" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
-                <div className="flex items-baseline justify-between gap-4 border-b pb-2" style={{ borderColor: "rgba(36,36,36,0.9)" }}>
-                  <span className="kicker" style={{ color: "#F1F0EA" }}>The wire</span>
+                <div className="flex items-baseline justify-between gap-4 border-b pb-2" style={{ borderColor: "rgb(var(--v-rule-rgb) /0.9)" }}>
+                  <span className="kicker" style={{ color: "var(--v-ink)" }}>The wire</span>
                   <span className="kicker hidden sm:inline">{todayLabel}</span>
                 </div>
                 <div className="border-b border-border mt-[3px]" />
@@ -1725,8 +1725,8 @@ export default function Dashboard() {
             {/* ═══════════════ PAST INVESTIGATIONS ═══════════════ */}
             {activeView === "history" && (
               <motion.div key="history" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
-                <div className="flex items-baseline justify-between gap-4 border-b pb-2" style={{ borderColor: "rgba(36,36,36,0.9)" }}>
-                  <span className="kicker" style={{ color: "#F1F0EA" }}>Archive</span>
+                <div className="flex items-baseline justify-between gap-4 border-b pb-2" style={{ borderColor: "rgb(var(--v-rule-rgb) /0.9)" }}>
+                  <span className="kicker" style={{ color: "var(--v-ink)" }}>Archive</span>
                   <span className="kicker hidden sm:inline">{analyses ? `${analyses.length} filed` : "Loading…"}</span>
                 </div>
                 <div className="border-b border-border mt-[3px]" />
@@ -1739,9 +1739,9 @@ export default function Dashboard() {
                   <div className="mt-8 space-y-3">
                     {Array.from({ length: 4 }).map((_, i) => (
                       <div key={i} className="flex items-center gap-4 py-3.5 border-b border-border animate-pulse">
-                        <div className="h-3 w-6" style={{ background: "#0C0C0C" }} />
-                        <div className="h-3 flex-1" style={{ background: "#0C0C0C" }} />
-                        <div className="h-3 w-24 hidden sm:block" style={{ background: "#0C0C0C" }} />
+                        <div className="h-3 w-6" style={{ background: "var(--v-surface)" }} />
+                        <div className="h-3 flex-1" style={{ background: "var(--v-surface)" }} />
+                        <div className="h-3 w-24 hidden sm:block" style={{ background: "var(--v-surface)" }} />
                       </div>
                     ))}
                   </div>
@@ -1754,7 +1754,7 @@ export default function Dashboard() {
                     <Button
                       onClick={() => goDesk(true)}
                       className="mt-5 h-9 px-5 text-[10.5px] uppercase tracking-[0.16em] hover:opacity-90"
-                      style={{ background: "#F1F0EA", color: "#151618" }}
+                      style={{ background: "var(--v-ink)", color: "var(--v-bg)" }}
                     >
                       Begin an investigation
                     </Button>
@@ -1779,8 +1779,8 @@ export default function Dashboard() {
             {/* ═══════════════ COMPARE ARTICLES ═══════════════ */}
             {activeView === "compare" && (
               <motion.div key="compare" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
-                <div className="flex items-baseline justify-between gap-4 border-b pb-2" style={{ borderColor: "rgba(36,36,36,0.9)" }}>
-                  <span className="kicker" style={{ color: "#F1F0EA" }}>Comparison desk</span>
+                <div className="flex items-baseline justify-between gap-4 border-b pb-2" style={{ borderColor: "rgb(var(--v-rule-rgb) /0.9)" }}>
+                  <span className="kicker" style={{ color: "var(--v-ink)" }}>Comparison desk</span>
                   <span className="kicker hidden sm:inline">Two articles · one method</span>
                 </div>
                 <div className="border-b border-border mt-[3px]" />
@@ -1797,8 +1797,8 @@ export default function Dashboard() {
             {/* ═══════════════ SETTINGS ═══════════════ */}
             {activeView === "settings" && (
               <motion.div key="settings" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
-                <div className="flex items-baseline justify-between gap-4 border-b pb-2" style={{ borderColor: "rgba(36,36,36,0.9)" }}>
-                  <span className="kicker" style={{ color: "#F1F0EA" }}>Settings</span>
+                <div className="flex items-baseline justify-between gap-4 border-b pb-2" style={{ borderColor: "rgb(var(--v-rule-rgb) /0.9)" }}>
+                  <span className="kicker" style={{ color: "var(--v-ink)" }}>Settings</span>
                   <span className="kicker hidden sm:inline">{editionLabel}</span>
                 </div>
                 <div className="border-b border-border mt-[3px]" />
@@ -1806,7 +1806,7 @@ export default function Dashboard() {
 
                 {/* Appearance */}
                 <section className="mt-10">
-                  <SectionHead no="01" title="Appearance" dek="Veritas is built on a near-black and warm ivory foundation." />
+                  <SectionHead no="01" title="Appearance" dek="One identity, two editions: near-black with warm ivory, or the same editorial system on paper." />
                   <div className="mt-4 flex items-center gap-2">
                     {(["light", "dark"] as const).map((mode) => (
                       <button
@@ -1816,7 +1816,7 @@ export default function Dashboard() {
                         className={`inline-flex items-center gap-2 h-9 px-4 border text-[10px] uppercase tracking-[0.16em] transition-colors ${
                           theme === mode ? "border-foreground/40 text-foreground" : "border-border text-muted-foreground hover:text-foreground"
                         }`}
-                        style={theme === mode ? { background: "rgba(241,240,234,0.07)" } : undefined}
+                        style={theme === mode ? { background: "rgb(var(--v-ink-rgb) /0.07)" } : undefined}
                       >
                         {mode === "light" ? <Sun className="w-3.5 h-3.5" /> : <Moon className="w-3.5 h-3.5" />}
                         {mode}
@@ -1837,7 +1837,7 @@ export default function Dashboard() {
                         className={`h-9 px-4 border text-[10px] uppercase tracking-[0.16em] transition-colors ${
                           analysisDepth === depth ? "border-foreground/40 text-foreground" : "border-border text-muted-foreground hover:text-foreground"
                         }`}
-                        style={analysisDepth === depth ? { background: "rgba(241,240,234,0.07)" } : undefined}
+                        style={analysisDepth === depth ? { background: "rgb(var(--v-ink-rgb) /0.07)" } : undefined}
                       >
                         {depth}
                       </button>
@@ -1866,11 +1866,11 @@ export default function Dashboard() {
                 <section className="mt-12">
                   <SectionHead no="04" title="About Veritas" />
                   <div className="mt-4 grid sm:grid-cols-2 gap-x-10 gap-y-4 max-w-3xl">
-                    <p className="text-[12.5px] leading-relaxed text-muted-foreground" style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}>
+                    <p className="text-[12.5px] leading-relaxed text-muted-foreground" style={{ fontFamily: "'Instrument Sans', system-ui, sans-serif" }}>
                       Veritas is an evidence-led verification desk. It retrieves the original article, extracts factual claims,
                       searches live independent coverage and cross-checks each claim against what was found.
                     </p>
-                    <p className="text-[12.5px] leading-relaxed text-muted-foreground" style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}>
+                    <p className="text-[12.5px] leading-relaxed text-muted-foreground" style={{ fontFamily: "'Instrument Sans', system-ui, sans-serif" }}>
                       Linguistic and framing analysis are reported separately as signals — they describe how something is written,
                       never whether it is true. Where evidence is missing, Veritas says so rather than guessing.
                     </p>
@@ -1882,8 +1882,8 @@ export default function Dashboard() {
             {/* ═══════════════ STATISTICS ═══════════════ */}
             {activeView === "stats" && (
               <motion.div key="stats" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
-                <div className="flex items-baseline justify-between gap-4 border-b pb-2" style={{ borderColor: "rgba(36,36,36,0.9)" }}>
-                  <span className="kicker" style={{ color: "#F1F0EA" }}>Statistics</span>
+                <div className="flex items-baseline justify-between gap-4 border-b pb-2" style={{ borderColor: "rgb(var(--v-rule-rgb) /0.9)" }}>
+                  <span className="kicker" style={{ color: "var(--v-ink)" }}>Statistics</span>
                   <span className="kicker hidden sm:inline">{analyses ? `${analyses.length} records` : "Loading…"}</span>
                 </div>
                 <div className="border-b border-border mt-[3px]" />
@@ -1895,7 +1895,7 @@ export default function Dashboard() {
                   {!analyses ? (
                     <div className="space-y-3">
                       {Array.from({ length: 3 }).map((_, i) => (
-                        <div key={i} className="h-16 border-b border-border animate-pulse" style={{ background: "#0C0C0C" }} />
+                        <div key={i} className="h-16 border-b border-border animate-pulse" style={{ background: "var(--v-surface)" }} />
                       ))}
                     </div>
                   ) : analyses.length === 0 ? (
@@ -1905,7 +1905,7 @@ export default function Dashboard() {
                       <Button
                         onClick={() => goDesk(true)}
                         className="mt-5 h-9 px-5 text-[10.5px] uppercase tracking-[0.16em] hover:opacity-90"
-                        style={{ background: "#F1F0EA", color: "#151618" }}
+                        style={{ background: "var(--v-ink)", color: "var(--v-bg)" }}
                       >
                         Begin an investigation
                       </Button>
@@ -1920,8 +1920,8 @@ export default function Dashboard() {
             {/* ═══════════════ METHODOLOGY ═══════════════ */}
             {activeView === "methodology" && (
               <motion.div key="methodology" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} transition={{ duration: 0.25 }}>
-                <div className="flex items-baseline justify-between gap-4 border-b pb-2" style={{ borderColor: "rgba(36,36,36,0.9)" }}>
-                  <span className="kicker" style={{ color: "#F1F0EA" }}>Methodology</span>
+                <div className="flex items-baseline justify-between gap-4 border-b pb-2" style={{ borderColor: "rgb(var(--v-rule-rgb) /0.9)" }}>
+                  <span className="kicker" style={{ color: "var(--v-ink)" }}>Methodology</span>
                   <span className="kicker hidden sm:inline">How we know what we know</span>
                 </div>
                 <div className="border-b border-border mt-[3px]" />
@@ -1980,7 +1980,7 @@ export default function Dashboard() {
                                   }`}
                                 >
                                   {active && (
-                                    <motion.span layoutId="toc-active" className="absolute left-0 top-0 bottom-0 w-px" style={{ background: "#F1F0EA" }} />
+                                    <motion.span layoutId="toc-active" className="absolute left-0 top-0 bottom-0 w-px" style={{ background: "var(--v-ink)" }} />
                                   )}
                                   <span className="num-marker shrink-0" style={{ opacity: active ? 1 : 0.55 }}>{secNo(s.id)}</span>
                                   <span className="text-[11.5px] leading-tight">{s.label}</span>
@@ -2001,15 +2001,15 @@ export default function Dashboard() {
 
                       {/* Masthead */}
                       <header>
-                        <div className="flex items-baseline justify-between gap-4 border-b pb-1.5" style={{ borderColor: "rgba(36,36,36,0.9)" }}>
-                          <span className="kicker" style={{ color: "#F1F0EA" }}>Veritas</span>
+                        <div className="flex items-baseline justify-between gap-4 border-b pb-1.5" style={{ borderColor: "rgb(var(--v-rule-rgb) /0.9)" }}>
+                          <span className="kicker" style={{ color: "var(--v-ink)" }}>Veritas</span>
                           <span className="kicker">
                             Filed {filedLabel} · Status <span style={{ color: STATUS.green }}>Complete</span>
                           </span>
                         </div>
                         <div className="border-b border-border mt-[3px]" />
 
-                        <p className="kicker mt-10" style={{ color: "#F1F0EA" }}>
+                        <p className="kicker mt-10" style={{ color: "var(--v-ink)" }}>
                           Investigation
                         </p>
 
@@ -2032,7 +2032,7 @@ export default function Dashboard() {
                         <div className="flex items-baseline justify-between gap-4">
                           <span className="flex items-baseline gap-3">
                             <span className="num-marker">01</span>
-                            <span className="kicker" style={{ color: "#F1F0EA" }}>Verdict</span>
+                            <span className="kicker" style={{ color: "var(--v-ink)" }}>Verdict</span>
                           </span>
                           <span className="kicker tabular" style={{ opacity: 0.6 }}>
                             {currentResult.redFlags.length} warning · {currentResult.greenFlags.length} positive signals
@@ -2052,7 +2052,7 @@ export default function Dashboard() {
                             </div>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-[14px] leading-relaxed" style={{ fontFamily: "'Manrope', system-ui, sans-serif", color: "#F1F0EA" }}>
+                            <p className="text-[14px] leading-relaxed" style={{ fontFamily: "'Instrument Sans', system-ui, sans-serif", color: "var(--v-ink)" }}>
                               {currentResult.summary}
                             </p>
                             <p className="mt-2.5 text-[11px] leading-relaxed text-muted-foreground">{vc.description}</p>
@@ -2060,7 +2060,7 @@ export default function Dashboard() {
                         </div>
 
                         {/* Confidence rule */}
-                        <div className="mt-6 h-[3px] w-full" style={{ background: "#242424" }}>
+                        <div className="mt-6 h-[3px] w-full" style={{ background: "var(--v-rule)" }}>
                           <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${currentResult.confidence}%` }}
@@ -2083,7 +2083,7 @@ export default function Dashboard() {
                               className={`px-4 py-3.5 ${i % 2 === 1 ? "border-l border-border" : ""} ${i >= 2 ? "border-t border-border sm:border-t-0" : ""} ${i === 2 ? "sm:border-l sm:border-border" : ""}`}
                             >
                               <span className="kicker block" style={{ opacity: 0.6 }}>{label}</span>
-                              <span className="block mt-1.5 text-[15px] tabular" style={{ fontFamily: "'JetBrains Mono', monospace", color: "#F1F0EA" }}>{value}</span>
+                              <span className="block mt-1.5 text-[15px] tabular" style={{ fontFamily: "'JetBrains Mono', monospace", color: "var(--v-ink)" }}>{value}</span>
                             </div>
                           ))}
                         </div>
@@ -2104,8 +2104,8 @@ export default function Dashboard() {
                                     className="w-full flex items-center gap-4 py-3 text-left"
                                     onClick={() => setCredFactor(isOpen ? null : item.key)}
                                   >
-                                    <span className="kicker w-32 sm:w-44 shrink-0" style={isOpen ? { color: "#F1F0EA" } : undefined}>{item.label}</span>
-                                    <span className="flex-1 h-[3px]" style={{ background: "#242424" }}>
+                                    <span className="kicker w-32 sm:w-44 shrink-0" style={isOpen ? { color: "var(--v-ink)" } : undefined}>{item.label}</span>
+                                    <span className="flex-1 h-[3px]" style={{ background: "var(--v-rule)" }}>
                                       {item.score != null && (
                                         <motion.span
                                           className="block h-full"
@@ -2118,7 +2118,7 @@ export default function Dashboard() {
                                     </span>
                                     <span
                                       className="w-10 text-right text-[10px] tabular shrink-0"
-                                      style={{ fontFamily: "'JetBrains Mono', monospace", color: item.score == null ? "#A6A39B" : "#F1F0EA" }}
+                                      style={{ fontFamily: "'JetBrains Mono', monospace", color: item.score == null ? "var(--v-ink-soft)" : "var(--v-ink)" }}
                                     >
                                       {item.score == null ? "n/a" : `${item.score}%`}
                                     </span>
@@ -2236,7 +2236,7 @@ export default function Dashboard() {
                             >
                               <p
                                 className="max-w-[74ch] text-[13.5px] leading-[1.85]"
-                                style={{ fontFamily: "'Manrope', system-ui, sans-serif", color: "#F1F0EA" }}
+                                style={{ fontFamily: "'Instrument Sans', system-ui, sans-serif", color: "var(--v-ink)" }}
                               >
                                 {currentResult.reasoning}
                               </p>
@@ -2247,7 +2247,7 @@ export default function Dashboard() {
                           type="button"
                           onClick={() => setReasoningOpen(!reasoningOpen)}
                           className="ctrl-frame mt-5 h-9 px-5 text-[10px]"
-                          style={{ color: "#F1F0EA" }}
+                          style={{ color: "var(--v-ink)" }}
                         >
                           {reasoningOpen ? "Hide reasoning" : "View reasoning"}
                           <span className="text-[13px] leading-none">{reasoningOpen ? "↑" : "→"}</span>
@@ -2294,9 +2294,9 @@ export default function Dashboard() {
                         {/* The separation, stated before anything is measured */}
                         <div
                           className="mb-9 border px-4 py-3.5"
-                          style={{ borderColor: "rgba(183,164,122,0.3)", background: "rgba(183,164,122,0.05)" }}
+                          style={{ borderColor: "rgb(var(--v-brass-rgb) /0.3)", background: "rgb(var(--v-brass-rgb) /0.05)" }}
                         >
-                          <p className="kicker" style={{ color: "#B7A47A" }}>Language signal</p>
+                          <p className="kicker" style={{ color: "var(--v-brass)" }}>Language signal</p>
                           <p className="mt-1.5 text-[11.5px] leading-relaxed text-muted-foreground max-w-[74ch]">
                             Language analysis is supplementary and is NOT proof that content is true. Verdicts are
                             produced only from factual claims cross-checked against retrieved independent evidence.
@@ -2318,7 +2318,7 @@ export default function Dashboard() {
                                     <span
                                       key={kw}
                                       className="text-[9.5px] px-2 py-0.5 border"
-                                      style={{ borderColor: "rgba(179,38,62,0.35)", color: "#B3263E", background: "rgba(179,38,62,0.07)" }}
+                                      style={{ borderColor: "rgb(var(--v-crimson-rgb) /0.35)", color: "var(--v-crimson)", background: "rgb(var(--v-crimson-rgb) /0.07)" }}
                                     >
                                       {kw}
                                     </span>

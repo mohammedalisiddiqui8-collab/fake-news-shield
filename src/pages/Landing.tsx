@@ -50,7 +50,7 @@ function OpeningQuote() {
           animate={{ opacity: 1, filter: "blur(0px)" }}
           exit={{ opacity: 0, filter: reduce ? "blur(0px)" : "blur(5px)" }}
           transition={{ duration: reduce ? 0.35 : 0.52, ease: "easeInOut" }}
-          className="whitespace-nowrap text-center font-serif-editorial text-[17px] italic leading-none tracking-[0.05em] text-[#D8D4CB] sm:text-[21px] lg:text-[25px]"
+          className="whitespace-nowrap text-center font-quote text-[17px] leading-none tracking-[0.03em] text-[#F1F0EA] sm:text-[21px] lg:text-[25px]"
         >
           {quoted(OPENING_QUOTES[index])}
         </motion.p>
@@ -63,7 +63,7 @@ export default function Landing() {
   const navigate = useNavigate();
 
   return (
-    <div className="veritas-night relative flex min-h-screen flex-col overflow-hidden bg-background text-foreground">
+    <div className="veritas-night relative flex min-h-screen flex-col overflow-hidden bg-[#080807] text-[#F1F0EA]">
       {/* ── The scene — the supplied reference artwork, full-bleed. Two
           crops of the same picture serve the two shapes: a portrait phone
           gets the 9:16 re-frame, anything landscape gets the 16:9
@@ -78,6 +78,14 @@ export default function Landing() {
         />
       </picture>
 
+      {/* ── The scan line ──
+           One 1px rule travelling across the photograph: it enters at the
+           left edge, crosses at a constant pace, fades out at the right and
+           starts again. It is layered over the artwork but under every piece
+           of live content (the chrome, the quote and the button all sit at
+           z-10), so it never crosses a word. Quieter still on a phone. */}
+      <div aria-hidden="true" className="hero-scan-line z-[5]" />
+
       {/* ── Top rule ── */}
       <div className="relative z-10 h-px w-full bg-[#2A2B2E]" />
 
@@ -88,10 +96,10 @@ export default function Landing() {
           className="group flex items-baseline gap-3"
           aria-label="Veritas — go to the desk"
         >
-          <span className="font-mono text-[10px] tracking-[0.3em] text-[#6F7074] transition-colors duration-500 group-hover:text-[#C9C3B7]">
+          <span className="font-mono text-[10px] tracking-[0.3em] text-[#6B6963] transition-colors duration-500 group-hover:text-[#F1F0EA]">
             V/
           </span>
-          <span className="font-masthead text-[10px] uppercase tracking-[0.34em] text-[#A5A5A1] transition-colors duration-500 group-hover:text-[#F1F0EA]">
+          <span className="font-masthead text-[10px] uppercase tracking-[0.34em] text-[#A6A39B] transition-colors duration-500 group-hover:text-[#F1F0EA]">
             Veritas
           </span>
         </button>
@@ -124,7 +132,7 @@ export default function Landing() {
           onClick={() => navigate("/desk")}
           whileHover={{ y: -1 }}
           whileTap={{ scale: 0.985 }}
-          className="group absolute left-1/2 top-[62.5%] flex -translate-x-1/2 -translate-y-1/2 items-center gap-2.5 rounded-full border border-[#C9C3B7]/40 bg-black/25 px-7 py-3 text-[11px] uppercase tracking-[0.26em] text-[#F1F0EA] backdrop-blur-sm transition-colors duration-500 hover:border-[#C9C3B7]/75 hover:bg-[#151410]/60 landscape:top-[66%] landscape:px-9 landscape:py-3.5 landscape:text-[12px]"
+          className="group absolute left-1/2 top-[62.5%] flex -translate-x-1/2 -translate-y-1/2 items-center gap-2.5 rounded-full border border-[#F1F0EA]/40 bg-black/25 px-7 py-3 text-[11px] uppercase tracking-[0.26em] text-[#F1F0EA] backdrop-blur-sm transition-colors duration-500 hover:border-[#F1F0EA]/75 hover:bg-[#101010]/60 landscape:top-[66%] landscape:px-9 landscape:py-3.5 landscape:text-[12px]"
         >
           Enter Veritas
           <span className="block text-[13px] leading-none transition-transform duration-300 ease-out group-hover:translate-x-[4px]">

@@ -5,17 +5,20 @@ interface ThemeContextType {
   setTheme: (theme: string) => void;
 }
 
-const ThemeContext = createContext<ThemeContextType>({ theme: "light", setTheme: () => {} });
+const ThemeContext = createContext<ThemeContextType>({ theme: "dark", setTheme: () => {} });
 
 export function useTheme() {
   return useContext(ThemeContext);
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState("light");
+  const [theme, setThemeState] = useState("dark");
 
   useEffect(() => {
-    const saved = localStorage.getItem("veritas-theme") || "light";
+    // Veritas ships dark; the stored choice wins when there is one, and it
+    // is written back so a first-time visitor gets the same default the
+    // pre-paint script in index.html assumed.
+    const saved = localStorage.getItem("veritas-theme") || "dark";
     setThemeState(saved);
     document.documentElement.classList.toggle("dark", saved === "dark");
   }, []);

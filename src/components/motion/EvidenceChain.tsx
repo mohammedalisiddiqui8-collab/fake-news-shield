@@ -173,11 +173,11 @@ export function EvidenceChain(props: EvidenceChainProps) {
     return (
       <div className="border-t border-border">
         <div className="flex items-center gap-4 py-4">
-          <span className="num-marker shrink-0" style={{ color: "#B3263E" }}>00</span>
-          <span className="kicker flex-1" style={{ color: "#B3263E" }}>
+          <span className="num-marker shrink-0" style={{ color: "var(--v-crimson)" }}>00</span>
+          <span className="kicker flex-1" style={{ color: "var(--v-crimson)" }}>
             Input → retrieval failed
           </span>
-          <AlertTriangle className="w-3.5 h-3.5 shrink-0" style={{ color: "#B3263E" }} />
+          <AlertTriangle className="w-3.5 h-3.5 shrink-0" style={{ color: "var(--v-crimson)" }} />
         </div>
         <p className="pb-5 pl-9 sm:pl-12 text-[12px] leading-[1.75] text-muted-foreground max-w-2xl">
           Reason: {props.failureReason || "URL could not be accessed or article content could not be retrieved."}{" "}
@@ -204,7 +204,7 @@ export function EvidenceChain(props: EvidenceChainProps) {
       {/* One hairline spine running the length of the chain */}
       <span
         className="absolute left-[15px] top-3 bottom-3 w-px sm:left-[17px]"
-        style={{ background: "#242424" }}
+        style={{ background: "var(--v-rule)" }}
         aria-hidden="true"
       />
 
@@ -219,15 +219,15 @@ export function EvidenceChain(props: EvidenceChainProps) {
               type="button"
               onClick={() => setExpandedStep(isExpanded ? null : step.key)}
               aria-expanded={isExpanded}
-              className="group relative flex w-full items-center gap-4 py-5 text-left transition-colors duration-300 hover:bg-[rgba(241,240,234,0.02)]"
+              className="group relative flex w-full items-center gap-4 py-5 text-left transition-colors duration-300 hover:bg-[rgb(var(--v-ink-rgb) /0.02)]"
             >
               <span className="relative z-10 shrink-0">
                 <span
                   className="flex h-[31px] w-[31px] items-center justify-center text-[9px] tabular transition-colors duration-300 sm:h-[35px] sm:w-[35px]"
                   style={{
-                    background: isExpanded ? "#F1F0EA" : "#080808",
-                    border: `1px solid ${isExpanded ? "#F1F0EA" : "#242424"}`,
-                    color: isExpanded ? "#080808" : "#A6A39B",
+                    background: isExpanded ? "var(--v-ink)" : "var(--v-bg)",
+                    border: `1px solid ${isExpanded ? "var(--v-ink)" : "var(--v-rule)"}`,
+                    color: isExpanded ? "var(--v-bg)" : "var(--v-ink-soft)",
                   }}
                 >
                   {String(i + 1).padStart(2, "0")}
@@ -237,7 +237,7 @@ export function EvidenceChain(props: EvidenceChainProps) {
               <span className="flex-1 min-w-0">
                 <span
                   className="block font-serif-editorial text-[16px] sm:text-[18px] leading-tight transition-colors duration-300"
-                  style={{ color: isExpanded ? "#F1F0EA" : "#CFCEC8" }}
+                  style={{ color: isExpanded ? "var(--v-ink)" : "var(--v-ink-soft)" }}
                 >
                   {step.label}
                 </span>
@@ -251,7 +251,7 @@ export function EvidenceChain(props: EvidenceChainProps) {
                 transition={{ duration: 0.25 }}
                 className="shrink-0"
               >
-                <ChevronDown className="w-3.5 h-3.5" style={{ color: "#6B6963" }} />
+                <ChevronDown className="w-3.5 h-3.5" style={{ color: "var(--v-ink-dim)" }} />
               </motion.span>
             </button>
 
@@ -288,13 +288,13 @@ export function EvidenceChain(props: EvidenceChainProps) {
                           >
                             <span
                               className="mt-[7px] h-px w-3 shrink-0"
-                              style={{ background: negative ? "#B3263E" : "#5C5D61" }}
+                              style={{ background: negative ? "var(--v-crimson)" : "var(--v-ink-dim)" }}
                             />
                             <span
                               className="text-[12.5px] leading-[1.7]"
                               style={{
-                                fontFamily: "'Manrope', system-ui, sans-serif",
-                                color: negative ? "#D8C6C1" : "#A6A39B",
+                                fontFamily: "'Instrument Sans', system-ui, sans-serif",
+                                color: negative ? "var(--v-crimson)" : "var(--v-ink-soft)",
                               }}
                             >
                               {item}

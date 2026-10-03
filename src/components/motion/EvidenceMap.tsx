@@ -22,18 +22,18 @@ const REL_LABEL: Record<string, string> = {
 };
 
 const REL_COLOR: Record<string, string> = {
-  supports: "#8FA58A",
-  contradicts: "#B3263E",
-  partial: "#B7A47A",
-  does_not_address: "#A6A39B",
-  unverified: "#A6A39B",
-  insufficient: "#A6A39B",
+  supports: "var(--v-green)",
+  contradicts: "var(--v-crimson)",
+  partial: "var(--v-brass)",
+  does_not_address: "var(--v-ink-soft)",
+  unverified: "var(--v-ink-soft)",
+  insufficient: "var(--v-ink-soft)",
 };
 
 function statusColor(status?: string) {
-  if (status === "supported") return "#8FA58A";
-  if (status === "contradicted") return "#B3263E";
-  return "#B7A47A";
+  if (status === "supported") return "var(--v-green)";
+  if (status === "contradicted") return "var(--v-crimson)";
+  return "var(--v-brass)";
 }
 
 function StatusMark({ status }: { status?: string }) {
@@ -64,7 +64,7 @@ export function EvidenceMap({
 }) {
   const [openId, setOpenId] = useState<number | null>(null);
   const verdictColor =
-    verdict === "likely_real" ? "#8FA58A" : verdict === "likely_fake" ? "#B3263E" : "#B7A47A";
+    verdict === "likely_real" ? "var(--v-green)" : verdict === "likely_fake" ? "var(--v-crimson)" : "var(--v-brass)";
 
   // While one claim is open it holds the reader's attention: every other
   // claim quiets down so its connections read clearly. No claim is ever
@@ -78,7 +78,7 @@ export function EvidenceMap({
         <p className="kicker" style={{ opacity: 0.5 }}>Evidence map</p>
         <p
           className="mt-3 text-[13px] leading-[1.8] text-muted-foreground"
-          style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
+          style={{ fontFamily: "'Instrument Sans', system-ui, sans-serif" }}
         >
           No claims were extracted for this investigation, so there is nothing to map. Run an
           investigation on an article and the claim → source connections appear here, drawn from
@@ -121,7 +121,7 @@ export function EvidenceMap({
                 </span>
                 <span
                   className="flex-1 min-w-0 text-[12.5px] leading-snug"
-                  style={{ fontFamily: "'Manrope', system-ui, sans-serif", color: "#F1F0EA" }}
+                  style={{ fontFamily: "'Instrument Sans', system-ui, sans-serif", color: "var(--v-ink)" }}
                 >
                   {claim.text}
                 </span>
@@ -159,7 +159,7 @@ export function EvidenceMap({
                   {/* The vertical rail from the claim down to its sources */}
                   <motion.span
                     className="absolute left-[13px] top-0 w-px sm:left-[17px]"
-                    style={{ background: "#242424" }}
+                    style={{ background: "var(--v-rule)" }}
                     initial={{ height: 0 }}
                     animate={{ height: isOpen ? "100%" : 0 }}
                     transition={{ duration: 0.45, ease: EASE }}
@@ -173,7 +173,7 @@ export function EvidenceMap({
                   ) : (
                     <ul>
                       {claim.sources.map((src, si) => {
-                        const tone = REL_COLOR[src.relationship] ?? "#A6A39B";
+                        const tone = REL_COLOR[src.relationship] ?? "var(--v-ink-soft)";
                         return (
                           <motion.li
                             key={si}
@@ -185,7 +185,7 @@ export function EvidenceMap({
                             {/* The horizontal connector from the rail to this source */}
                             <span
                               className="absolute -left-3 top-[13px] h-px w-3 sm:-left-5"
-                              style={{ background: "#242424" }}
+                              style={{ background: "var(--v-rule)" }}
                               aria-hidden="true"
                             />
                             <span
@@ -195,7 +195,7 @@ export function EvidenceMap({
                             />
                             <span className="min-w-0 flex-1">
                               <span className="flex flex-wrap items-baseline gap-x-2.5 gap-y-0.5">
-                                <span className="text-[12px] font-medium" style={{ color: "#F1F0EA" }}>
+                                <span className="text-[12px] font-medium" style={{ color: "var(--v-ink)" }}>
                                   {src.name}
                                 </span>
                                 <span
@@ -225,7 +225,7 @@ export function EvidenceMap({
           <span className="block h-[7px] w-[7px]" style={{ background: verdictColor }} aria-hidden="true" />
           <span
             className="text-[16px] leading-none tracking-[0.03em]"
-            style={{ fontFamily: "'Bodoni Moda', Georgia, serif", color: "#F1F0EA" }}
+            style={{ fontFamily: "'Bodoni Moda', Georgia, serif", color: "var(--v-ink)" }}
           >
             {verdict.replace(/_/g, " ")}
           </span>

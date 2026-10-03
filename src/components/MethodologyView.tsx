@@ -33,13 +33,13 @@ export function MethodologyView() {
         transition={{ duration: 0.5 }}
         className="flex items-center gap-4"
       >
-        <span className="kicker" style={{ color: "#F1F0EA" }}>Our approach</span>
-        <span className="h-px flex-1" style={{ background: "#242424" }} />
+        <span className="kicker" style={{ color: "var(--v-ink)" }}>Our approach</span>
+        <span className="h-px flex-1" style={{ background: "var(--v-rule)" }} />
       </motion.div>
 
       <h2
         className="mt-8 font-serif-editorial text-[clamp(1.8rem,5vw,2.6rem)] leading-[1.08]"
-        style={{ color: "#F1F0EA" }}
+        style={{ color: "var(--v-ink)" }}
       >
         How Veritas Works
       </h2>
@@ -61,7 +61,7 @@ export function MethodologyView() {
             {i < steps.length - 1 && (
               <span
                 className="absolute left-[13px] top-8 bottom-0 w-px sm:left-[15px]"
-                style={{ background: "#242424" }}
+                style={{ background: "var(--v-rule)" }}
                 aria-hidden="true"
               />
             )}
@@ -73,7 +73,7 @@ export function MethodologyView() {
             <div className="min-w-0 pt-0.5">
               <h3
                 className="font-serif-editorial text-[19px] sm:text-[22px] leading-tight"
-                style={{ color: "#F1F0EA" }}
+                style={{ color: "var(--v-ink)" }}
               >
                 {step.title}
               </h3>

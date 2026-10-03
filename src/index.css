@@ -1,13 +1,10 @@
 /* ─── Google Fonts ───
    Three roles, three faces:
-     Bodoni Moda    — display / brand titles (600) and upright quotes (400)
-     Manrope        — all general content: nav, buttons, body, labels, meta
-     JetBrains Mono — technical data only: counts, percentages, timestamps
-
-   DM Serif Display / Libre Baskerville / Source Serif 4 / Inter are retained
-   for the title page, whose typography is explicitly frozen (see the
-   `.veritas-night` scope at the bottom of this file). ─── */
-@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500;6..96,600&family=Manrope:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;0,8..60,700;1,8..60,400&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap');
+     Bodoni Moda      — display / brand titles (600) and upright quotes (400)
+     Instrument Sans  — all general content: nav, buttons, body, labels, meta
+     JetBrains Mono   — technical data only: counts, percentages, timestamps
+   ─── */
+@import url('https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,400;6..96,500;6..96,600&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:wght@300;400;500&display=swap');
 
 @import "tailwindcss";
 @import "tw-animate-css";
@@ -33,11 +30,23 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
-  /* Status-only accents — muted, printed, never neon */
-  --color-signal-sage: #8FA58A;
-  --color-signal-brass: #B7A47A;
-  --color-signal-crimson: #B3263E;
-  --color-signal-clay: #B7A47A;
+  /* Named editorial inks — every state colour resolves through these, so one
+     palette definition drives both themes. */
+  --color-page: var(--v-bg);
+  --color-surface: var(--v-surface);
+  --color-surface-2: var(--v-surface-2);
+  --color-ink: var(--v-ink);
+  --color-ink-soft: var(--v-ink-soft);
+  --color-ink-dim: var(--v-ink-dim);
+  --color-rule: var(--v-rule);
+  /* Status-only accents — muted, printed, never neon.
+     sage = supported/verified · brass = uncertain/needs verification ·
+     crimson = contradicted/warning. Same meaning in both themes. */
+  --color-signal-sage: var(--v-green);
+  --color-signal-green: var(--v-green);
+  --color-signal-brass: var(--v-brass);
+  --color-signal-crimson: var(--v-crimson);
+  --color-signal-clay: var(--v-brass);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -56,89 +65,109 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/* ─── LOCKED PALETTE — Void Essence editorial edition ───
-   Near-black canvas (#080808) · off-white ink (#F1F0EA) · warm grey
-   secondary (#A6A39B) · hairline rules (#242424) · three status inks only:
-   sage (supported), muted brass (uncertain / needs verification),
-   crimson (contradicted / warning). No glow, no glass, no gradient. ─── */
+/* ─── PALETTE PRIMITIVES ───────────────────────────────────────────────
+   One set of channels per ink. Everything else — the shadcn tokens, the
+   named editorial inks, the utility classes, and every inline colour in a
+   component — is derived from these, so switching themes is a single
+   cascade and nothing can drift out of sync.
+
+   LIGHT (default) — warm editorial paper, never pure white:
+     canvas #F3F0E8 · ink #181818 · secondary #625F58 · dim #77736A
+     rule #D8D3C8 · crimson #A51F36 · green #41794E · brass #826A38
+     (status inks darkened from the suggested values for WCAG legibility:
+      6.5:1, 4.5:1 and 4.5:1 on paper.)
+
+   DARK — the original Veritas canvas:
+     canvas #080808 · ink #F1F0EA · secondary #A6A39B · dim #6B6963
+     rule #242424 · crimson #B3263E · green #6FAF78 · brass #B7A47A
+   ─── */
 :root {
   --radius: 0.125rem;
-  --background: #080808;
-  --foreground: #F1F0EA;
-  --card: #0C0C0C;
-  --card-foreground: #F1F0EA;
-  --popover: #0C0C0C;
-  --popover-foreground: #F1F0EA;
-  --primary: #F1F0EA;
-  --primary-foreground: #080808;
-  --secondary: #101010;
-  --secondary-foreground: #A6A39B;
-  --muted: #0C0C0C;
-  --muted-foreground: #A6A39B;
-  --accent: #F1F0EA;
-  --accent-foreground: #080808;
-  --destructive: #B3263E;
-  --border: #242424;
-  --input: #242424;
-  --ring: #F1F0EA;
-  --chart-1: #F1F0EA;
-  --chart-2: #A6A39B;
-  --chart-3: #B3263E;
-  --chart-4: #8FA58A;
-  --chart-5: #B7A47A;
-  --sidebar: #080808;
-  --sidebar-foreground: #F1F0EA;
-  --sidebar-primary: #F1F0EA;
-  --sidebar-primary-foreground: #080808;
-  --sidebar-accent: #0C0C0C;
-  --sidebar-accent-foreground: #F1F0EA;
-  --sidebar-border: #242424;
-  --sidebar-ring: #F1F0EA;
-  /* Status inks, addressable by name wherever a state colour is needed. */
-  --ink: #F1F0EA;
-  --ink-soft: #A6A39B;
-  --ink-dim: #6B6963;
-  --rule: #242424;
-  --surface: #0C0C0C;
-  --status-supported: #8FA58A;
-  --status-uncertain: #B7A47A;
-  --status-contradicted: #B3263E;
+
+  /* ── primitives ── */
+  --v-bg-rgb: 243 240 232;        /* #F3F0E8 */
+  --v-surface-rgb: 250 248 242;   /* #FAF8F2 */
+  --v-surface-2-rgb: 237 233 222; /* #EDE9DE */
+  --v-ink-rgb: 24 24 24;          /* #181818 */
+  --v-ink-soft-rgb: 98 95 88;     /* #625F58 */
+  --v-ink-dim-rgb: 119 115 106;   /* #77736A */
+  --v-rule-rgb: 216 211 200;      /* #D8D3C8 */
+  --v-crimson-rgb: 165 31 54;     /* #A51F36 */
+  --v-green-rgb: 65 121 78;       /* #41794E */
+  --v-brass-rgb: 130 106 56;      /* #826A38 */
+
+  /* ── solid editorial inks (aliases, never re-valued per theme) ── */
+  --v-bg: rgb(var(--v-bg-rgb));
+  --v-surface: rgb(var(--v-surface-rgb));
+  --v-surface-2: rgb(var(--v-surface-2-rgb));
+  --v-ink: rgb(var(--v-ink-rgb));
+  --v-ink-soft: rgb(var(--v-ink-soft-rgb));
+  --v-ink-dim: rgb(var(--v-ink-dim-rgb));
+  --v-rule: rgb(var(--v-rule-rgb));
+  --v-crimson: rgb(var(--v-crimson-rgb));
+  --v-green: rgb(var(--v-green-rgb));
+  --v-brass: rgb(var(--v-brass-rgb));
+
+  /* ── component tokens ── */
+  --background: var(--v-bg);
+  --foreground: var(--v-ink);
+  --card: var(--v-surface);
+  --card-foreground: var(--v-ink);
+  --popover: var(--v-surface);
+  --popover-foreground: var(--v-ink);
+  --primary: var(--v-ink);
+  --primary-foreground: var(--v-bg);
+  --secondary: var(--v-surface-2);
+  --secondary-foreground: var(--v-ink-soft);
+  --muted: var(--v-surface-2);
+  --muted-foreground: var(--v-ink-soft);
+  --accent: var(--v-ink);
+  --accent-foreground: var(--v-bg);
+  --destructive: var(--v-crimson);
+  --border: var(--v-rule);
+  --input: var(--v-rule);
+  --ring: var(--v-ink);
+  --chart-1: var(--v-ink);
+  --chart-2: var(--v-ink-soft);
+  --chart-3: var(--v-crimson);
+  --chart-4: var(--v-green);
+  --chart-5: var(--v-brass);
+  --sidebar: var(--v-bg);
+  --sidebar-foreground: var(--v-ink);
+  --sidebar-primary: var(--v-ink);
+  --sidebar-primary-foreground: var(--v-bg);
+  --sidebar-accent: var(--v-surface-2);
+  --sidebar-accent-foreground: var(--v-ink);
+  --sidebar-border: var(--v-rule);
+  --sidebar-ring: var(--v-ink);
+
+  /* Named inks, addressable wherever a state colour is needed. */
+  --ink: var(--v-ink);
+  --ink-soft: var(--v-ink-soft);
+  --ink-dim: var(--v-ink-dim);
+  --rule: var(--v-rule);
+  --surface: var(--v-surface);
+  --status-supported: var(--v-green);
+  --status-uncertain: var(--v-brass);
+  --status-contradicted: var(--v-crimson);
+
+  /* The atmospheric layer borrowed from the title page's artwork. */
+  --atmo-wash-desk: rgb(var(--v-bg-rgb) / 85%);
+  --atmo-wash-analysis: rgb(var(--v-bg-rgb) / 92%);
 }
 
-/* One editorial edition: the theme switch keeps the same printed palette so
-   inline editorial colors can never desynchronize from the tokens. */
+/* DARK — one override of the primitive channels is all it takes. */
 .dark {
-  --background: #080808;
-  --foreground: #F1F0EA;
-  --card: #0C0C0C;
-  --card-foreground: #F1F0EA;
-  --popover: #0C0C0C;
-  --popover-foreground: #F1F0EA;
-  --primary: #F1F0EA;
-  --primary-foreground: #080808;
-  --secondary: #101010;
-  --secondary-foreground: #A6A39B;
-  --muted: #0C0C0C;
-  --muted-foreground: #A6A39B;
-  --accent: #F1F0EA;
-  --accent-foreground: #080808;
-  --destructive: #B3263E;
-  --border: #242424;
-  --input: #242424;
-  --ring: #F1F0EA;
-  --chart-1: #F1F0EA;
-  --chart-2: #A6A39B;
-  --chart-3: #B3263E;
-  --chart-4: #8FA58A;
-  --chart-5: #B7A47A;
-  --sidebar: #080808;
-  --sidebar-foreground: #F1F0EA;
-  --sidebar-primary: #F1F0EA;
-  --sidebar-primary-foreground: #080808;
-  --sidebar-accent: #0C0C0C;
-  --sidebar-accent-foreground: #F1F0EA;
-  --sidebar-border: #242424;
-  --sidebar-ring: #F1F0EA;
+  --v-bg-rgb: 8 8 8;            /* #080808 */
+  --v-surface-rgb: 12 12 12;    /* #0C0C0C */
+  --v-surface-2-rgb: 16 16 16;  /* #101010 */
+  --v-ink-rgb: 241 240 234;     /* #F1F0EA */
+  --v-ink-soft-rgb: 166 163 155;/* #A6A39B */
+  --v-ink-dim-rgb: 107 105 99;  /* #6B6963 */
+  --v-rule-rgb: 36 36 36;       /* #242424 */
+  --v-crimson-rgb: 179 38 62;   /* #B3263E */
+  --v-green-rgb: 111 175 120;   /* #6FAF78 */
+  --v-brass-rgb: 183 164 122;   /* #B7A47A */
 }
 
 @layer base {
@@ -146,27 +175,28 @@
   html { -webkit-text-size-adjust: 100%; }
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Manrope', system-ui, -apple-system, sans-serif;
-    font-feature-settings: "cv11", "ss01", "ss03";
+    font-family: 'Instrument Sans', system-ui, -apple-system, sans-serif;
     overflow-x: hidden;
   }
   button:not([disabled]), [role="button"]:not([disabled]) { cursor: pointer; }
+  /* Controls are content, not chrome — they take the Instrument Sans role too. */
+  button, input, select, textarea, label { font-family: inherit; }
 
   /* A · DISPLAY / BRAND — Bodoni Moda, semi-bold. Refined, never heavy. */
   h1, h2, h3, .font-serif-editorial, .font-display {
-    font-family: 'Bodoni Moda', 'Source Serif 4', Georgia, serif;
+    font-family: 'Bodoni Moda', Georgia, serif;
     font-weight: 600;
     letter-spacing: -0.005em;
   }
   /* B · QUOTES — Bodoni Moda regular, upright. Never italic. */
   .font-quote {
-    font-family: 'Bodoni Moda', 'Source Serif 4', Georgia, serif;
+    font-family: 'Bodoni Moda', Georgia, serif;
     font-weight: 400;
     font-style: normal;
   }
   /* A · the wordmark reads as a publication, not a logo. */
   .font-masthead {
-    font-family: 'Bodoni Moda', 'Source Serif 4', Georgia, serif;
+    font-family: 'Bodoni Moda', Georgia, serif;
     font-weight: 600;
   }
   /* D · TECHNICAL DATA — counts, percentages, timestamps, identifiers. */
@@ -176,32 +206,32 @@
 @layer utilities {
   /* Restrained hairline surface — no glass, no glow, no lift */
   .glass-card {
-    background: #0C0C0C;
-    border: 1px solid #242424;
+    background: var(--v-surface);
+    border: 1px solid var(--v-rule);
     border-radius: 0.125rem;
   }
 
   .editorial-rule {
     height: 1px;
-    background: #242424;
+    background: var(--v-rule);
   }
 
   .text-balance { text-wrap: balance; }
 
   /* ─── Editorial furniture ─── */
   .kicker {
-    font-family: 'Manrope', system-ui, sans-serif;
+    font-family: 'Instrument Sans', system-ui, sans-serif;
     font-size: 9px;
     line-height: 1.6;
     letter-spacing: 0.24em;
     text-transform: uppercase;
-    color: var(--muted-foreground);
+    color: var(--v-ink-soft);
   }
   .num-marker {
     font-family: 'JetBrains Mono', monospace;
     font-size: 9px;
     letter-spacing: 0.14em;
-    color: #6B6963;
+    color: var(--v-ink-dim);
     font-variant-numeric: tabular-nums;
   }
   .tabular { font-variant-numeric: tabular-nums; }
@@ -217,7 +247,7 @@
   .ul-hover:hover { background-size: 100% 1px; }
   /* Hairline row hover — newsroom archive feel */
   .row-hover { transition: background-color 0.24s ease; }
-  .row-hover:hover { background-color: rgba(241, 240, 234, 0.035); }
+  .row-hover:hover { background-color: rgb(var(--v-ink-rgb) / 0.05); }
 
   /* ─── Framed functional control — a control, not a pill ───
      Thin rule, flat, readable uppercase; brightens on hover exactly the way
@@ -227,24 +257,24 @@
     align-items: center;
     justify-content: center;
     gap: 0.625rem;
-    border: 1px solid #242424;
+    border: 1px solid var(--v-rule);
     background: transparent;
-    color: #F1F0EA;
-    font-family: 'Manrope', system-ui, sans-serif;
+    color: var(--v-ink);
+    font-family: 'Instrument Sans', system-ui, sans-serif;
     text-transform: uppercase;
     letter-spacing: 0.16em;
     transition: border-color 0.3s ease, background-color 0.3s ease, color 0.3s ease;
   }
   .ctrl-frame:hover:not(:disabled) {
-    border-color: rgba(241, 240, 234, 0.4);
-    background: rgba(241, 240, 234, 0.05);
+    border-color: rgb(var(--v-ink-rgb) / 0.4);
+    background: rgb(var(--v-ink-rgb) / 0.05);
   }
   .ctrl-frame:active:not(:disabled) { transform: translateY(1px); }
   .ctrl-frame:disabled { opacity: 0.4; cursor: not-allowed; }
-  .ctrl-frame[data-primary="true"] { border-color: rgba(241, 240, 234, 0.28); }
+  .ctrl-frame[data-primary="true"] { border-color: rgb(var(--v-ink-rgb) / 0.28); }
   .ctrl-frame[data-primary="true"]:hover:not(:disabled) {
-    border-color: rgba(241, 240, 234, 0.7);
-    background: rgba(241, 240, 234, 0.07);
+    border-color: rgb(var(--v-ink-rgb) / 0.7);
+    background: rgb(var(--v-ink-rgb) / 0.07);
   }
   /* Horizontal strips (mobile nav) without a visible scrollbar */
   .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
@@ -252,13 +282,11 @@
 
   /* ═══ EDITORIAL TOOLBAR ═══
      One quiet horizontal bar: wordmark, section links, one primary action.
-     Flat #080808, a single #242424 hairline beneath, no glass, no pill, no
-     glow. Inactive links sit at secondary ink and travel toward ivory on
-     hover; the active link is ivory with a 1px ivory underline. */
+     Flat canvas, a single hairline beneath, no glass, no pill, no glow. */
   .v-toolbar {
-    background: #080808;
-    border-bottom: 1px solid #242424;
-    font-family: 'Manrope', system-ui, sans-serif;
+    background: var(--v-bg);
+    border-bottom: 1px solid var(--v-rule);
+    font-family: 'Instrument Sans', system-ui, sans-serif;
   }
   .v-nav-link {
     position: relative;
@@ -269,7 +297,7 @@
     line-height: 1;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: #A6A39B;
+    color: var(--v-ink-soft);
     background: none;
     border: 0;
     transition: color 0.28s ease;
@@ -281,14 +309,14 @@
     right: 0;
     bottom: -1px;
     height: 1px;
-    background: #F1F0EA;
+    background: var(--v-ink);
     transform: scaleX(0);
     transform-origin: left center;
     transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1);
   }
-  .v-nav-link:hover:not(:disabled) { color: #F1F0EA; }
+  .v-nav-link:hover:not(:disabled) { color: var(--v-ink); }
   .v-nav-link:hover:not(:disabled)::after { transform: scaleX(1); }
-  .v-nav-link[data-active='true'] { color: #F1F0EA; }
+  .v-nav-link[data-active='true'] { color: var(--v-ink); }
   .v-nav-link[data-active='true']::after { transform: scaleX(1); }
   .v-nav-link:disabled { opacity: 0.35; cursor: not-allowed; }
 
@@ -301,12 +329,12 @@
     line-height: 1;
     letter-spacing: 0.2em;
     text-transform: uppercase;
-    color: #F1F0EA;
+    color: var(--v-ink);
     background: none;
     border: 0;
     transition: color 0.28s ease;
   }
-  .v-nav-cta:hover { color: #A6A39B; }
+  .v-nav-cta:hover { color: var(--v-ink-soft); }
   .v-nav-cta .v-nav-arrow {
     display: inline-block;
     transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
@@ -314,8 +342,16 @@
   .v-nav-cta:hover .v-nav-arrow { transform: translateX(4px); }
 
   /* ─── Navigation surfaces (desktop rail + mobile header) ─── */
-  .veritas-nav-surface .kicker { color: #A6A39B; }
-  .veritas-nav-surface .num-marker { color: #6B6963; }
+  .veritas-nav-surface .kicker { color: var(--v-ink-soft); }
+  .veritas-nav-surface .num-marker { color: var(--v-ink-dim); }
+
+  /* ─── Atmospheric layer (Desk / Analysis) ───
+     The blurred artwork is held at a tenth of its own brightness under a
+     wash of the current canvas, so the layer reads as paper grain rather
+     than as a photograph in either theme. */
+  .atmo-image { opacity: var(--atmo-image, 0.12); }
+  .atmo-wash-desk { background: var(--atmo-wash-desk); }
+  .atmo-wash-analysis { background: var(--atmo-wash-analysis); }
 }
 
 @keyframes statusPulse {
@@ -350,17 +386,48 @@
   100% { transform: translateX(-50%); }
 }
 
-@keyframes scanSweep {
-  0% { transform: translateX(-100%); }
-  100% { transform: translateX(100vw); }
+/* ═══ HERO SCAN LINE ═══
+   The title page's single hairline, now travelling: one 1px rule that
+   starts at the left edge, crosses the frame at a constant pace, fades out
+   at the right margin and restarts from the left. Linear throughout — no
+   easing, no bounce, no trail, no glow, no particles. It sits behind the
+   hero's own content (the line is layered under the type, over the
+   photograph) and runs under `prefers-reduced-motion` like everything
+   else. */
+@keyframes heroScan {
+  0%   { transform: translateX(0); opacity: 0; }
+  12%  { opacity: 0.16; }
+  86%  { opacity: 0.16; }
+  100% { transform: translateX(100vw); opacity: 0; }
+}
+/* The same pass on a phone, held quieter still. */
+@keyframes heroScanSoft {
+  0%   { transform: translateX(0); opacity: 0; }
+  12%  { opacity: 0.08; }
+  86%  { opacity: 0.08; }
+  100% { transform: translateX(100vw); opacity: 0; }
+}
+.hero-scan-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  background: var(--v-ink);
+  animation: heroScan 9s linear infinite;
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+@media (max-width: 640px) {
+  .hero-scan-line { animation-name: heroScanSoft; }
 }
 
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #242424; border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: #6B6963; }
+::-webkit-scrollbar-thumb { background: var(--v-rule); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--v-ink-dim); }
 
-::selection { background: rgba(241, 240, 234, 0.18); color: #F1F0EA; }
+::selection { background: rgb(var(--v-ink-rgb) / 0.18); color: var(--v-ink); }
 
 /* ─── Reduced motion — the investigation is still fully readable without it ───
    Kills decorative/scroll-linked movement for users who ask the system to
@@ -386,11 +453,11 @@ html { scroll-behavior: smooth; }
 .tiptap { outline: none; }
 .tiptap p.is-editor-empty:first-child::before {
   content: attr(data-placeholder);
-  float: left;  color: #6B6963;
+  float: left;  color: var(--v-ink-dim);
   pointer-events: none; height: 0;
 }
 
-/* ─── Subtle film grain — keeps flat black from reading as dead pixels ─── */
+/* ─── Subtle film grain — keeps flat fills from reading as dead pixels ─── */
 body::before {
   content: '';
   position: fixed;
@@ -402,44 +469,36 @@ body::before {
   background-size: 200px;
 }
 
-/* ─── Title page scope — FROZEN ───
-   The hero's composition, artwork, quote and moving line are explicitly out of
-   scope for this pass, so the title page keeps the exact faces and near-black
-   canvas it was built with. Everything outside `.veritas-night` runs the new
-   Void Essence system. */
+/* ─── Title page scope ───
+   The hero sits on its own dark artwork in both themes: the title page
+   never turns to paper. Its canvas, rules and inks are written directly in
+   the dark palette (see Landing.tsx), so nothing here is left to inherit
+   from the active theme. What this scope does pin is type — Instrument Sans
+   for the chrome, Bodoni Moda 600 for the wordmark, Bodoni Moda 400 upright
+   for the quote — so the hero cannot drift with the shared type system. */
 .veritas-night {
   --background: #080807;
   --foreground: #F1F0EA;
-  --card: #0A0A0A;
-  --card-foreground: #F1F0EA;
-  --popover: #0C0C0C;
-  --popover-foreground: #F1F0EA;
-  --primary: #F1F0EA;
-  --primary-foreground: #080808;
-  --secondary: #0C0C0C;
-  --secondary-foreground: #A5A5A1;
-  --muted: #0A0A0A;
-  --muted-foreground: #A5A5A1;
-  --accent: #F1F0EA;
-  --accent-foreground: #080808;
-  --destructive: #B08479;
   --border: #2A2B2E;
   --input: #2A2B2E;
-  --ring: #C9C3B7;
+  --ring: #F1F0EA;
+  --destructive: #B3263E;
 }
-.veritas-night body,
-.veritas-night {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+.veritas-night,
+.veritas-night body {
+  font-family: 'Instrument Sans', system-ui, -apple-system, sans-serif;
 }
 .veritas-night h1,
 .veritas-night h2,
 .veritas-night h3,
+.veritas-night .font-display,
+.veritas-night .font-masthead,
 .veritas-night .font-serif-editorial {
-  font-family: 'DM Serif Display', 'Source Serif 4', Georgia, serif;
-  font-weight: 400;
-  font-style: italic;
+  font-family: 'Bodoni Moda', Georgia, serif;
+  font-weight: 600;
 }
-.veritas-night .font-masthead {
-  font-family: 'Libre Baskerville', 'DM Serif Display', Georgia, serif;
+.veritas-night .font-quote {
+  font-family: 'Bodoni Moda', Georgia, serif;
   font-weight: 400;
+  font-style: normal;
 }

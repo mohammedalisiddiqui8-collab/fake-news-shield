@@ -94,9 +94,9 @@ export const SCRUTINY_STAGES: ScrutinyStage[] = [
     example:
       "The verdict follows from the contradicted claim, not from the tone of the writing. The reasoning is published alongside it, so the route to the result can be checked.",
     outcomes: [
-      { label: "Credible", tone: "#8FA58A", note: "Key claims corroborated by retrieved independent coverage." },
-      { label: "Uncertain", tone: "#B7A47A", note: "Evidence insufficient, mixed, or unavailable." },
-      { label: "Misleading", tone: "#B3263E", note: "Key claims contradicted by retrieved independent coverage." },
+      { label: "Credible", tone: "var(--v-green)", note: "Key claims corroborated by retrieved independent coverage." },
+      { label: "Uncertain", tone: "var(--v-brass)", note: "Evidence insufficient, mixed, or unavailable." },
+      { label: "Misleading", tone: "var(--v-crimson)", note: "Key claims contradicted by retrieved independent coverage." },
     ],
   },
 ];
@@ -118,7 +118,7 @@ export function ScrutinyChapter() {
         {/* The spine — one hairline running the full length of the path */}
         <span
           className="absolute left-[7px] top-[30px] bottom-[27px] w-px"
-          style={{ background: "#242424" }}
+          style={{ background: "var(--v-rule)" }}
           aria-hidden="true"
         />
 
@@ -142,17 +142,17 @@ export function ScrutinyChapter() {
                   <motion.span
                     className="block h-[9px] w-[9px]"
                     animate={{
-                      background: isActive ? "#F1F0EA" : isDone ? "#6B6963" : "#080808",
-                      borderColor: isActive ? "#F1F0EA" : isDone ? "#6B6963" : "#242424",
+                      background: isActive ? "var(--v-ink)" : isDone ? "var(--v-ink-dim)" : "var(--v-bg)",
+                      borderColor: isActive ? "var(--v-ink)" : isDone ? "var(--v-ink-dim)" : "var(--v-rule)",
                     }}
                     transition={{ duration: 0.3, ease: EASE }}
-                    style={{ border: "1px solid #242424" }}
+                    style={{ border: "1px solid var(--v-rule)" }}
                     aria-hidden="true"
                   />
                 </span>
 
                 {/* Number, label, question */}
-                <span className="num-marker w-7 shrink-0 pt-[5px] transition-colors duration-300" style={{ color: isActive ? "#F1F0EA" : isDone ? "#8A8A86" : "#6B6963" }}>
+                <span className="num-marker w-7 shrink-0 pt-[5px] transition-colors duration-300" style={{ color: isActive ? "var(--v-ink)" : isDone ? "var(--v-ink-dim)" : "var(--v-ink-dim)" }}>
                   {String(i + 1).padStart(2, "0")}
                 </span>
                 <span className="flex-1 min-w-0">
@@ -161,20 +161,20 @@ export function ScrutinyChapter() {
                       className="text-[19px] sm:text-[22px] leading-none tracking-[0.02em] transition-colors duration-300"
                       style={{
                         fontFamily: "'Bodoni Moda', Georgia, serif",
-                        color: isActive ? "#F1F0EA" : isDone ? "#F1F0EA" : "#A6A39B",
+                        color: isActive ? "var(--v-ink)" : isDone ? "var(--v-ink)" : "var(--v-ink-soft)",
                       }}
                     >
                       {s.label}
                     </span>
                     <StageIcon
                       className="h-3 w-3 self-center transition-colors duration-300"
-                      style={{ color: isActive ? "#F1F0EA" : "#6B6963" }}
+                      style={{ color: isActive ? "var(--v-ink)" : "var(--v-ink-dim)" }}
                     />
                     <span
                       className="text-[11.5px] italic transition-colors duration-300 sm:text-[12.5px]"
                       style={{
-                        fontFamily: "'Manrope', system-ui, sans-serif",
-                        color: isActive ? "#A6A39B" : "#6B6963",
+                        fontFamily: "'Instrument Sans', system-ui, sans-serif",
+                        color: isActive ? "var(--v-ink-soft)" : "var(--v-ink-dim)",
                       }}
                     >
                       {s.question}
@@ -183,10 +183,10 @@ export function ScrutinyChapter() {
                 </span>
 
                 {/* State tick — a rule that extends when the stage is active */}
-                <span className="relative mt-1 hidden h-px w-10 shrink-0 sm:block" style={{ background: "#242424" }}>
+                <span className="relative mt-1 hidden h-px w-10 shrink-0 sm:block" style={{ background: "var(--v-rule)" }}>
                   <motion.span
                     className="absolute inset-0 origin-left"
-                    style={{ background: "#F1F0EA" }}
+                    style={{ background: "var(--v-ink)" }}
                     initial={false}
                     animate={{ scaleX: isActive ? 1 : 0 }}
                     transition={{ duration: 0.4, ease: EASE }}
@@ -212,8 +212,8 @@ export function ScrutinyChapter() {
                           <div>
                             <p className="kicker mb-3" style={{ opacity: 0.5 }}>Worked example</p>
                             <p
-                              className="text-[13.5px] leading-[1.85] text-[#F1F0EA]"
-                              style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
+                              className="text-[13.5px] leading-[1.85] text-[var(--v-ink)]"
+                              style={{ fontFamily: "'Instrument Sans', system-ui, sans-serif" }}
                             >
                               {s.example}
                             </p>
@@ -255,7 +255,7 @@ export function ScrutinyChapter() {
                             </div>
 
                             <div className="mt-5 flex items-center gap-2.5 border-t border-border/70 pt-4">
-                              <FileText className="h-3 w-3 shrink-0" style={{ color: "#6B6963" }} />
+                              <FileText className="h-3 w-3 shrink-0" style={{ color: "var(--v-ink-dim)" }} />
                               <p className="text-[10.5px] leading-relaxed text-muted-foreground" style={{ opacity: 0.75 }}>
                                 This is the real Veritas sequence. The stage you select in a report shows the actual
                                 claims, sources and passages from your own investigation.
@@ -278,7 +278,7 @@ export function ScrutinyChapter() {
                 >
                   <motion.div
                     className="absolute inset-0 origin-top"
-                    style={{ background: "rgba(201,195,183,0.5)" }}
+                    style={{ background: "rgb(var(--v-ink-rgb) /0.5)" }}
                     initial={false}
                     animate={{ scaleY: isDone ? 1 : 0 }}
                     transition={{ duration: 0.45, ease: EASE }}

@@ -72,12 +72,12 @@ function InvestigationRoute() {
               {/* The hairline segment — a short tail after the last marker */}
               <span
                 className={`absolute top-[3px] h-px ${last ? "left-0 right-[82%]" : "left-0 right-0"}`}
-                style={{ background: "#242424" }}
+                style={{ background: "var(--v-rule)" }}
                 aria-hidden="true"
               />
               <motion.span
                 className={`absolute top-[3px] h-px origin-left ${last ? "left-0 right-[82%]" : "left-0 right-0"}`}
-                style={{ background: "rgba(201,195,183,0.6)" }}
+                style={{ background: "rgb(var(--v-ink-rgb) /0.6)" }}
                 initial={{ scaleX: 0 }}
                 whileInView={{ scaleX: 1 }}
                 viewport={{ once: true, margin: "-8%" }}
@@ -87,7 +87,7 @@ function InvestigationRoute() {
               {/* The station marker */}
               <motion.span
                 className="relative block h-[7px] w-[7px]"
-                style={{ background: "#080808", border: "1px solid #6B6963" }}
+                style={{ background: "var(--v-bg)", border: "1px solid var(--v-ink-dim)" }}
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true, margin: "-8%" }}
@@ -96,7 +96,7 @@ function InvestigationRoute() {
               />
               <span className="num-marker mt-3 block">{station.no}</span>
               <span
-                className="mt-1 hidden text-[8.5px] uppercase tracking-[0.16em] text-[#6B6963] sm:block"
+                className="mt-1 hidden text-[8.5px] uppercase tracking-[0.16em] text-[var(--v-ink-dim)] sm:block"
                 style={{ fontFamily: "'JetBrains Mono', monospace" }}
               >
                 {station.label}
@@ -135,7 +135,7 @@ export default function Desk() {
       <HeroAtmosphere strength="desk" />
       {/* ═══ EDITORIAL TOOLBAR — DESK ═══
           One quiet bar: the wordmark, the two sections, one primary action.
-          Flat #080808 with a single hairline rule beneath; no glass, no pill,
+          Flat var(--v-bg) with a single hairline rule beneath; no glass, no pill,
           no glow. Desktop shows the full set; narrow screens collapse to the
           wordmark and a MENU control. */}
       <header className="v-toolbar sticky top-0 z-40">
@@ -143,7 +143,7 @@ export default function Desk() {
           <button
             type="button"
             onClick={() => navigate("/")}
-            className="v-nav-link !text-[13px] !tracking-[0.28em] text-[#F1F0EA]"
+            className="v-nav-link !text-[13px] !tracking-[0.28em] text-[var(--v-ink)]"
             aria-label="Veritas — title page"
           >
             Veritas
@@ -209,25 +209,25 @@ export default function Desk() {
           {/* The folio line — printed annotation, not chrome. Carries the
               chapter number, the case file and the edition date. */}
           <div className="flex items-baseline gap-4">
-            <span className="kicker shrink-0" style={{ color: "#F1F0EA" }}>
+            <span className="kicker shrink-0" style={{ color: "var(--v-ink)" }}>
               01 / The investigation desk
             </span>
-            <span className="hidden h-px w-10 shrink-0 self-center sm:block" style={{ background: "#242424" }} aria-hidden="true" />
+            <span className="hidden h-px w-10 shrink-0 self-center sm:block" style={{ background: "var(--v-rule)" }} aria-hidden="true" />
             <span className="kicker hidden shrink-0 lg:inline">
               Case / 001 · Veritas investigation desk · Live verification system
             </span>
-            <span className="h-px flex-1" style={{ background: "#242424" }} aria-hidden="true" />
+            <span className="h-px flex-1" style={{ background: "var(--v-rule)" }} aria-hidden="true" />
             <span className="kicker shrink-0 hidden sm:inline">
               {new Date().toLocaleDateString("en-GB", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
             </span>
           </div>
 
           {/* The directive — one voice, then nothing */}
-          <h1 className="mt-9 font-masthead text-[clamp(2.4rem,7.5vw,4.75rem)] leading-[0.98] tracking-[0.02em] text-[#F1F0EA] sm:mt-12">
+          <h1 className="mt-9 font-masthead text-[clamp(2.4rem,7.5vw,4.75rem)] leading-[0.98] tracking-[0.02em] text-[var(--v-ink)] sm:mt-12">
             Follow the evidence.
           </h1>
 
-          <p className="mt-4 text-[10.5px] uppercase tracking-[0.18em] text-[#A6A39B]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+          <p className="mt-4 text-[10.5px] uppercase tracking-[0.18em] text-[var(--v-ink-soft)]" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
             Trace how each claim becomes a verdict.
           </p>
 
@@ -259,7 +259,7 @@ export default function Desk() {
               type="button"
               onClick={() => setShowMethod((s) => !s)}
               aria-expanded={showMethod}
-              className="group inline-flex items-center gap-2 text-[9.5px] uppercase tracking-[0.22em] text-[#6B6963] transition-colors duration-300 hover:text-[#F1F0EA]"
+              className="group inline-flex items-center gap-2 text-[9.5px] uppercase tracking-[0.22em] text-[var(--v-ink-dim)] transition-colors duration-300 hover:text-[var(--v-ink)]"
               style={{ fontFamily: "'JetBrains Mono', monospace" }}
             >
               {showMethod ? "Close the method" : "About the method"}
@@ -286,7 +286,7 @@ export default function Desk() {
               >
                 <p
                   className="max-w-[56ch] pt-6 text-[13px] leading-[1.8] text-muted-foreground"
-                  style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
+                  style={{ fontFamily: "'Instrument Sans', system-ui, sans-serif" }}
                 >
                   How Veritas investigates: retrieve the article, extract its checkable claims, retrieve
                   independent coverage, weigh the evidence, assess. Each chapter below shows one system
@@ -317,7 +317,7 @@ export default function Desk() {
         <div className="mt-28 lg:mt-36 border-t border-border pt-12">
           <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="kicker" style={{ color: "#F1F0EA" }}>Ready when you are</p>
+              <p className="kicker" style={{ color: "var(--v-ink)" }}>Ready when you are</p>
               <p className="mt-3 max-w-[46ch] text-[13.5px] leading-[1.75] text-muted-foreground">
                 File an investigation and the full report — verdict, claims, evidence, reasoning — is yours.
               </p>

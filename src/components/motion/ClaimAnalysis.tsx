@@ -31,10 +31,10 @@ const statusConfig: Record<
   Claim["status"],
   { icon: typeof CheckCircle2; color: string; label: string }
 > = {
-  supported: { icon: CheckCircle2, color: "#8FA58A", label: "SUPPORTED" },
-  uncertain: { icon: HelpCircle, color: "#B7A47A", label: "UNCERTAIN" },
-  contradicted: { icon: XCircle, color: "#B3263E", label: "CONTRADICTED" },
-  needs_verification: { icon: AlertTriangle, color: "#A6A39B", label: "NEEDS VERIFICATION" },
+  supported: { icon: CheckCircle2, color: "var(--v-green)", label: "SUPPORTED" },
+  uncertain: { icon: HelpCircle, color: "var(--v-brass)", label: "UNCERTAIN" },
+  contradicted: { icon: XCircle, color: "var(--v-crimson)", label: "CONTRADICTED" },
+  needs_verification: { icon: AlertTriangle, color: "var(--v-ink-soft)", label: "NEEDS VERIFICATION" },
 };
 
 /**
@@ -67,11 +67,11 @@ export function ClaimAnalysis({ claims }: ClaimAnalysisProps) {
             <button
               type="button"
               aria-expanded={isExpanded}
-              className="w-full cursor-pointer text-left py-6 transition-colors hover:bg-[rgba(241,240,234,0.018)]"
+              className="w-full cursor-pointer text-left py-6 transition-colors hover:bg-[rgb(var(--v-ink-rgb) /0.018)]"
               onClick={() => setExpandedId(isExpanded ? null : claim.id)}
             >
               <div className="flex items-baseline justify-between gap-4 px-1">
-                <span className="num-marker" style={{ color: "#F1F0EA" }}>
+                <span className="num-marker" style={{ color: "var(--v-ink)" }}>
                   Claim {String(claim.id).padStart(2, "0")}
                 </span>
                 <span
@@ -86,7 +86,7 @@ export function ClaimAnalysis({ claims }: ClaimAnalysisProps) {
               <div className="mt-3 flex items-start gap-4 px-1">
                 <p
                   className="font-quote flex-1 min-w-0 text-[15px] sm:text-[16px] leading-[1.65]"
-                  style={{ color: "#F1F0EA" }}
+                  style={{ color: "var(--v-ink)" }}
                 >
                   “{claim.text}”
                 </p>
@@ -95,13 +95,13 @@ export function ClaimAnalysis({ claims }: ClaimAnalysisProps) {
                   transition={{ duration: 0.2 }}
                   className="shrink-0 mt-1.5"
                 >
-                  <ChevronDown className="w-4 h-4" style={{ color: "#A6A39B" }} />
+                  <ChevronDown className="w-4 h-4" style={{ color: "var(--v-ink-soft)" }} />
                 </motion.div>
               </div>
 
               <div className="mt-3.5 flex items-center gap-3 px-1">
                 <span className="kicker" style={{ opacity: 0.7 }}>Confidence</span>
-                <span className="h-[2px] w-24 sm:w-32" style={{ background: "#242424" }}>
+                <span className="h-[2px] w-24 sm:w-32" style={{ background: "var(--v-rule)" }}>
                   <motion.span
                     className="block h-full"
                     initial={{ width: 0 }}
@@ -146,10 +146,10 @@ export function ClaimAnalysis({ claims }: ClaimAnalysisProps) {
                       </span>
                     </motion.span>
                     <div>
-                      <p className="kicker" style={{ color: "#F1F0EA" }}>Evidence</p>
+                      <p className="kicker" style={{ color: "var(--v-ink)" }}>Evidence</p>
                       <p
                         className="mt-2 text-[13px] leading-[1.8]"
-                        style={{ color: "#F1F0EA" }}
+                        style={{ color: "var(--v-ink)" }}
                       >
                         {claim.evidence}
                       </p>
@@ -157,11 +157,11 @@ export function ClaimAnalysis({ claims }: ClaimAnalysisProps) {
 
                     {claim.sources.length > 0 && (
                       <div>
-                        <p className="kicker" style={{ color: "#8FA58A" }}>Supporting sources</p>
+                        <p className="kicker" style={{ color: "var(--v-green)" }}>Supporting sources</p>
                         <div className="mt-2 space-y-1.5">
                           {claim.sources.map((src, j) => (
                             <div key={j} className="flex items-start gap-2">
-                              <ExternalLink className="w-3 h-3 shrink-0 mt-0.5" style={{ color: "#8FA58A" }} />
+                              <ExternalLink className="w-3 h-3 shrink-0 mt-0.5" style={{ color: "var(--v-green)" }} />
                               <span className="text-[12px] leading-relaxed text-muted-foreground">{src}</span>
                             </div>
                           ))}
@@ -171,11 +171,11 @@ export function ClaimAnalysis({ claims }: ClaimAnalysisProps) {
 
                     {claim.contradictingSources.length > 0 && (
                       <div>
-                        <p className="kicker" style={{ color: "#B3263E" }}>Contradicting sources</p>
+                        <p className="kicker" style={{ color: "var(--v-crimson)" }}>Contradicting sources</p>
                         <div className="mt-2 space-y-1.5">
                           {claim.contradictingSources.map((src, j) => (
                             <div key={j} className="flex items-start gap-2">
-                              <XCircle className="w-3 h-3 shrink-0 mt-0.5" style={{ color: "#B3263E" }} />
+                              <XCircle className="w-3 h-3 shrink-0 mt-0.5" style={{ color: "var(--v-crimson)" }} />
                               <span className="text-[12px] leading-relaxed text-muted-foreground">{src}</span>
                             </div>
                           ))}
@@ -184,10 +184,10 @@ export function ClaimAnalysis({ claims }: ClaimAnalysisProps) {
                     )}
 
                     <div>
-                      <p className="kicker" style={{ color: "#F1F0EA" }}>Reasoning</p>
+                      <p className="kicker" style={{ color: "var(--v-ink)" }}>Reasoning</p>
                       <p
                         className="mt-2 text-[13px] leading-[1.8]"
-                        style={{ color: "#F1F0EA" }}
+                        style={{ color: "var(--v-ink)" }}
                       >
                         {claim.explanation}
                       </p>

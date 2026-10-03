@@ -37,14 +37,14 @@ export function ArticleFingerprint({ fingerprint, dateStr, note, available = tru
   const coverage = coverageAvailable ? fingerprint.sourceCoverage + "%" : "—";
   const coverageWidth = coverageAvailable ? `${fingerprint.sourceCoverage}%` : "0%";
   const cells = [
-    { label: "Claims", value: value(fingerprint.claims), color: "#F1F0EA" },
-    { label: "Unique sources", value: value(fingerprint.sources), color: "#F1F0EA" },
-    { label: "Verified", value: value(fingerprint.verified), color: "#8FA58A" },
-    { label: "Uncertain", value: value(fingerprint.uncertain), color: "#B7A47A" },
-    { label: "Contradicted", value: value(fingerprint.contradicted), color: "#B3263E" },
-    { label: "Unverified", value: value(fingerprint.unverified), color: "#A6A39B" },
-    { label: "Claim–source refs", value: available ? (fingerprint.sourceRefs != null ? String(fingerprint.sourceRefs) : "—") : "—", color: "#F1F0EA" },
-    { label: "Evidence found", value: value(fingerprint.evidenceFound), color: "#F1F0EA" },
+    { label: "Claims", value: value(fingerprint.claims), color: "var(--v-ink)" },
+    { label: "Unique sources", value: value(fingerprint.sources), color: "var(--v-ink)" },
+    { label: "Verified", value: value(fingerprint.verified), color: "var(--v-green)" },
+    { label: "Uncertain", value: value(fingerprint.uncertain), color: "var(--v-brass)" },
+    { label: "Contradicted", value: value(fingerprint.contradicted), color: "var(--v-crimson)" },
+    { label: "Unverified", value: value(fingerprint.unverified), color: "var(--v-ink-soft)" },
+    { label: "Claim–source refs", value: available ? (fingerprint.sourceRefs != null ? String(fingerprint.sourceRefs) : "—") : "—", color: "var(--v-ink)" },
+    { label: "Evidence found", value: value(fingerprint.evidenceFound), color: "var(--v-ink)" },
   ];
 
   return (
@@ -73,17 +73,17 @@ export function ArticleFingerprint({ fingerprint, dateStr, note, available = tru
       <div className="mt-8 pt-6 border-t border-border">
         <div className="flex items-baseline justify-between gap-4 mb-3">
           <span className="kicker" style={{ opacity: 0.7 }}>Source coverage</span>
-          <span className="font-mono text-[11px] tabular" style={{ color: "#F1F0EA" }}>
+          <span className="font-mono text-[11px] tabular" style={{ color: "var(--v-ink)" }}>
             {coverage}
           </span>
         </div>
-        <div className="h-[2px] w-full" style={{ background: "#242424" }}>
+        <div className="h-[2px] w-full" style={{ background: "var(--v-rule)" }}>
           <motion.div
             initial={{ width: 0 }}
             animate={{ width: coverageWidth }}
             transition={{ duration: 0.8, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
             className="h-full"
-            style={{ background: "#F1F0EA" }}
+            style={{ background: "var(--v-ink)" }}
           />
         </div>
         <p className="kicker mt-4" style={{ opacity: 0.45 }}>

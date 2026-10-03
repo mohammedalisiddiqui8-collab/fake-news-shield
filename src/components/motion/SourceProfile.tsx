@@ -56,18 +56,18 @@ export function SourceProfile({ profile }: SourceProfileProps) {
             animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 6 }}
             transition={{ delay: i * 0.05, duration: 0.3 }}
             className="p-2.5"
-            style={{ background: "#0C0C0C", border: "1px solid #242424" }}
+            style={{ background: "var(--v-surface)", border: "1px solid var(--v-rule)" }}
           >
             <div className="flex items-center gap-1.5 mb-1">
               <item.icon
                 className="w-2.5 h-2.5"
-                style={{ color: "#F1F0EA", opacity: 0.6 }}
+                style={{ color: "var(--v-ink)", opacity: 0.6 }}
               />
               <span
                 className="text-[7px] font-bold tracking-[0.15em]"
                 style={{
                   fontFamily: "'JetBrains Mono', monospace",
-                  color: "#A6A39B",
+                  color: "var(--v-ink-soft)",
                 }}
               >
                 {item.label}
@@ -76,7 +76,7 @@ export function SourceProfile({ profile }: SourceProfileProps) {
             <span
               className="text-[10px] font-semibold block leading-snug"
               style={{
-                color: item.value === "NOT AVAILABLE" ? "#A6A39B" : "#F1F0EA",
+                color: item.value === "NOT AVAILABLE" ? "var(--v-ink-soft)" : "var(--v-ink)",
                 opacity: item.value === "NOT AVAILABLE" ? 0.5 : 1,
                 fontStyle: item.value === "NOT AVAILABLE" ? "italic" : "normal",
               }}
@@ -91,7 +91,7 @@ export function SourceProfile({ profile }: SourceProfileProps) {
       <div>
         <p
           className="text-[8px] font-bold tracking-[0.15em] uppercase mb-2"
-          style={{ color: "#F1F0EA" }}
+          style={{ color: "var(--v-ink)" }}
         >
           Source Signals
         </p>
@@ -103,23 +103,23 @@ export function SourceProfile({ profile }: SourceProfileProps) {
               animate={inView ? { opacity: 1, x: 0 } : { opacity: 0, x: -4 }}
               transition={{ delay: 0.2 + i * 0.04, duration: 0.25 }}
               className="flex items-center gap-2 py-1.5 px-2.5"
-              style={{ background: "#0C0C0C" }}
+              style={{ background: "var(--v-surface)" }}
             >
               {signal.available ? (
                 <CheckCircle2
                   className="w-2.5 h-2.5 shrink-0"
-                  style={{ color: "#F1F0EA" }}
+                  style={{ color: "var(--v-ink)" }}
                 />
               ) : (
                 <HelpCircle
                   className="w-2.5 h-2.5 shrink-0"
-                  style={{ color: "#A6A39B", opacity: 0.4 }}
+                  style={{ color: "var(--v-ink-soft)", opacity: 0.4 }}
                 />
               )}
               <span
                 className="text-[9px]"
                 style={{
-                  color: signal.available ? "#A6A39B" : "#A6A39B",
+                  color: signal.available ? "var(--v-ink-soft)" : "var(--v-ink-soft)",
                   opacity: signal.available ? 1 : 0.5,
                 }}
               >
@@ -135,7 +135,7 @@ export function SourceProfile({ profile }: SourceProfileProps) {
         <div>
           <p
             className="text-[8px] font-bold tracking-[0.15em] uppercase mb-2"
-            style={{ color: "#F1F0EA" }}
+            style={{ color: "var(--v-ink)" }}
           >
             Available Evidence
           </p>
@@ -150,11 +150,11 @@ export function SourceProfile({ profile }: SourceProfileProps) {
               >
                 <span
                   className="w-1 h-1 rounded-full mt-1.5 shrink-0"
-                  style={{ background: "#F1F0EA" }}
+                  style={{ background: "var(--v-ink)" }}
                 />
                 <span
                   className="text-[10px] leading-relaxed"
-                  style={{ color: "#A6A39B" }}
+                  style={{ color: "var(--v-ink-soft)" }}
                 >
                   {evidence}
                 </span>

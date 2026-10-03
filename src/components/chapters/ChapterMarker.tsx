@@ -33,12 +33,12 @@ export function ChapterMarker({
       >
         {/* ── Folio number / rule / aside ── */}
         <div className="flex items-center gap-4 sm:gap-6">
-          <span className="kicker shrink-0" style={{ color: "#F1F0EA" }}>
+          <span className="kicker shrink-0" style={{ color: "var(--v-ink)" }}>
             {no}
           </span>
           <motion.span
             className="h-px flex-1 origin-left"
-            style={{ background: "#242424" }}
+            style={{ background: "var(--v-rule)" }}
             initial={{ scaleX: 0 }}
             whileInView={{ scaleX: 1 }}
             viewport={{ once: true, margin: "-10%" }}
@@ -48,13 +48,13 @@ export function ChapterMarker({
         </div>
 
         {/* ── Title — masthead face, the loudest line in the chapter ── */}
-        <h2 className="mt-5 font-masthead text-[clamp(1.9rem,5vw,3rem)] leading-none tracking-[0.03em] text-[#F1F0EA]">
+        <h2 className="mt-5 font-masthead text-[clamp(1.9rem,5vw,3rem)] leading-none tracking-[0.03em] text-[var(--v-ink)]">
           {title}
         </h2>
 
         <p
           className="mt-5 max-w-[58ch] text-[14px] leading-[1.8] text-muted-foreground"
-          style={{ fontFamily: "'Manrope', system-ui, sans-serif" }}
+          style={{ fontFamily: "'Instrument Sans', system-ui, sans-serif" }}
         >
           {standfirst}
         </p>
