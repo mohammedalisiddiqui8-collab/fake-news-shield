@@ -97,11 +97,12 @@ export default function Landing() {
            fill in that same colour takes their place invisibly. They hang
            off the root because that is the only box here whose origin is
            the top of the viewport: sized in vh, that is the coordinate
-           space the artwork itself occupies, at any window height. The
-           gap between the bands is exactly where the live quote sits. The
+           space the artwork itself occupies, at any window height. Both
+           bands sit under the live layer (z-10), so where one passes behind
+           the live quote or button it vanishes into the same backdrop. The
            portrait crop carries neither piece. */}
-      <div aria-hidden="true" className="absolute left-1/2 top-[49.6vh] z-[6] hidden h-[3vh] w-[34%] -translate-x-1/2 bg-[#080807] landscape:block" />
-      <div aria-hidden="true" className="absolute left-1/2 top-[58.4vh] z-[6] hidden h-[6vh] w-[34%] -translate-x-1/2 bg-[#080807] landscape:block" />
+      <div aria-hidden="true" className="absolute left-1/2 top-[49.6vh] z-[6] hidden h-[5vh] w-[34%] -translate-x-1/2 bg-[#080807] landscape:block" />
+      <div aria-hidden="true" className="absolute left-1/2 top-[58.1vh] z-[6] hidden h-[13vh] w-[34%] -translate-x-1/2 bg-[#080807] landscape:block" />
 
       {/* ── Top rule ── */}
       <div className="relative z-10 h-px w-full bg-[#2A2B2E]" />
