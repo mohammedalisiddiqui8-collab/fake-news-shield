@@ -68,16 +68,37 @@ export default function Landing() {
       {/* ── The scene — the supplied reference artwork, full-bleed. Two
           crops of the same picture serve the two shapes: a portrait phone
           gets the 9:16 re-frame, anything landscape gets the 16:9
-          original, so neither loses the masthead. ── */}
-      <picture className="absolute inset-0 block">
-        <source media="(orientation: portrait)" srcSet="/1790790680751_edit_358901019924703.png" />
-        <img
-          src="/veritas-hero.png"
-          alt=""
-          aria-hidden="true"
-          className="h-full w-full object-cover"
-        />
-      </picture>
+          original, so neither loses the masthead. In landscape the frame
+          around the picture is sized to the exact object-cover footprint —
+          a centred 16:9 box grown to max(100%, …) on each axis — so
+          anything placed inside it in % lands on exact image coordinates
+          at every window shape. The picture itself renders pixel for
+          pixel exactly as before. ── */}
+      <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
+        <div className="absolute left-1/2 top-1/2 h-full w-full -translate-x-1/2 -translate-y-1/2 landscape:h-[max(100%,56.25vw)] landscape:w-[max(100%,177.78vh)]">
+          <picture className="block h-full w-full">
+            <source media="(orientation: portrait)" srcSet="/1790790680751_edit_358901019924703.png" />
+            <img
+              src="/veritas-hero.png"
+              alt=""
+              aria-hidden="true"
+              className="h-full w-full object-cover"
+            />
+          </picture>
+          {/* ── The picture's own duplicates, replaced in place ──
+              The 16:9 crop bakes in an old static opening line and the
+              old ENTER pill whose rounded border read as a stray box
+              above the button. They are pixels, not elements — there is
+              nothing in the DOM to delete — so they are replaced by fills
+              of the very backdrop colour they sit on (rgb(8,8,7)),
+              anchored in % of the picture frame so the replacement tracks
+              the image exactly at every window size. They sit under the
+              scan line and under the live layer. The portrait crop
+              carries neither piece. ── */}
+          <div aria-hidden="true" className="absolute left-1/2 top-[49.7%] hidden h-[4.3%] w-[34%] -translate-x-1/2 bg-[#080807] landscape:block" />
+          <div aria-hidden="true" className="absolute left-1/2 top-[58.4%] hidden h-[6.8%] w-[34%] -translate-x-1/2 bg-[#080807] landscape:block" />
+        </div>
+      </div>
 
       {/* ── The scan line ──
            One 1px rule travelling across the photograph: it enters at the
@@ -86,23 +107,6 @@ export default function Landing() {
            of live content (the chrome, the quote and the button all sit at
            z-10), so it never crosses a word. Quieter still on a phone. */}
       <div aria-hidden="true" className="hero-scan-line z-[5]" />
-
-      {/* ── The picture's own duplicates, replaced ──
-           The 16:9 landscape crop bakes in two pieces of furniture that
-           duplicate what the live layer already provides: an old static
-           opening line, and the old ENTER pill whose rounded border read
-           as a stray white box above the button. They are pixels, not
-           elements, so they can only be replaced, not re-styled — and the
-           backdrop around both measures rgb(8,8,7), flat enough that a
-           fill in that same colour takes their place invisibly. They hang
-           off the root because that is the only box here whose origin is
-           the top of the viewport: sized in vh, that is the coordinate
-           space the artwork itself occupies, at any window height. Both
-           bands sit under the live layer (z-10), so where one passes behind
-           the live quote or button it vanishes into the same backdrop. The
-           portrait crop carries neither piece. */}
-      <div aria-hidden="true" className="absolute left-1/2 top-[49.6vh] z-[6] hidden h-[5vh] w-[34%] -translate-x-1/2 bg-[#080807] landscape:block" />
-      <div aria-hidden="true" className="absolute left-1/2 top-[58.1vh] z-[6] hidden h-[13vh] w-[34%] -translate-x-1/2 bg-[#080807] landscape:block" />
 
       {/* ── Top rule ── */}
       <div className="relative z-10 h-px w-full bg-[#2A2B2E]" />
