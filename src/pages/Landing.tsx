@@ -8,8 +8,9 @@ import { useNavigate } from "react-router";
    masthead is the largest element on the page and stays part of the
    image. What a photograph cannot do is change or respond, so the two
    elements beneath it are live: the opening line that rotates, and the
-   way in. Only the pill's baked outline is covered, and only by a fill
-   matched to the near-black backdrop already behind it. ─────────────── */
+   way in. The line and pill the picture bakes in are covered, and only
+   by fills matched to the near-black backdrop already behind them.
+   ─────────────── */
 
 const OPENING_QUOTES = [
   "Truth deserves evidence.",
@@ -107,23 +108,31 @@ export default function Landing() {
 
       {/* ── The live layer ──
            The opening line returns to the DOM, set larger than the
-           lettering it replaces and placed exactly where that line
-           stood. Below it, a fill matched to the near-black backdrop
-           hides the pill's baked outline, and the real control sits on
-           top of it so the way in works. ── */}
+           lettering it replaces. Two fills matched to the near-black
+           backdrop take the artwork's own baked line and pill out of
+           the picture, and the real control sits on top of them so the
+           way in works. ── */}
       <main className="relative z-10 flex-1">
         {/* The opening line — the examined claim, in soft ivory. */}
         <div className="absolute inset-x-0 top-[51%] -translate-y-1/2 landscape:top-[51.5%]">
           <OpeningQuote />
         </div>
 
-        {/* The portrait artwork no longer carries the pill, so nothing
-            covers it there. The 16:9 landscape crop still does, and its
-            backdrop is measured at rgb(8,8,7) — flat enough that the
-            fill is simply the colour already there. */}
+        {/* The portrait artwork carries neither the line nor the pill, so
+            nothing covers it there. The 16:9 landscape crop bakes in both:
+            an old opening line, and the pill's rounded outline — the pair
+            that read as a second quote and as a stray white box above the
+            button. Their backdrop is measured at rgb(8,8,7), flat enough
+            that a fill in that same colour simply takes their place.
+            Both bands are cut in vh so they land on the artwork at any
+            window height; the live quote sits in the gap between them. */}
         <div
           aria-hidden="true"
-          className="absolute left-1/2 top-[57.6%] hidden h-[4.9%] w-[34%] -translate-x-1/2 bg-[#080807] landscape:block"
+          className="absolute left-1/2 top-[49.6vh] hidden h-[3vh] w-[34%] -translate-x-1/2 bg-[#080807] landscape:block"
+        />
+        <div
+          aria-hidden="true"
+          className="absolute left-1/2 top-[58.4vh] hidden h-[6vh] w-[34%] -translate-x-1/2 bg-[#080807] landscape:block"
         />
 
         {/* ── The way in ── */}
