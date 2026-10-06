@@ -87,6 +87,22 @@ export default function Landing() {
            z-10), so it never crosses a word. Quieter still on a phone. */}
       <div aria-hidden="true" className="hero-scan-line z-[5]" />
 
+      {/* ── The picture's own duplicates, replaced ──
+           The 16:9 landscape crop bakes in two pieces of furniture that
+           duplicate what the live layer already provides: an old static
+           opening line, and the old ENTER pill whose rounded border read
+           as a stray white box above the button. They are pixels, not
+           elements, so they can only be replaced, not re-styled — and the
+           backdrop around both measures rgb(8,8,7), flat enough that a
+           fill in that same colour takes their place invisibly. They hang
+           off the root because that is the only box here whose origin is
+           the top of the viewport: sized in vh, that is the coordinate
+           space the artwork itself occupies, at any window height. The
+           gap between the bands is exactly where the live quote sits. The
+           portrait crop carries neither piece. */}
+      <div aria-hidden="true" className="absolute left-1/2 top-[49.6vh] z-[6] hidden h-[3vh] w-[34%] -translate-x-1/2 bg-[#080807] landscape:block" />
+      <div aria-hidden="true" className="absolute left-1/2 top-[58.4vh] z-[6] hidden h-[6vh] w-[34%] -translate-x-1/2 bg-[#080807] landscape:block" />
+
       {/* ── Top rule ── */}
       <div className="relative z-10 h-px w-full bg-[#2A2B2E]" />
 
@@ -108,32 +124,14 @@ export default function Landing() {
 
       {/* ── The live layer ──
            The opening line returns to the DOM, set larger than the
-           lettering it replaces. Two fills matched to the near-black
-           backdrop take the artwork's own baked line and pill out of
-           the picture, and the real control sits on top of them so the
-           way in works. ── */}
+           lettering it replaces, and the real control sits beneath it so
+           the way in works. Nothing else belongs here: the artwork's own
+           duplicates are replaced above. ── */}
       <main className="relative z-10 flex-1">
         {/* The opening line — the examined claim, in soft ivory. */}
         <div className="absolute inset-x-0 top-[51%] -translate-y-1/2 landscape:top-[51.5%]">
           <OpeningQuote />
         </div>
-
-        {/* The portrait artwork carries neither the line nor the pill, so
-            nothing covers it there. The 16:9 landscape crop bakes in both:
-            an old opening line, and the pill's rounded outline — the pair
-            that read as a second quote and as a stray white box above the
-            button. Their backdrop is measured at rgb(8,8,7), flat enough
-            that a fill in that same colour simply takes their place.
-            Both bands are cut in vh so they land on the artwork at any
-            window height; the live quote sits in the gap between them. */}
-        <div
-          aria-hidden="true"
-          className="absolute left-1/2 top-[49.6vh] hidden h-[3vh] w-[34%] -translate-x-1/2 bg-[#080807] landscape:block"
-        />
-        <div
-          aria-hidden="true"
-          className="absolute left-1/2 top-[58.4vh] hidden h-[6vh] w-[34%] -translate-x-1/2 bg-[#080807] landscape:block"
-        />
 
         {/* ── The way in ── */}
         <motion.button
