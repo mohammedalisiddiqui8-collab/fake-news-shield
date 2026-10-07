@@ -104,7 +104,7 @@ export function TraceChapter() {
   const reduceMotion = useReducedMotion();
 
   return (
-    <div className="relative" ref={pathRef}>
+    <div className="relative min-h-[85svh] sm:min-h-0" ref={pathRef}>
       {/* The spine — one hairline that draws itself down the chapter as it
           is scrolled; framer resolves it instantly under reduced motion */}
       <motion.span
@@ -129,6 +129,7 @@ export function TraceChapter() {
                 type="button"
                 onClick={() => setOpen(isOpen ? null : station.no)}
                 className="flex w-full items-baseline gap-5 py-5 text-left sm:gap-7"
+                whileTap={{ scale: 0.995 }}
                 variants={rowVariants}
                 animate={isOpen ? "open" : open !== null ? "quiet" : "closed"}
                 whileHover={isOpen ? undefined : "hover"}
@@ -154,6 +155,11 @@ export function TraceChapter() {
 
                 <span className="flex-1 min-w-0">
                   <span className="flex flex-wrap items-baseline gap-x-3">
+                    {i === 0 && (
+                      <span className="kicker text-[8.5px] sm:hidden" style={{ opacity: 0.5 }}>
+                        Tap for details
+                      </span>
+                    )}
                     <motion.span
                       className="text-[19px] sm:text-[22px] leading-none tracking-[0.02em]"
                       style={{ fontFamily: "'Bodoni Moda', Georgia, serif" }}
@@ -168,6 +174,15 @@ export function TraceChapter() {
                       {station.verb}
                     </span>
                   </span>
+                </span>
+
+                {/* Mobile affordance — a phone has neither spine nor rule, so
+                    expansion is spelled once and dotted throughout */}
+                <span
+                  className="shrink-0 self-center font-mono text-[13px] leading-none text-[var(--v-ink-dim)] sm:hidden"
+                  aria-hidden="true"
+                >
+                  …
                 </span>
 
                 {/* The indicator is a rule, not a chevron */}

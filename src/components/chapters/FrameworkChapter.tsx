@@ -193,7 +193,7 @@ export function FrameworkChapter() {
       {/* ── The two tracks ── */}
       <div className="mt-10 grid gap-x-14 gap-y-10 lg:grid-cols-2">
         {/* Track switch */}
-        <div className="lg:col-span-2 flex items-center gap-6">
+        <div className="lg:col-span-2 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-6">
           <div className="flex items-center border border-border">
             {(["claims", "language"] as const).map((t) => (
               <button
@@ -245,7 +245,7 @@ export function FrameworkChapter() {
         {/* The assessment, and the convergence */}
         <div className="lg:pl-8">
           <div className="border-t border-border pt-6">
-            <div className="flex flex-wrap items-baseline gap-x-3">
+            <div className="flex flex-wrap items-baseline gap-x-3 max-sm:flex-col max-sm:items-start max-sm:gap-2">
               <span className="kicker" style={{ opacity: 0.5 }}>Both tracks report to</span>
               <span className="text-[15px] leading-none" style={{ fontFamily: "'Bodoni Moda', Georgia, serif", color: "var(--v-ink)" }}>
                 Credibility assessment
@@ -262,7 +262,7 @@ export function FrameworkChapter() {
           </div>
 
           <div className="mt-8 border-t border-border pt-6">
-            <div className="flex flex-wrap items-baseline gap-x-3">
+            <div className="flex flex-wrap items-baseline gap-x-3 max-sm:flex-col max-sm:items-start max-sm:gap-2">
               <span className="kicker" style={{ opacity: 0.5 }}>Produced by the claim track only</span>
               <span className="text-[15px] leading-none" style={{ fontFamily: "'Bodoni Moda', Georgia, serif", color: "var(--v-ink)" }}>
                 Verdict &amp; confidence
