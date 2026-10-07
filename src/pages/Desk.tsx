@@ -205,7 +205,6 @@ export default function Desk() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.9, ease: EASE }}
-          className="max-md:flex max-md:flex-col max-md:justify-center max-md:min-h-[calc(100svh-3.5rem-3.5rem)] max-md:pb-0 max-md:mb-0"
         >
           {/* The folio line — printed annotation, not chrome. Carries the
               chapter number, the case file and the edition date. */}
