@@ -104,13 +104,9 @@ export function TraceChapter() {
   const reduceMotion = useReducedMotion();
 
   return (
-    <div
-      className="relative flex min-h-[100svh] flex-col md:block md:min-h-0"
-      ref={pathRef}
-    >
-      {/* Mobile-only reading affordance — the chapter fills the phone screen,
-          the path resting centred beneath one line of instruction */}
-      <p className="kicker mb-7 md:hidden" style={{ opacity: 0.5 }}>
+    <div className="relative" ref={pathRef}>
+      {/* Mobile-only reading affordance — one line of instruction above the path */}
+      <p className="kicker md:hidden" style={{ opacity: 0.5 }}>
         Tap a step to inspect
       </p>
       {/* The spine — one hairline that draws itself down the chapter as it

@@ -202,20 +202,20 @@ export function PatternsChapter({
 
       {/* ── The reading — one line for the selected signal ── */}
       <div className="mt-10 border-t border-border pt-5">
-        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+        <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 max-md:flex-nowrap max-md:items-center max-md:gap-x-3">
           <span
-            className="text-[15px] leading-none tracking-[0.04em]"
+            className="text-[15px] leading-none tracking-[0.04em] max-md:text-[12.5px] max-md:tracking-[0.02em] max-md:shrink max-md:whitespace-nowrap"
             style={{ fontFamily: "'Bodoni Moda', Georgia, serif", color: "var(--v-ink)" }}
           >
             {signal.name}
           </span>
           <span
-            className="kicker"
+            className="kicker max-md:shrink-0"
             style={{ color: signal.pole === "caution" ? "var(--v-crimson)" : "var(--v-green)" }}
           >
             {signal.pole === "caution" ? "Warning signal" : "Positive signal"}
           </span>
-          <span className="kicker tabular ml-auto" style={{ opacity: 0.5 }}>
+          <span className="kicker tabular ml-auto max-md:ml-0 max-md:shrink-0 max-md:text-right" style={{ opacity: 0.5 }}>
             {hasValue ? `${value}% of this analysis` : isMeasured ? "Not detected" : "Not measured"}
           </span>
         </div>
