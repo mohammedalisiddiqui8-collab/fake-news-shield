@@ -299,25 +299,7 @@ export default function Desk() {
         </motion.div>
 
         {/* The route of an investigation — the page's own wayfinding */}
-        {/* ── Mobile transition — a barely-there editorial divider between the
-            method note and the route. The surrounding margins carry the
-            same gap the plain mt-16 used to, so nothing moved. ── */}
-        <div
-          className="items-center gap-4 hidden max-md:flex"
-          aria-hidden="true"
-          style={{ marginTop: "3rem", marginBottom: "3rem" }}
-        >
-          <span className="h-px flex-1" style={{ background: "var(--v-rule)", opacity: 0.5 }} />
-          <span
-            className="kicker text-[8px] tracking-[0.28em] shrink-0"
-            style={{ opacity: 0.4 }}
-          >
-            Method / Trace
-          </span>
-          <span className="h-px flex-1" style={{ background: "var(--v-rule)", opacity: 0.5 }} />
-        </div>
-
-        <div className="mt-16 sm:mt-20 max-md:mt-0">
+        <div className="mt-16 sm:mt-20 max-md:mt-8">
           <InvestigationRoute />
         </div>
 
