@@ -104,11 +104,19 @@ export function TraceChapter() {
   const reduceMotion = useReducedMotion();
 
   return (
-    <div className="relative min-h-[85svh] sm:min-h-0" ref={pathRef}>
+    <div
+      className="relative flex min-h-[100svh] flex-col md:block md:min-h-0"
+      ref={pathRef}
+    >
+      {/* Mobile-only reading affordance — the chapter fills the phone screen,
+          the path resting centred beneath one line of instruction */}
+      <p className="kicker mb-7 md:hidden" style={{ opacity: 0.5 }}>
+        Tap a step to inspect
+      </p>
       {/* The spine — one hairline that draws itself down the chapter as it
           is scrolled; framer resolves it instantly under reduced motion */}
       <motion.span
-        className="absolute left-[7px] top-2 bottom-2 w-px hidden origin-top sm:block"
+        className="absolute left-[7px] top-2 bottom-2 w-px hidden origin-top md:block"
         style={{ background: "var(--v-ink)", opacity: 0.55, scaleY: reduceMotion ? 1 : drawn }}
         aria-hidden="true"
       />
@@ -129,13 +137,12 @@ export function TraceChapter() {
                 type="button"
                 onClick={() => setOpen(isOpen ? null : station.no)}
                 className="flex w-full items-baseline gap-5 py-5 text-left sm:gap-7"
-                whileTap={{ scale: 0.995 }}
                 variants={rowVariants}
                 animate={isOpen ? "open" : open !== null ? "quiet" : "closed"}
                 whileHover={isOpen ? undefined : "hover"}
               >
                 {/* Station marker on the spine */}
-                <span className="relative hidden w-[15px] shrink-0 self-center sm:block">
+                <span className="relative hidden w-[15px] shrink-0 self-center md:block">
                   <motion.span
                     className="absolute left-1/2 top-1/2 block h-[7px] w-[7px] -translate-x-1/2 -translate-y-1/2"
                     style={{ border: "1px solid var(--v-ink-dim)", background: "var(--v-bg)" }}
@@ -155,11 +162,6 @@ export function TraceChapter() {
 
                 <span className="flex-1 min-w-0">
                   <span className="flex flex-wrap items-baseline gap-x-3">
-                    {i === 0 && (
-                      <span className="kicker text-[8.5px] sm:hidden" style={{ opacity: 0.5 }}>
-                        Tap for details
-                      </span>
-                    )}
                     <motion.span
                       className="text-[19px] sm:text-[22px] leading-none tracking-[0.02em]"
                       style={{ fontFamily: "'Bodoni Moda', Georgia, serif" }}
@@ -179,14 +181,14 @@ export function TraceChapter() {
                 {/* Mobile affordance — a phone has neither spine nor rule, so
                     expansion is spelled once and dotted throughout */}
                 <span
-                  className="shrink-0 self-center font-mono text-[13px] leading-none text-[var(--v-ink-dim)] sm:hidden"
+                  className="shrink-0 self-center font-mono text-[13px] leading-none text-[var(--v-ink-dim)] md:hidden"
                   aria-hidden="true"
                 >
                   …
                 </span>
 
                 {/* The indicator is a rule, not a chevron */}
-                <span className="relative mt-2 hidden h-px w-10 shrink-0 sm:block" style={{ background: "var(--v-rule)" }}>
+                <span className="relative mt-2 hidden h-px w-10 shrink-0 md:block" style={{ background: "var(--v-rule)" }}>
                   <motion.span
                     className="absolute inset-0 origin-left"
                     style={{ background: "var(--v-ink)" }}

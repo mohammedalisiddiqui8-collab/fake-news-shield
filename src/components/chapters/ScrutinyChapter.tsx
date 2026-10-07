@@ -110,7 +110,8 @@ export function ScrutinyChapter() {
     <div>
       {/* Kicker — what the interaction is for */}
       <p className="kicker mb-7" style={{ opacity: 0.5 }}>
-        Select a stage to follow one claim through the system
+        <span className="md:hidden">Tap a step to inspect</span>
+        <span className="hidden md:inline">Select a stage to follow one claim through the system</span>
       </p>
 
       {/* ── The vertical path: one rule, five stations, one case file open ── */}
@@ -182,8 +183,16 @@ export function ScrutinyChapter() {
                   </span>
                 </span>
 
+                {/* Mobile affordance — a dotted cue that the stage opens */}
+                <span
+                  className="shrink-0 self-center font-mono text-[13px] leading-none text-[var(--v-ink-dim)] md:hidden"
+                  aria-hidden="true"
+                >
+                  …
+                </span>
+
                 {/* State tick — a rule that extends when the stage is active */}
-                <span className="relative mt-1 hidden h-px w-10 shrink-0 sm:block" style={{ background: "var(--v-rule)" }}>
+                <span className="relative mt-1 hidden h-px w-10 shrink-0 md:block" style={{ background: "var(--v-rule)" }}>
                   <motion.span
                     className="absolute inset-0 origin-left"
                     style={{ background: "var(--v-ink)" }}

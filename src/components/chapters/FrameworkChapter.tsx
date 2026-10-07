@@ -193,8 +193,8 @@ export function FrameworkChapter() {
       {/* ── The two tracks ── */}
       <div className="mt-10 grid gap-x-14 gap-y-10 lg:grid-cols-2">
         {/* Track switch */}
-        <div className="lg:col-span-2 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-6">
-          <div className="flex items-center border border-border">
+        <div className="lg:col-span-2 flex flex-col items-start gap-5 md:flex-row md:items-center md:gap-6">
+          <div className="flex items-center border border-border max-md:w-full">
             {(["claims", "language"] as const).map((t) => (
               <button
                 key={t}
@@ -215,7 +215,7 @@ export function FrameworkChapter() {
               </button>
             ))}
           </div>
-          <p className="text-[11px] leading-relaxed text-muted-foreground max-w-[52ch]">
+          <p className="text-[11px] leading-relaxed text-muted-foreground max-w-[52ch] max-md:max-w-none max-md:w-full">
             {tab === "claims"
               ? "The claim track is the only path to a verdict. It is the whole of the verification method."
               : "The language track runs alongside and reports on how the article is written. It is annotated, never decisive."}
@@ -245,7 +245,7 @@ export function FrameworkChapter() {
         {/* The assessment, and the convergence */}
         <div className="lg:pl-8">
           <div className="border-t border-border pt-6">
-            <div className="flex flex-wrap items-baseline gap-x-3 max-sm:flex-col max-sm:items-start max-sm:gap-2">
+            <div className="flex flex-wrap items-baseline gap-x-3 max-md:flex-col max-md:items-start max-md:gap-4">
               <span className="kicker" style={{ opacity: 0.5 }}>Both tracks report to</span>
               <span className="text-[15px] leading-none" style={{ fontFamily: "'Bodoni Moda', Georgia, serif", color: "var(--v-ink)" }}>
                 Credibility assessment
@@ -262,7 +262,7 @@ export function FrameworkChapter() {
           </div>
 
           <div className="mt-8 border-t border-border pt-6">
-            <div className="flex flex-wrap items-baseline gap-x-3 max-sm:flex-col max-sm:items-start max-sm:gap-2">
+            <div className="flex flex-wrap items-baseline gap-x-3 max-md:flex-col max-md:items-start max-md:gap-5">
               <span className="kicker" style={{ opacity: 0.5 }}>Produced by the claim track only</span>
               <span className="text-[15px] leading-none" style={{ fontFamily: "'Bodoni Moda', Georgia, serif", color: "var(--v-ink)" }}>
                 Verdict &amp; confidence

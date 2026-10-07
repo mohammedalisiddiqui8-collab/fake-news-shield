@@ -185,7 +185,7 @@ export function PatternsChapter({
                           {s.name}
                         </span>
                         <span
-                          className="kicker tabular shrink-0 transition-colors duration-300 max-sm:ml-auto max-sm:w-8 max-sm:justify-self-start max-sm:text-left"
+                          className="kicker tabular shrink-0 transition-colors duration-300 max-md:ml-auto max-md:w-8 max-md:text-left"
                           style={{ color: isActive ? tone : "var(--v-ink-dim)" }}
                         >
                           {typeof v === "number" ? `${v}%` : "—"}
