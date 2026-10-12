@@ -1,5 +1,5 @@
 // Chapters 1–3: Introduction, Literature Review, Methodology
-import { drawER, drawClass, drawFlow, drawActivity, drawSequence } from "./diagrams.mjs";
+import * as DIAG from "./diagrams.mjs";
 
 export function chapter1(doc, D) {
   doc.newPage("body");
@@ -29,13 +29,34 @@ export function chapter1(doc, D) {
 
 export function chapter2(doc, D) {
   doc.newPage("body");
-  doc.h1("2", "Literature Review (Project Planning & Design Document)");
-  doc.para("This chapter covers the planning work: what tools and prior research the project stands on, what was asked of users, how requirements were collected, and what existing software was studied before building anything. A note on scope first: the literature reviewed here is deliberately focused on automated fact-checking as an engineering task — how claims are detected, how evidence is retrieved, how verification is decided — because those are the stages Veritas implements. The wider social-science literature on why misinformation spreads is acknowledged but not reviewed in depth, since Veritas does not model propagation.");
+  doc.h1("2", "Objectives of the Project");
+  doc.para("The objectives below were fixed at the proposal stage and are restated here against what the finished system actually does, so the examiner can check each one against the corresponding section of this report.");
   doc.h1end();
 
-  doc.h2("2.1", "Survey of Technology (Minimum Hardware & Software Requirement)");
+  doc.h2("2.1", "Primary Objective");
+  doc.para("To build a working web application that gives an ordinary reader a structured, evidence-backed first pass on a suspicious news article: the user supplies the article (URL or pasted text); the system retrieves it, divides it into individually checkable claims, searches for independent coverage of each claim, and reports what was found claim by claim together with an overall verdict, a confidence level and written reasoning.");
+
+  doc.h2("2.2", "Secondary Objectives");
+  doc.bullet("Provide a transparent, auditable verification process: every investigation exposes the stages it ran (Trace replay), the per-claim evidence chain and the counting rules behind every displayed number (coverage, fingerprint).");
+  doc.bullet("Handle failure honestly: when a page cannot be fetched or a platform blocks automated access (Instagram is named explicitly), report UNABLE TO ANALYZE / RETRIEVAL FAILED, show the submitted input, perform no verification and store no record.");
+  doc.bullet("Keep language analysis strictly supplementary: sensationalism, clickbait and attribution signals are displayed as observations but are structurally prevented from deciding the verdict.");
+  doc.bullet("Achieve a genuinely usable mobile experience, since users read forwarded content on phones; the layout was tuned against a 390x844 viewport.");
+  doc.bullet("Keep user accounts and stored investigations private: password authentication through Convex Auth, each case file visible only to the user who ran it.");
+  doc.bullet("Document the system to viva depth: data design, algorithms, diagrams, testing record and this report, all derived from the real source code.");
+
+  doc.h2("2.3", "Scope and Non-Objectives");
+  doc.para("Stating what the project deliberately does not attempt, because it bounds the claims made later: Veritas does not measure truth directly and does not claim accuracy percentages; it does not train machine-learning models (the analysis is rule-based plus live retrieval); it does not cover social-media-only content that blocks automated retrieval; and it is a first pass for readers, not a substitute for professional editorial judgement in high-stakes cases. Each non-objective is revisited with the actual behaviour in section 10.3.");
+}
+
+export function chapter2lit(doc, D) {
+  doc.newPage("body");
+  doc.h1("3", "Literature Review");
+  doc.para("This chapter covers the planning work: what tools and prior research the project stands on, what was asked of users, how requirements were collected, and what existing software was studied before building anything. A note on scope first: the literature reviewed here is deliberately focused on automated fact-checking as an engineering task \u2014 how claims are detected, how evidence is retrieved, how verification is decided \u2014 because those are the stages Veritas implements. The wider social-science literature on why misinformation spreads is acknowledged but not reviewed in depth, since Veritas does not model propagation.");
+  doc.h1end();
+
+  doc.h2("3.1", "Survey of Technology (Minimum Hardware & Software Requirement)");
   doc.para("Before development began, the practical requirements were written down so that the system would be buildable and demonstrable on ordinary student hardware. The survey below records what the project actually needs, and why.");
-  doc.h3("2.1.1", "Minimum Hardware Requirements");
+  doc.h3("3.1.1", "Minimum Hardware Requirements");
   doc.table(
     ["Component", "Minimum (end-user)", "Recommended (development)", "Why it matters"],
     [
@@ -47,9 +68,9 @@ export function chapter2(doc, D) {
     ],
     [70, 130, 130, 160]
   );
-  doc.para("No GPU or special-purpose hardware is required anywhere in the stack. Veritas does not train or host a neural network; its analysis is rule-based pattern matching plus live evidence retrieval, which is a deliberate choice justified in section 2.4 and Chapter 5.", { gap: 6 });
+  doc.para("No GPU or special-purpose hardware is required anywhere in the stack. Veritas does not train or host a neural network; its analysis is rule-based pattern matching plus live evidence retrieval, which is a deliberate choice justified in section 3.4 and Chapter 5.", { gap: 6 });
 
-  doc.h3("2.1.2", "Software Requirements");
+  doc.h3("3.1.2", "Software Requirements");
   doc.table(
     ["Software", "Version used", "Role in the project", "Why this choice"],
     [
@@ -70,9 +91,9 @@ export function chapter2(doc, D) {
   );
   doc.para("The distinguishing software decision is Convex. A fact-checking investigation is a naturally asynchronous, multi-stage job: fetch, extract, search per claim, assess. Convex actions handle the external calls, and its reactive queries push the finished case file to the open browser without polling. This removed the need to write and host a separate REST API, which mattered for a one-person project with a fixed timeline.", { gap: 6 });
 
-  doc.h2("2.2", "Interview Questions (Open-ended and Close-ended)");
+  doc.h2("3.2", "Interview Questions (Open-ended and Close-ended)");
   doc.para("Users were interviewed in two rounds: an exploratory round before design (open-ended), and a validation round on the working prototype (close-ended). The questions and a summary of the answers are recorded here because several of them changed the design directly.");
-  doc.h3("2.2.1", "Open-ended Questions");
+  doc.h3("3.2.1", "Open-ended Questions");
   doc.table(
     ["#", "Question asked", "Summary of responses"],
     [
@@ -84,7 +105,7 @@ export function chapter2(doc, D) {
     ],
     [24, 190, 196]
   );
-  doc.h3("2.2.2", "Close-ended Questions");
+  doc.h3("3.2.2", "Close-ended Questions");
   doc.table(
     ["#", "Question (yes/no)", "Yes", "Design consequence"],
     [
@@ -97,11 +118,11 @@ export function chapter2(doc, D) {
     [24, 150, 30, 206]
   );
 
-  doc.h2("2.3", "Data Collection Plan (Requirement Gathering)");
+  doc.h2("3.3", "Data Collection Plan (Requirement Gathering)");
   doc.para("Requirements were gathered through three instruments, used in this order. First, the user interviews summarised above (five participants, two rounds) established priorities: transparency over automation depth, honesty over confidence, mobile usability. Second, a walkthrough of real forwarded content was performed: twelve items that had circulated in community groups were collected (with permission) and used as reference cases throughout development. These are not a benchmark dataset — no accuracy claims are made from them — but they exercised the pipeline against realistic inputs, including one Instagram post, one paywalled article, and one press-release-style page with almost no checkable claims. Third, a small diary study asked two volunteers to note, over one week, every moment they wanted more information from the prototype. The diary produced the request that became the Trace replay (they wanted to know \u201Cwhat did it actually do while I waited?\u201D).");
   doc.para("The plan deliberately avoided collecting anything that would create fake precision. No survey scores were aggregated into an \u201Caccuracy\u201D number, because five users and twelve items cannot support one, and because the engine's behaviour is deterministic and inspectable rather than statistical. Wherever this report states a result, it is the observed output of a specific documented test case (Chapter 4, Testing), not a statistical generalisation.");
 
-  doc.h2("2.4", "Supporting Material (Apps / Websites / Prototypes)");
+  doc.h2("3.4", "Supporting Material (Apps / Websites / Prototypes)");
   doc.para("Before writing code, existing systems were studied to see what worked and what was missing. The findings below also justify the honest claim, made in Chapter 5, that Veritas combines known techniques rather than inventing new ones.");
   doc.table(
     ["System / resource", "What it does", "What Veritas took from it", "What Veritas does differently"],
@@ -118,19 +139,5 @@ export function chapter2(doc, D) {
   doc.para("Prototypes: three paper wireframes and two throwaway React prototypes were produced before the final build. Prototype 1 fixed the report-section layout (numbered sections, evidence per claim). Prototype 2 introduced the Trace timeline after the diary study. Both were shown to the interview participants, and their feedback is the origin of the current interface's most distinctive behaviours.");
 }
 
-export function chapter3(doc, D) {
-  doc.newPage("body");
-  doc.h1("3", "Methodology (Design Documentation)");
-  doc.para("This chapter documents the design models of Veritas: the entity-relationship diagram for the data, the class (module) diagram for the code structure, and the flow, activity and sequence diagrams for behaviour. The models describe the system as actually implemented — where the implementation deviates from a textbook model, the text says so. All five diagrams were drawn specifically for this report from the real source code.", { size: 10.4 });
-  doc.h1end();
-
-  drawER(doc, D);
-  doc.newPage("body");
-  drawClass(doc, D);
-  doc.newPage("body");
-  drawFlow(doc, D);
-  doc.newPage("body");
-  drawActivity(doc, D);
-  doc.newPage("body");
-  drawSequence(doc, D);
-}
+// Design diagrams now live in chapter 5 (Research Methodology) of
+// chapters5to11.mjs, matching the teacher template's chapter order.

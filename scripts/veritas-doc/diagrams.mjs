@@ -1,252 +1,285 @@
-// The five required diagrams (ER, Class, Flow, Activity, Sequence)
-import { rgb } from "pdf-lib";
-import { makeDraw } from "./draw.mjs";
-
-const FILL = rgb(0.94, 0.94, 0.955);
-const FILL2 = rgb(0.90, 0.90, 0.92);
-
-export function drawER(doc, D) {
-  const { box, label, arrow } = D;
-  doc.h2("3.1", "ER Diagram");
-  doc.para("The entity–relationship model below captures the data that one Veritas investigation produces. An INVESTIGATION record owns everything else: it is created each time a user submits a URL or pasted article text. From it, zero or more CLAIMS are extracted, and every claim that enters cross-checking draws zero or more retrieved SOURCES; each source that actually addresses the claim becomes an EVIDENCE entry carrying an excerpt, a date and a relationship (supports / contradicts / partial / does-not-address). ASSESSMENT stores the final verdict, confidence and reasoning, while the FINGERPRINT stores the aggregate counters (claims, unique sources, claim–source references, source coverage). Note that the cardinals on INVESTIGATION–SOURCE are indirect: sources are reached through claims, so the aggregate table counts claim–source references (one per claim–source pair), not raw source rows.");
-  doc.spacer(6);
-
+// All required diagrams, light professional style. PDF y grows upward from the page bottom.
+export function drawERfull(doc, D) {
+  const { box, label, arrow, FILL, FILL2 } = D;
+  doc.h2("5.2", "ER Diagram");
+  doc.para("One completed investigation is stored as one document. The diagram shows the entities inside that document and how they relate. Cardinalities: an investigation has zero or more claims; a claim may be cross-checked against zero or more retrieved sources; a (claim, source) pair with a retrieved URL constitutes an evidence reference. The assessment and the fingerprint are derived summaries of the claims and the cross-check, not independent inputs. Sentinel notices (for example NO INDEPENDENT CORROBORATION FOUND) carry no URL and never become sources.");
+  doc.spacer(8);
   const cx = 297;
-  const bw = 108, bh = 42;
-  // INVESTIGATION top centre
-  box(cx - bw / 2, 560, bw, bh, "INVESTIGATION\n(id, input, url, inputType,\nwordCount, createdAt)", { fill: FILL2, size: 7.0, lh: 8.6 });
-  // CLAIM left, SOURCE right
-  box(cx - 215, 428, bw + 14, bh + 6, "CLAIM\n(id, text, status,\nconfidence, evidence,\nexplanation)", { fill: FILL, size: 7.0, lh: 8.6 });
-  box(cx + 107, 428, bw + 14, bh + 6, "SOURCE\n(url, domain, name,\nheadline, date,\nrelationship)", { fill: FILL, size: 7.0, lh: 8.6 });
-  // EVIDENCE centre-bottom
-  box(cx - bw / 2 - 20, 296, bw + 40, bh + 6, "EVIDENCE / CROSS-CHECK\n(claimId, excerpt, relationship,\nfreshness, role, url)", { fill: FILL, size: 7.0, lh: 8.6 });
-  // ASSESSMENT bottom-left, FINGERPRINT bottom-right
-  box(cx - 215, 170, bw + 14, bh + 6, "ASSESSMENT\n(verdict, confidence,\nsummary, reasoning,\nredFlags, greenFlags)", { fill: FILL, size: 7.0, lh: 8.6 });
-  box(cx + 107, 170, bw + 14, bh + 6, "FINGERPRINT\n(claims, sources, sourceRefs,\nsourceCoverage, verified,\nuncertain, contradicted)", { fill: FILL, size: 7.0, lh: 8.6 });
-  // FRAMING / FRESHNESS far bottom centre
-  box(cx - bw / 2 - 20, 66, bw + 40, 34, "FRAMING SIGNALS / FRESHNESS / TIMELINE (per-claim observations)", { fill: null, size: 6.8 });
+  const bw = 130, bh = 46;
+  box(cx - bw / 2, 560, bw, bh, "INVESTIGATION\n(userId, inputText, inputType,\nverdict, confidence, createdAt)", { fill: FILL2, size: 7.0, lh: 9.0 });
+  box(cx - 235, 430, 150, 52, "CLAIM\n(id, text, status, confidence,\nevidence, explanation,\nsources[], contradictingSources[])", { fill: FILL, size: 6.8, lh: 8.8 });
+  box(cx + 85, 430, 150, 52, "SOURCE\n(name, headline, date, excerpt,\nrelationship, url?)", { fill: FILL, size: 6.8, lh: 8.8 });
+  box(cx - bw / 2 - 10, 300, bw + 20, 46, "EVIDENCE REFERENCE\n(claimId x source)", { fill: FILL, size: 7.0, lh: 9.0 });
+  box(cx - 235, 175, 150, 46, "ASSESSMENT\n(summary, reasoning,\nredFlags[], greenFlags[])", { fill: FILL, size: 6.8, lh: 8.8 });
+  box(cx + 85, 175, 150, 46, "FINGERPRINT\n(claims, sources, sourceRefs,\nsourceCoverage, verified,\nuncertain, contradicted, unverified)", { fill: FILL, size: 6.6, lh: 8.4 });
+  box(cx - bw / 2 - 10, 80, bw + 20, 30, "TIMELINE / FRESHNESS / FRAMING (annotating observations)", { size: 6.6 });
+  arrow(cx - 40, 560, cx - 180, 484, { label: "1 : N extracts" });
+  arrow(cx + 40, 560, cx + 180, 484, { label: "via crossCheck 1 : N" });
+  arrow(cx - 150, 430, cx - 50, 348, { label: "yields" });
+  arrow(cx + 150, 430, cx + 50, 348, { label: "becomes part of" });
+  arrow(cx - 40, 300, cx - 160, 223, { label: "summarised by" });
+  arrow(cx + 40, 300, cx + 160, 223, { label: "counted in" });
+  arrow(cx, 300, cx, 112, { label: "annotated by" });
+  doc.caption("Figure 5.1 - ER diagram of the investigation data model (one analyses document).");
+  doc.h2end();
+}
 
-  // connectors
-  arrow(cx, 560, cx - 130, 428 + bh + 6 + 6, { label: "extracts 1:N" });
-  arrow(cx, 560, cx + 130, 428 + bh + 6 + 6, { label: "reaches via claims 1:N" });
-  arrow(cx - 130, 428, cx - 30, 296 + bh + 6 + 6, { label: "yields 1:N" });
-  arrow(cx + 130, 428, cx + 30, 296 + bh + 6 + 6, { label: "becomes 0:N" });
-  arrow(cx - 60, 296, cx - 130, 170 + bh + 6 + 6, { label: "summarises" });
-  arrow(cx + 60, 296, cx + 130, 170 + bh + 6 + 6, { label: "counts" });
-  arrow(cx, 296, cx, 100, { label: "annotates" });
-  // cardinalities
-  label(cx - 44, 528, "1", { size: 7.4, font: "hb", color: INK });
-  label(cx - 160, 452, "N", { size: 7.4, font: "hb", color: INK });
-  label(cx + 40, 528, "1", { size: 7.4, font: "hb", color: INK });
-  label(cx + 148, 452, "N", { size: 7.4, font: "hb", color: INK });
-  doc.caption("Figure 3.1 — Entity-relationship diagram of the Veritas investigation data model.");
+export function drawDFD0(doc, D) {
+  const { box, label, arrow, FILL, FILL2 } = D;
+  doc.h2("5.3", "Data Flow Diagram - Level 0 (Context)");
+  doc.spacer(10);
+  box(232, 420, 130, 40, "0\nVERITAS\nAnalysis Engine", { fill: FILL2, size: 8.0, lh: 10 });
+  box(60, 500, 110, 26, "USER", { fill: FILL, size: 7.8 });
+  box(60, 340, 110, 26, "USER (report)", { fill: FILL, size: 7.8 });
+  box(430, 500, 105, 26, "PUBLISHER SITE", { fill: FILL, size: 7.8 });
+  box(430, 340, 105, 26, "WEB SEARCH", { fill: FILL, size: 7.8 });
+  box(430, 420, 105, 26, "CONVEX DB", { fill: FILL, size: 7.8 });
+  arrow(170, 513, 260, 460, { label: "URL / article text" });
+  arrow(260, 424, 170, 353, { label: "report / failure" });
+  arrow(348, 452, 430, 513, { label: "fetch request" });
+  arrow(430, 500, 348, 445, { label: "page HTML" });
+  arrow(348, 428, 430, 428, { label: "case file" });
+  arrow(348, 440, 430, 348, { label: "per-claim queries" });
+  arrow(430, 340 + 24, 348, 435, { label: "results", dashed: true });
+  doc.caption("Figure 5.2 - Context diagram: the engine as one process talking to the user, the publisher, the search service and the database.");
+  doc.h2end();
+}
+
+export function drawDFD1(doc, D) {
+  const { box, label, arrow, FILL, FILL2 } = D;
+  doc.h2("5.4", "Data Flow Diagram - Level 1");
+  doc.para("Level 1 expands the engine into its internal processes. The data store (the analyses table) is written once, at the very end of the pipeline; nothing is read back mid-investigation, which keeps a run deterministic and replayable in the Trace view.");
+  doc.spacer(8);
+  const pw = 96, ph = 30;
+  box(60, 470, pw, ph, "1.0 Validate\n& classify input", { fill: FILL, size: 7.2 });
+  box(210, 470, pw, ph, "2.0 Retrieve\narticle text", { fill: FILL, size: 7.2 });
+  box(360, 470, pw, ph, "3.0 Clean &\nisolate body", { fill: FILL, size: 7.2 });
+  box(150, 330, pw, ph, "4.0 Extract\nclaims", { fill: FILL, size: 7.2 });
+  box(320, 330, pw, ph, "5.0 Evidence search\n& cross-check", { fill: FILL, size: 7.2 });
+  box(230, 190, 120, 34, "6.0 Assess (verdict,\nconfidence, fingerprint)", { fill: FILL2, size: 7.0 });
+  box(470, 420, 120, 24, "RETRIEVAL FAILURE\nstop, nothing stored", { size: 6.6 });
+  arrow(60 + pw / 2, 500, 258, 470 + 14, {});
+  arrow(306, 485, 360, 485, {});
+  arrow(360 + pw / 2, 470, 198, 330 + 28, {});
+  arrow(246, 330, 368, 330, {});
+  arrow(222, 330, 250, 224, {});
+  arrow(368, 330, 300, 224, {});
+  arrow(360 + pw, 485, 470, 440, { label: "cannot fetch / not article", dashed: true });
+  label(64, 206, "D1  analyses table (case file)", { size: 7.0 });
+  arrow(260, 190, 150, 200, {});
+  doc.caption("Figure 5.3 - Level-1 DFD showing the internal processes of one investigation.");
   doc.h2end();
 }
 
 export function drawClass(doc, D) {
-  const { box, label, arrow } = D;
-  doc.h2("3.2", "Class Diagram");
-  doc.para("Veritas is implemented as a set of cooperating modules rather than classes in the classical OOP sense, but the responsibilities map one-to-one onto the class view below. AnalysisController (the Convex action analyzeNews) is the entry point and orchestrator: it validates the submission, calls ArticleRetriever, and on success hands the cleaned text to ClaimExtractor, LinguisticAnalyzer and EvidenceService. EvidenceService performs the live external search and classifies every retrieved result's relationship to its claim. AssessmentEngine derives the verdict and confidence from the claim statuses only — linguistic signals are carried alongside but never tip the verdict on their own. ReportBuilder assembles the fingerprint, timeline, freshness and framing objects that the React UI renders.");
-  doc.spacer(6);
-
-  const colW = 150, bh = 54, gap = 16;
+  const { box, label, arrow, FILL, FILL2, INK } = D;
+  doc.h2("5.5", "Class Diagram (logical modules)");
+  doc.para("The implementation is functional TypeScript, so the diagram records logical modules and their main operations rather than an inheritance hierarchy. One deliberate separation is worth pointing out: the assessment module never receives a linguistic score as an input to the verdict rule, it receives claim statuses only. That is the code-level guarantee behind the claim that language signals can annotate but never decide a verdict.");
+  doc.spacer(8);
+  const colW = 176, bh = 54, gapY = 16;
   const rows = [
-    ["AnalysisController", "validate(input) / dispatch(depth)\nterminateOnRetrievalFailure()\nmount: Convex action analyzeNews"],
-    ["ArticleRetriever", "extractUrlCandidate() / classifyUrl()\nfetchArticleText() / extractArticleBody()\nextractPageMetadata() / 8s timeout"],
-    ["ClaimExtractor", "extractRawClaims(text, limit)\nnumbering / checkability filter\nattribution + self-qualified guards"],
-    ["LinguisticAnalyzer", "redFlagCategories (5) / greenFlagCats (6)\nweightedMatches() / framingSignals()\nbaseSignal (supplementary only)"],
-    ["EvidenceService", "searchClaim(claim, opts)\nfollowUpSearch() / relationshipOf()\nsourceAuthority() / notices"],
-    ["AssessmentEngine", "statusOf(claim, evidence)\nverdictFrom(claims) / confidenceCap\nunresolvedCeiling() / hardRules()"],
-    ["ReportBuilder", "fingerprint() / timeline() / freshness()\ncoverage() via investigationStats\npersistence: convex analyses table"],
+    ["AnalysisController", "analyzeNews action; input routing;\nends early on retrieval failure"],
+    ["ArticleRetriever", "extractUrlCandidate; classifyUrl;\nfetchArticleText (8 s cap); metadata"],
+    ["BodyCleaner", "extractArticleBody; widget removal;\nlegacy-tag fallback strip"],
+    ["ClaimExtractor", "extractRawClaims; sentence splitting;\ncheckability filter; numbering"],
+    ["LinguisticAnalyzer", "flag categories; weightedMatches;\nframingSignals (supplementary)"],
+    ["EvidenceService", "searchClaim per claim; relationship\nlabels; sourceAuthority; follow-up"],
+    ["AssessmentEngine", "status rules; verdict + confidence\ncaps; hard rules (overrides)"],
+    ["ReportBuilder", "source stats via investigationStats;\nfingerprint, timeline, freshness;\npersist case file to analyses"],
   ];
-  let y = 560;
-  const xL = 92, xR = 322;
-  const pos = {};
   rows.forEach((r, i) => {
     const col = i % 2, row = Math.floor(i / 2);
-    const x = col === 0 ? xL : xR;
-    const yy = y - row * (bh + gap);
-    box(x, yy, colW, bh, r[0], { fill: FILL, size: 8.2 });
-    label(x + colW / 2, yy - 9.5, r[1].split("\n")[0], { size: 6.6, align: "center", color: rgb(0.32, 0.32, 0.36) });
-    label(x + colW / 2, yy - 17.5, r[1].split("\n")[1] ?? "", { size: 6.6, align: "center", color: rgb(0.32, 0.32, 0.36) });
-    pos[r[0]] = { x, y: yy, w: colW, h: bh };
+    const x = col === 0 ? 62 : 306;
+    const yy = 556 - row * (bh + gapY);
+    box(x, yy + bh - 13, colW, 13, r[0], { fill: FILL2, size: 7.8 });
+    const p = doc.cur.page;
+    r[1].split("\n").forEach((ln, k) => label(x + 6, yy + bh - 25 - k * 9, ln, { size: 6.6 }));
+    p.drawRectangle({ x, y: yy, width: colW, height: bh, borderColor: INK, borderWidth: 0.9 });
   });
-  // ReportBuilder centred at bottom
-  const rbY = y - 3 * (bh + gap);
-  box(207, rbY, colW, bh, "ReportBuilder", { fill: FILL2, size: 8.2 });
-  label(207 + colW / 2, rbY - 9.5, "fingerprint() / timeline() / freshness()", { size: 6.6, align: "center", color: rgb(0.32, 0.32, 0.36) });
-  label(207 + colW / 2, rbY - 17.5, "coverage() via investigationStats", { size: 6.6, align: "center", color: rgb(0.32, 0.32, 0.36) });
-
-  const A = pos["AnalysisController"], R = pos["ArticleRetriever"],
-    CE = pos["ClaimExtractor"], LA = pos["LinguisticAnalyzer"],
-    ES = pos["EvidenceService"], AE = pos["AssessmentEngine"];
-  arrow(A.x + A.w / 2, A.y, R.x + R.w / 2, R.y + R.h, { label: "uses" });
-  arrow(R.x + R.w / 2, R.y, CE.x + CE.w / 2, CE.y + CE.h, { label: "clean text" });
-  arrow(CE.x + CE.w, CE.y + CE.h / 2, LA.x, LA.y + LA.h / 2, { label: "same text" });
-  arrow(CE.x + CE.w / 2, CE.y, ES.x + ES.w / 2, ES.y + ES.h, { label: "claims" });
-  arrow(ES.x + ES.w / 2, ES.y, AE.x + AE.w / 2, AE.y + AE.h, { label: "evidence" });
-  arrow(LA.x + LA.w / 2, LA.y, 207 + colW / 2, rbY + bh, { label: "signals", dashed: true });
-  arrow(AE.x + AE.w / 2, AE.y, 207 + colW / 2 - 20, rbY + bh, { label: "statuses" });
-  doc.caption("Figure 3.2 — Logical class diagram of the Veritas analysis pipeline.");
+  arrow(150, 556, 394, 556, { label: "uses" });
+  arrow(394, 486, 238, 416, { label: "clean text" });
+  arrow(394, 416, 238, 346, { label: "numbered claims" });
+  arrow(238, 390, 306, 390, { label: "language signals (side channel)" });
+  arrow(394, 346, 238, 276, { label: "evidence per claim" });
+  arrow(238, 300, 306, 300, { label: "claim statuses" });
+  doc.caption("Figure 5.4 - Class (logical-module) diagram of the analysis pipeline.");
   doc.h2end();
 }
 
 export function drawFlow(doc, D) {
-  const { box, diamond, label, arrow } = D;
-  doc.h2("3.3", "Flow Chart");
-  doc.para("The flow chart traces one submission from START to END, including the branch that matters most for reliability: retrieval failure. If the article cannot be fetched, the pipeline stops immediately — no claims, no verdict, no confidence are produced from nothing. This is the branch that produced the UNABLE TO ANALYZE / RETRIEVAL FAILED behaviour documented in Chapter 4.");
-  doc.spacer(6);
-
-  const cx = 250;
+  const { box, diamond, label, arrow, FILL2 } = D;
+  doc.h2("5.6", "Flow Chart");
+  doc.spacer(4);
+  const cx = 200;
   const bw = 128, bh = 22;
   const steps = [
-    ["START", 788, "oval"],
-    ["Input URL / pasted article text", 752, "box"],
-    ["Validate URL structure (http/https)", 716, "box"],
-    ["Retrieve article content (fetch, 8 s timeout)", 680, "box"],
+    ["START", 800],
+    ["Input URL / pasted text", 764],
+    ["Validate URL structure", 728],
+    ["Retrieve article (8 s cap)", 692],
   ];
-  steps.forEach(([t, y, kind]) => {
-    if (kind === "oval") box(cx - 40, y, 80, 20, t, { fill: FILL2, size: 7.8 });
+  steps.forEach(([t, y]) => {
+    if (t === "START") box(cx - 40, y + 4, 80, 18, t, { fill: FILL2, size: 7.8 });
     else box(cx - bw / 2, y, bw, bh, t, { size: 7.6 });
   });
-  arrow(cx, 788, cx, 774);
-  arrow(cx, 752, cx, 738);
-  arrow(cx, 716, cx, 702);
-  arrow(cx, 680, cx, 656);
-
-  // decision: retrieval successful?
-  diamond(cx, 636, 150, 40, "Retrieval successful?", { size: 7.4 });
-  // NO branch → right
-  box(cx + 150, 626, 120, 22, "RETRIEVAL FAILURE", { fill: FILL2, size: 7.6 });
-  arrow(cx + 75, 636, cx + 150, 637, { label: "NO" });
-  box(cx + 150, 590, 120, 22, "Report UNABLE TO ANALYZE — STOP", { size: 7.2 });
-  arrow(cx + 210, 626, cx + 210, 612);
-  box(cx + 150, 554, 120, 22, "END (no verdict issued)", { fill: FILL2, size: 7.4 });
-  arrow(cx + 210, 590, cx + 210, 576);
-  // YES continues down
-  arrow(cx, 616, cx, 596, { label: "YES" });
+  for (let i = 0; i < steps.length - 1; i++) arrow(cx, steps[i][1], cx, steps[i + 1][1] + bh);
+  arrow(cx, 692, cx, 666);
+  diamond(cx, 646, 140, 40, "Retrieval\nsuccessful?", { size: 7.0 });
+  box(cx + 130, 636, 140, 22, "RETRIEVAL FAILURE", { size: 7.4 });
+  arrow(cx + 70, 646, cx + 130, 647, { label: "NO" });
+  box(cx + 130, 594, 140, 22, "Report UNABLE TO ANALYZE", { size: 6.9 });
+  arrow(cx + 200, 636, cx + 200, 616);
+  box(cx + 130, 556, 140, 22, "END - no case file stored", { fill: FILL2, size: 7.0 });
+  arrow(cx + 200, 594, cx + 200, 578);
+  arrow(cx, 626, cx, 604, { label: "YES" });
   const chain = [
-    ["Clean / isolate article body", 574],
-    ["Extract factual claims (numbered)", 538],
-    ["Retrieve external evidence per claim", 502],
-    ["Cross-check: supports / contradicts / partial", 466],
-    ["Compute coverage, fingerprint, freshness", 430],
-    ["Generate verdict + confidence (evidence-gated)", 394],
-    ["Display report + investigation trace", 358],
-    ["END", 322],
+    ["Clean / isolate article body", 582],
+    ["Extract numbered claims", 546],
+    ["Search external evidence per claim", 510],
+    ["Classify: supports / contradicts / partial", 474],
+    ["Apply source-credibility + freshness weights", 438],
+    ["Claim statuses to evidence-gated verdict", 402],
+    ["Compute coverage / fingerprint / trace", 366],
+    ["Persist case file (skipped on failure)", 330],
+    ["END", 292],
   ];
-  chain.forEach(([t, y], i) => {
-    if (t === "END") box(cx - 40, y, 80, 20, t, { fill: FILL2, size: 7.8 });
-    else box(cx - bw / 2, y, bw, bh, t, { size: 7.6 });
-    const ny = i < chain.length - 1 ? chain[i + 1][1] + bh : null;
-    arrow(cx, y, cx, y - (y - (i < chain.length - 1 ? chain[i + 1][1] + bh : y - 24)) - (i < chain.length - 1 ? 0 : 4));
-  });
-  // fix arrows between chain boxes
-  for (let i = 0; i < chain.length - 1; i++) {
-    const [, y1] = chain[i]; const [, y2] = chain[i + 1];
-    arrow(cx, y1, cx, y2 + bh);
+  for (let i = 0; i < chain.length; i++) {
+    const [t, y] = chain[i];
+    if (t === "END") box(cx - 40, y, 80, 18, t, { fill: FILL2, size: 7.8 });
+    else box(cx - bw / 2 - 10, y, bw + 20, bh - 6, t, { size: 7.0 });
+    if (i === 0) arrow(cx, 604, cx, y + bh - 6);
+    else arrow(cx, chain[i - 1][1], cx, y + bh - 6);
   }
-  doc.caption("Figure 3.3 — Flow chart of one Veritas investigation, including the retrieval-failure stop branch.");
+  doc.caption("Figure 5.5 - Flow chart of one investigation, including the retrieval-failure stop.");
   doc.h2end();
 }
 
 export function drawActivity(doc, D) {
-  const { box, label, arrow } = D;
-  doc.h2("3.4", "Activity Diagram");
-  doc.para("The activity diagram separates the user's actions (left lane) from the system's work (right lane). The user submits a URL or pastes text and waits; everything after that is Veritas working. The partition boundary makes the division of responsibility explicit — the user never sees intermediate stages unless they open the Trace view, and the system never asks the user to do anything mid-investigation.");
-  doc.spacer(6);
-
-  const xU = 120, xS = 380;
-  const laneW = 200;
-  // swimlanes
-  doc.cur.page.drawRectangle({ x: xU - laneW / 2, y: 120, width: laneW, height: 560, borderColor: rgb(0.75, 0.75, 0.78), borderWidth: 0.7 });
-  doc.cur.page.drawRectangle({ x: xS - laneW / 2, y: 120, width: laneW, height: 560, borderColor: rgb(0.75, 0.75, 0.78), borderWidth: 0.7 });
-  label(xU, 686, "USER", { size: 9, font: "hb", align: "center", color: INK });
-  label(xS, 686, "VERITAS SYSTEM", { size: 9, font: "hb", align: "center", color: INK });
-
+  const { box, label, arrow, FILL } = D;
+  doc.h2("5.7", "Activity Diagram");
+  doc.para("Swimlanes separate user actions from system work. After the hand-off the user waits; the whole pipeline runs without further input, and either a finished report or the failure state is returned.");
+  doc.spacer(8);
+  const xU = 140, xS = 420, laneW = 220;
+  const p = doc.cur.page;
+  p.drawRectangle({ x: xU - laneW / 2, y: 150, width: laneW, height: 570, color: FILL });
+  p.drawRectangle({ x: xS - laneW / 2, y: 150, width: laneW, height: 570, color: FILL });
+  label(xU, 712, "USER", { size: 9, font: "hb", align: "center" });
+  label(xS, 712, "VERITAS SYSTEM", { size: 9, font: "hb", align: "center" });
   const steps = [
-    [xU, 640, "Submit URL or article text"],
-    [xS, 596, "Validate input & classify URL"],
-    [xS, 552, "Retrieve page (8 s cap)"],
-    [xS, 508, "Extract & clean article body"],
-    [xS, 464, "Extract numbered claims"],
-    [xS, 420, "Search external evidence per claim"],
-    [xS, 376, "Classify relationships; cross-check"],
-    [xS, 332, "Derive coverage, fingerprint, freshness"],
-    [xS, 288, "Produce verdict + confidence"],
-    [xU, 244, "Read report / step through Trace"],
-    [xU, 200, "END"],
+    [xU, 670, "Submit URL or article text"],
+    [xS, 630, "Validate input, classify URL"],
+    [xS, 590, "Retrieve page (8 s cap)"],
+    [xS, 550, "Extract and clean article body"],
+    [xS, 510, "Extract numbered claims"],
+    [xS, 470, "Search external evidence"],
+    [xS, 430, "Classify, cross-check, weigh"],
+    [xS, 390, "Derive coverage and fingerprint"],
+    [xS, 350, "Produce verdict + confidence"],
+    [xU, 310, "Read report, replay Trace"],
+    [xU, 270, "END"],
   ];
-  for (const [x, y, t] of steps) {
-    if (t === "END") box(x - 30, y, 60, 18, t, { fill: FILL2, size: 7.6 });
-    else box(x - 85, y, 170, 22, t, { size: 7.4 });
+  for (let i = 0; i < steps.length; i++) {
+    const [x, y, t] = steps[i];
+    if (t === "END") box(x - 30, y, 60, 18, t, { size: 7.4 });
+    else box(x - 90, y, 180, 22, t, { size: 7.2 });
+    if (i > 0 && steps[i - 1][0] === x) arrow(x, steps[i - 1][1], x, y + 22);
   }
-  // vertical arrows down each lane
-  arrow(xU, 640, xU, 262);
-  arrow(xS, 596, xS, 310);
-  // lane crossings
-  arrow(xU + 85, 651, xS - 85, 607, { label: "hand-off" });
-  arrow(xS - 85, 255, xU + 85, 255, { label: "report returned", dashed: true });
-  doc.caption("Figure 3.4 — Activity diagram with user/system swimlanes.");
+  arrow(xU + 90, 681, xS - 90, 641, { label: "hand-off" });
+  arrow(xS - 90, 311, xU + 90, 311, { label: "report / failure returned", dashed: true });
+  doc.caption("Figure 5.6 - Activity diagram with user and system swimlanes.");
   doc.h2end();
 }
 
 export function drawSequence(doc, D) {
-  const { box, label, arrow } = D;
-  doc.h2("3.5", "Sequence Diagram");
-  doc.para("The sequence diagram shows the same investigation as ordered messages between participants. Two details are worth noting for the viva. First, the Retrieval participant returns a failure object, not an exception: the controller converts it into the RETRIEVAL FAILED response and the sequence simply ends. Second, Evidence Search runs once per claim (the loop fragment), and every result is classified before the database write, so the stored case file already contains the classified evidence rather than raw search output.");
-  doc.spacer(6);
-
-  const lanes = [
-    ["User", 80],
-    ["Browser / UI", 185],
-    ["Backend\n(Controller)", 290],
-    ["Retrieval", 390],
-    ["Claim\nExtraction", 462],
-    ["Evidence\nSearch", 530],
-    ["Convex DB", 620],
-    ["Assessment", 700],
-  ];
-  const topY = 640, botY = 150;
+  const { box, label, arrow, FILL, INK } = D;
+  doc.h2("5.8", "Sequence Diagram");
+  doc.spacer(4);
+  const lanes = [["User", 70], ["Browser/UI", 168], ["Controller", 272], ["Retriever", 376], ["Claims", 452], ["Evidence", 528], ["Convex", 614], ["Assessment", 700]];
+  const topY = 646, botY = 176;
+  const p = doc.cur.page;
   for (const [name, x] of lanes) {
-    const lines = name.split("\n");
-    lines.forEach((ln, i) => label(x, topY + 14 - i * 9, ln, { size: 7.6, font: "hb", align: "center", color: INK }));
-    doc.cur.page.drawLine({ start: { x, y: topY + 4 }, end: { x, y: botY }, thickness: 0.6, color: rgb(0.6, 0.6, 0.64), dashArray: { pattern: 4, phase: 2 } });
+    box(x - 36, topY + 4, 72, 18, name, { fill: FILL, size: 6.8 });
+    p.drawLine({ start: { x, y: topY + 2 }, end: { x, y: botY }, thickness: 0.6, dashArray: [4] });
   }
-
   const msg = (from, to, y, text, { dashed = false } = {}) => {
-    const x1 = lanes.find(l => l[0].startsWith(from))[1];
-    const x2 = lanes.find(l => l[0].startsWith(to))[1];
-    const p = doc.cur.page;
-    p.drawLine({ start: { x: x1, y }, end: { x: x2 - Math.sign(x2 - x1) * 3, y }, thickness: 0.8, color: INK, dashArray: dashed ? { pattern: 3, phase: 0 } : undefined });
-    // head
-    const hx = x2 - Math.sign(x2 - x1) * 3;
-    p.drawLine({ start: { x: hx, y }, end: { x: hx - Math.sign(x2 - x1) * 6, y: y + 2.4 }, thickness: 0.8, color: INK });
-    p.drawLine({ start: { x: hx, y }, end: { x: hx - Math.sign(x2 - x1) * 6, y: y - 2.4 }, thickness: 0.8, color: INK });
-    label((x1 + x2) / 2, y + 3, text, { size: 6.6, align: "center", color: rgb(0.25, 0.25, 0.3) });
+    const x1 = lanes.find((l) => l[0] === from)[1];
+    const x2 = lanes.find((l) => l[0] === to)[1];
+    const dir = Math.sign(x2 - x1) || 1;
+    p.drawLine({ start: { x: x1, y }, end: { x: x2 - dir * 3, y }, thickness: 0.8, dashArray: dashed ? [3] : undefined });
+    const hx = x2 - dir * 3;
+    p.drawLine({ start: { x: hx, y }, end: { x: hx - dir * 6, y: y + 2.4 }, thickness: 0.8 });
+    p.drawLine({ start: { x: hx, y }, end: { x: hx - dir * 6, y: y - 2.4 }, thickness: 0.8 });
+    label((x1 + x2) / 2, y + 3.2, text, { size: 6.2, align: "center" });
   };
+  msg("User", "Browser/UI", 634, "submit URL / pasted text");
+  msg("Browser/UI", "Controller", 618, "analyzeNews action call");
+  msg("Controller", "Retriever", 602, "fetchArticleText(url, 8 s cap)");
+  msg("Retriever", "Controller", 587, "text + metadata, or failure object", { dashed: true });
+  msg("Controller", "Claims", 571, "extractRawClaims(clean text)");
+  msg("Claims", "Controller", 557, "numbered claims", { dashed: true });
+  p.drawRectangle({ x: 478, y: 384, width: 214, height: 158, borderColor: INK, borderWidth: 0.8 });
+  label(480, 540, "loop [each cross-checked claim]", { size: 6.4, font: "hb" });
+  msg("Controller", "Evidence", 526, "searchClaim(claim)");
+  msg("Evidence", "Controller", 511, "sources + relationships", { dashed: true });
+  msg("Controller", "Evidence", 496, "follow-up search (asserting claims)");
+  msg("Evidence", "Controller", 481, "correction / resolution evidence", { dashed: true });
+  msg("Controller", "Controller", 460, "classify, apply weights, pair sources");
+  msg("Controller", "Assessment", 430, "claim statuses");
+  msg("Assessment", "Controller", 414, "verdict + confidence + reasoning", { dashed: true });
+  msg("Controller", "Convex", 386, "persist case file (skipped on failure)");
+  label(66, 268, "Failure path: the retriever returns a failure object instead of throwing;", { size: 6.8 });
+  label(66, 256, "the controller reports UNABLE TO ANALYZE with confidence shown as a dash.", { size: 6.8 });
+  label(66, 244, "No claims, evidence, verdict, fingerprint or database record are created.", { size: 6.8 });
+  msg("Controller", "Browser/UI", 232, "reactive report update", { dashed: true });
+  msg("Browser/UI", "User", 216, "report + Trace replay steps", { dashed: true });
+  doc.caption("Figure 5.7 - Sequence diagram with the failure short-circuit marked explicitly.");
+  doc.h2end();
+}
 
-  msg("User", "Browser", 622, "submit URL / text");
-  msg("Browser", "Backend", 606, "analyzeNews action");
-  msg("Backend", "Retrieval", 590, "fetchArticleText(url)");
-  msg("Retrieval", "Backend", 576, "ok: text + metadata", { dashed: true });
-  msg("Backend", "Claim", 560, "extractRawClaims(text)");
-  msg("Claim", "Backend", 546, "numbered claims", { dashed: true });
-  // loop box
-  doc.cur.page.drawRectangle({ x: 350, y: 462, width: 310, height: 86, borderColor: rgb(0.4, 0.4, 0.45), borderWidth: 0.7 });
-  label(356, 540, "loop [for each claim]", { size: 6.8, font: "hbi" in doc.f ? "hbi" : "hb", color: MUTED });
-  msg("Backend", "Evidence", 524, "searchClaim(claim)");
-  msg("Evidence", "Backend", 508, "sources + relationships", { dashed: true });
-  msg("Backend", "Backend", 488, "classify / cross-check");
-  msg("Backend", "Assessment", 440, "claims + statuses + signals");
-  msg("Assessment", "Backend", 424, "verdict + confidence", { dashed: true });
-  msg("Backend", "Convex", 404, "persist case file");
-  msg("Browser", "Convex", 380, "subscribe (reactive query)", { dashed: true });
-  msg("Convex", "Browser", 362, "investigation record", { dashed: true });
-  msg("Browser", "User", 344, "report + Trace replay", { dashed: true });
-  // failure alt path note
-  label(350, 320, "alt: retrieval fails → Backend returns RETRIEVAL FAILED (confidence “—”),", { size: 6.8, color: MUTED });
-  label(350, 310, "no claims / evidence / verdict are produced, nothing is persisted.", { size: 6.8, color: MUTED });
-  doc.caption("Figure 3.5 — Sequence diagram of one investigation across all participants.");
+export function drawComponents(doc, D) {
+  const { box, label, arrow, FILL, FILL2 } = D;
+  doc.h2("5.9", "Component Diagram");
+  doc.para("Deployment view. Everything the user downloads is one static bundle; the backend is Convex; the analysis runs inside Convex actions which are the only components allowed to reach the publisher site and the search service.");
+  doc.spacer(8);
+  box(50, 480, 190, 62, "Browser bundle (static)\nReact 19 + TS + Vite + Tailwind v4\nshadcn/ui, Lucide, Framer Motion;\nThree.js used for the landing scene", { fill: FILL, size: 7.0, lh: 9.6 });
+  box(320, 480, 190, 62, "Convex backend\nactions: analyzeNews (pipeline)\nqueries: history, case files\nmutations: persist on success\nConvex Auth (password, users)", { fill: FILL, size: 7.0, lh: 9.6 });
+  box(320, 300, 190, 44, "analyses table (documents)\nindex by_user (userId, createdAt)", { fill: FILL2, size: 7.0, lh: 9.6 });
+  arrow(240, 511, 320, 511, { label: "HTTPS" });
+  arrow(415, 480, 415, 346, { label: "write once" });
+  box(50, 300, 190, 44, "External services\npublisher sites (fetch)\nweb search (per-claim queries)", { fill: FILL2, size: 7.0, lh: 9.6 });
+  arrow(415, 300, 240, 320, { label: "outbound calls", dashed: true });
+  doc.caption("Figure 5.8 - Component (deployment) diagram.");
+  doc.h2end();
+}
+
+export function drawState(doc, D) {
+  const { box, label, arrow, FILL, FILL2 } = D;
+  doc.h2("5.10", "State Diagram");
+  doc.para("States of one submitted item as it moves through the application. The failure state here is a first-class terminal state, not an error overlaid on the success screen.");
+  doc.spacer(8);
+  const bx = (x, y, w, h, t, f) => box(x, y, w, h, t, { fill: f, size: 7.0 });
+  bx(80, 560, 110, 26, "SUBMITTED", FILL);
+  bx(240, 560, 120, 26, "VALIDATING", FILL);
+  bx(420, 560, 110, 26, "RETRIEVING", FILL);
+  bx(420, 430, 110, 26, "EXTRACTING", FILL);
+  bx(240, 430, 120, 26, "SEARCHING", FILL);
+  bx(80, 430, 110, 26, "CROSSCHECKING", FILL);
+  bx(80, 300, 120, 26, "ASSESSING", FILL2);
+  bx(260, 300, 150, 26, "CASE FILE STORED", FILL2);
+  bx(420, 240, 90, 26, "FAILED", FILL2);
+  arrow(190, 573, 240, 573, {});
+  arrow(360, 573, 420, 573, {});
+  arrow(475, 560, 475, 456, {});
+  arrow(420, 443, 360, 443, {});
+  arrow(240, 443, 190, 443, {});
+  arrow(135, 430, 135, 326, {});
+  arrow(200, 313, 260, 313, {});
+  label(292, 566, "valid structure", { size: 6.4 });
+  label(420, 566, "8 s cap, HTTP status", { size: 6.4 });
+  label(196, 468, "with claims", { size: 6.4 });
+  label(244, 566, "bad URL / no text", { size: 6.2 });
+  box(500, 560, 60, 26, "INVALID", FILL2);
+  arrow(540, 560, 520, 266, { label: "report only", dashed: true });
+  doc.caption("Figure 5.9 - State diagram of one submission; FAILED is terminal and stores nothing.");
   doc.h2end();
 }
