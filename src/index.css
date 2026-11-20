@@ -500,23 +500,3 @@ body::before {
   font-weight: 400;
   font-style: normal;
 }
-
-/* ─── Title page ticker ───
-   Two identical lists laid end to end, translated by exactly half the
-   track. Hover or keyboard focus holds the line still so it can be read;
-   reduced motion removes the travel and leaves the first frame. */
-.v-ticker-track {
-  animation: v-ticker 54s linear infinite;
-  will-change: transform;
-}
-.v-ticker:hover .v-ticker-track,
-.v-ticker:focus-within .v-ticker-track {
-  animation-play-state: paused;
-}
-@keyframes v-ticker {
-  from { transform: translate3d(0, 0, 0); }
-  to { transform: translate3d(-50%, 0, 0); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .v-ticker-track { animation: none; }
-}
